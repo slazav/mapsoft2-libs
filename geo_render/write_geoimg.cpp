@@ -33,7 +33,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "Write map file in OziExprorer format (by default it is not written).");
   opts.add("skip_image", 0,0, m,
     "Do not write image file (can be used if only the map file is needed). "
-    "Option -o <file> option should be provided anyway, the filename "
+    "Option -o <file> should be provided anyway, the filename "
     "will be written to the map-file.");
 }
 
