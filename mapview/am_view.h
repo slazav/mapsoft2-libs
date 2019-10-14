@@ -12,7 +12,7 @@ class FullScreen : public ActionMode{
   public:
     FullScreen (Mapview * mapview) : ActionMode(mapview), state(0){ }
     std::string get_name() { return "Fullscreen mode"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::FULLSCREEN; }
+    std::string get_icon() { return "view-fullscreen"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 

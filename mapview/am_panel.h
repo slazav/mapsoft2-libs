@@ -8,7 +8,7 @@ class PanelDelSel : public ActionMode{
 public:
     PanelDelSel (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Delete selected"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::DELETE; }
+    std::string get_icon() { return "edit-delete"; }
     bool is_radio() { return false; }
     void activate() {
       switch (mapview->panels->get_current_page()){
@@ -23,7 +23,7 @@ class PanelDelAll : public ActionMode{
 public:
     PanelDelAll (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Delete all"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::DELETE; }
+    std::string get_icon() { return "edit-delete"; }
     bool is_radio() { return false; }
     void activate() {
       switch (mapview->panels->get_current_page()){
@@ -38,7 +38,7 @@ class PanelMoveUp : public ActionMode{
 public:
     PanelMoveUp (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Move up"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::GO_UP; }
+    std::string get_icon() { return "go-up"; }
     bool is_radio() { return false; }
     void activate() {
       switch (mapview->panels->get_current_page()){
@@ -53,7 +53,7 @@ class PanelMoveDown : public ActionMode{
 public:
     PanelMoveDown (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Move down"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::GO_DOWN; }
+    std::string get_icon() { return "go-down"; }
     bool is_radio() { return false; }
     void activate() {
       switch (mapview->panels->get_current_page()){
@@ -68,7 +68,7 @@ class PanelMoveTop : public ActionMode{
 public:
     PanelMoveTop (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Move to top"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::GOTO_TOP; }
+    std::string get_icon() { return "go-top"; }
     bool is_radio() { return false; }
     void activate() {
       switch (mapview->panels->get_current_page()){
@@ -83,7 +83,7 @@ class PanelMoveBottom : public ActionMode{
 public:
     PanelMoveBottom (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Move to bottom"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::GOTO_BOTTOM; }
+    std::string get_icon() { return "go-buttom"; }
     bool is_radio() { return false; }
     void activate() {
       switch (mapview->panels->get_current_page()){
@@ -98,7 +98,7 @@ class PanelHideAll : public ActionMode{
 public:
     PanelHideAll (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Hide All"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::REMOVE; }
+    std::string get_icon() { return "list-remove"; }
     bool is_radio() { return false; }
     void activate() {
 //      mapview->viewer.start_waiting();
@@ -115,7 +115,7 @@ class PanelShowAll : public ActionMode{
 public:
     PanelShowAll (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Show All"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::ADD; }
+    std::string get_icon() { return "list-add"; }
     bool is_radio() { return false; }
     void activate() {
 //      mapview->viewer.start_waiting();
@@ -132,7 +132,7 @@ class PanelInvert : public ActionMode{
 public:
     PanelInvert (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Invert visibility"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::REFRESH; }
+    std::string get_icon() { return "view-refresh"; }
     bool is_radio() { return false; }
     void activate() {
 //      mapview->viewer.start_waiting();
@@ -181,7 +181,7 @@ class PanelGoto : public ActionMode{
 public:
     PanelGoto (Mapview * mapview) : ActionMode(mapview){ }
     std::string get_name() { return "Goto"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::JUMP_TO; }
+    std::string get_icon() { return "go-jump"; }
     bool is_radio() { return false; }
     void activate() {
       dRect r;
@@ -229,7 +229,7 @@ public:
     }
 
     std::string get_name() { return "Save selected"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::SAVE_AS; }
+    std::string get_icon() { return "document-save-as"; }
     bool is_radio() { return false; }
 
     void activate() {

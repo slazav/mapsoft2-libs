@@ -274,8 +274,9 @@ ActionManager::AddAction(ActionMode *action,
                          const std::string & id, const std::string & menu){
   modes.push_back(std::shared_ptr<ActionMode>(action));
   int m = modes.size()-1;
-  std::string  mname   = action->get_name();
-  Gtk::StockID stockid = action->get_stockid();
+  std::string  name = action->get_name();
+  std::string  icon = action->get_icon();
+  std::string  desc = action->get_desc();
   Gtk::AccelKey acckey = action->get_acckey();
 
   if (!actions->get_action(id)){
@@ -283,11 +284,11 @@ ActionManager::AddAction(ActionMode *action,
     // these stupid ifs...
     if (acckey.is_null())
       actions->add(
-        Gtk::Action::create(id, stockid, mname),
+        Gtk::Action::create_with_icon_name(id, icon, name, desc),
         sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m));
     else
       actions->add(
-        Gtk::Action::create(id, stockid, mname), acckey,
+        Gtk::Action::create_with_icon_name(id, icon, name, desc), acckey,
         sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m));
   }
 

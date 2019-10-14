@@ -17,8 +17,9 @@ public:
     ActionMode(Mapview * mapview_) : mapview(mapview_) { }
 
     // Returns name, stock id, accel key, tooltip for the mode.
-    virtual std::string   get_name() = 0;
-    virtual Gtk::StockID  get_stockid() { return Gtk::StockID(); }
+    virtual std::string get_name() = 0;
+    virtual std::string get_icon() { return ""; }
+    virtual std::string get_desc() { return ""; }
     virtual Gtk::AccelKey get_acckey()  { return Gtk::AccelKey(""); }
 
     // for non-radio modes only activate method is called.
