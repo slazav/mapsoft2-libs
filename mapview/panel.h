@@ -71,8 +71,8 @@ public:
   void remove_selected(){
     auto it = get_selection()->get_selected();
     if (!it) return;
-    store->erase(it);
     GObjMulti::del(it->get_value(columns.gobj));
+    store->erase(it);
   }
 
   // Remove object
@@ -100,7 +100,7 @@ public:
 
   // Join visible/all objects
   void join(bool visible) {
-    std::shared_ptr<Td> newd(new Td);
+    std::shared_ptr<Td> newd(NULL);
 
     auto i = store->children().begin();
     while (i != store->children().end()){
@@ -109,17 +109,21 @@ public:
       }
 
       auto curr = i->get_value(columns.gobj);
-      if (!curr){ ++i; continue; }
+      auto data = i->get_value(columns.data);
+      if (!curr || !data){ ++i; continue; }
 
-      newd->insert(newd->end(), curr->begin(), curr->end());
-      if (newd->size()) newd->name = "JOIN";
-      else newd->name = curr->name;
+      if (!newd){
+        newd = data;
+      }
+      else {
+        newd->insert(newd->end(), data->begin(), data->end());
+        newd->name = "JOIN";
+      }
 
       i = store->erase(i);
       GObjMulti::del(curr);
     }
-    if (newd->size())
-    GObjMulti::add(newd);
+    if (newd && newd->size()) add(newd);
   }
 
   // Find selected object
@@ -151,11 +155,19 @@ public:
   void get_sel_data(GeoData & data) {
     auto i = get_selection()->get_selected();
     if (!i) return;
-    auto data1 = (*i)[columns.gobj]->get_data();
-    data.push_back(*data1);
+    std::shared_ptr<Td> d = (*i)[columns.data];
+    data.push_back(*d.get());
   }
 
-  /* move object (up/down/top/bottom) */
+  // get sub-object range
+  dRect get_range(){
+    auto i = get_selection()->get_selected();
+    if (!i) return dRect();
+    std::shared_ptr<Tl> gobj = (*i)[columns.gobj];
+    return gobj->bbox();
+  }
+
+  // move selected object (up/down/top/bottom)
   void move(bool up, bool onestep){
     auto it1 = get_selection()->get_selected();
     auto it2 = it1;
@@ -174,18 +186,18 @@ public:
     upd_wp();
   }
 
+  // callback for updating data from the panel
   void on_panel_edited (const Gtk::TreeModel::Path& path,
                         const Gtk::TreeModel::iterator& iter) {
-    // update gobj depth and visibility in GObjMulti
     upd_wp();
-    // update names in data (no need to redraw)
     upd_name();
   }
 
+  // update names in data (no need to redraw)
   virtual bool upd_name(Tl * sel_gobj = NULL, bool dir=true) = 0;
 
-  /* Update visibility and depths of objects
-     according to TreeView */
+  // update gobj depth and visibility in GObjMulti
+  // according to TreeView
   bool upd_wp(){
     bool ret=false;
     Gtk::TreeNodeChildren::const_iterator i;
@@ -216,6 +228,9 @@ public:
     if (ret) signal_redraw_me().emit(iRect());
     return ret;
   }
+
+  // number of objects in the panel
+  int size() {return GObjMulti::size();}
 
 protected:
   Glib::RefPtr<Gtk::ListStore> store;

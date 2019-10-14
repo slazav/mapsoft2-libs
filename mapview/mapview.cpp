@@ -77,12 +77,13 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     scr_trk->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     scr_map->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     scr_vmp->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+
     /// append pages to the Notebook
-    panels->append_page(*scr_wpt, "WPT");
-    panels->append_page(*scr_trk, "TRK");
-    panels->append_page(*scr_map, "MAP");
-//    panels->append_page(*scr_vmp, "VMAP");
-//    panels->append_page(panel_misc, "Misc");
+    panels->insert_page(*scr_wpt, "WPT", "WPT", PAGE_WPTS);
+    panels->append_page(*scr_trk, "TRK", "TRK", PAGE_TRKS);
+//    panels->append_page(*scr_vmp, "VMAP", "VMAP", PAGE_VMAP);
+    panels->append_page(*scr_map, "MAP", "MAP", PAGE_MAPS);
+
     panels->set_scrollable(false);
     panels->set_size_request(100,-1);
 
@@ -166,14 +167,14 @@ Mapview::add_data(const GeoData & data, bool scroll) {
 
   if (scroll){
     if (data.trks.size()>0 && data.trks.begin()->size()>0){
-       goto_wgs( (*data.trks.begin())[0] );
+       goto_point( (*data.trks.begin())[0] );
     }
     else if (data.wpts.size()>0 && data.wpts.begin()->size()>0){
-       goto_wgs( (*data.wpts.begin())[0] );
+       goto_point( (*data.wpts.begin())[0] );
     }
     else if (data.maps.size()>0 && data.maps.begin()->size()>0
          && data.maps.begin()->begin()->ref.size()>0){
-       goto_wgs( data.maps.begin()->begin()->ref.begin()->second );
+       goto_point( data.maps.begin()->begin()->ref.begin()->second );
     }
   }
 
@@ -282,11 +283,27 @@ Mapview::set_cnv(const std::shared_ptr<ConvBase> & c){
 }
 
 void
-Mapview::goto_wgs(dPoint p){
+Mapview::goto_point(dPoint p, bool wgs){
   if (!haveref) return;
-  gobj.get_cnv()->bck(p);
+  if (!wgs) gobj.get_cnv()->bck(p);
   viewer.set_center(p);
 }
+
+void
+Mapview::goto_range(const dRect & r, bool wgs){
+  if (!haveref) return;
+
+  dRect orng = wgs? gobj.get_cnv()->bck_acc(r, 1) : r;
+  dRect vrng = viewer.get_view_range();
+
+  double k = 1;
+  while (vrng.w > 2*k*orng.w || vrng.h > 2*k*orng.h) k*=2;
+  while (vrng.w < k*orng.w || vrng.h < k*orng.h) k/=2;
+
+  viewer.set_center(r.cnt());
+  viewer.rescale(k);
+}
+
 
 /**********************************************************/
 #include <sys/stat.h>

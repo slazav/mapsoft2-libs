@@ -26,6 +26,11 @@
 #define ACCEL_FILE "mapsoft2.acc"
 #define CSS_FILE   "mapsoft2.css"
 
+#define PAGE_WPTS 0
+#define PAGE_TRKS 1
+#define PAGE_VMAP 2
+#define PAGE_MAPS 3
+
 class Mapview : public Gtk::Window {
 public:
     /// Mapview components (order is important for constructing):
@@ -123,7 +128,10 @@ public:
     std::shared_ptr<ConvBase> get_cnv() {return gobj.get_cnv();}
 
     // Scroll the viewer window to get given coordinates in the center.
-    void goto_wgs(dPoint p);
+    void goto_point(dPoint p, bool wgs = true);
+
+    // scroll and zoom window to show given coordinate range.
+    void goto_range(const dRect & r, bool wgs = true);
 
     /**********************************/
 

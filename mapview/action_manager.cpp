@@ -12,6 +12,7 @@
 
 #include "am_file.h"
 #include "am_view.h"
+#include "am_panel.h"
 //#include "am_open.h"
 //#include "am_add_file.h"
 //#include "am_save.h"
@@ -144,7 +145,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(ShowPt,          "Misc")
     ADD_ACT(Nav,             "Misc")
     AddSep("Misc");
-
+*/
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")
     ADD_ACT(PanelSave,        "PopupWPTs")
@@ -182,8 +183,8 @@ ActionManager::ActionManager (Mapview * mapview_):
     AddSep("PopupTRKs");
     ADD_ACT(PanelDelSel,      "PopupTRKs")
     ADD_ACT(PanelDelAll,      "PopupTRKs")
-    AddSep("PopupTRKs");
-    ADD_ACT(DrawOpt,          "PopupTRKs")
+//    AddSep("PopupTRKs");
+//    ADD_ACT(DrawOpt,          "PopupTRKs")
 
     // Map panel menu
     ADD_ACT(PanelGoto,        "PopupMAPs")
@@ -203,6 +204,8 @@ ActionManager::ActionManager (Mapview * mapview_):
     AddSep("PopupMAPs");
     ADD_ACT(PanelDelSel,      "PopupMAPs")
     ADD_ACT(PanelDelAll,      "PopupMAPs")
+
+/*
 
     // SRTM panel menu
     ADD_ACT(SrtmOpt,          "PopupSRTM")
@@ -315,10 +318,10 @@ ActionManager::on_panel_button_press (GdkEventButton * event) {
   if (event->button == 3) {
     Gtk::Menu * M = 0;
     switch (mapview->panels->get_current_page()){
-      case 0: M = popup_wpts; break;
-      case 1: M = popup_trks; break;
-      case 2: M = popup_maps; break;
-      case 3: M = popup_srtm; break;
+      case PAGE_WPTS: M = popup_wpts; break;
+      case PAGE_TRKS: M = popup_trks; break;
+//      case PAGE_VMAP: M = popup_vmap; break;
+      case PAGE_MAPS: M = popup_maps; break;
     }
     if (M) M->popup(event->button, event->time);
     return true;
