@@ -45,6 +45,10 @@ class SimpleViewer : public Gtk::DrawingArea {
     virtual iPoint get_center (void) const {
       return origin + iPoint(get_width(), get_height())/2;}
 
+    // Get view range.
+    virtual iRect get_view_range (void) const {
+      return iRect(origin.x, origin.y, get_width(), get_height());}
+
     // Set background color.
     virtual void set_bgcolor(int c) {bgcolor=c | 0xFF000000;}
 
