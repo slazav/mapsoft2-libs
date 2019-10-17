@@ -7,7 +7,7 @@
 class PanelDelSel : public ActionMode{
 public:
     PanelDelSel (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Delete selected"; }
+    std::string get_name() { return "_Delete selected"; }
     std::string get_icon() { return "edit-delete"; }
     bool is_radio() { return false; }
     void activate() {
@@ -37,7 +37,7 @@ public:
 class PanelMoveUp : public ActionMode{
 public:
     PanelMoveUp (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move up"; }
+    std::string get_name() { return "Move _up"; }
     std::string get_icon() { return "go-up"; }
     bool is_radio() { return false; }
     void activate() {
@@ -52,7 +52,7 @@ public:
 class PanelMoveDown : public ActionMode{
 public:
     PanelMoveDown (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move down"; }
+    std::string get_name() { return "Move _down"; }
     std::string get_icon() { return "go-down"; }
     bool is_radio() { return false; }
     void activate() {
@@ -67,7 +67,7 @@ public:
 class PanelMoveTop : public ActionMode{
 public:
     PanelMoveTop (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move to top"; }
+    std::string get_name() { return "Move to _top"; }
     std::string get_icon() { return "go-top"; }
     bool is_radio() { return false; }
     void activate() {
@@ -82,7 +82,7 @@ public:
 class PanelMoveBottom : public ActionMode{
 public:
     PanelMoveBottom (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move to bottom"; }
+    std::string get_name() { return "Move to _bottom"; }
     std::string get_icon() { return "go-buttom"; }
     bool is_radio() { return false; }
     void activate() {
@@ -131,7 +131,7 @@ public:
 class PanelInvert : public ActionMode{
 public:
     PanelInvert (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Invert visibility"; }
+    std::string get_name() { return "_Invert visibility"; }
     std::string get_icon() { return "view-refresh"; }
     bool is_radio() { return false; }
     void activate() {
@@ -148,7 +148,7 @@ public:
 class PanelJoinVis : public ActionMode{
 public:
     PanelJoinVis (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Join visible"; }
+    std::string get_name() { return "_Join visible"; }
     bool is_radio() { return false; }
     void activate() {
 //      mapview->viewer.start_waiting();
@@ -180,7 +180,7 @@ public:
 class PanelGoto : public ActionMode{
 public:
     PanelGoto (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Goto"; }
+    std::string get_name() { return "_Goto"; }
     std::string get_icon() { return "go-jump"; }
     bool is_radio() { return false; }
     void activate() {
@@ -228,7 +228,7 @@ public:
       set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
     }
 
-    std::string get_name() { return "Save selected"; }
+    std::string get_name() { return "_Save selected"; }
     std::string get_icon() { return "document-save-as"; }
     bool is_radio() { return false; }
 

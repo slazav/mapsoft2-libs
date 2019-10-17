@@ -10,7 +10,7 @@
 class New : public ActionMode{
   public:
     New (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "New"; }
+    std::string get_name() { return "_New"; }
     std::string get_icon() { return "document-new"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>n"); }
     bool is_radio() { return false; }
@@ -54,7 +54,7 @@ class LoadFile : public ActionMode, public Gtk::FileChooserDialog{
       set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
     }
 
-    std::string get_name() { return "Load File"; }
+    std::string get_name() { return "_Load File"; }
     std::string get_icon() { return "document-open"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>l"); }
     bool is_radio() { return false; }
@@ -75,7 +75,7 @@ class LoadFile : public ActionMode, public Gtk::FileChooserDialog{
 class Quit : public ActionMode{
 public:
     Quit (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Quit"; }
+    std::string get_name() { return "_Quit"; }
     std::string get_icon() { return "application-exit"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>q"); }
     bool is_radio() { return false; }
