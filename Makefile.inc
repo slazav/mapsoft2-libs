@@ -87,7 +87,7 @@ $(TEST_OBJECTS): %.o: %.cpp
 	@$(TEST_CMD)
 
 make_tests: $(SIMPLE_TEST_RES) $(SCRIPT_TEST_RES)
-	@for i in $(OTHER_TESTS); do echo "## Running test: $$i"; ./$$i; done
+	@sh -e -c 'for i in $(OTHER_TESTS); do echo "## Running test: $$i"; ./$$i; done'
 
 ######################################################
 # building rules for programs and shared lib
