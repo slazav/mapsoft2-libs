@@ -5,8 +5,8 @@
 
 #include <vector>
 #include <memory>
-#include <err/err.h>
-#include <geom/rect.h>
+#include "err/err.h"
+#include "geom/rect.h"
 
 /*
 An image: 2d array of arbitrary data.
