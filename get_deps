@@ -91,7 +91,7 @@ sub get_hdeps {
     while (my $l=<$ff>) {
       next unless $l=~/^#/;
 
-      if ($l=~m|^#include\s+"([^"/]+)/([^"/]+)"|) {
+      if ($l=~m|^#\s*include\s+"([^"/]+)/([^"/]+)"|) {
         die "Can't find file \"$1/$2\" included in \"$f\"\n"
           unless -f "$lib_dir/$1/$2";
         if ($mode == 0) {
@@ -106,7 +106,7 @@ sub get_hdeps {
         }
       }
 
-      if ($l=~m|^#include\s+"([^"/]+)"|) {
+      if ($l=~m|^#\s*include\s+"([^"/]+)"|) {
         die "Can't find file \"$1\" included in \"$f\"\n"
           unless -f "$dir/$1";
         if ($mode!=0){
