@@ -177,7 +177,7 @@ main(){
       assert_eq(m.find(o1.cl, o1.type+1, dRect("[1,1,1,1]")).size(), 0);
       assert_eq(m.find(MAPDB_POINT, o1.type, dRect("[1,1,1,1]")).size(), 0);
       assert_eq(m.find(o1.cl, o1.type, dRect("[10,1,1,1]")).size(), 0);
-      std::set<int> ii = m.find(o1.cl, o1.type, dRect("[1,1,1,1]"));
+      std::set<uint32_t> ii = m.find(o1.cl, o1.type, dRect("[1,1,1,1]"));
       assert_eq(ii.size(),1);
 
 

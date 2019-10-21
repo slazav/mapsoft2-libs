@@ -23,7 +23,7 @@ class GeoHashDB::Impl {
     ~Impl() {}
 
     // get id of objects which may be found in the range
-    std::set<int> get(const uint32_t type, const dRect & range);
+    std::set<uint32_t> get(const uint32_t type, const dRect & range);
 
     // add an object
     void put(const uint32_t id, const uint32_t type, const dRect & range);
@@ -32,10 +32,10 @@ class GeoHashDB::Impl {
     void del(const uint32_t id, const uint32_t type, const dRect & range);
 
     // get all types
-    std::set<int> get_types();
+    std::set<uint32_t> get_types();
 
   private:
-    std::set<int> get_hash(const std::string & hash0, bool exact);
+    std::set<uint32_t> get_hash(const std::string & hash0, bool exact);
 
     // we use type+geohash key
     std::string join_type(const uint32_t type, const std::string & hash){
@@ -51,7 +51,7 @@ class GeoHashDB::Impl {
 GeoHashDB::GeoHashDB(std::string fname, const char *dbname, bool create):
   impl(std::unique_ptr<Impl>(new Impl(fname, dbname, create))) { }
 
-std::set<int>
+std::set<uint32_t>
 GeoHashDB::get(const uint32_t type, const dRect & range){
   return impl->get(type, range);}
 
@@ -63,7 +63,7 @@ void
 GeoHashDB::del(const uint32_t id, const uint32_t type, const dRect & range){
   impl->del(id, type, range);}
 
-std::set<int>
+std::set<uint32_t>
 GeoHashDB::get_types() {return impl->get_types();}
 
 GeoHashDB::~GeoHashDB(){}
@@ -99,9 +99,9 @@ GeoHashDB::Impl::Impl(std::string fname, const char *dbname, bool create){
 }
 
 // same as in geohash/storage.cpp
-std::set<int>
+std::set<uint32_t>
 GeoHashDB::Impl::get(const uint32_t type, const dRect & range){
-  std::set<int> ret;
+  std::set<uint32_t> ret;
   if (!range) return ret;
   std::set<std::string> hashes = GEOHASH_encode4(range, HASHLEN);
   std::set<std::string> done;
@@ -112,7 +112,7 @@ GeoHashDB::Impl::get(const uint32_t type, const dRect & range){
       bool exact = i < h.size();  // for full hashes look also for smaller regions.
       done.insert(hh);
       // std::cerr << "GET [" << hh << "] " << (i<h.size()) << "\n";
-      std::set<int> r = get_hash(join_type(type, hh), i<h.size());
+      std::set<uint32_t> r = get_hash(join_type(type, hh), i<h.size());
       ret.insert(r.begin(), r.end());
     }
   }
@@ -161,12 +161,12 @@ GeoHashDB::Impl::del(const uint32_t id, const uint32_t type, const dRect & range
   }
 }
 
-std::set<int>
+std::set<uint32_t>
 GeoHashDB::Impl::get_types(){
   DBT k = mk_dbt();
   DBT v = mk_dbt();
 
-  std::set<int> ret;
+  std::set<uint32_t> ret;
 
   int fl = DB_FIRST; // get first
   DBC *curs = NULL;
@@ -199,12 +199,12 @@ GeoHashDB::Impl::get_types(){
   return ret;
 }
 
-std::set<int>
+std::set<uint32_t>
 GeoHashDB::Impl::get_hash(const std::string & hash0, bool exact){
   DBT k = mk_dbt(hash0);
   DBT v = mk_dbt();
 
-  std::set<int> ret;
+  std::set<uint32_t> ret;
 
   int fl = DB_SET_RANGE; // first get t >= t1
   DBC *curs = NULL;
@@ -227,7 +227,7 @@ GeoHashDB::Impl::get_hash(const std::string & hash0, bool exact){
 
       if (hash.size()>=hash0.size() &&
           hash.compare(0,hash0.size(), hash0)==0){
-        ret.insert(*(int*)v.data);
+        ret.insert(*(uint32_t*)v.data);
         fl=DB_NEXT; // switch to DB_NEXT and repeat
         continue;
       }

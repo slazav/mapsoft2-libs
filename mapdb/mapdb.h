@@ -144,8 +144,7 @@ public:
   void del(uint32_t id);
 
   /// Find objects with given type and range
-  std::set<int> find(MapDBObjClass cl, int type, const dRect & range);
-
+  std::set<uint32_t> find(MapDBObjClass cl, int type, const dRect & range);
 
   ///////////////
   /* Import/export */

@@ -24,7 +24,7 @@ main(){
       db.put(9, 0, dRect(-100,-50,    220,100));
       db.put(10, 0, dRect()); // empty range - do nothing
 
-      std::set<int> v1 = db.get(0, dRect());
+      std::set<uint32_t> v1 = db.get(0, dRect());
       assert_eq(v1.size(),0);
 
       v1 = db.get_types();
@@ -57,7 +57,7 @@ main(){
     {
       // open existing file
       GeoHashDB db("a.dbh", NULL, 0);
-      std::set<int> v1 = db.get(0, dRect(36,57, 0.001,0.001));
+      std::set<uint32_t> v1 = db.get(0, dRect(36,57, 0.001,0.001));
       //for (auto i:v1) std::cerr << "> " << i << "\n";
       assert_eq(v1.size(),3);
       assert_eq(v1.count(5),1);
