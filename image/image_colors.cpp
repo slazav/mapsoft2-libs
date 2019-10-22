@@ -332,6 +332,19 @@ image_remap(const Image & img, const std::vector<uint32_t> & cmap, const Opt & o
 
 /***********************************************************/
 
+Image image_to_argb(const Image & img){
+  if (img.type() == IMAGE_32ARGB) return img;
+  Image ret(img.width(), img.height(), IMAGE_32ARGB);
+  for (int x=0; x<img.width(); ++x){
+    for (int y=0; y<img.height(); ++y){
+      ret.set32(x,y, img.get_argb(x,y));
+    }
+  }
+  return ret;
+}
+
+/***********************************************************/
+
 int
 image_classify_alpha(const Image & img){
   int ret=0;

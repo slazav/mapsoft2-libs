@@ -19,6 +19,9 @@ std::vector<uint32_t> image_colormap(const Image & img, const Opt & opt = Opt())
 Image image_remap(const Image & img, const std::vector<uint32_t> & cmap,
                   const Opt & opt = Opt());
 
+// convert image data to 32-bit colors (for making Cairo patterns etc).
+Image image_to_argb(const Image & img);
+
 // Image tranparency (only for 32bpp images)
 // returns 0: fully non-transparent image.
 // returns 1: image contains transparent (but not semi-transparent) pixels.
@@ -32,7 +35,7 @@ int image_classify_alpha(const Image & img);
 // colors[clen] array is filled with the color palette.
 int image_classify_color(const Image & img, uint32_t *colors, int clen=256);
 
-// Change image color outside border line.
+// Change image color outside border line. (NOT USED?)
 // If border line is empty, set color in the whole image
 void image_apply_border(const Image & img, const iLine & brd = iLine(),
                         const uint32_t color = 0);
