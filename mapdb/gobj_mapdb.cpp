@@ -280,6 +280,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
           cr->translate(p.x, p.y);
           cr->set_source(data->patt);
           cr->paint();
+          cr->translate(-p.x, -p.y);
         }
       }
     }
@@ -298,6 +299,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         cr->translate(p.x, p.y);
         cr->set_source(data->patt);
         cr->paint();
+        cr->translate(-p.x, -p.y);
       }
     }
   }
