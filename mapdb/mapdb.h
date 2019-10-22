@@ -144,7 +144,12 @@ public:
   void del(uint32_t id);
 
   /// Find objects with given type and range
-  std::set<uint32_t> find(MapDBObjClass cl, int type, const dRect & range);
+  std::set<uint32_t> find(MapDBObjClass cl, int type, const dRect & range){
+    return geohash.get((cl  << 16) | type, range); }
+
+  /// Find objects with given type and range
+  std::set<uint32_t> find(int etype, const dRect & range){
+    return geohash.get(etype, range); }
 
   ///////////////
   /* Import/export */

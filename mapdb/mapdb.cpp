@@ -234,8 +234,3 @@ MapDB::del(uint32_t id){
   objects.del(id);
 }
 
-std::set<uint32_t>
-MapDB::find(MapDBObjClass cl, int type, const dRect & range){
-  uint32_t ct  = (cl  << 16) | type;
-  return geohash.get(ct, range);
-}

@@ -7,7 +7,7 @@
 #include <map>
 
 #include "cairo/cairo_wrapper.h"
-#include "viewer/gobj.h"
+#include "viewer/gobj_multi.h"
 
 #include "mapdb.h"
 #include "image/image.h"
@@ -46,16 +46,18 @@ void ms2opt_add_drawmapdb(GetOptSet & opts);
 /********************************************************************/
 
 /* Render MapDB map */
-class GObjMapDB : public GObj{
+class GObjMapDB : public GObjMulti{
 private:
 
+  std::shared_ptr<MapDB> map;
+
   CairoWrapper cr;
-  MapDB & map;
 
   enum StepFeature {
     FEATURE_STROKE, // draw the contour with some thickness and color
-    FEATURE_DASH,   // set dashed line
-    FEATURE_FILL,   // fill the area with some color
+    FEATURE_FILL,    // fill the area with some color
+    FEATURE_SMOOTH,  // set line smoothing
+    FEATURE_DASH,    // set dashed line
   };
 
   enum StepAction {
@@ -65,24 +67,47 @@ private:
     STEP_DRAW_AREA
   };
 
-  struct DrawingStep {
+  struct DrawingStep : public GObj {
     StepAction action; // what to do
-    int type;          // object type
+    uint32_t etype;     // object extended type (type + (cl<<16) )
     std::map<StepFeature, std::string> features;
-    DrawingStep(): action(STEP_UNKNOWN), type(0) {}
+    MapDB * map;
+    DrawingStep(MapDB * map): map(map), action(STEP_UNKNOWN), etype(0) {}
+
+    // Put feature parameters to the map of features.
+    // We want to parse strings only while reading the config file.
+    // Then feature parameters are saved as raw data wrapped in std::string
+    // and then restored in draw()
+    template<typename T1>
+    void put_feature(StepFeature ftr, const std::string & v1){
+      struct fdata_t {T1 v1;} fdata = {
+         str_to_type<T1>(v1),
+      };
+      features.emplace(ftr,
+        std::string((const char*)&fdata, sizeof(fdata)));
+    }
+    template<typename T1, typename T2>
+    void put_feature(StepFeature ftr,
+          const std::string & v1, const std::string & v2){
+      struct fdata_t {T1 v1; T2 v2;} fdata = {
+         str_to_type<T1>(v1),
+         str_to_type<T2>(v2),
+      };
+      features.emplace(ftr,
+        std::string((const char*)&fdata, sizeof(fdata)));
+    }
+
+    int draw(const CairoWrapper & cr, const dRect & draw_range) override;
   };
 
-  std::list<DrawingStep> steps;
 
   static void add_feature(DrawingStep & st,
                           const std::vector<std::string> & vs, int ln);
 
 public:
 
-  /***/
-  GObjMapDB(MapDB & map);
-
-  int draw(const CairoWrapper & cr, const dRect &box) override;
+  // constructor -- open new map
+  GObjMapDB(const std::string & mapdir);
 
 };
 
