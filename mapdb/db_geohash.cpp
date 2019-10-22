@@ -102,7 +102,7 @@ GeoHashDB::Impl::Impl(std::string fname, const char *dbname, bool create){
 std::set<uint32_t>
 GeoHashDB::Impl::get(const uint32_t type, const dRect & range){
   std::set<uint32_t> ret;
-  if (!range) return ret;
+  if (range.is_empty()) return ret;
   std::set<std::string> hashes = GEOHASH_encode4(range, HASHLEN);
   std::set<std::string> done;
   for (auto const & h:hashes) {
@@ -111,8 +111,8 @@ GeoHashDB::Impl::get(const uint32_t type, const dRect & range){
       if (done.count(hh)) continue; // do not repeat queries with same hash
       bool exact = i < h.size();  // for full hashes look also for smaller regions.
       done.insert(hh);
-      // std::cerr << "GET [" << hh << "] " << (i<h.size()) << "\n";
-      std::set<uint32_t> r = get_hash(join_type(type, hh), i<h.size());
+      //std::cerr << "GET [" << hh << "] " << exact << "\n";
+      std::set<uint32_t> r = get_hash(join_type(type, hh), exact);
       ret.insert(r.begin(), r.end());
     }
   }
@@ -121,10 +121,11 @@ GeoHashDB::Impl::get(const uint32_t type, const dRect & range){
 
 void
 GeoHashDB::Impl::put(const uint32_t id, const uint32_t type, const dRect & range){
-  if (!range) return;
+  if (range.is_empty()) return;
   std::set<std::string> hashes = GEOHASH_encode4(range, HASHLEN);
   for (auto const & h:hashes) {
-    DBT k = mk_dbt(join_type(type,h));
+    std::string s = join_type(type,h);
+    DBT k = mk_dbt(s);
     DBT v = mk_dbt(&id);
     // std::cerr << "PUT [" << h << "] " << id << "\n";
     // do nothing if key/value pair already exists
@@ -135,7 +136,7 @@ GeoHashDB::Impl::put(const uint32_t id, const uint32_t type, const dRect & range
 
 void
 GeoHashDB::Impl::del(const uint32_t id, const uint32_t type, const dRect & range){
-  if (!range) return;
+  if (range.is_empty()) return;
   std::set<std::string> hashes = GEOHASH_encode4(range, HASHLEN);
   DBC *curs = NULL;
   try {
@@ -220,8 +221,8 @@ GeoHashDB::Impl::get_hash(const std::string & hash0, bool exact){
       if (res!=0) throw Err() << "db_geohash: " << db_strerror(res);
 
       // check what we found
-      if (v.size != sizeof(int))
-        throw Err() << "db_geohash: bad value";
+      if (v.size != sizeof(uint32_t) || k.size < sizeof(uint32_t))
+        throw Err() << "db_geohash: bad database record";
       std::string hash((char*)k.data, (char*)k.data+k.size);
       if (exact && hash!=hash0) break;
 
