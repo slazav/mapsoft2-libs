@@ -42,6 +42,11 @@ CairoExtra::mkpath_smline(const dMultiLine & o, bool close, double curve_l){
 void
 CairoExtra::mkpath_smline(const dLine & o, bool close, double curve_l){
   if (o.size()<1) return;
+  if (o.size()==1){
+    move_to(*o.begin());
+    line_to(*o.begin());
+    return;
+  }
   dPoint old;
   bool first = true;
   for (dLine::const_iterator p=o.begin(); p!=o.end(); p++){
