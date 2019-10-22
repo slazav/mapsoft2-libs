@@ -1,5 +1,5 @@
-#ifndef PANEL_ACTIONS_H
-#define PANEL_ACTIONS_H
+#ifndef AM_PANEL_H
+#define AM_PANEL_H
 
 #include "action_mode.h"
 #include "geo_data/geo_io.h"

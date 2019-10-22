@@ -25,8 +25,9 @@ public:
  */
 
 template <typename Tl, typename Td>
-class Panel : public Gtk::TreeView, public GObjMulti {
+class Panel : public Gtk::ScrolledWindow, public GObjMulti {
   sigc::signal<void> signal_data_changed_;
+  Gtk::TreeView *treeview;
 public:
 
   // This signal is emitted when data is changed
@@ -38,14 +39,17 @@ public:
 
   // Constructor.
   Panel() {
-    store = Gtk::ListStore::create(columns);
-    set_model(store);
-    append_column_editable("V", columns.checked);
-    int name_cell_n = append_column_editable("V", columns.name);
 
-    Gtk::TreeViewColumn* name_column = get_column(name_cell_n - 1);
+    treeview = manage(new Gtk::TreeView);
+
+    store = Gtk::ListStore::create(columns);
+    treeview->set_model(store);
+    treeview->append_column_editable("V", columns.checked);
+    int name_cell_n = treeview->append_column_editable("V", columns.name);
+
+    Gtk::TreeViewColumn* name_column = treeview->get_column(name_cell_n - 1);
     Gtk::CellRendererText* name_cell =
-      (Gtk::CellRendererText*)get_column_cell_renderer(name_cell_n - 1);
+      (Gtk::CellRendererText*)treeview->get_column_cell_renderer(name_cell_n - 1);
     if (name_column && name_cell)
       name_column->add_attribute(
         name_cell->property_weight(), columns.weight);
@@ -53,9 +57,12 @@ public:
     store->signal_row_changed().connect (
       sigc::mem_fun (this, &Panel::on_panel_edited));
 
-    set_enable_search(false);
-    set_headers_visible(false);
-    set_reorderable(false);
+    treeview->set_enable_search(false);
+    treeview->set_headers_visible(false);
+    treeview->set_reorderable(false);
+
+    set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+    Gtk::ScrolledWindow::add(*treeview);
   }
 
   // Add data
@@ -69,7 +76,7 @@ public:
 
   // Remove selected object
   void remove_selected(){
-    auto it = get_selection()->get_selected();
+    auto it = treeview->get_selection()->get_selected();
     if (!it) return;
     GObjMulti::del(it->get_value(columns.gobj));
     store->erase(it);
@@ -128,7 +135,7 @@ public:
 
   // Find selected object
   std::shared_ptr<Tl> find_selected() {
-    auto const it = get_selection()->get_selected();
+    auto const it = treeview->get_selection()->get_selected();
     if (!it) return NULL;
     return it->get_value(columns.gobj);
   }
@@ -153,7 +160,7 @@ public:
 
   // Get selected data
   void get_sel_data(GeoData & data) {
-    auto i = get_selection()->get_selected();
+    auto i = treeview->get_selection()->get_selected();
     if (!i) return;
     std::shared_ptr<Td> d = (*i)[columns.data];
     data.push_back(*d.get());
@@ -161,7 +168,7 @@ public:
 
   // get sub-object range
   dRect get_range(){
-    auto i = get_selection()->get_selected();
+    auto i = treeview->get_selection()->get_selected();
     if (!i) return dRect();
     std::shared_ptr<Tl> gobj = (*i)[columns.gobj];
     return gobj->bbox();
@@ -169,7 +176,7 @@ public:
 
   // move selected object (up/down/top/bottom)
   void move(bool up, bool onestep){
-    auto it1 = get_selection()->get_selected();
+    auto it1 = treeview->get_selection()->get_selected();
     auto it2 = it1;
     if (!it1) return;
     if (up && (it1 == store->children().begin())) return;

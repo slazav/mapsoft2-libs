@@ -18,18 +18,19 @@
 #include "panel_wpts.h"
 #include "panel_trks.h"
 #include "panel_maps.h"
-//#include "panel_vmap.h"
-//#include "panel_misc.h"
+#include "panel_mapdb.h"
 #include "panel_status.h"
 
 #define DATADIR    "mapsoft2"
 #define ACCEL_FILE "mapsoft2.acc"
 #define CSS_FILE   "mapsoft2.css"
 
+// Same order as in mapview constructor where pages are added
+// to the Gtk::Notebook:
 #define PAGE_WPTS 0
 #define PAGE_TRKS 1
-#define PAGE_VMAP 2
-#define PAGE_MAPS 3
+#define PAGE_MAPS 2
+#define PAGE_VMAP 3
 
 class Mapview : public Gtk::Window {
 public:
@@ -45,11 +46,10 @@ public:
     std::shared_ptr<PanelTrks> panel_trks;
     std::shared_ptr<PanelWpts> panel_wpts;
     std::shared_ptr<PanelMaps> panel_maps;
-//    PanelVMAP panel_vmap;
-//    PanelMISC panel_misc;
+    std::shared_ptr<PanelMapDB> panel_mapdb;
+
     PanelStatus spanel; // status bar
     ActionManager amanager; // menus and action handling
-
 
     DlgChConf dlg_chconf; // exit confirmation
     DlgErr dlg_err;     // error dialog
@@ -116,8 +116,6 @@ public:
     // Exit Mapview application (confirmation dialog will appear
     // if previous project has been changed and force==false).
     void exit(bool force=false);
-
-//    void add_vmap(const vmap::world & W, bool scroll=false);
 
     /**********************************/
 

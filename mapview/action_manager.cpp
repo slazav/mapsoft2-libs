@@ -13,47 +13,6 @@
 #include "am_file.h"
 #include "am_view.h"
 #include "am_panel.h"
-//#include "am_open.h"
-//#include "am_add_file.h"
-//#include "am_save.h"
-//#include "am_save_all.h"
-//#include "am_save_vis.h"
-//#include "am_download.h"
-//#include "am_quit.h"
-
-//#include "am_add_wpt.h"
-//#include "am_edit_wpt.h"
-//#include "am_move_wpt.h"
-//#include "am_delete_wpt.h"
-
-//#include "am_add_track.h"
-//#include "am_edit_track.h"
-//#include "am_del_trk.h"
-//#include "am_add_tpt.h"
-//#include "am_edit_tpt.h"
-//#include "am_move_tpt.h"
-//#include "am_delete_tpt.h"
-//#include "am_mark_trk.h"
-//#include "am_trk_filter.h"
-//#include "am_trk_opt.h"
-
-//#include "am_edit_map.h"
-//#include "am_setref.h"
-//#include "am_llref.h"
-
-//#include "srtm_riv.h"
-//#include "srtm_area.h"
-//#include "am_srtm_opt.h"
-//#include "am_pano.h"
-
-//#include "am_save_image.h"
-//#include "am_show_pt.h"
-//#include "am_nav.h"
-
-//#include "am_fullscreen.h"
-//#include "am_hide_panels.h"
-
-//#include "panel_actions.h"
 
 /*********/
 
@@ -98,54 +57,13 @@ ActionManager::ActionManager (Mapview * mapview_):
     /* Main menu */
 
     ADD_ACT(New,             "File")
-    ADD_ACT(LoadFile,         "File")
-//    ADD_ACT(Open,            "File")
-//    ADD_ACT(Download,        "File")
-
-//    AddSep("File");
-
-//    ADD_ACT(Save,            "File")
-//    ADD_ACT(SaveAll,         "File")
-//    ADD_ACT(SaveVis,         "File")
+    ADD_ACT(LoadFile,        "File")
     AddSep("File");
     ADD_ACT(Quit,            "File")
 
     ADD_ACT(FullScreen,      "View")
     ADD_ACT(HidePanels,      "View")
 
-/*
-    ADD_ACT(AddWaypoint,     "Waypoints")
-    ADD_ACT(EditWaypoint,    "Waypoints")
-    ADD_ACT(MoveWaypoint,    "Waypoints")
-    ADD_ACT(DeleteWaypoint,  "Waypoints")
-
-    ADD_ACT(AddTrack,        "Tracks")
-    ADD_ACT(EditTrack,       "Tracks")
-    ADD_ACT(DelTrk,          "Tracks")
-    AddSep("Tracks");
-    ADD_ACT(AddTrackpoint,   "Tracks")
-    ADD_ACT(EditTrackpoint,  "Tracks")
-    ADD_ACT(MoveTrackpoint,  "Tracks")
-    ADD_ACT(DeleteTrackpoint,"Tracks")
-    AddSep("Tracks");
-    ADD_ACT(MarkTrack,       "Tracks")
-    ADD_ACT(FilterTrack,     "Tracks")
-    ADD_ACT(DrawOpt,         "Tracks")
-
-    ADD_ACT(EditMap,         "Maps")
-    ADD_ACT(SetRef,          "Maps")
-    ADD_ACT(LLRef,           "Maps")
-
-    ADD_ACT(SrtmRiv,         "SRTM")
-    ADD_ACT(SrtmArea,        "SRTM")
-    ADD_ACT(Pano,            "SRTM")
-    ADD_ACT(SrtmOpt,         "SRTM")
-
-    ADD_ACT(SaveImage,       "Misc")
-    ADD_ACT(ShowPt,          "Misc")
-    ADD_ACT(Nav,             "Misc")
-    AddSep("Misc");
-*/
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")
     ADD_ACT(PanelSave,        "PopupWPTs")
@@ -204,7 +122,6 @@ ActionManager::ActionManager (Mapview * mapview_):
     AddSep("PopupMAPs");
     ADD_ACT(PanelDelSel,      "PopupMAPs")
     ADD_ACT(PanelDelAll,      "PopupMAPs")
-
 /*
 
     // SRTM panel menu
@@ -213,8 +130,9 @@ ActionManager::ActionManager (Mapview * mapview_):
     /***************************************/
 
     /* Cleate menus */
-    actions->add(Gtk::Action::create("MenuFile", "_File"));
-    actions->add(Gtk::Action::create("MenuView", "_View"));
+    actions->add(Gtk::Action::create("MenuFile",  "_File"));
+    actions->add(Gtk::Action::create("MenuView",  "_View"));
+
 //    actions->add(Gtk::Action::create("MenuWaypoints", "_Waypoints"));
 //    actions->add(Gtk::Action::create("MenuTracks", "_Tracks"));
 //    actions->add(Gtk::Action::create("MenuMaps", "_Maps"));

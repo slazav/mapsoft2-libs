@@ -12,7 +12,6 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     panel_wpts(new PanelWpts),
     panel_trks(new PanelTrks),
     panel_maps(new PanelMaps),
-//    panel_vmap(this),
     amanager(this)
 {
 
@@ -34,58 +33,38 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     panel_maps->signal_data_changed().connect(
       sigc::bind(sigc::mem_fun(this, &Mapview::set_changed), true));
 
-    gobj.set_opt(opts);
-//    // Add gobjs from panels. Misc panel have two, below and above others.
-//    gobj.push_back(panel_misc.get_wpd());
-//    gobj.push_back((Workplane *) &panel_vmap);
-    gobj.add(10, panel_wpts);
-    gobj.add(20, panel_trks);
-    gobj.add(30, panel_maps);
-//    gobj.push_back(panel_misc.get_wph());
-//    gobj.connect_signals();
-
-    // in the viewer we don't want to fit waypoints inside tiles
-    opts->put("wpt_adj_brd", 0);
-
-
     /// events from viewer
     viewer.signal_busy().connect(
       sigc::mem_fun (&spanel, &PanelStatus::set_busy));
     viewer.signal_idle().connect(
       sigc::mem_fun (&spanel, &PanelStatus::set_idle));
 
+    // in the viewer we don't want to fit waypoints inside tiles
+    opts->put("wpt_adj_brd", 0);
+
+    gobj.set_opt(opts);
+    // Add gobjs from panels.
+    gobj.add(PAGE_WPTS, panel_wpts);
+    gobj.add(PAGE_TRKS, panel_trks);
+    gobj.add(PAGE_MAPS, panel_maps);
+
     /***************************************/
     /// Build panels (Notebook)
     panels = manage(new Gtk::Notebook());
     panels->set_name("panels");
-    /// scrollwindows with layerlists
-    Gtk::ScrolledWindow * scr_wpt = manage(new Gtk::ScrolledWindow);
-    Gtk::ScrolledWindow * scr_trk = manage(new Gtk::ScrolledWindow);
-    Gtk::ScrolledWindow * scr_map = manage(new Gtk::ScrolledWindow);
-    Gtk::ScrolledWindow * scr_vmp = manage(new Gtk::ScrolledWindow);
-
-    scr_wpt->add(*panel_wpts.get());
-    scr_trk->add(*panel_trks.get());
-    scr_map->add(*panel_maps.get());
-//    scr_vmp->add(panel_vmap);
-
-    panel_wpts->set_opt(o);
-    panel_trks->set_opt(o);
-    panel_maps->set_opt(o);
-
-    scr_wpt->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-    scr_trk->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-    scr_map->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-    scr_vmp->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-
-    /// append pages to the Notebook
-    panels->insert_page(*scr_wpt, "WPT", "WPT", PAGE_WPTS);
-    panels->append_page(*scr_trk, "TRK", "TRK", PAGE_TRKS);
-//    panels->append_page(*scr_vmp, "VMAP", "VMAP", PAGE_VMAP);
-    panels->append_page(*scr_map, "MAP", "MAP", PAGE_MAPS);
-
     panels->set_scrollable(false);
     panels->set_size_request(100,-1);
+
+    panels->append_page(*panel_wpts.get(), "WPT", "WPT");
+    panels->append_page(*panel_trks.get(), "TRK", "TRK");
+    panels->append_page(*panel_maps.get(), "MAP", "MAP");
+
+    // vmaps
+    if (opts->exists("mapdb")){
+      panel_mapdb.reset(new PanelMapDB(opts->get("mapdb","")));
+      gobj.add(PAGE_VMAP, panel_mapdb);
+      panels->append_page(*panel_mapdb.get(), "VMAP", "VMAP");
+    }
 
     /// Build main paned: Viewer + Panels
     Gtk::HPaned * paned = manage(new Gtk::HPaned);
@@ -263,15 +242,6 @@ Mapview::exit(bool force) {
   g_print ("Exiting...\n");
   hide();
 }
-
-
-/*
-void
-Mapview::add_vmap(const vmap::world & W, bool scroll) {
-  boost::shared_ptr<vmap::world> data(new vmap::world(W));
-  panel_vmap.add(data);
-}
-*/
 
 /**********************************************************/
 
