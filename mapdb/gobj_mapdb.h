@@ -29,11 +29,14 @@ in following way:
     + <feature> <options> ...
     + <feature> <options> ...
     ...
+    map <feature> <options> ...
+    + <feature> <options> ...
+    ...
 
 where possible features are:
 
     stroke <width> <color> -- Draw a point, a line or an area contour.
-    fill <color> -- Fill an area.
+    fill <color> -- Fill an area or the map.
     patt <image file> <scale> -- Fill an area with the pattern.
     img  <image file> <scale> -- Draw an image (point or area)
     smooth <distance> -- Use smoothed paths.
@@ -72,13 +75,15 @@ private:
     FEATURE_DASH,    // set dashed line
     FEATURE_CAP,     // set line cap
     FEATURE_JOIN,    // set line cap
+    FEATURE_OP,      // set drawing operator
   };
 
   enum StepAction {
     STEP_UNKNOWN,
     STEP_DRAW_POINT,
     STEP_DRAW_LINE,
-    STEP_DRAW_AREA
+    STEP_DRAW_AREA,
+    STEP_DRAW_MAP
   };
 
   /*******************************************/
@@ -155,7 +160,7 @@ private:
   struct FeatureCap : Feature {
     Cairo::LineCap cap;
     FeatureCap(const std::vector<std::string> & vs){
-      check_args(vs, {"<round|butt|square>"});
+      check_args(vs, {"round|butt|square"});
       if      (vs[0] == "round")  cap = Cairo::LINE_CAP_ROUND;
       else if (vs[0] == "butt")   cap = Cairo::LINE_CAP_BUTT;
       else if (vs[0] == "square") cap = Cairo::LINE_CAP_SQUARE;
@@ -170,6 +175,31 @@ private:
       if      (vs[0] == "miter")  join = Cairo::LINE_JOIN_MITER;
       else if (vs[0] == "round")  join = Cairo::LINE_JOIN_ROUND;
       else throw Err() << "wrong value: round or miter expected";
+    }
+  };
+
+  struct FeatureOp : Feature {
+    Cairo::Operator op;
+    FeatureOp(const std::vector<std::string> & vs){
+      check_args(vs, {"clear|source|over|in|out|atop|dest|"
+          "dest_over|dest_in|dest_out|dest_atop|xor|add|saturate"});
+      if      (vs[0] == "clear")     op = Cairo::OPERATOR_CLEAR;
+      else if (vs[0] == "source")    op = Cairo::OPERATOR_SOURCE;
+      else if (vs[0] == "over")      op = Cairo::OPERATOR_OVER;
+      else if (vs[0] == "in")        op = Cairo::OPERATOR_IN;
+      else if (vs[0] == "out")       op = Cairo::OPERATOR_OUT;
+      else if (vs[0] == "atop")      op = Cairo::OPERATOR_ATOP;
+      else if (vs[0] == "dest")      op = Cairo::OPERATOR_DEST;
+      else if (vs[0] == "dest_over") op = Cairo::OPERATOR_DEST_OVER;
+      else if (vs[0] == "dest_in")   op = Cairo::OPERATOR_DEST_IN;
+      else if (vs[0] == "dest_out")  op = Cairo::OPERATOR_DEST_OUT;
+      else if (vs[0] == "dest_atop") op = Cairo::OPERATOR_DEST_ATOP;
+      else if (vs[0] == "xor")       op = Cairo::OPERATOR_XOR;
+      else if (vs[0] == "add")       op = Cairo::OPERATOR_ADD;
+      else if (vs[0] == "saturate")  op = Cairo::OPERATOR_SATURATE;
+      else throw Err() << "Wrong drawing operator. Possible values: "
+       "clear, source, over, in, out, atop, dest, "
+       "dest_over, dest_in, dest_out, dest_atop, xor, add, saturate.";
     }
   };
 

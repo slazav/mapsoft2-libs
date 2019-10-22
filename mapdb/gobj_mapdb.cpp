@@ -67,6 +67,15 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       add(depth--, st);
     }
 
+    // draw on the whole map
+    else if (vs.size() > 2 && vs[0] == "map") {
+      st.reset(new DrawingStep(map.get()));
+      st->action = STEP_DRAW_MAP;
+      ftr = vs[1];
+      vs.erase(vs.begin(), vs.begin()+2);
+      add(depth--, st);
+    }
+
     // add feature to a previous step
     else if (st && vs[0] == "+" && vs.size() > 1) {
       ftr = vs[1];
@@ -94,8 +103,9 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // fill <color>
       if (ftr == "fill"){
-        if (st->action != STEP_DRAW_AREA )
-          throw Err() << "feature is only valid in area drawing steps";
+        if (st->action != STEP_DRAW_AREA &&
+            st->action != STEP_DRAW_MAP)
+          throw Err() << "feature is only valid in area and map drawing steps";
         st->features.emplace(FEATURE_FILL,
           std::shared_ptr<Feature>(new FeatureFill(vs)));
         continue;
@@ -161,6 +171,18 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
         continue;
       }
 
+      // operator <op>
+      if (ftr == "operator"){
+        if (st->action != STEP_DRAW_AREA &&
+            st->action != STEP_DRAW_LINE &&
+            st->action != STEP_DRAW_POINT &&
+            st->action != STEP_DRAW_MAP)
+          throw Err() << "feature is only valid in line, area, point, map drawing steps";
+        st->features.emplace(FEATURE_OP,
+          std::shared_ptr<Feature>(new FeatureOp(vs)));
+        continue;
+      }
+
       throw Err() << "unknown feature";
     }
     catch (Err e) {
@@ -223,6 +245,12 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     }
   }
 
+  // Operator feature
+  if (features.count(FEATURE_OP)){
+    auto data = (FeatureOp *)features.find(FEATURE_OP)->second.get();
+    cr->set_operator(data->op);
+  }
+
   // Pattern feature
   if (features.count(FEATURE_PATT)){
     auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
@@ -234,9 +262,11 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   if (features.count(FEATURE_FILL)){
     auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
     cr->set_color_a(data->col);
-    cr->fill_preserve();
+    if (action == STEP_DRAW_MAP)
+      cr->paint();
+    else
+      cr->fill_preserve();
   }
-
 
   // Stroke feature
   if (features.count(FEATURE_STROKE)){
