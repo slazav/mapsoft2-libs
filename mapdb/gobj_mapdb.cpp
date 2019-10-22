@@ -17,7 +17,7 @@ ms2opt_add_drawmapdb(GetOptSet & opts){
 }
 /**********************************************************/
 
-GObjMapDB::GObjMapDB(const std::string & mapdir){
+GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
   map = std::shared_ptr<MapDB>(new MapDB(mapdir, false));
 
@@ -31,6 +31,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir){
   int line_num[2] = {0,0};
   int depth = 0;
   std::shared_ptr<DrawingStep> st(NULL);
+  std::string ftr; // current feature
+
   while (1){
     vector<string> vs = read_words(ff, line_num, true);
     if (vs.size()==0) break;
@@ -39,8 +41,9 @@ GObjMapDB::GObjMapDB(const std::string & mapdir){
     if (vs.size() > 2 && vs[0] == "point") {
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_POINT;
-      st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]);
-      vs.erase(vs.begin(), vs.begin()+2);
+      st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POINT<<16);
+      ftr = vs[2];
+      vs.erase(vs.begin(), vs.begin()+3);
       add(depth--, st);
     }
 
@@ -49,7 +52,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir){
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_LINE;
       st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_LINE<<16);
-      vs.erase(vs.begin(), vs.begin()+2);
+      ftr = vs[2];
+      vs.erase(vs.begin(), vs.begin()+3);
       add(depth--, st);
     }
 
@@ -58,89 +62,114 @@ GObjMapDB::GObjMapDB(const std::string & mapdir){
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_AREA;
       st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POLYGON<<16);
-      vs.erase(vs.begin(), vs.begin()+2);
+      ftr = vs[2];
+      vs.erase(vs.begin(), vs.begin()+3);
       add(depth--, st);
     }
 
     // add feature to a previous step
-    else if (st && vs[0] == "+") {
-      vs.erase(vs.begin(),vs.begin()+1);
+    else if (st && vs[0] == "+" && vs.size() > 1) {
+      ftr = vs[1];
+      vs.erase(vs.begin(),vs.begin()+2);
     }
 
     else {
       throw Err() << "Can't parse configuration file at line "
                   << line_num[0];
     }
-    add_feature(*st.get(), vs, line_num[0]);
+
+    // Add feature
+    try{
+
+      // stroke <color> <thickness>
+      if (ftr == "stroke"){
+        if (st->action != STEP_DRAW_POINT &&
+            st->action != STEP_DRAW_LINE &&
+            st->action != STEP_DRAW_AREA )
+          throw Err() << "feature is only valid in point, line, and area drawing steps";
+        st->features.emplace(FEATURE_STROKE,
+          std::shared_ptr<Feature>(new FeatureStroke(vs)));
+        continue;
+      }
+
+      // fill <color>
+      if (ftr == "fill"){
+        if (st->action != STEP_DRAW_AREA )
+          throw Err() << "feature is only valid in area drawing steps";
+        st->features.emplace(FEATURE_FILL,
+          std::shared_ptr<Feature>(new FeatureFill(vs)));
+        continue;
+      }
+
+      // patt <file> <scale>
+      if (ftr == "patt"){
+        if (st->action != STEP_DRAW_AREA )
+          throw Err() << "feature is only valid in area drawing steps";
+        st->features.emplace(FEATURE_PATT,
+          std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
+        continue;
+      }
+
+      // img <file> <scale>
+      if (ftr == "img"){
+        if (st->action != STEP_DRAW_POINT &&
+            st->action != STEP_DRAW_AREA )
+          throw Err() << "feature is only valid in point and area drawing steps";
+        st->features.emplace(FEATURE_IMG,
+          std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
+        continue;
+      }
+
+      // smooth <distance>
+      if (ftr == "smooth"){
+        if (st->action != STEP_DRAW_AREA &&
+            st->action != STEP_DRAW_LINE)
+          throw Err() << "feature is only valid in line and area drawing steps";
+        st->features.emplace(FEATURE_SMOOTH,
+          std::shared_ptr<Feature>(new FeatureSmooth(vs)));
+        continue;
+      }
+
+      // dash <length1> <length2> ...
+      if (ftr == "dash"){
+        if (st->action != STEP_DRAW_AREA &&
+            st->action != STEP_DRAW_LINE)
+          throw Err() << "feature is only valid in line and area drawing steps";
+        st->features.emplace(FEATURE_DASH,
+          std::shared_ptr<Feature>(new FeatureDash(vs)));
+        continue;
+      }
+
+      // cap round|butt|square
+      if (ftr == "cap"){
+        if (st->action != STEP_DRAW_AREA &&
+            st->action != STEP_DRAW_LINE &&
+            st->action != STEP_DRAW_POINT)
+          throw Err() << "feature is only valid in point, line, and area drawing steps";
+        st->features.emplace(FEATURE_CAP,
+          std::shared_ptr<Feature>(new FeatureCap(vs)));
+        continue;
+      }
+
+      // join round|miter
+      if (ftr == "join"){
+        if (st->action != STEP_DRAW_AREA &&
+            st->action != STEP_DRAW_LINE)
+          throw Err() << "feature is only valid in line and area drawing steps";
+        st->features.emplace(FEATURE_JOIN,
+          std::shared_ptr<Feature>(new FeatureJoin(vs)));
+        continue;
+      }
+
+      throw Err() << "unknown feature";
+    }
+    catch (Err e) {
+      throw Err() << "GObjMapDB: configuration file, line " << line_num[0] << ": "
+                  << "feature " << (ftr==""? "": "\"" + ftr + "\": ")
+                  << e.str();
+    }
 
   }
-}
-
-void
-GObjMapDB::add_feature(DrawingStep & st, const std::vector<std::string> & vs, int ln){
-  if (vs.size()==0) throw Err() << "GObjMapDB::add_feature: empty data";
-
-  // stroke <color> <thickness>
-  if (vs[0] == "stroke"){
-    if (st.action != STEP_DRAW_POINT &&
-        st.action != STEP_DRAW_LINE &&
-        st.action != STEP_DRAW_AREA )
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << "feature is only valud in "
-                  << "point, line, and area drawing steps";
-    if (vs.size()!=3)
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature should have 2 arguments (color, line width)";
-
-    st.put_feature<uint32_t, double>(FEATURE_STROKE, vs[1], vs[2]);
-    return;
-  }
-
-  // fill <color>
-  if (vs[0] == "fill"){
-    if (st.action != STEP_DRAW_AREA )
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature is only valud in "
-                  << "area drawing steps";
-    if (vs.size()!=2)
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature should have 1 argument (color)";
-
-    st.put_feature<uint32_t>(FEATURE_FILL, vs[1]);
-    return;
-  }
-
-  // smooth <distance>
-  if (vs[0] == "smooth"){
-    if (st.action != STEP_DRAW_AREA &&
-        st.action != STEP_DRAW_LINE)
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature is only valud in "
-                  << "line and area drawing steps";
-    if (vs.size()!=2)
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature should have 1 argument (distance)";
-
-    st.put_feature<double>(FEATURE_SMOOTH, vs[1]);
-    return;
-  }
-
-  // dash <v1> <v2> ...
-  if (vs[0] == "dash"){
-    if (st.action != STEP_DRAW_LINE &&
-        st.action != STEP_DRAW_AREA)
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature is only valud in "
-                  << "line and area drawing steps";
-    if (vs.size()<1)
-      throw Err() << "GObjMapDB: configuration line " << ln
-                  << ": " << vs[0] << " feature should at least 1 argument";
-    // ....
-
-    return;
-  }
-
-  throw Err() << "GObjMapDB: can't parse feature at line " << ln << ": " << vs[0];
 }
 
 /**********************************************************/
@@ -149,46 +178,128 @@ int
 GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   std::set<uint32_t> ids;
-  dRect wgs_range = cnv? cnv->frw_acc(range) : range;
 
-  // Select objects in the drawing range.
-  // Make drawing path
+  // calculate range for object selecting
+  dRect sel_range(range);
+  {
+    // expand by line width
+    if (features.count(FEATURE_STROKE)){
+      auto ftr = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
+      sel_range.expand(ftr->th);
+    }
+    // expand by image size
+    if (features.count(FEATURE_IMG)){
+      auto ftr = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+      sel_range.expand(ftr->img.width(), ftr->img.height());
+    }
+  }
+  // convert to wgs84
+  if (cnv) sel_range = cnv->frw_acc(sel_range);
+
+  // Select objects in the range.
   if (action == STEP_DRAW_POINT ||
       action == STEP_DRAW_LINE ||
       action == STEP_DRAW_AREA){
 
-    ids = map->find(etype, wgs_range);
+    ids = map->find(etype, sel_range);
     if (ids.size()==0) return GObj::FILL_NONE;
-    cr->begin_new_path();
+  }
 
+  // Make drawing path
+  cr->begin_new_path();
+  if (features.count(FEATURE_STROKE) ||
+      features.count(FEATURE_FILL) ||
+      features.count(FEATURE_PATT)){
     double sm = 0;
     if (features.count(FEATURE_SMOOTH)){
-      sm = *(double*)features.find(FEATURE_SMOOTH)->second.data();
+      auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
+      sm = ftr->dist;
     }
-
     for (auto const i: ids){
       auto O = map->get(i);
-      if (!intersect(O.bbox(), wgs_range)) continue;
+      if (!intersect(O.bbox(), sel_range)) continue;
       cr->mkpath_smline(cnv? cnv->bck_acc(O) : O,
              action == STEP_DRAW_AREA, sm);
     }
   }
 
-  // Stroke feature
-  if (features.count(FEATURE_STROKE)){
-    struct fdata_t {uint32_t col; double th;} * fdata =
-      (fdata_t*)features.find(FEATURE_STROKE)->second.data();
-    cr->set_color_a(fdata->col);
-    cr->set_line_width(fdata->th);
-    cr->stroke_preserve();
+  // Pattern feature
+  if (features.count(FEATURE_PATT)){
+    auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+    cr->set_source(data->patt);
+    cr->fill();
   }
 
   // Fill feature
   if (features.count(FEATURE_FILL)){
-    struct fdata_t {uint32_t col;} * fdata =
-      (fdata_t*)features.find(FEATURE_FILL)->second.data();
-    cr->set_color_a(fdata->col);
+    auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
+    cr->set_color_a(data->col);
     cr->fill_preserve();
+  }
+
+
+  // Stroke feature
+  if (features.count(FEATURE_STROKE)){
+    // Setup dashed line
+    if (features.count(FEATURE_DASH)){
+      auto data = (FeatureDash *)features.find(FEATURE_DASH)->second.get();
+      cr->set_dash(data->vd, 0);
+    }
+
+    // Setup line cap
+    if (features.count(FEATURE_CAP)){
+      auto data = (FeatureCap *)features.find(FEATURE_CAP)->second.get();
+      cr->set_line_cap(data->cap);
+    }
+    else
+      cr->set_line_cap(Cairo::LINE_CAP_ROUND);
+
+    // Setup line join
+    if (features.count(FEATURE_JOIN)){
+      auto data = (FeatureJoin *)features.find(FEATURE_JOIN)->second.get();
+      cr->set_line_join(data->join);
+    }
+    else
+      cr->set_line_join(Cairo::LINE_JOIN_ROUND);
+
+    auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
+    cr->set_color_a(data->col);
+    cr->set_line_width(data->th);
+    cr->stroke_preserve();
+  }
+
+  // Image feature (points)
+  if (features.count(FEATURE_IMG) && action == STEP_DRAW_POINT){
+    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (!intersect(O.bbox(), sel_range)) continue;
+      for (auto const & l:O){
+        for (dPoint p:l){
+          if (cnv) cnv->bck(p);
+          cr->translate(p.x, p.y);
+          cr->set_source(data->patt);
+          cr->paint();
+        }
+      }
+    }
+  }
+
+  // Image feature (areas)
+  if (features.count(FEATURE_IMG) && action == STEP_DRAW_AREA){
+    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (!intersect(O.bbox(), sel_range)) continue;
+      // each segment
+      for (auto const & l:O){
+        dPoint p = l.bbox().cnt();
+        if (cnv) cnv->bck(p);
+        cr->translate(p.x, p.y);
+        cr->set_source(data->patt);
+        cr->paint();
+      }
+    }
   }
 
   return GObj::FILL_PART;
