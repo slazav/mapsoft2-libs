@@ -18,6 +18,11 @@
 // the ImageSurface is used.
 Cairo::RefPtr<Cairo::ImageSurface> image_to_surface(const Image & img);
 
+// Convert image to a Cairo::SurfacePattern.
+// Data is kept in the Image, it should be alive while
+// the ImageSurface is used.
+Cairo::RefPtr<Cairo::SurfacePattern> image_to_pattern(const Image & img, double sc);
+
 //////////////////////////////////////////////////////////////////
 /// This class contains functions
 /// we want to add to the Cairo::Context
@@ -160,9 +165,6 @@ struct CairoExtra : public Cairo::Context {
 
 
   void render_border(const iRect & range, const dLine & brd, const int bgcolor);
-
-  /// convert Image to a cairo pattern
-  Cairo::RefPtr<Cairo::SurfacePattern> img2patt(const Image & I, double sc=1);
 
 };
 

@@ -8,12 +8,30 @@ image_to_surface(const Image & img) {
   Cairo::Format format = Cairo::FORMAT_ARGB32;
   // check if surface raw data compatable with Image
   if (img.type() != IMAGE_32ARGB)
-    throw Err() << "SimpleViewer: only 32-bpp images are supported";
+    throw Err() << "Cairo::image_to_surface: only 32-bpp images are supported";
   if (Cairo::ImageSurface::format_stride_for_width(format, img.width()) != img.width()*4)
-    throw Err() << "SimpleViewer: non-compatable data";
+    throw Err() << "Cairo::image_to_surface: non-compatable data";
   return Cairo::ImageSurface::create(img.data(),
       format, img.width(), img.height(), img.width()*4);
 }
+
+Cairo::RefPtr<Cairo::SurfacePattern>
+image_to_pattern(const Image & img, double sc){
+  try{
+    auto surf = image_to_surface(img);
+    Cairo::RefPtr<Cairo::SurfacePattern> patt =
+      Cairo::SurfacePattern::create(surf);
+    Cairo::Matrix M=Cairo::identity_matrix();
+    M.translate(surf->get_width()/2.0, surf->get_height()/2.0);
+    M.scale(sc,sc);
+    patt->set_matrix(M);
+    return patt;
+  }
+  catch (Cairo::logic_error err){
+    throw Err() << err.what();
+  }
+}
+
 
 void
 CairoExtra::mkpath_smline(const dMultiLine & o, bool close, double curve_l){
@@ -181,25 +199,7 @@ CairoExtra::render_border(const iRect & range, const dLine & brd, const int bgco
   fill();
 }
 
-Cairo::RefPtr<Cairo::SurfacePattern>
-CairoExtra::img2patt(const Image & img, double sc){
-  try{
-    auto surf = image_to_surface(img);
-    Cairo::RefPtr<Cairo::SurfacePattern> patt =
-      Cairo::SurfacePattern::create(surf);
-    Cairo::Matrix M=Cairo::identity_matrix();
-    M.translate(surf->get_width()/2.0, surf->get_height()/2.0);
-    M.scale(sc,sc);
-    patt->set_matrix(M);
-    return patt;
-  }
-  catch (Cairo::logic_error err){
-    throw Err() << err.what();
-  }
-}
-
 /// Cairo Wrapper functions
-
 void
 CairoWrapper::set_surface_img(int w_, int h_){
   w = w_; h=h_;
