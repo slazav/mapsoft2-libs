@@ -2,26 +2,55 @@
 #include <algorithm>
 #include <jansson.h>
 
+/**********************************************************/
+
 template<>
 std::string str_to_type<std::string>(const std::string & s){ return s; }
 
-template<>
-int str_to_type<int>(const std::string & s){
+// parse dec/hex numbers (internal, only for unsigned types)
+template<typename T>
+T str_to_type_hex(const std::string & s){
   std::istringstream ss(s);
-  int val; ss >> val;
+  T val; ss >> val;
   if (!ss.eof()){
     char c; ss>>c;
     if (val!=0 || c!='x')
       throw Err() << "can't parse value: " << s;
-    unsigned int uval;
-    ss >> std::hex >> uval;
-    val = (int)uval;
+    ss >> std::hex >> val;
   }
   if (ss.fail() || !ss.eof())
     throw Err() << "can't parse value: " << s;
   return val;
 }
 
+// parse dec/hex numbers
+template<>
+int16_t str_to_type<int16_t>(const std::string & s){
+  return (int16_t)str_to_type_hex<uint16_t>(s);}
+
+template<>
+uint16_t str_to_type<uint16_t>(const std::string & s){
+  return str_to_type_hex<uint16_t>(s);}
+
+template<>
+int32_t str_to_type<int32_t>(const std::string & s){
+  return (int32_t)str_to_type_hex<uint32_t>(s);}
+
+template<>
+uint32_t str_to_type<uint32_t>(const std::string & s){
+  return str_to_type_hex<uint32_t>(s);}
+
+template<>
+uint64_t str_to_type<uint64_t>(const std::string & s){
+  return str_to_type_hex<uint64_t>(s);}
+
+template<>
+int64_t str_to_type<int64_t>(const std::string & s){
+  return (int64_t)str_to_type_hex<uint64_t>(s);}
+
+
+
+/**********************************************************/
 
 template<>
 std::string type_to_str<std::string>(const std::string & t){ return t; }

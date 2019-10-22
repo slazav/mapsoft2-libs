@@ -121,7 +121,7 @@ class Opt : public std::map<std::string,std::string>{
 
   /// Returns value for a given key.
   /// If option does not exists or cast fails then default value is returned.
-  template<typename T>
+  template<typename T = std::string>
   T get (const std::string & key, const T & def = T()) const {
     std::map<std::string, std::string>::const_iterator it = find(key);
     if (it == end()) return def;

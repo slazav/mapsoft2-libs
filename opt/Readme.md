@@ -50,6 +50,14 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 -----------------
 ## Changelog:
 
+2019.10.22 V.Zavjalov 1.7:
+- Convert hex numbers to different integer types (u?int{16,32,64}_t).
+  If number is too large for the type an error is thrown.
+  Example: opt.get<uint16_t>("name") will read "0xFFFF"
+  but not "0xFFFFF".
+- Set default template parameter of Opt::get to std::string
+  (now one can simply use opt.get("name");)
+
 2019.09.25 V.Zavjalov 1.6:
 - allow reading large hex numbers (0xFFFFFFFF) as signed integer
 
