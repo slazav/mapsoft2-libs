@@ -47,6 +47,7 @@ void verify_neighbors(
 }
 
 int main( /* int argc, char **argv */ ) {
+  try{
 
   verify_area("c216ne", 45.3680419921875, -121.70654296875, 45.37353515625, -121.695556640625);
   verify_area("C216Ne", 45.3680419921875, -121.70654296875, 45.37353515625, -121.695556640625);
@@ -82,6 +83,9 @@ int main( /* int argc, char **argv */ ) {
 
   verify_area(GEOHASH_encode(dRect(37,55,0.01,0.01), 10),
      dRect(36.9140625,54.84375,0.3515625,0.17578125));
+
+  verify_area(GEOHASH_encode(dRect(37,55,0,0), 10), // zero-size rectangle
+     dRect(36.9999897,54.9999994,1.07288361e-05,5.36441803e-06));
 
   // "bad" rectangles with empty hash
   verify_area(GEOHASH_encode(dRect(-0.001,-0.001,0.002,0.002), 10),
@@ -128,6 +132,23 @@ int main( /* int argc, char **argv */ ) {
     assert_eq(v.count("s0000000"), 1); // [0,0,0.000343322754,0.000171661377]
   }
 
+  { // zero-size rectangle
+    dRect r(0,0,0,0);
+    std::set<std::string> v = GEOHASH_encode4(r, 10);
+    // for (auto i:v) std::cerr << i << " " << GEOHASH_decode(i) << "\n";
+    assert_eq(v.size(), 1);
+    assert_eq(v.count("s000000000"), 1); // [0,0,1.07288361e-05,5.36441803e-06]
+  }
+
+  { // zero-size rectangle
+    dRect r(1,1,0,0);
+    std::set<std::string> v = GEOHASH_encode4(r, 10);
+    // for (auto i:v) std::cerr << i << " " << GEOHASH_decode(i) << "\n";
+    assert_eq(v.size(), 1);
+    assert_eq(v.count("s00twy01mt"), 1); // [0.999991894,0.999997258,1.07288361e-05,5.36441803e-06]
+  }
+
+
   { // "good" rectange
     dRect r(0.0001,0.0001,0.000002,0.000002);
     std::set<std::string> v = GEOHASH_encode4(r, 10);
@@ -164,5 +185,10 @@ int main( /* int argc, char **argv */ ) {
            dRect());
   }
 
+  }
+  catch (Err e){
+    std::cerr << "Error: " << e.str() << "\n";
+    return 1;
+  }
   return 0;
 }
