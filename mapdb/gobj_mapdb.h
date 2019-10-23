@@ -111,7 +111,7 @@ public:
         }
         throw Err()
           << args.size() << " argument" << (args.size()>1 ? "s":"")
-          << "expected: " << list;
+          << " expected: " << list;
       }
     }
   };
