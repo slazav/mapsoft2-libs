@@ -50,7 +50,7 @@ std::vector<std::string> read_words(
 
     // append normal characters
     if (first && line_num) {line_num[0] = line_num[1]+1; first=false;}
-    str += lc ? tolower(c):c;
+    str += (lc && c>='A' && c<='Z') ? tolower(c):c;
   }
 
   if (quote1 || quote2){

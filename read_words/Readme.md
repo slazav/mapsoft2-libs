@@ -10,13 +10,19 @@ Read one line from the stream and extract words, separated by spaces.
  - If line_num parameter is not NULL, it should be initialized
    by 0,0 before the first call. Then starting line number of the first
    word and number of the last line read is returned there.
- - If lc parameter is true then all characters are converted to lower case.
+ - If lc parameter is true then all Latin characters are converted
+   to lower case.
 
 `std::vector<std::string> read_words(
    std::istream & ss, int line_num[] = NULL, const bool lc=false);`
 
 ------------
 ## Changelog:
+2019.10.23 V.Zavjalov 1.2:
+- lc parameter affects only Latin characters.
+  Reasons: tolower() anyway did not work with UTF characters,
+  proper wide character reading is needed; together with Gtk::Main
+  it produce unexpected conversions (Cyrrilic "г" to Cyrillic "У").
 
 2019.06.01 V.Zavjalov 1.1:
 - Do not stop reading if newlines is inside quotes.

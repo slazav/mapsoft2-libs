@@ -53,6 +53,18 @@ c]
 EOF
 )"
 
+assert "$(echo abcdez | "$prog")" "1: [abcdez]"
+assert "$(echo ABCDEZ | "$prog")" "1: [ABCDEZ]"
+
+assert "$(echo abcdez | "$prog" -l)" "1: [abcdez]"
+assert "$(echo ABCDEZ | "$prog" -l)" "1: [abcdez]"
+
+assert "$(echo абвгдеёжзийклмнопрстуфхцчшщъыьэюя | "$prog")" "1: [абвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
+assert "$(echo АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ | "$prog")" "1: [АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ]"
+
+assert "$(echo абвгдеёжзийклмнопрстуфхцчшщъыьэюя | "$prog" -l)" "1: [абвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
+assert "$(echo АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ | "$prog" -l)" "1: [АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ]"
+
 assert "$(echo -e "#a\n\n\"b\n\nc" | "$prog" 2>&1)" \
 "Error: Unclosed quote in line 3"
 
