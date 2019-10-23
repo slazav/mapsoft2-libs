@@ -94,6 +94,7 @@ public:
     FEATURE_OP,      // set drawing operator
     FEATURE_GROUP,   // set drawing step group
     FEATURE_NAME,    // set drawing step name
+    FEATURE_MOVETO,  // move point to a nearest object
  };
 
 
@@ -230,6 +231,22 @@ public:
     }
   };
 
+  // for both move_to and rotate_to features
+  struct FeatureMoveTo : Feature {
+    uint32_t target; // target object etype
+    bool rotate;
+    double dist;
+    FeatureMoveTo(const std::vector<std::string> & vs, const bool rotate):
+        rotate(rotate){
+      check_args(vs, {"area|line","type", "dist"});
+      target = str_to_type<uint32_t>(vs[1]);
+      dist   = str_to_type<double>(vs[2]);
+      if      (vs[0] == "area")      target |= MAPDB_POLYGON << 16;
+      else if (vs[0] == "line")      target |= MAPDB_LINE << 16;
+      else throw Err() << "Wrong parameter: line or area expected";
+    }
+  };
+
   /*******************************************/
   // drawing step class
   struct DrawingStep : public GObj {
@@ -243,6 +260,8 @@ public:
     DrawingStep(MapDB * map): map(map), action(STEP_UNKNOWN), etype(0) {}
     std::string get_name() const {return step_name;}
     std::string get_group() const {return group_name;}
+
+    void convert_coords(MapDBObj & O);
     int draw(const CairoWrapper & cr, const dRect & draw_range) override;
   };
   /*******************************************/

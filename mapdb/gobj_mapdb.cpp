@@ -207,6 +207,25 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
         continue;
       }
 
+      // move_to area|line <type>
+      if (ftr == "move_to"){
+        if (st->action != STEP_DRAW_POINT)
+          throw Err() << "feature is only valid in point drawing steps";
+        st->features.emplace(FEATURE_MOVETO,
+          std::shared_ptr<Feature>(new FeatureMoveTo(vs, false)));
+        continue;
+      }
+
+      // rotate_to area|line <type>
+      if (ftr == "rotate_to"){
+        if (st->action != STEP_DRAW_POINT)
+          throw Err() << "feature is only valid in point drawing steps";
+        st->features.emplace(FEATURE_MOVETO,
+          std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
+        continue;
+      }
+
+
       throw Err() << "unknown feature";
     }
     catch (Err e) {
@@ -219,6 +238,39 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 }
 
 /**********************************************************/
+
+#include "geom_tools/line_utils.h"
+// change object coordinates according to features
+void
+GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
+
+  if (cnv) cnv->bck(O);
+
+  if (features.count(FEATURE_MOVETO)){
+    auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
+    for (auto & l:O){ // segments
+      for (auto & p:l){ // points
+        dRect r(p,p);
+        r.expand(ftr->dist);
+        if (cnv) r = cnv->frw_acc(r);
+
+        dMultiLine lines;
+        auto ids = map->find(ftr->target, r);
+        for (int i:ids){
+          auto O1 = map->get(i);
+          if (cnv) cnv->bck(O1);
+          for (auto const & l:O1)
+            lines.push_back(l);
+        }
+
+        dPoint t(1,0);
+        double dd = nearest_pt(lines, t, p, ftr->dist);
+        if (ftr->rotate) O.angle = -atan2(t.y, t.x);
+      }
+    }
+  }
+
+}
 
 int
 GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
@@ -237,6 +289,11 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (features.count(FEATURE_IMG)){
       auto ftr = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
       sel_range.expand(ftr->img.width(), ftr->img.height());
+    }
+    // expand by move_to distance
+    if (features.count(FEATURE_MOVETO)){
+      auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
+      sel_range.expand(ftr->dist);
     }
   }
   // convert to wgs84
@@ -264,8 +321,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
-      cr->mkpath_smline(cnv? cnv->bck_acc(O) : O,
-             action == STEP_DRAW_AREA, sm);
+      convert_coords(O);
+      cr->mkpath_smline(O, action == STEP_DRAW_AREA, sm);
     }
   }
 
@@ -328,13 +385,16 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
+      O.angle *= M_PI/180;
+      convert_coords(O);
       for (auto const & l:O){
         for (dPoint p:l){
-          if (cnv) cnv->bck(p);
+          cr->save();
           cr->translate(p.x, p.y);
+          cr->rotate(-O.angle);
           cr->set_source(data->patt);
           cr->paint();
-          cr->translate(-p.x, -p.y);
+          cr->restore();
         }
       }
     }
@@ -346,10 +406,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
+      convert_coords(O);
       // each segment
       for (auto const & l:O){
         dPoint p = l.bbox().cnt();
-        if (cnv) cnv->bck(p);
         cr->translate(p.x, p.y);
         cr->set_source(data->patt);
         cr->paint();
