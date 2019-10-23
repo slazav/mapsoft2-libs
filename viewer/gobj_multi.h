@@ -66,6 +66,14 @@ private:
 
 public:
 
+  // get list of all objects
+  std::vector<std::shared_ptr<GObj> > get_data() const {
+    std::vector<std::shared_ptr<GObj> > ret;
+    for (auto const & d:data)
+      ret.push_back(d.second.obj);
+    return ret;
+  }
+
   // get object depth (-1 if there is no such object)
   int get_depth(std::shared_ptr<GObj> o) const{
     auto it = find(o);
