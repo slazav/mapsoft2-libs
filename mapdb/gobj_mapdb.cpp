@@ -42,6 +42,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_POINT;
       st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POINT<<16);
+      st->step_name = vs[0] + " " + vs[1];
       ftr = vs[2];
       vs.erase(vs.begin(), vs.begin()+3);
       add(depth--, st);
@@ -52,6 +53,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_LINE;
       st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_LINE<<16);
+      st->step_name = vs[0] + " " + vs[1];
       ftr = vs[2];
       vs.erase(vs.begin(), vs.begin()+3);
       add(depth--, st);
@@ -62,6 +64,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_AREA;
       st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POLYGON<<16);
+      st->step_name = vs[0] + " " + vs[1];
       ftr = vs[2];
       vs.erase(vs.begin(), vs.begin()+3);
       add(depth--, st);
@@ -71,6 +74,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
     else if (vs.size() > 2 && vs[0] == "map") {
       st.reset(new DrawingStep(map.get()));
       st->action = STEP_DRAW_MAP;
+      st->step_name = vs[0];
       ftr = vs[1];
       vs.erase(vs.begin(), vs.begin()+2);
       add(depth--, st);
@@ -87,7 +91,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
                   << line_num[0];
     }
 
-    // Add feature
+    // Parse features
     try{
 
       // stroke <color> <thickness>
@@ -183,6 +187,26 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
         continue;
       }
 
+      // group <name>
+      if (ftr == "group"){
+        FeatureGroup f(vs); // parse parameters, but do not save feature data
+        st->group_name = f.name;
+
+        // if the group is not in the group list, add it there
+        bool known_group = false;
+        for (auto const & gr:groups)
+          if (gr == f.name){ known_group = true; break;}
+        if (!known_group) groups.push_back(f.name);
+        continue;
+      }
+
+      // name <name>
+      if (ftr == "name"){
+        FeatureName f(vs); // parse parameters, but do not save feature data
+        st->step_name = f.name;
+        continue;
+      }
+
       throw Err() << "unknown feature";
     }
     catch (Err e) {
@@ -190,8 +214,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
                   << "feature " << (ftr==""? "": "\"" + ftr + "\": ")
                   << e.str();
     }
+  } // end of configuration file
 
-  }
 }
 
 /**********************************************************/

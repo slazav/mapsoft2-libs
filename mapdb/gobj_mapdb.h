@@ -43,9 +43,13 @@ where possible features are:
     dash <len1> ...  -- Setup dashed line. Valid for lines and areas together with stroke feature.
     cap  round|butt|square -- Set line cup (default round). Use with stroke feature.
     join round|miter       -- Set line join (default round). Use with stroke feature.
+    operator <op>          -- Set drawing operator (clear|source|over|in|out|atop|dest|
+                              dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
+    group <name>           -- set group name for a drawing step
+    name  <name>           -- set name for a drawing step
 
-If `stroke`, `fill` and `patt` features exists together then the drawing
-order is following: pattern, then fill, then stroke.
+If `stroke`, `fill` and `patt` `img` features exists together then the drawing
+order is following: pattern, then fill, then stroke, then img.
 
 */
 
@@ -63,9 +67,21 @@ private:
 
   std::string mapdir;
   std::shared_ptr<MapDB> map;
+  std::vector<std::string> groups; // ordered list of all groups
 
-  CairoWrapper cr;
+public:
 
+  /*******************************************/
+  // known drawing step
+  enum StepAction {
+    STEP_UNKNOWN,
+    STEP_DRAW_POINT,
+    STEP_DRAW_LINE,
+    STEP_DRAW_AREA,
+    STEP_DRAW_MAP
+  };
+
+  // known drawing features for each step
   enum StepFeature {
     FEATURE_STROKE, // draw the contour with some thickness and color
     FEATURE_FILL,    // fill the area with some color
@@ -76,15 +92,10 @@ private:
     FEATURE_CAP,     // set line cap
     FEATURE_JOIN,    // set line cap
     FEATURE_OP,      // set drawing operator
-  };
+    FEATURE_GROUP,   // set drawing step group
+    FEATURE_NAME,    // set drawing step name
+ };
 
-  enum StepAction {
-    STEP_UNKNOWN,
-    STEP_DRAW_POINT,
-    STEP_DRAW_LINE,
-    STEP_DRAW_AREA,
-    STEP_DRAW_MAP
-  };
 
   /*******************************************/
   // base class for drawing features
@@ -203,19 +214,51 @@ private:
     }
   };
 
+  struct FeatureGroup : Feature {
+    std::string name;
+    FeatureGroup(const std::vector<std::string> & vs){
+      check_args(vs, {"name"});
+      name = vs[0];
+    }
+  };
+
+  struct FeatureName : Feature {
+    std::string name;
+    FeatureName(const std::vector<std::string> & vs){
+      check_args(vs, {"name"});
+      name = vs[0];
+    }
+  };
+
   /*******************************************/
+  // drawing step class
   struct DrawingStep : public GObj {
-    StepAction action; // what to do
+    StepAction action;  // what to do
     uint32_t etype;     // object extended type (type + (cl<<16) )
+    std::string step_name;  // step name
+    std::string group_name; // group name
     std::map<StepFeature, std::shared_ptr<Feature> > features;
     MapDB * map;
-    DrawingStep(MapDB * map): map(map), action(STEP_UNKNOWN), etype(0) {}
 
+    DrawingStep(MapDB * map): map(map), action(STEP_UNKNOWN), etype(0) {}
+    std::string get_name() const {return step_name;}
+    std::string get_group() const {return group_name;}
     int draw(const CairoWrapper & cr, const dRect & draw_range) override;
   };
   /*******************************************/
 
-public:
+
+  /*******************************************/
+  std::vector<std::string> get_groups() const {return groups;}
+
+  // Note that group can be only partially visible, we can only
+  // set the group visibility, but not read it.
+  void set_group_visibility(const std::string & name, const bool vis){
+    for (auto const & st:get_data()){
+      if (name != ((DrawingStep*)st.get())->get_group()) continue;
+      set_visibility(st, vis);
+    }
+  }
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir);
