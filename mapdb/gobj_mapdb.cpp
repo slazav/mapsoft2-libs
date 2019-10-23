@@ -34,7 +34,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
   std::string ftr; // current feature
 
   while (1){
-    vector<string> vs = read_words(ff, line_num, true);
+    vector<string> vs = read_words(ff, line_num, false);
     if (vs.size()==0) break;
 
     // draw a point object
