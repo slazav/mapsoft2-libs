@@ -33,6 +33,7 @@ in following way:
     + <feature> <options> ...
     ...
 
+
 where possible features are:
 
     stroke <width> <color> -- Draw a point, a line or an area contour.
@@ -51,6 +52,12 @@ where possible features are:
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.
 
+other commands in the configuration file
+
+    set_ref file <filename> -- set map reference from a file
+    set_ref nom <name> <dpi> -- set map reference as a Soviet nomenclature name
+
+
 */
 
 /********************************************************************/
@@ -68,6 +75,7 @@ private:
   std::string mapdir;
   std::shared_ptr<MapDB> map;
   std::vector<std::string> groups; // ordered list of all groups
+  GeoMap ref; // default map reference
 
 public:
 
@@ -278,6 +286,9 @@ public:
       set_visibility(st, vis);
     }
   }
+
+  // get default reference
+  GeoMap get_ref() const { return ref; }
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir);

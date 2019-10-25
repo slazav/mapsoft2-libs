@@ -6,6 +6,8 @@
 
 #include "gobj_mapdb.h"
 #include "read_words/read_words.h"
+#include "geo_data/geo_io.h"
+#include "geo_mkref/geo_mkref.h"
 
 using namespace std;
 
@@ -36,63 +38,90 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
   while (1){
     vector<string> vs = read_words(ff, line_num, false);
     if (vs.size()==0) break;
+    ftr = "";
 
-    // draw a point object
-    if (vs.size() > 2 && vs[0] == "point") {
-      st.reset(new DrawingStep(map.get()));
-      st->action = STEP_DRAW_POINT;
-      st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POINT<<16);
-      st->step_name = vs[0] + " " + vs[1];
-      ftr = vs[2];
-      vs.erase(vs.begin(), vs.begin()+3);
-      add(depth--, st);
-    }
-
-    // draw a line object
-    else if (vs.size() > 2 && vs[0] == "line") {
-      st.reset(new DrawingStep(map.get()));
-      st->action = STEP_DRAW_LINE;
-      st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_LINE<<16);
-      st->step_name = vs[0] + " " + vs[1];
-      ftr = vs[2];
-      vs.erase(vs.begin(), vs.begin()+3);
-      add(depth--, st);
-    }
-
-    // draw an area object
-    else if (vs.size() > 2 && vs[0] == "area") {
-      st.reset(new DrawingStep(map.get()));
-      st->action = STEP_DRAW_AREA;
-      st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POLYGON<<16);
-      st->step_name = vs[0] + " " + vs[1];
-      ftr = vs[2];
-      vs.erase(vs.begin(), vs.begin()+3);
-      add(depth--, st);
-    }
-
-    // draw on the whole map
-    else if (vs.size() > 2 && vs[0] == "map") {
-      st.reset(new DrawingStep(map.get()));
-      st->action = STEP_DRAW_MAP;
-      st->step_name = vs[0];
-      ftr = vs[1];
-      vs.erase(vs.begin(), vs.begin()+2);
-      add(depth--, st);
-    }
-
-    // add feature to a previous step
-    else if (st && vs[0] == "+" && vs.size() > 1) {
-      ftr = vs[1];
-      vs.erase(vs.begin(),vs.begin()+2);
-    }
-
-    else {
-      throw Err() << "Can't parse configuration file at line "
-                  << line_num[0];
-    }
-
-    // Parse features
     try{
+
+      // draw a point object
+      if (vs.size() > 2 && vs[0] == "point") {
+        st.reset(new DrawingStep(map.get()));
+        st->action = STEP_DRAW_POINT;
+        st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POINT<<16);
+        st->step_name = vs[0] + " " + vs[1];
+        ftr = vs[2];
+        vs.erase(vs.begin(), vs.begin()+3);
+        add(depth--, st);
+      }
+
+      // draw a line object
+      else if (vs.size() > 2 && vs[0] == "line") {
+        st.reset(new DrawingStep(map.get()));
+        st->action = STEP_DRAW_LINE;
+        st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_LINE<<16);
+        st->step_name = vs[0] + " " + vs[1];
+        ftr = vs[2];
+        vs.erase(vs.begin(), vs.begin()+3);
+        add(depth--, st);
+      }
+
+      // draw an area object
+      else if (vs.size() > 2 && vs[0] == "area") {
+        st.reset(new DrawingStep(map.get()));
+        st->action = STEP_DRAW_AREA;
+        st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POLYGON<<16);
+        st->step_name = vs[0] + " " + vs[1];
+        ftr = vs[2];
+        vs.erase(vs.begin(), vs.begin()+3);
+        add(depth--, st);
+      }
+
+      // draw on the whole map
+      else if (vs.size() > 2 && vs[0] == "map") {
+        st.reset(new DrawingStep(map.get()));
+        st->action = STEP_DRAW_MAP;
+        st->step_name = vs[0];
+        ftr = vs[1];
+        vs.erase(vs.begin(), vs.begin()+2);
+        add(depth--, st);
+      }
+
+      // add feature to a previous step
+      else if (vs.size() > 1 && vs[0] == "+" && st) {
+        ftr = vs[1];
+        vs.erase(vs.begin(),vs.begin()+2);
+      }
+
+      // setref command
+      else if (vs.size() > 1 && vs[0] == "set_ref") {
+        st.reset(); // "+" should not work after the command
+        if (vs[1] == "file") {
+          if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: setref file <filename>";
+          GeoData d;
+          read_geo(vs[2], d);
+          if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
+            << "setref: can't read any reference from file: " << vs[2];
+          ref = (*d.maps.begin())[0];
+        }
+        else if (vs[1] == "nom") {
+          if (vs.size()!=4) throw Err()
+            << "wrong number of arguments: setref nom <name> <dpi>";
+          Opt o;
+          o.put("mkref", "nom");
+          o.put("name", vs[2]);
+          o.put("dpi", vs[3]);
+          ref = geo_mkref(o);
+        }
+        else throw Err() << "setref command: 'file' or 'nom' word is expected";
+        vs.erase(vs.begin(),vs.begin()+2);
+        continue;
+      }
+
+      else {
+        throw Err() << "Unknown command or drawing step";
+      }
+
+      /// Parse features
 
       // stroke <color> <thickness>
       if (ftr == "stroke"){
@@ -230,9 +259,10 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
     }
     catch (Err e) {
       throw Err() << "GObjMapDB: configuration file, line " << line_num[0] << ": "
-                  << "feature " << (ftr==""? "": "\"" + ftr + "\": ")
+                  << (ftr==""? "": "feature : \"" + ftr + "\": ")
                   << e.str();
     }
+
   } // end of configuration file
 
 }
