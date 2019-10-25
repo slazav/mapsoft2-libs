@@ -203,6 +203,8 @@ struct GeoMap{
 
   /******************************************************************/
 
+  bool empty() const {return ref.size()==0;}
+
   void add_ref(const double x1, const double y1, const double x2, const double y2){
     ref.insert(std::make_pair(dPoint(x1,y1), dPoint(x2,y2))); }
 

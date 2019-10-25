@@ -93,6 +93,7 @@ main(){
       assert(m1==m2);
       assert(m1<=m2);
       assert(m1>=m2);
+      assert(m1.empty());
 
       assert_eq(m1.image_dpi, 300);
       assert_eq(m1.tile_size, 256);
@@ -102,6 +103,7 @@ main(){
       m1.add_ref(1,2,30,40);
       m1.add_ref(dPoint("[2,3]"),dPoint("[41,51]"));
       m1.add_ref(dLine("[[3,4],[4,5]]"),dLine("[[52,62],[63,73]]"));
+      assert(!m1.empty());
 
       std::ostringstream ss;
       for (auto & r:m1.ref) ss << r.first << " " << r.second;
