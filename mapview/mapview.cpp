@@ -64,6 +64,9 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
       panel_mapdb.reset(new PanelMapDB(opts->get("mapdb","")));
       gobj.add(PAGE_VMAP, panel_mapdb);
       panels->append_page(*panel_mapdb.get(), "VMAP", "VMAP");
+      GeoMap r = panel_mapdb->get_ref();
+      if (!r.empty())
+        set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
     }
 
     /// Build main paned: Viewer + Panels
