@@ -82,11 +82,11 @@ public:
   /*******************************************/
   // known drawing step
   enum StepAction {
-    STEP_UNKNOWN,
-    STEP_DRAW_POINT,
-    STEP_DRAW_LINE,
-    STEP_DRAW_AREA,
-    STEP_DRAW_MAP
+    STEP_UNKNOWN = 0,
+    STEP_DRAW_POINT = 1<<0,
+    STEP_DRAW_LINE  = 1<<1,
+    STEP_DRAW_AREA  = 1<<2,
+    STEP_DRAW_MAP   = 1<<3
   };
 
   // known drawing features for each step
@@ -107,7 +107,13 @@ public:
 
 
   /*******************************************/
-  // base class for drawing features
+  // Base class for drawing features.
+  // Each drawing step may contain a number of features
+  // which describe various operations. Feature objects
+  // are used to keep data for these operations. They
+  // also fave constructors for extractind data from 
+  // string arguments.
+
   struct Feature {
     // check number of arguments
     void check_args(const std::vector<std::string> & vs,
@@ -271,6 +277,13 @@ public:
 
     void convert_coords(MapDBObj & O);
     int draw(const CairoWrapper & cr, const dRect & draw_range) override;
+
+    // check valid step types
+    void check_type(const int step_mask){
+      if (action & step_mask == 0) throw Err()
+        << "feature can not be used for this drawing step";
+    }
+
   };
   /*******************************************/
 

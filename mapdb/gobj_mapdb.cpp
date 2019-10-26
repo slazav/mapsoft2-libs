@@ -125,10 +125,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // stroke <color> <thickness>
       if (ftr == "stroke"){
-        if (st->action != STEP_DRAW_POINT &&
-            st->action != STEP_DRAW_LINE &&
-            st->action != STEP_DRAW_AREA )
-          throw Err() << "feature is only valid in point, line, and area drawing steps";
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->features.emplace(FEATURE_STROKE,
           std::shared_ptr<Feature>(new FeatureStroke(vs)));
         continue;
@@ -136,9 +133,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // fill <color>
       if (ftr == "fill"){
-        if (st->action != STEP_DRAW_AREA &&
-            st->action != STEP_DRAW_MAP)
-          throw Err() << "feature is only valid in area and map drawing steps";
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP);
         st->features.emplace(FEATURE_FILL,
           std::shared_ptr<Feature>(new FeatureFill(vs)));
         continue;
@@ -146,8 +141,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // patt <file> <scale>
       if (ftr == "patt"){
-        if (st->action != STEP_DRAW_AREA )
-          throw Err() << "feature is only valid in area drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_MAP);
         st->features.emplace(FEATURE_PATT,
           std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
         continue;
@@ -155,9 +149,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // img <file> <scale>
       if (ftr == "img"){
-        if (st->action != STEP_DRAW_POINT &&
-            st->action != STEP_DRAW_AREA )
-          throw Err() << "feature is only valid in point and area drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT);
         st->features.emplace(FEATURE_IMG,
           std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
         continue;
@@ -165,9 +157,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // smooth <distance>
       if (ftr == "smooth"){
-        if (st->action != STEP_DRAW_AREA &&
-            st->action != STEP_DRAW_LINE)
-          throw Err() << "feature is only valid in line and area drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
         st->features.emplace(FEATURE_SMOOTH,
           std::shared_ptr<Feature>(new FeatureSmooth(vs)));
         continue;
@@ -175,9 +165,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // dash <length1> <length2> ...
       if (ftr == "dash"){
-        if (st->action != STEP_DRAW_AREA &&
-            st->action != STEP_DRAW_LINE)
-          throw Err() << "feature is only valid in line and area drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
         st->features.emplace(FEATURE_DASH,
           std::shared_ptr<Feature>(new FeatureDash(vs)));
         continue;
@@ -185,10 +173,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // cap round|butt|square
       if (ftr == "cap"){
-        if (st->action != STEP_DRAW_AREA &&
-            st->action != STEP_DRAW_LINE &&
-            st->action != STEP_DRAW_POINT)
-          throw Err() << "feature is only valid in point, line, and area drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_POINT);
         st->features.emplace(FEATURE_CAP,
           std::shared_ptr<Feature>(new FeatureCap(vs)));
         continue;
@@ -196,9 +181,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // join round|miter
       if (ftr == "join"){
-        if (st->action != STEP_DRAW_AREA &&
-            st->action != STEP_DRAW_LINE)
-          throw Err() << "feature is only valid in line and area drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
         st->features.emplace(FEATURE_JOIN,
           std::shared_ptr<Feature>(new FeatureJoin(vs)));
         continue;
@@ -206,11 +189,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // operator <op>
       if (ftr == "operator"){
-        if (st->action != STEP_DRAW_AREA &&
-            st->action != STEP_DRAW_LINE &&
-            st->action != STEP_DRAW_POINT &&
-            st->action != STEP_DRAW_MAP)
-          throw Err() << "feature is only valid in line, area, point, map drawing steps";
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_POINT | STEP_DRAW_MAP);
         st->features.emplace(FEATURE_OP,
           std::shared_ptr<Feature>(new FeatureOp(vs)));
         continue;
@@ -238,8 +217,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // move_to area|line <type>
       if (ftr == "move_to"){
-        if (st->action != STEP_DRAW_POINT)
-          throw Err() << "feature is only valid in point drawing steps";
+        st->check_type(STEP_DRAW_POINT);
         st->features.emplace(FEATURE_MOVETO,
           std::shared_ptr<Feature>(new FeatureMoveTo(vs, false)));
         continue;
@@ -247,8 +225,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // rotate_to area|line <type>
       if (ftr == "rotate_to"){
-        if (st->action != STEP_DRAW_POINT)
-          throw Err() << "feature is only valid in point drawing steps";
+        st->check_type(STEP_DRAW_POINT);
         st->features.emplace(FEATURE_MOVETO,
           std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
         continue;
