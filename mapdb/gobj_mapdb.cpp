@@ -118,7 +118,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       }
 
       else {
-        throw Err() << "Unknown command or drawing step";
+        throw Err() << "Unknown command or drawing step: " << vs[0];
       }
 
       /// Parse features
