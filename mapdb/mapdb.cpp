@@ -162,6 +162,9 @@ MapDB::set_map_brd(const dMultiLine & b) {
 /**********************************************************/
 uint32_t
 MapDB::add(const MapDBObj & o){
+  if (o.empty())
+    throw Err() << "MapDB::add: empty object";
+
   // get last id + 1
   uint32_t id;
   uint32_t ct = (o.cl << 16) | o.type;
@@ -189,6 +192,9 @@ MapDB::put(const uint32_t id, const MapDBObj & o){
   std::string str = objects.get(id1);
   if (id1 == 0xFFFFFFFF)
     throw Err() << "MapDB::put: object does not exists: " << id;
+
+  if (o.empty())
+    throw Err() << "MapDB::put: empty object";
 
   MapDBObj o1;
   o1.unpack(str);

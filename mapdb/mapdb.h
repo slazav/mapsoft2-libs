@@ -151,6 +151,12 @@ public:
   std::set<uint32_t> find(uint32_t etype, const dRect & range){
     return geohash.get(etype, range); }
 
+  /// get all object types in the database
+  std::set<uint32_t> get_etypes() {
+    return geohash.get_types();}
+
+
+
   ///////////////
   /* Import/export */
   public:
