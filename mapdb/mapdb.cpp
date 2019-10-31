@@ -182,11 +182,13 @@ MapDB::add(const MapDBObj & o){
 }
 
 void
-MapDB::put(uint32_t id, const MapDBObj & o){
+MapDB::put(const uint32_t id, const MapDBObj & o){
 
   // get old object
-  std::string str = objects.get(id);
-  if (id == 0xFFFFFFFF) return;
+  uint32_t id1 = id;
+  std::string str = objects.get(id1);
+  if (id1 == 0xFFFFFFFF)
+    throw Err() << "MapDB::put: object does not exists: " << id;
 
   MapDBObj o1;
   o1.unpack(str);
@@ -205,11 +207,11 @@ MapDB::put(uint32_t id, const MapDBObj & o){
 }
 
 MapDBObj
-MapDB::get(uint32_t id){
+MapDB::get(const uint32_t id){
   uint32_t id1 = id;
   std::string str = objects.get(id1);
   if (id1 == 0xFFFFFFFF)
-    throw Err() << "MapDB::get: no such object: " << id;
+    throw Err() << "MapDB::get: object does not exists: " << id;
   MapDBObj ret;
   ret.unpack(str);
   return ret;
@@ -217,11 +219,13 @@ MapDB::get(uint32_t id){
 
 
 void
-MapDB::del(uint32_t id){
+MapDB::del(const uint32_t id){
 
   // get old object
-  std::string str = objects.get(id);
-  if (id == 0xFFFFFFFF) return;
+  uint32_t id1 = id;
+  std::string str = objects.get(id1);
+  if (id1 == 0xFFFFFFFF)
+    throw Err() << "MapDB::del: object does not exists: " << id;
 
   MapDBObj o;
   o.unpack(str);

@@ -134,21 +134,21 @@ public:
 
   /// Rewrite existing object, update geohashes.
   /// If object does not exist it will be added anyway.
-  void put(uint32_t id, const MapDBObj & o);
+  void put(const uint32_t id, const MapDBObj & o);
 
   /// Read an object.
-  MapDBObj get(uint32_t id);
+  MapDBObj get(const uint32_t id);
 
   /// Delete an object.
   /// If the object does not exist throw an error.
-  void del(uint32_t id);
+  void del(const uint32_t id);
 
   /// Find objects with given type and range
-  std::set<uint32_t> find(MapDBObjClass cl, int type, const dRect & range){
+  std::set<uint32_t> find(MapDBObjClass cl, uint16_t type, const dRect & range){
     return geohash.get((cl  << 16) | type, range); }
 
   /// Find objects with given type and range
-  std::set<uint32_t> find(int etype, const dRect & range){
+  std::set<uint32_t> find(uint32_t etype, const dRect & range){
     return geohash.get(etype, range); }
 
   ///////////////

@@ -144,6 +144,7 @@ main(){
       // get version
       assert_eq(m.get_map_version(), 0);
 
+
       // get/set object
       MapDBObj o1;
       o1.cl = MAPDB_LINE;
@@ -154,10 +155,18 @@ main(){
       o1.comm = "object comment\nsecond line";
       o1.tags.insert("object source\nsecond line");
 
+      assert_err(m.put(0,o1), "MapDB::put: object does not exists: 0");
+      assert_err(m.del(0), "MapDB::del: object does not exists: 0");
+      assert_err(m.get(0), "MapDB::get: object does not exists: 0");
+
       // add/get object
       uint32_t id = m.add(o1);
       assert_eq(id, 0);
       assert_eq(o1, m.get(id));
+
+      assert_err(m.put(1,o1), "MapDB::put: object does not exists: 1");
+      assert_err(m.del(1), "MapDB::del: object does not exists: 1");
+      assert_err(m.get(1), "MapDB::get: object does not exists: 1");
 
       // update object
       o1.type = 0x2342;
@@ -167,9 +176,7 @@ main(){
 
       // delete object
       m.del(id);
-      try {m.get(id); assert(false);} catch (Err e) {
-        assert_eq(e.str(), "MapDB::get: no such object: 0");
-      }
+      assert_err(m.get(0), "MapDB::get: object does not exists: 0");
 
       // find
       id = m.add(o1);
