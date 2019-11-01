@@ -225,9 +225,9 @@ main(){
     assert_err(str_to_type<dPoint>("[0,1]a"),
       "can't parse point: \"[0,1]a\": end of file expected near 'a'");
 
-//    // string coordinates
-//    assert_deq(str_to_type<dPoint>("[\"0\",\"0\"]"), dPoint(0,0), 1e-6);
-//    assert_deq(str_to_type<iPoint>("[\"0x10\",\"0xA\"]"), iPoint(16,10), 1e-6);
+    // string coordinates
+    assert_deq(str_to_type<dPoint>("[\"0\",\"0\"]"), dPoint(0,0), 1e-6);
+    assert_deq(str_to_type<iPoint>("[\"0x10\",\"0xA\"]"), iPoint(16,10), 1e-6);
 
   }
 
@@ -276,10 +276,10 @@ main(){
       "can't parse point: \"[0,1,1]a\": end of file expected near 'a'");
 
     // string coordinates
-//    assert_deq(str_to_type<dPoint>("[\"0\",\"0\",\"1\"]"), dPoint(0,0,1), 1e-6);
-//    assert_deq(str_to_type<iPoint>("[\"0x10\",\"0xA\",\"0x1\"]"), iPoint(16,10,1), 1e-6);
+    assert_deq(str_to_type<dPoint>("[\"0\",\"0\",\"1\"]"), dPoint(0,0,1), 1e-6);
+    assert_deq(str_to_type<iPoint>("[\"0x10\",\"0xA\",\"0x1\"]"), iPoint(16,10,1), 1e-6);
 
-//    assert_err(iPoint("[\"\",\"0xA\",\"0x1\"]"), "");
+    assert_err(iPoint("[\"\",\"0xA\",\"0x1\"]"), "can't parse point: \"[\"\",\"0xA\",\"0x1\"]\": can't parse value: \"\"");
 
   }
 

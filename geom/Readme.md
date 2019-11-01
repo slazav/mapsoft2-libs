@@ -46,7 +46,9 @@
 - Point can be converted to a string and back
   (and thus used inside Opt class). String representation is a
   JSON array with two or three numerical fields, `[x,y,z]` or
-  `[x,y]` for `z==0`.
+  `[x,y]` for `z==0`. Coordinates can be numericals (integer of floating point)
+   or strings containing integer values in decimal or hex form
+   (e.g. 0.1, 0, "0", "0xA").
 
 -----------------
 ## Rect class
@@ -118,7 +120,9 @@ coordinates are involved.
 
 - Rectangle can be converted to a string and back
   (and thus used inside Opt class). String representation is a
-  JSON array with four numerical fields `[x,y,w,h]` or empty array.
+  JSON array with four fields `[x,y,w,h]` or empty array.
+  Coordinates can be numericals (integer of floating point) or strings
+  containing integer values in decimal or hex form (e.g. 0.1, 0, "0", "0xA").
 
 -----------------
 ## Line class

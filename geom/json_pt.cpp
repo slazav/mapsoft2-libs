@@ -11,12 +11,15 @@
 /**********************************************************/
 
 // Get double value from a JSON array.
+// Also support integer values written as a string in decimal or hex form.
+// Examples: 0.1, 1, "10", "0xA"
 // Array type and size should be checked before!
 double
 json_get_arr_val(json_t *array, int index){
   json_t *V = json_array_get(array, index);
   if (!V) throw Err() << "can't extract array index " << index;
   if (json_is_number(V)) return json_number_value(V);
+  if (json_is_string(V)) return str_to_type<int>(json_string_value(V));
   throw Err() << "can't extract a number from array index " << index;
 }
 
