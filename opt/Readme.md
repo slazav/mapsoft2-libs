@@ -50,6 +50,9 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 -----------------
 ## Changelog:
 
+2019.11.01 V.Zavjalov 1.7.1:
+- Add quotes in error messages
+
 2019.10.22 V.Zavjalov 1.7:
 - Convert hex numbers to different integer types (u?int{16,32,64}_t).
   If number is too large for the type an error is thrown.

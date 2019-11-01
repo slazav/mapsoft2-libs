@@ -15,11 +15,11 @@ T str_to_type_hex(const std::string & s){
   if (!ss.eof()){
     char c; ss>>c;
     if (val!=0 || c!='x')
-      throw Err() << "can't parse value: " << s;
+      throw Err() << "can't parse value: \"" << s << "\"";
     ss >> std::hex >> val;
   }
   if (ss.fail() || !ss.eof())
-    throw Err() << "can't parse value: " << s;
+    throw Err() << "can't parse value: \"" << s << "\"";
   return val;
 }
 

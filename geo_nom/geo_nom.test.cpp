@@ -87,7 +87,7 @@ main(){
     "can't parse nomenclature map scale: a");
 
   assert_err(str_to_type<nom_scale_t>("500m "),
-    "can't parse value: 500m ");
+    "can't parse value: \"500m \"");
 
   assert_eq(type_to_str<nom_scale_t>(SC_1M), "1:1000000");
   assert_eq(type_to_str<nom_scale_t>(SC_500k), "1:500000");

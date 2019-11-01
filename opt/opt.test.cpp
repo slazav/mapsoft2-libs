@@ -16,11 +16,11 @@ try{
 
   O1.put("int", "123a");
   assert_err(
-    O1.get<int>("int"), "can't parse value: 123a");
+    O1.get<int>("int"), "can't parse value: \"123a\"");
 
   O1.put("d", "123.1 ");
   assert_err(
-    O1.get("d", 1.0), "can't parse value: 123.1 ");
+    O1.get("d", 1.0), "can't parse value: \"123.1 \"");
 
   assert_eq(O1.exists("d"), true);
   assert_eq(O1.exists("e"), false);
@@ -158,9 +158,9 @@ try{
   assert_eq(O1.get<int32_t>("hex32",0), (int32_t)0xFFFFFFFF);
   assert_eq(O1.get<int64_t>("hex64",0), (int64_t)0xFFFFFFFFFFFFFFFF);
 
-  assert_err(O1.get<uint8_t>("hex16",0), "can't parse value: 0xFFFF");
-  assert_err(O1.get<uint16_t>("hex32",0), "can't parse value: 0xFFFFFFFF");
-  assert_err(O1.get<uint32_t>("hex64",0), "can't parse value: 0xFFFFFFFFFFFFFFFF");
+  assert_err(O1.get<uint8_t>("hex16",0), "can't parse value: \"0xFFFF\"");
+  assert_err(O1.get<uint16_t>("hex32",0), "can't parse value: \"0xFFFFFFFF\"");
+  assert_err(O1.get<uint32_t>("hex64",0), "can't parse value: \"0xFFFFFFFFFFFFFFFF\"");
 
 //  assert_eq(O1.get("h1", 0.0), 255);
 //  assert_eq(O1.get("h2", 0.0), 254);

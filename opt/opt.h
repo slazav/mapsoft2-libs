@@ -18,7 +18,7 @@ T str_to_type(const std::string & s){
   T val;
   ss >> std::showbase >> val;
   if (ss.fail() || !ss.eof())
-    throw Err() << "can't parse value: " << s;
+    throw Err() << "can't parse value: \"" << s << "\"";
   return val;
 }
 
