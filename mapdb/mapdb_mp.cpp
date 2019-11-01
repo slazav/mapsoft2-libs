@@ -8,9 +8,55 @@
 #include "mp/mp.h"
 #include "read_words/read_words.h"
 
+/**********************************************************/
+/* Import/export of MP format */
+
 using namespace std;
 
-/* Import/export of MP format */
+/**********************************************************/
+void
+ms2opt_add_mapdb_mp_imp(GetOptSet & opts){
+  const char *g = "MAPDB_MP_IMP";
+  opts.add("config", 1,'c',g,
+    "Configuration file for MP->MapDB conversion");
+
+  opts.add("cnv_points", 1,0,g,
+    "Type conversion rules for point objects: "
+    "[[<type_in>, <type_out>], [<type_in>, <type_out>], ...] "
+    "type_in==0 matches all types; type_out==0 sets output type "
+    "same as input one. Default value: [[0,0]].");
+
+  opts.add("cnv_lines", 1,0,g,
+    "Type conversion rules for line objects. Same notation as in cnv_point.");
+
+  opts.add("cnv_areas", 1,0,g,
+    "Type conversion rules for area objects. Same notation as in cnv_point.");
+
+  opts.add("data_level", 1,0,g,
+    "Read data from a specified MP data level");
+
+}
+
+/**********************************************************/
+void
+ms2opt_add_mapdb_mp_exp(GetOptSet & opts){
+  const char *g = "MAPDB_MP_EXP";
+  opts.add("config", 1,'c',g,
+    "Configuration file for MapDB->MP conversion");
+
+  opts.add("cnv_points", 1,0,g,
+    "Type conversion rules for point objects: "
+    "[[<type_in>, <type_out>], [<type_in>, <type_out>], ...] "
+    "type_in==0 matches all types; type_out==0 sets output type "
+    "same as input one. Default value: [[0,0]].");
+
+  opts.add("cnv_lines", 1,0,g,
+    "Type conversion rules for line objects. Same notation as in cnv_point.");
+
+  opts.add("cnv_areas", 1,0,g,
+    "Type conversion rules for area objects. Same notation as in cnv_point.");
+
+}
 
 /**********************************************************/
 void
@@ -37,14 +83,14 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     ifstream ff(opts.get<string>("config"));
     while (1){
       vector<string> vs = read_words(ff, line_num, true);
-      if (vs.size()<1) continue;
+      if (vs.size()<1) break;
 
       int cl = -1;
-      if (vs[0]=="point" || vs[0]=="poi") cl=0;
-      if (vs[0]=="line" || vs[0]=="multiline") cl=1;
-      if (vs[0]=="polygon") cl=2;
+      if (vs[0]=="point") cl=0;
+      if (vs[0]=="line")  cl=1;
+      if (vs[0]=="area")  cl=2;
 
-      if (cl>=0 &&  vs.size()>1 && vs.size()<3){
+      if (cl>=0 && cl<3 && vs.size()>1 && vs.size()<4){
         cnvs[cl].push_back(iPoint(
           str_to_type<int>(vs[1]),
           vs.size()<3? 0:str_to_type<int>(vs[2])));
@@ -61,10 +107,10 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     }
   }
 
-  if (opts.exists("cnv_point"))   cnvs[0] = opts.get<dLine>("cnv_point");
-  if (opts.exists("cnv_line"))    cnvs[0] = opts.get<dLine>("cnv_line");
-  if (opts.exists("cnv_polygon")) cnvs[0] = opts.get<dLine>("cnv_polygon");
-  if (opts.exists("data_level"))  level   = opts.get<int>("level");
+  if (opts.exists("cnv_points"))  cnvs[0] = opts.get<dLine>("cnv_points");
+  if (opts.exists("cnv_lines"))   cnvs[1] = opts.get<dLine>("cnv_lines");
+  if (opts.exists("cnv_areas"))   cnvs[2] = opts.get<dLine>("cnv_areas");
+  if (opts.exists("data_level")) level   = opts.get<int>("data_level");
 
   // read MP file
   MP mp_data;
@@ -75,9 +121,13 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
 
     MapDBObj o1;
 
-    if (o.Class<0 || o.Class>2)
-      throw Err() << "wrong MP class: "<< o.Class;
-    o1.cl = (MapDBObjClass)o.Class;
+    switch (o.Class){
+      case 0: o1.cl = MAPDB_POINT; break;
+      case 1: o1.cl = MAPDB_LINE; break;
+      case 2: o1.cl = MAPDB_POLYGON; break;
+      default:
+        throw Err() << "wrong MP class: "<< o.Class;
+    }
 
     // convert type
     for (auto const & cnv: cnvs[o1.cl]){
@@ -165,9 +215,9 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
     }
   }
 
-  if (opts.exists("cnv_point"))   cnvs[0] = opts.get<dLine>("cnv_point");
-  if (opts.exists("cnv_line"))    cnvs[0] = opts.get<dLine>("cnv_line");
-  if (opts.exists("cnv_polygon")) cnvs[0] = opts.get<dLine>("cnv_polygon");
+  if (opts.exists("cnv_points")) cnvs[0] = opts.get<dLine>("cnv_points");
+  if (opts.exists("cnv_lines"))  cnvs[1] = opts.get<dLine>("cnv_lines");
+  if (opts.exists("cnv_areass")) cnvs[2] = opts.get<dLine>("cnv_areas");
 
   MP mp_data;
   uint32_t key = 0;

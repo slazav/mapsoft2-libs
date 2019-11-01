@@ -183,6 +183,15 @@ public:
 
 };
 
+// add option groups:
+//   MAPDB_MP_IMP, MAPDB_MP_EXP, MAPDB_VMAP_IMP, MAPDB_VMAP_EXP
 
+#include "getopt/getopt.h"
+
+void ms2opt_add_mapdb_mp_imp(GetOptSet & opts);
+void ms2opt_add_mapdb_mp_exp(GetOptSet & opts);
+
+void ms2opt_add_mapdb_vmap_imp(GetOptSet & opts);
+void ms2opt_add_mapdb_vmap_exp(GetOptSet & opts);
 
 #endif
