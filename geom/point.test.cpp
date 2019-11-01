@@ -214,16 +214,21 @@ main(){
     assert_deq(str_to_type<dPoint>(" [ 0 , 1 ] "), dPoint(0,1), 1e-6);
 
     assert_err(str_to_type<dPoint>(" [ 0 , 1 "),
-      "can't parse value:  [ 0 , 1 ");
+      "can't parse point: \"[ 0 , 1 \": ']' expected near end of file");
 
     assert_err(str_to_type<dPoint>("0,1"),
-      "can't parse value: 0,1");
+      "can't parse point: \"0,1\": '[' or '{' expected near '0'");
 
     assert_err(str_to_type<dPoint>("[0.1]"),
-      "can't parse value: [0.1]");
+      "can't parse point: \"[0.1]\": a two-element JSON array expected");
 
     assert_err(str_to_type<dPoint>("[0,1]a"),
-      "can't parse value: [0,1]a");
+      "can't parse point: \"[0,1]a\": end of file expected near 'a'");
+
+//    // string coordinates
+//    assert_deq(str_to_type<dPoint>("[\"0\",\"0\"]"), dPoint(0,0), 1e-6);
+//    assert_deq(str_to_type<iPoint>("[\"0x10\",\"0xA\"]"), iPoint(16,10), 1e-6);
+
   }
 
   // input/output, 3d points (also check that dPoint is printed with setprecision(9))
@@ -259,16 +264,23 @@ main(){
     assert_deq(str_to_type<dPoint>(" [ 0 , 1 , 2 ] "), dPoint(0,1,2), 1e-6);
 
     assert_err(str_to_type<dPoint>(" [ 0 , 1 ,1"),
-      "can't parse value:  [ 0 , 1 ,1");
+      "can't parse point: \"[ 0 , 1 ,1\": ']' expected near end of file");
 
     assert_err(str_to_type<dPoint>("0,1,1"),
-      "can't parse value: 0,1,1");
+      "can't parse point: \"0,1,1\": '[' or '{' expected near '0'");
 
     assert_err(str_to_type<dPoint>("[0.1]"),
-      "can't parse value: [0.1]");
+      "can't parse point: \"[0.1]\": a two-element JSON array expected");
 
     assert_err(str_to_type<dPoint>("[0,1,1]a"),
-      "can't parse value: [0,1,1]a");
+      "can't parse point: \"[0,1,1]a\": end of file expected near 'a'");
+
+    // string coordinates
+//    assert_deq(str_to_type<dPoint>("[\"0\",\"0\",\"1\"]"), dPoint(0,0,1), 1e-6);
+//    assert_deq(str_to_type<iPoint>("[\"0x10\",\"0xA\",\"0x1\"]"), iPoint(16,10,1), 1e-6);
+
+//    assert_err(iPoint("[\"\",\"0xA\",\"0x1\"]"), "");
+
   }
 
   }

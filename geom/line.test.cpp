@@ -240,15 +240,15 @@ main(){
 
   assert_err(
     str_to_type<iLine>("[[0,0],[2,0],[2,2]]a"),
-    "end of file expected near 'a'");
+    "can't parse line: \"[[0,0],[2,0],[2,2]]a\": end of file expected near 'a'");
 
   assert_err(
     str_to_type<iLine>("[[0,0],[2,0],[2,2"),
-    "']' expected near end of file");
+    "can't parse line: \"[[0,0],[2,0],[2,2\": ']' expected near end of file");
 
   assert_err(
     str_to_type<iLine>("[0,0],[2,0],[2,2]"),
-    "end of file expected near ','");
+    "can't parse line: \"[0,0],[2,0],[2,2]\": end of file expected near ','");
 
   }
   catch (Err e) {

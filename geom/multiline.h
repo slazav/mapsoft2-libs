@@ -6,16 +6,12 @@
 #include <cmath>
 #include <list>
 #include <vector>
-#include "line.h"
+
 #include "point.h"
+#include "line.h"
 
 ///\addtogroup libmapsoft
 ///@{
-
-template <typename T>
-class MultiLine;
-MultiLine<double> string_to_mline(const std::string & s);
-
 
 /// Line with multiple segments (std::vector of Line)
 template <typename T>
@@ -25,7 +21,7 @@ struct MultiLine : std::vector<Line<T> > {
   MultiLine() {}
 
   /// Constructor: make a line using string "[ [[x1,y1],[x2,y2]] , [[x3,y4],[x5,y5]]]"
-  MultiLine(const std::string & s) { *this = string_to_mline(s);}
+  MultiLine(const std::string & s) { *this = str_to_type<MultiLine>(s);}
 
   /******************************************************************/
   // operators +,-,/,*
@@ -318,6 +314,16 @@ double dist(const MultiLine<T> & A, const MultiLine<T> & B){
   return sqrt(ret);
 }
 
+/******************************************************************/
+// type definitions
+
+/// MultiLine with double coordinates
+/// \relates MultiLine
+typedef MultiLine<double> dMultiLine;
+
+/// MultiLine with int coordinates
+/// \relates MultiLine
+typedef MultiLine<int> iMultiLine;
 
 /******************************************************************/
 // input/output
@@ -333,36 +339,26 @@ std::ostream & operator<< (std::ostream & s, const MultiLine<T> & l){
   return s;
 }
 
+
+// see json_pt.cpp
+dMultiLine str_to_mline(const std::string & str);
+
+
 /// \brief Input operator: read MultiLine from a JSON array of lines.
 /// \note Single line is also allowed.
 /// \note This >> operator is different from that in
 /// Point or Rect. It always reads the whole stream and
 /// returns error if there are extra characters.
 /// No possibility to read two objects from one stream.
-
-/// \todo Move json code somewhere else.
-
 /// \relates MultiLine
 template <typename T>
 std::istream & operator>> (std::istream & s, MultiLine<T> & ml){
   // read the whole stream into a string
   std::ostringstream os;
   s>>os.rdbuf();
-  ml=string_to_mline(os.str());
+  ml=str_to_mline(os.str());
   return s;
 }
-
-
-/******************************************************************/
-// type definitions
-
-/// MultiLine with double coordinates
-/// \relates MultiLine
-typedef MultiLine<double> dMultiLine;
-
-/// MultiLine with int coordinates
-/// \relates MultiLine
-typedef MultiLine<int> iMultiLine;
 
 ///@}
 #endif

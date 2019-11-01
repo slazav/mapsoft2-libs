@@ -7,17 +7,14 @@
 #include <cmath>
 #include <list>
 #include <vector>
-#include "point.h"
-#include "rect.h"
 #include "err/err.h"
 #include "opt/opt.h"
 
+#include "point.h"
+#include "rect.h"
+
 ///\addtogroup libmapsoft
 ///@{
-
-template <typename T> class Line;
-/// convert string to line
-Line<double> string_to_line(const std::string & s);
 
 /// 2d line: std::vector of Point.
 template <typename T>
@@ -27,7 +24,7 @@ struct Line : std::vector<Point<T> > {
   Line() {}
 
   /// Constructor: make a line using string "[[x1,y1],[x2,y2]]"
-  Line(const std::string & s) { *this = string_to_line(s);}
+  Line(const std::string & s) { *this = str_to_type<Line>(s);}
 
   /******************************************************************/
   // operators +,-,/,*
@@ -394,6 +391,17 @@ double dist(const Line<T> & A, const Line<T> & B){
 }
 
 /******************************************************************/
+// type definitions
+
+/// Line with double coordinates
+/// \relates Line
+typedef Line<double> dLine;
+
+/// Line with int coordinates
+/// \relates Line
+typedef Line<int> iLine;
+
+/******************************************************************/
 // input/output
 
 /// \relates Line
@@ -407,6 +415,9 @@ std::ostream & operator<< (std::ostream & s, const Line<T> & l){
   return s;
 }
 
+// see json_pt.cpp
+dLine str_to_line(const std::string & str);
+
 /// Input operator: read Line from a JSON array of points
 /// This >> operator is different from that in
 /// Point or Rect. It always reads the whole stream and
@@ -418,20 +429,9 @@ std::istream & operator>> (std::istream & s, Line<T> & l){
   // read the whole stream into a string
   std::ostringstream os;
   s>>os.rdbuf();
-  l=string_to_line(os.str());
+  l=str_to_line(os.str());
   return s;
 }
-
-/******************************************************************/
-// type definitions
-
-/// Line with double coordinates
-/// \relates Line
-typedef Line<double> dLine;
-
-/// Line with int coordinates
-/// \relates Line
-typedef Line<int> iLine;
 
 ///@}
 #endif

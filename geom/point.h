@@ -279,6 +279,18 @@ Point<double> norm2d(const Point<T> & p) {
 }
 
 /******************************************************************/
+// type definitions
+
+/// Point with double coordinates
+/// \relates Point
+typedef Point<double> dPoint;
+
+/// Point with int coordinates
+/// \relates Point
+typedef Point<int> iPoint;
+
+
+/******************************************************************/
 // input/output
 
 /// Output operator: print point as a two-element json array
@@ -291,43 +303,18 @@ std::ostream & operator<< (std::ostream & s, const Point<T> & p){
   return s;
 }
 
+// see json_pt.cpp
+dPoint str_to_point(const std::string & str);
+
 /// Input operator: read point from a two-element json array
 /// \relates Point
 template <typename T>
 std::istream & operator>> (std::istream & s, Point<T> & p){
-  char sep;
-  s >> std::ws >> sep;
-  if (sep!='['){
-    s.setstate(std::ios::failbit);
-    return s;
-  }
-  s >> std::ws >> p.x >> std::ws >> sep;
-  if (sep!=','){
-    s.setstate(std::ios::failbit);
-    return s;
-  }
-  s >> std::ws >> p.y >> std::ws >> sep >> std::ws;
-  if (sep==','){
-    s >> std::ws >> p.z >> std::ws >> sep >> std::ws;
-  }
-  if (sep!=']'){
-    s.setstate(std::ios::failbit);
-    return s;
-  }
-  s.setstate(std::ios::goodbit);
+  std::ostringstream os;
+  s>>os.rdbuf();
+  p=str_to_point(os.str());
   return s;
 }
-
-/******************************************************************/
-// type definitions
-
-/// Point with double coordinates
-/// \relates Point
-typedef Point<double> dPoint;
-
-/// Point with int coordinates
-/// \relates Point
-typedef Point<int> iPoint;
 
 ///@}
 #endif

@@ -413,6 +413,17 @@ double dist(const Rect<T> & r1, const Rect<T> & r2) {
   return hypot(dist(r1.tlc(),r2.tlc()), dist(r1.brc(),r2.brc()));}
 
 /******************************************************************/
+// type definitions
+
+/// Rect with double coordinates
+/// \relates Rect
+typedef Rect<double> dRect;
+
+/// Rect with int coordinates
+/// \relates Rect
+typedef Rect<int> iRect;
+
+/******************************************************************/
 // input/output
 
 /// \relates Rect
@@ -425,53 +436,19 @@ std::ostream & operator<< (std::ostream & s, const Rect<T> & r){
   return s;
 }
 
+// see json_pt.cpp
+dRect str_to_rect(const std::string & str);
+
 /// \relates Rect
 /// \brief Input operator: read Rect from a json array: [] or [x,y,w,h]
 template <typename T>
 std::istream & operator>> (std::istream & s, Rect<T> & r){
-  char sep;
-  s >> std::ws >> sep;
-  if (sep!='['){
-    s.setstate(std::ios::failbit);
-    return s;
-  }
-
-  s >> std::ws >> sep;
-  if (sep==']'){
-    s >> std::ws;
-    s.setstate(std::ios::goodbit);
-    r=Rect<T>();
-    return s;
-  }
-  s.putback(sep);
-
-  s >> std::ws >> r.x >> std::ws >> sep;
-  if (sep!=','){ s.setstate(std::ios::failbit); return s; }
-
-  s >> std::ws >> r.y >> std::ws >> sep;
-  if (sep!=','){ s.setstate(std::ios::failbit); return s; }
-
-  s >> std::ws >> r.w >> std::ws >> sep;
-  if (sep!=','){ s.setstate(std::ios::failbit); return s; }
-
-  s >> std::ws >> r.h >> std::ws >> sep >> std::ws;
-  if (sep!=']'){ s.setstate(std::ios::failbit); return s; }
-
-  r.e=false;
-  s.setstate(std::ios::goodbit);
+  // read the whole stream into a string
+  std::ostringstream os;
+  s>>os.rdbuf();
+  r=str_to_rect(os.str());
   return s;
 }
-
-/******************************************************************/
-// type definitions
-
-/// Rect with double coordinates
-/// \relates Rect
-typedef Rect<double> dRect;
-
-/// Rect with int coordinates
-/// \relates Rect
-typedef Rect<int> iRect;
 
 ///@}
 #endif
