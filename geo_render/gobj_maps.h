@@ -13,7 +13,7 @@
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_DRAWMAP options
+// add DRAWMAP group of options
 void ms2opt_add_drawmap(GetOptSet & opts);
 
 /********************************************************************/

@@ -13,15 +13,16 @@ using namespace std;
 
 void
 ms2opt_add_std(GetOptSet & opts){
-  int m = MS2OPT_STD;
-  opts.add("help",    0,'h', m, "Show help message.");
-  opts.add("pod",     0, 0 , m, "Show help message as POD template.");
-  opts.add("verbose", 0,'v', m, "Be verbose.\n");
+  const char *g = "STD";
+  opts.add("help",    0,'h', g, "Show help message.");
+  opts.add("pod",     0, 0 , g, "Show help message as POD template.");
+  opts.add("verbose", 0,'v', g, "Be verbose.\n");
 }
 
 void
 ms2opt_add_out(GetOptSet & opts){
-  opts.add("out", 1, 'o', MS2OPT_OUT, "Output file.");
+  const char *g = "OUT";
+  opts.add("out", 1, 'o', g, "Output file.");
 }
 
 /**********************************************/
@@ -94,14 +95,14 @@ parse_options(int * argc, char ***argv,
 Opt
 parse_options(int *argc, char ***argv,
               const GetOptSet & ext_options,
-              int mask,
+              const std::set<std::string> & groups,
               const char * last_opt) {
 
   // build long_options structure
   option * long_options = new option[ext_options.size()+1];
   int j = 0;
   for (auto const & opt:ext_options) {
-    if ((opt.group & mask) == 0) continue;
+    if (groups.size()>0 && groups.count(opt.group) == 0) continue;
     long_options[j].name    = opt.name.c_str();
     long_options[j].has_arg = opt.has_arg;
     long_options[j].flag    = NULL;
@@ -127,12 +128,13 @@ parse_options(int *argc, char ***argv,
 Opt
 parse_options_all(int *argc, char ***argv,
               const GetOptSet & ext_options,
-              int mask, vector<string> & non_opts){
+              const std::set<std::string> & groups,
+              vector<string> & non_opts){
 
-  Opt O = parse_options(argc, argv, ext_options, mask);
+  Opt O = parse_options(argc, argv, ext_options, groups);
   while (*argc>0) {
     non_opts.push_back(*argv[0]);
-    Opt O1 = parse_options(argc, argv, ext_options, mask);
+    Opt O1 = parse_options(argc, argv, ext_options, groups);
     O.insert(O1.begin(), O1.end());
   }
   return O;
@@ -148,7 +150,7 @@ HelpPrinter::HelpPrinter(
     const std::string & name):
     s(std::cout),
     pod(pod), opts_(opts), name_(name),
-    printed(0), usage_head(false), width(80) {
+    usage_head(false), width(80) {
 
   struct winsize size;
   ioctl(STDOUT_FILENO,TIOCGWINSZ,&size);
@@ -179,12 +181,18 @@ HelpPrinter::usage(const std::string & text){
 }
 
 void
-HelpPrinter::opts(unsigned int mask){
+HelpPrinter::opts(const std::set<std::string> & groups){
 
   if (pod) s << "=over 2\n\n";
 
   for (auto const & opt:opts_){
-    if ((opt.group & mask) == 0) continue;
+    // select option groups
+    if (groups.count(opt.group) == 0) continue;
+
+    // Check if we printed this option before.
+    if (printed.count(opt.name) != 0) throw Err() <<
+      "HelpPrinter: duplicated option in the help message: " << opt.name;
+    printed.insert(opt.name);
 
     ostringstream oname;
 
@@ -209,12 +217,6 @@ HelpPrinter::opts(unsigned int mask){
     }
   }
   if (pod) s << "=back\n\n";
-
-  // Check if we printed these options before, then add them to
-  // printed var.
-  if (printed & mask) throw Err() <<
-    "HelpPrinter: duplicated options in the help message";
-  printed|=mask;
 }
 
 void
@@ -244,11 +246,10 @@ HelpPrinter::par(const std::string & text){
 
 HelpPrinter::~HelpPrinter(){
   // check if we have printed all options
-  unsigned int all=0;
-  for (auto const & o:opts_) all |= o.group;
-  if (all != printed)
-    s << "\nWARNING: not all options have been printed: "
-      << std::hex << (all^printed) << "\n";
+  for (auto const & o:opts_){
+    if (printed.count(o.name) == 0)
+      s << "\nWARNING: options have not been printed: " << o.name;
+  }
 }
 
 void

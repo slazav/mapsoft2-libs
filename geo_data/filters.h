@@ -10,7 +10,7 @@
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_GEOFLT options
+// add GEOFLT group of options
 void ms2opt_add_geoflt(GetOptSet & opts);
 
 /********************************************************************/

@@ -6,14 +6,6 @@
 #include "getopt.h"
 #include <cstring>
 
-#define OPT_INP  1<<10  // input-only options
-#define OPT_CMN  1<<11  // filter options (used both as input and output)
-#define OPT_OUT  1<<12  // output-only options
-
-#define MASK_IN0  (MASK_INP | MS2OPT_STD)          // mask to select global input options
-#define MASK_INP  (OPT_INP | OPT_CMN | MS2OPT_OUT) // mask to select input options
-#define MASK_OUT  (OPT_OUT | OPT_CMN)              // mask to select output options
-
 using namespace std;
 
 // non-standard options
@@ -38,13 +30,13 @@ usage(bool pod=false){
      << "output file according with output options.\n"
   ;
   pr.head(1, "General options:");
-  pr.opts(MS2OPT_STD | MS2OPT_OUT);
+  pr.opts({"STD", "OUT"});
   pr.head(1, "Input options:");
-  pr.opts(OPT_INP);
+  pr.opts({"MY_INP"});
   pr.head(1, "Common options (can be used as input and output options):");
-  pr.opts(OPT_CMN);
+  pr.opts({"MY_CMN"});
   pr.head(1, "Output options:");
-  pr.opts(OPT_OUT);
+  pr.opts({"MY_OUT"});
   throw Err();
 }
 
@@ -53,20 +45,21 @@ int
 main(int argc, char *argv[]){
   try{
 
-    options.add("inp1",  1,'I', OPT_INP, "input option with argument");
-    options.add("inp2",  0,'J', OPT_INP, "input option w/o argument");
-    options.add("cmn1",  1,'C', OPT_CMN, "common option with argument");
-    options.add("cmn2",  0,'D', OPT_CMN, "common option w/o argument");
-    options.add("out1",  1,'O', OPT_OUT, "output option with argument");
-    options.add("out2",  0,'P', OPT_OUT, "output option w/o argument");
+    options.add("inp1",  1,'I', "MY_INP", "input option with argument");
+    options.add("inp2",  0,'J', "MY_INP", "input option w/o argument");
+    options.add("cmn1",  1,'C', "MY_CMN", "common option with argument");
+    options.add("cmn2",  0,'D', "MY_CMN", "common option w/o argument");
+    options.add("out1",  1,'O', "MY_OUT", "output option with argument");
+    options.add("out2",  0,'P', "MY_OUT", "output option w/o argument");
 
-    // standard options: MS2OPT_STD, MS2OPT_OUT
+    // standard options: "STD", "OUT"
     ms2opt_add_std(options);
     ms2opt_add_out(options);
 
     if (argc<2) usage();
 
-    Opt O = parse_options(&argc, &argv, options, MASK_IN0, "out");
+    Opt O = parse_options(&argc, &argv, options,
+      {"STD", "OUT", "MY_INP", "MY_CMN"}, "out");
     if (O.exists("help")) usage();
     if (O.exists("pod"))  usage(true);
     bool verb = O.exists("verbose");
@@ -80,7 +73,8 @@ main(int argc, char *argv[]){
       const char * ifile = argv[0];
 
       // parse file-specific options and append global options
-      O = parse_options(&argc, &argv, options, MASK_INP, "out");
+      O = parse_options(&argc, &argv, options,
+        {"OUT", "MY_INP", "MY_CMN", "MY_OUT"}, "out");
       O.insert(GO.begin(), GO.end());
 
       ofile = O.get("out", "");
@@ -93,7 +87,7 @@ main(int argc, char *argv[]){
     if (ofile != ""){
       // parse output options
       argc++; argv--;
-      O = parse_options(&argc, &argv, options, MASK_OUT);
+      O = parse_options(&argc, &argv, options, {"MY_OUT", "MY_CMN"});
 
       if (verb) cout << "writing: " << ofile
                      << " options: " << O << "\n";

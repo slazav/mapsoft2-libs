@@ -11,22 +11,22 @@ using namespace std;
 
 void
 ms2opt_add_drawtrk(GetOptSet & opts){
-  int m = MS2OPT_DRAWTRK;
-  opts.add("trk_draw_mode", 1,0,m,
+  const char *g = "DRAWTRK";
+  opts.add("trk_draw_mode", 1,0,g,
     "Track drawing mode (normal, speed, height).");
-  opts.add("trk_draw_th", 1,0,m,
+  opts.add("trk_draw_th", 1,0,g,
     "Line thickness, overrides track setting.");
-  opts.add("trk_draw_color", 1,0,m,
+  opts.add("trk_draw_color", 1,0,g,
     "Color (for normal drawing mode), overrides track color.");
-  opts.add("trk_draw_dots", 1,0,m,
+  opts.add("trk_draw_dots", 1,0,g,
     "Draw dots (for normal drawing mode), default: 1.");
-  opts.add("trk_draw_arrows", 1,0,m,
+  opts.add("trk_draw_arrows", 1,0,g,
     "Draw arrows (for normal drawing mode), default: 0.");
-  opts.add("trk_draw_min",    1,0,m,
+  opts.add("trk_draw_min",    1,0,g,
     "Min value (km/h for speed mode, m for height mode).");
-  opts.add("trk_draw_max",    1,0,m,
+  opts.add("trk_draw_max",    1,0,g,
     "Max value (km/h for speed mode, m for height mode).");
-  opts.add("trk_draw_grad",   1,0,m,
+  opts.add("trk_draw_grad",   1,0,g,
     "Color gradient (for speed or height modes), default: BCGYRM.");
 }
 

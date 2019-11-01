@@ -16,7 +16,7 @@ Options:
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_DRAWGRD options
+// add DRAWGRD group of options
 void ms2opt_add_drawgrd(GetOptSet & opts);
 
 /********************************************************************/

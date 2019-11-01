@@ -10,7 +10,7 @@
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_DRAWWPT options
+// add DRAWWPT group of options
 void ms2opt_add_drawwpt(GetOptSet & opts);
 
 /********************************************************************/

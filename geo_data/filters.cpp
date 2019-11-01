@@ -9,13 +9,13 @@ using namespace std;
 // add MS2OPT_GEOFLT options
 void
 ms2opt_add_geoflt(GetOptSet & opts){
-  int m = MS2OPT_GEOFLT;
-  opts.add("skip",    1, 0, m, "Skip part of geodata. Argument is a string "
+  const char *g = "GEOFLT";
+  opts.add("skip",    1, 0, g, "Skip part of geodata. Argument is a string "
                                "which letters show what to skip: W - waypoints, "
                                "T - tracks, M - maps, t - time, z - altitude, "
                                "b - map borders." );
-  opts.add("join",    0, 0, m, "Join all waypoint lists, tracks, map lists.");
-  opts.add("nom_brd", 0, 0, m, "Set map border for a Soviet nomenclature map "
+  opts.add("join",    0, 0, g, "Join all waypoint lists, tracks, map lists.");
+  opts.add("nom_brd", 0, 0, g, "Set map border for a Soviet nomenclature map "
                                "(the map should have a valid name)");
 }
 

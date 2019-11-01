@@ -21,17 +21,17 @@ ms2opt_add_geoimg(GetOptSet & opts){
   ms2opt_add_image(opts);
   ms2opt_add_ozimap_o(opts);
 
-  int m = MS2OPT_IMAGE;
+  const char *g = "IMAGE";
   opts.remove("img_in_fmt");
   opts.remove("img_out_fmt");
-  opts.add("out_fmt",    1,0,   m,
+  opts.add("out_fmt", 1,0,g,
     "Explicitely set image output format: pdf, ps, svg, png, jpeg, tiff, gif. "
     "By default format is determined from the output file extension.");
-  opts.add("bgcolor",    1,0,   m,
+  opts.add("bgcolor", 1,0,g,
     "Image background color (default 0xFFFFFFFF).");
-  opts.add("map",        1,'m', m,
+  opts.add("map", 1,'m',g,
     "Write map file in OziExprorer format (by default it is not written).");
-  opts.add("skip_image", 0,0, m,
+  opts.add("skip_image", 0,0,g,
     "Do not write image file (can be used if only the map file is needed). "
     "Option -o <file> should be provided anyway, the filename "
     "will be written to the map-file.");

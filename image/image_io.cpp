@@ -12,19 +12,19 @@
 
 /**********************************************************/
 void ms2opt_add_image(GetOptSet & opts){
-  int m = MS2OPT_IMAGE;
-  opts.add("img_in_fmt", 1,0, m,
+  const char *g = "IMAGE";
+  opts.add("img_in_fmt", 1,0, g,
     "Explicitely set image format: jpeg, png, gif, tiff");
-  opts.add("img_out_fmt", 1,0, m,
+  opts.add("img_out_fmt", 1,0, g,
     "Explicitely set image format: jpeg, png, gif, tiff");
-  opts.add("tiff_format", 1,0, m,
+  opts.add("tiff_format", 1,0, g,
     "When writing TIFF, convert image to one of following forms: "
     "argb, rgb, grey, pal (default depends on the image).");
-  opts.add("tiff_minwhite", 1,0, m,
+  opts.add("tiff_minwhite", 1,0, g,
     "When writing greyscale TIFF, use MINISWHITE colors (default: 0).");
-  opts.add("jpeg_quality", 1,0, m,
+  opts.add("jpeg_quality", 1,0, g,
     "Set JPEG quality (default 95).");
-  opts.add("png_format", 1,0, m,
+  opts.add("png_format", 1,0, g,
     "When writing PNG, convert image to one of following forms: "
     "argb, rgb, grey, agrey, pal (default depends on the image).");
   ms2opt_add_image_cmap(opts);

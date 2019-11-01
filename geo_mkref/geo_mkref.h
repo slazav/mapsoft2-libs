@@ -19,7 +19,7 @@ Following map fields are set:
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_GEO_MKREF options
+// add MKREF group of options
 void ms2opt_add_mkref(GetOptSet & opts);
 
 /********************************************************************/

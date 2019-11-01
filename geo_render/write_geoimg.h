@@ -7,6 +7,7 @@
 #include "getopt/getopt.h"
 
 // add options for saving images and map files (including --map)
+// groups: MKREF, IMAGE, IMAGE_CMAP, DRAWTRK, GRAWMAP, DRAWWPT, GEO_O
 void ms2opt_add_geoimg(GetOptSet & opts);
 
 // Write geodata to a raster file.

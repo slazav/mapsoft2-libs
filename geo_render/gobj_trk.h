@@ -17,7 +17,7 @@ Supported track options:
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_DRAWTRK options
+// add DRAWTRK group of options
 void ms2opt_add_drawtrk(GetOptSet & opts);
 
 /********************************************************************/

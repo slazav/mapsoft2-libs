@@ -8,39 +8,39 @@ using namespace std;
 
 void
 ms2opt_add_geo_i(GetOptSet & opts){
-  int m = MS2OPT_GEO_I;
-  opts.add("in_fmt", 1, 0, m,
+  const char *g = "GEO_I";
+  opts.add("in_fmt", 1, 0, g,
     "Geodata input format (json, gu, gpx, kml, kmz, ozi, zip).");
 }
 
 void
 ms2opt_add_geo_io(GetOptSet & opts){
-  int m = MS2OPT_GEO_IO;
-  opts.add("gu_enc",  1, 0, m, "Garmin Utils format charset (default KOI8-R).");
-  opts.add("ozi_enc", 1, 0, m, "OziExplorer format charset (default Windows-1251).");
+  const char *g = "GEO_IO";
+  opts.add("gu_enc",  1, 0, g, "Garmin Utils format charset (default KOI8-R).");
+  opts.add("ozi_enc", 1, 0, g, "OziExplorer format charset (default Windows-1251).");
 }
 
 void
 ms2opt_add_geo_o(GetOptSet & opts){
-  int m = MS2OPT_GEO_O;
-  opts.add("out_fmt",        1, 0, m, "Geodata output format (json, gu, gpx, kml, kmz, ozi, zip).");
-  opts.add("xml_compr",      1, 0, m, "Compress XML output (GPX and KML formats), default 0.");
-  opts.add("xml_indent",     1, 0, m, "Use XML indentation (GPX and KML formats), default 1.");
-  opts.add("xml_ind_str",    1, 0, m, "XML indentation string (GPX and KML formats), default '  '.");
-  opts.add("xml_qchar",      1, 0, m, "XML quoting character (GPX and KML formats), default '\''.");
-  opts.add("gpx_write_rte",  1, 0, m, "Write waypoint lists as routes (GPX format), default 0.");
-  opts.add("json_sort_keys", 1, 0, m, "Sort json objects by keys (GeoJSON format), default 1.");
-  opts.add("json_compact",   1, 0, m, "Write compact json (GeoJSON format), default 0.");
-  opts.add("json_indent",    1, 0, m, "Use json indentation (GeoJSON format), default 1.");
+  const char *g = "GEO_O";
+  opts.add("out_fmt",        1, 0, g, "Geodata output format (json, gu, gpx, kml, kmz, ozi, zip).");
+  opts.add("xml_compr",      1, 0, g, "Compress XML output (GPX and KML formats), default 0.");
+  opts.add("xml_indent",     1, 0, g, "Use XML indentation (GPX and KML formats), default 1.");
+  opts.add("xml_ind_str",    1, 0, g, "XML indentation string (GPX and KML formats), default '  '.");
+  opts.add("xml_qchar",      1, 0, g, "XML quoting character (GPX and KML formats), default '\''.");
+  opts.add("gpx_write_rte",  1, 0, g, "Write waypoint lists as routes (GPX format), default 0.");
+  opts.add("json_sort_keys", 1, 0, g, "Sort json objects by keys (GeoJSON format), default 1.");
+  opts.add("json_compact",   1, 0, g, "Write compact json (GeoJSON format), default 0.");
+  opts.add("json_indent",    1, 0, g, "Use json indentation (GeoJSON format), default 1.");
 
   ms2opt_add_ozimap_o(opts);
 }
 
 void
 ms2opt_add_ozimap_o(GetOptSet & opts){
-  int m = MS2OPT_GEO_O;
-  opts.add("ozi_map_grid",   1, 0, m, "Write map reference points in grid coordinates (OziExplorer format), default 0");
-  opts.add("ozi_map_wgs",    1, 0, m, "Always use wgs84 datum for map coordinates (OziExplorer format), default 0");
+  const char *g = "GEO_O";
+  opts.add("ozi_map_grid",   1, 0, g, "Write map reference points in grid coordinates (OziExplorer format), default 0");
+  opts.add("ozi_map_wgs",    1, 0, g, "Always use wgs84 datum for map coordinates (OziExplorer format), default 0");
 }
 
 /**********************************************************/

@@ -11,28 +11,28 @@ using namespace std;
 void
 ms2opt_add_drawwpt(GetOptSet & opts){
 
-  int m = MS2OPT_DRAWWPT;
-  opts.add("wpt_text_font", 1,0,m,
+  const char *g = "DRAWWPT";
+  opts.add("wpt_text_font", 1,0,g,
     "Waypoint font (default: \"serif\").");
-  opts.add("wpt_text_size", 1,0,m,
+  opts.add("wpt_text_size", 1,0,g,
     "Waypoint font size, pixels (default: 10).");
-  opts.add("wpt_text_pad", 1,0,m,
+  opts.add("wpt_text_pad", 1,0,g,
     "Waypoint text padding, pixels (default: 2).");
-  opts.add("wpt_draw_size", 1,0,m,
+  opts.add("wpt_draw_size", 1,0,g,
     "Waypoint dot radius, pixels (default: 3).");
-  opts.add("wpt_line_width", 1,0,m,
+  opts.add("wpt_line_width", 1,0,g,
     "Waypoint line width, (default: 1).");
-  opts.add("wpt_stick_len", 1,0,m,
+  opts.add("wpt_stick_len", 1,0,g,
     "Length of waypoint flag stick (default: 10).");
-  opts.add("wpt_color", 1,0,m,
+  opts.add("wpt_color", 1,0,g,
     "Waypoint color (default: 0xFF000000).");
-  opts.add("wpt_bgcolor", 1,0,m,
+  opts.add("wpt_bgcolor", 1,0,g,
     "Waypoint background color (default: 0xFFFFFFFF).");
-  opts.add("wpt_adj", 1,0,m,
+  opts.add("wpt_adj", 1,0,g,
     "Adjust waypoint flag positions to prevent mutual collisions (default: 1).");
-  opts.add("wpt_adj_brd", 1,0,m,
+  opts.add("wpt_adj_brd", 1,0,g,
     "Adjust waypoint flag positions to prevent boundary collisions (default: 0).");
-  opts.add("wpt_skip_far", 1,0,m,
+  opts.add("wpt_skip_far", 1,0,g,
     "Skip points if their labels can not be placed close enough (default: 5*wpt_stick_len).");
 }
 

@@ -15,52 +15,52 @@ using namespace std;
 
 void
 ms2opt_add_mkref(GetOptSet & opts){
-  int m = MS2OPT_MKREF;
-  opts.add("mkref", 1,0,m,
+  const char *g = "MKREF";
+  opts.add("mkref", 1,0,g,
     "Choose map type (nom, google_tile, tms_tile, proj)");
-  opts.add("name", 1,0,m,
+  opts.add("name", 1,0,g,
     "Set map name. For \"nom\" maps it should contain a "
     "valid Soviet nomenclature name.");
-  opts.add("dpi", 1,0,m,
+  opts.add("dpi", 1,0,g,
     "Map resolution, pixels per inch (\"nom\" and \"proj\" maps)");
-  opts.add("mag", 1,0,m,
+  opts.add("mag", 1,0,g,
     "Map magnification (\"nom\" maps)");
-  opts.add("margins",  1,0,m,
+  opts.add("margins",  1,0,g,
     "Map margins, pixels (\"nom\" and \"proj\" maps).");
-  opts.add("top_margin", 1,0,m,
+  opts.add("top_margin", 1,0,g,
     "Override top margin value (\"nom\" and \"proj\" maps).");
-  opts.add("left_margin", 1,0,m,
+  opts.add("left_margin", 1,0,g,
     "Override left margin value (\"nom\" and \"proj\" maps).");
-  opts.add("right_margin", 1,0,m,
+  opts.add("right_margin", 1,0,g,
     "Override right margin value (\"nom\" and \"proj\" maps).");
-  opts.add("bottom_margin", 1,0,m,
+  opts.add("bottom_margin", 1,0,g,
     "Override bottom margin value (\"nom\" and \"proj\" maps).");
-  opts.add("zindex", 1,0,m,
+  opts.add("zindex", 1,0,g,
     "Tile zindex (\"*_tile\" maps). Can be skipped if tile argument "
     "has the form [x,y,z]");
-  opts.add("tiles", 1,0,m,
+  opts.add("tiles", 1,0,g,
     "Tile or tile range (\"*_tile\" maps), [x,y], [x,y,z], or [x,y,w,h]");
-  opts.add("coords", 1,0,m,
+  opts.add("coords", 1,0,g,
     "Figure in projection coordinates (rectangle or lines) to "
     "be covered by the map (\"proj\" maps). "
     "Figure can be a rectangle written as [x,y,w,h], or a line, "
     "[[x1,y1],[x2,y2], ...], or a multi-segment line, "
     "[<line>, <line>, ...].");
-  opts.add("border", 1,0,m,
+  opts.add("border", 1,0,g,
     "Map border in projection coordinates (\"proj\" maps), "
     "a line or a multi-segment line.");
-  opts.add("coords_wgs", 1,0,m,
+  opts.add("coords_wgs", 1,0,g,
     "Figure in wgs84 coordinates to be covered by the map "
     "(\"*_tile\" or \"proj\" maps), a rectangle, a line, or a multi-segment line.");
-  opts.add("border_wgs", 1,0,m,
+  opts.add("border_wgs", 1,0,g,
     "Map border in wgs84 coordinates (\"*_tile\" or \"proj\" maps), "
     "a line or a multi-segment line.");
-  opts.add("proj", 1,0,m,
+  opts.add("proj", 1,0,g,
     "Projection setting, \"libproj\" parameter string "
     "(e.g. \"+datum=WGS84 +proj=lonlat\") "
     "or mapsoft2 alias (\"WGS\", \"WEB\", \"FI\", \"CH\", \"SU39\", etc.)."
     "Default is WGS.");
-  opts.add("scale", 1,0,m,
+  opts.add("scale", 1,0,g,
     "Map scale, projection units per map cm (\"proj\" maps). "
     "Default value is 0.01 degree/cm for degree projections, "
     "1000m/cm for metric projections.");
