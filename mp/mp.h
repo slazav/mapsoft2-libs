@@ -87,7 +87,7 @@ struct MP : std::list<MPObj>{
     MP(){
       ID=0;
       LblCoding               = 9;
-      Codepage                = "";
+      Codepage                = "1251";
       Elevation               = 'M';
       PreProcess              = 'F';
       Opts["Transparent"]     = "N";
