@@ -56,6 +56,10 @@ ms2opt_add_mapdb_mp_exp(GetOptSet & opts){
   opts.add("cnv_areas", 1,0,g,
     "Type conversion rules for area objects. Same notation as in cnv_point.");
 
+  opts.add("codepage", 1,0,g, "set MP codepage");
+  opts.add("name",     1,0,g, "set MP map name");
+  opts.add("id",       1,0,g, "ser MP map ID");
+
 }
 
 /**********************************************************/
@@ -72,7 +76,6 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
   // data level
   int level = 0;
 
-
   // Read configuration file.
   if (opts.exists("config")){
     int line_num[2] = {0,0};
@@ -81,30 +84,51 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     for (int i=0; i<3; i++) cnvs[i] = iLine();
 
     ifstream ff(opts.get<string>("config"));
-    while (1){
-      vector<string> vs = read_words(ff, line_num, true);
-      if (vs.size()<1) break;
+    try {
+      while (1){
+        vector<string> vs = read_words(ff, line_num, true);
+        if (vs.size()<1) break;
 
-      int cl = -1;
-      if (vs[0]=="point") cl=0;
-      if (vs[0]=="line")  cl=1;
-      if (vs[0]=="area")  cl=2;
+        if (vs[0]=="point"){
+          if (vs.size()!=2 && vs.size()!=3)
+            throw Err() << "point: two or three arguments expected: "
+                           "<type_in> [<type_out>]";
+          cnvs[0].push_back(iPoint(
+            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+          continue;
+        }
 
-      if (cl>=0 && cl<3 && vs.size()>1 && vs.size()<4){
-        cnvs[cl].push_back(iPoint(
-          str_to_type<int>(vs[1]),
-          vs.size()<3? 0:str_to_type<int>(vs[2])));
-        continue;
+        if (vs[0]=="line"){
+          if (vs.size()!=2 && vs.size()!=3)
+            throw Err() << "line: two or three arguments expected: "
+                           "<type_in> [<type_out>]";
+          cnvs[1].push_back(iPoint(
+            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+          continue;
+        }
+
+        if (vs[0]=="area"){
+          if (vs.size()!=2 && vs.size()!=3)
+            throw Err() << "area: two or three arguments expected: "
+                           "<type_in> [<type_out>]";
+          cnvs[2].push_back(iPoint(
+            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+          continue;
+        }
+
+        if (vs[0]=="level"){
+          if (vs.size()!=2) throw Err() << "level: one argument expected";
+          level = str_to_type<int>(vs[1]);
+          continue;
+        }
+
+        throw Err() << "unknown command: " << vs[0];
       }
-
-      if ((vs[0]=="level") && vs.size()==2){
-        level = str_to_type<int>(vs[1]);
-        continue;
-      }
-
-      throw Err() << "bad configuration file at line "
-                  << line_num[0];
+    } catch (Err e){
+        throw Err() << "MapDB::import_mp: bad configuration file at line "
+                    << line_num[0] << ": " << e.str();
     }
+
   }
 
   if (opts.exists("cnv_points"))  cnvs[0] = opts.get<dLine>("cnv_points");
@@ -122,9 +146,9 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     MapDBObj o1;
 
     switch (o.Class){
-      case 0: o1.cl = MAPDB_POINT; break;
-      case 1: o1.cl = MAPDB_LINE; break;
-      case 2: o1.cl = MAPDB_POLYGON; break;
+      case MP_POINT:   o1.cl = MAPDB_POINT; break;
+      case MP_LINE:    o1.cl = MAPDB_LINE; break;
+      case MP_POLYGON: o1.cl = MAPDB_POLYGON; break;
       default:
         throw Err() << "wrong MP class: "<< o.Class;
     }
@@ -186,6 +210,8 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
   for (int i=0; i<3; i++)
     cnvs[i].push_back(iPoint(0,0));
 
+  MP mp_data;
+
   // Read configuration file.
   if (opts.exists("config")){
 
@@ -194,42 +220,90 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
 
     int line_num[2] = {0,0};
     ifstream ff(opts.get<string>("config"));
-    while (1){
-      vector<string> vs = read_words(ff, line_num, true);
-      if (vs.size()<1) continue;
 
-      int cl = -1;
-      if (vs[0]=="point" || vs[0]=="poi") cl=0;
-      if (vs[0]=="line" || vs[0]=="multiline") cl=1;
-      if (vs[0]=="polygon") cl=2;
+    try {
+      while (1){
+        vector<string> vs = read_words(ff, line_num, true);
+        if (vs.size()<1) break;
 
-      if (cl>=0 &&  vs.size()>1 && vs.size()<3){
-        cnvs[cl].push_back(iPoint(
-          str_to_type<int>(vs[1]),
-          vs.size()<3? 0:str_to_type<int>(vs[2])));
-        continue;
+        if (vs[0]=="point"){
+          if (vs.size()!=2 && vs.size()!=3)
+            throw Err() << "point: two or three arguments expected: "
+                           "<type_in> [<type_out>]";
+          cnvs[0].push_back(iPoint(
+            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+          continue;
+        }
+
+        if (vs[0]=="line"){
+          if (vs.size()!=2 && vs.size()!=3)
+            throw Err() << "line: two or three arguments expected: "
+                           "<type_in> [<type_out>]";
+          cnvs[1].push_back(iPoint(
+            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+          continue;
+        }
+
+        if (vs[0]=="area"){
+          if (vs.size()!=2 && vs.size()!=3)
+            throw Err() << "area: two or three arguments expected: "
+                           "<type_in> [<type_out>]";
+          cnvs[2].push_back(iPoint(
+            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+          continue;
+        }
+
+        if (vs[0]=="codepage"){
+          if (vs.size()!=2) throw Err() << "codepage: one argument expected";
+          mp_data.Codepage = vs[1];
+          continue;
+        }
+
+        if (vs[0]=="id"){
+          if (vs.size()!=2) throw Err() << "id: one argument expected";
+          mp_data.ID = str_to_type<int>(vs[1]);
+          continue;
+        }
+
+        if (vs[0]=="name"){
+          if (vs.size()!=2) throw Err() << "name: one argument expected";
+          mp_data.Name = vs[1];
+          continue;
+        }
+
+        throw Err() << "unknown command: " << vs[0];
       }
-
-      throw Err() << "bad configuration file at line "
-                  << line_num[0];
+    } catch (Err e){
+        throw Err() << "MapDB::export_mp: bad configuration file at line "
+                    << line_num[0] << ": " << e.str();
     }
   }
+
 
   if (opts.exists("cnv_points")) cnvs[0] = opts.get<dLine>("cnv_points");
   if (opts.exists("cnv_lines"))  cnvs[1] = opts.get<dLine>("cnv_lines");
   if (opts.exists("cnv_areass")) cnvs[2] = opts.get<dLine>("cnv_areas");
+  if (opts.exists("codepage"))   mp_data.Codepage = opts.get("codepage");
+  if (opts.exists("name"))       mp_data.Name = opts.get("name");
+  if (opts.exists("id"))         mp_data.ID = opts.get("id", 0);
 
-  MP mp_data;
+
+
   uint32_t key = 0;
-
   std::string str = objects.get_first(key);
-
   while (key!=0xFFFFFFFF){
     MapDBObj o;
     o.unpack(str);
 
     MPObj o1;
     o1.Class = o.cl;
+    switch (o.cl){
+      case MAPDB_POINT:   o1.Class = MP_POINT; break;
+      case MAPDB_LINE:    o1.Class = MP_LINE; break;
+      case MAPDB_POLYGON: o1.Class = MP_POLYGON; break;
+      default:
+        throw Err() << "wrong MapDB object class: "<< o.cl;
+    }
 
     // convert type
     for (auto const & cnv: cnvs[o.cl]){
@@ -238,33 +312,33 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
         break;
       }
     }
-
     // skip unknown types
-    if (!o1.Type) continue;
+    if (o1.Type!=-1){
 
-    // name
-    o1.Label = o.name;
+      // name
+      o1.Label = o.name;
 
-    // comments
-    if (o.comm.size()){
-      int pos1=0, pos2=0;
-      do {
-        pos2 = o.comm.find('\n', pos1);
-        o1.Comment.push_back(o.comm.substr(pos1,pos2));
-        pos1 = pos2+1;
-      } while (pos2!=string::npos);
+      // comments
+      if (o.comm.size()){
+        int pos1=0, pos2=0;
+        do {
+          pos2 = o.comm.find('\n', pos1);
+          o1.Comment.push_back(o.comm.substr(pos1,pos2));
+          pos1 = pos2+1;
+        } while (pos2!=string::npos);
+      }
+
+      // direction
+      o1.Direction = o.dir;
+
+      // source
+      if (o.tags.size()>0) o1.Opts.put("Source", *o.tags.begin());
+
+      // points
+      o1.Data.push_back(o);
+
+      if (o1.Data.size()) mp_data.push_back(o1);
     }
-
-    // direction
-    o1.Direction = o.dir;
-
-    // source
-    if (o.tags.size()>0) o1.Opts.put("Source", *o.tags.begin());
-
-    // points
-    o1.Data.push_back(o);
-
-    if (o1.Data.size()) mp_data.push_back(o1);
 
     str = objects.get_next(key);
   }
