@@ -9,10 +9,10 @@
 
 - In the header following fields are supported: `ID`, `Name`,
   `LblCoding`, `Codepage`, `Elevation`, `TreSize`, `RgnLimit`,
-  `PreProcess`, `Levels`, `Level`.
+  `PreProcess`, `Levels`, `Level`. Unknown fields are written to options.
 
 - Comments before the header are converted to UTF-8 according to the
-  `Codepage` field  and attached to the MP object.
+  `Codepage` field and attached to the MP object.
 
 - Only `[POI]`, `[POLYLINE]`, `[POLYGON]`,
   `[RGN10]`, `[RGN20]`, `[RGN30]`, and `[RGN40]`
