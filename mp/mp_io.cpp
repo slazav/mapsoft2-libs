@@ -8,6 +8,17 @@
 using namespace std;
 
 
+/*********************************************************/
+void
+ms2opt_add_mp(GetOptSet & opts){
+  const char *g = "MP";
+  opts.add("mp_in_enc", 1,0,g,
+    "Override input encoding for MP-files");
+  opts.add("mp_out_enc", 1,0,g,
+    "Override output encoding for MP-files");
+}
+
+/*********************************************************/
 // get line, trim \r, skip empty lines
 string getl(istream & f){
   string l;
@@ -35,6 +46,7 @@ bool icasencmp(const string& l, const string& r, const int n) {
 }
 
 
+/*********************************************************/
 void read_mp(istream & f, MP & data, const Opt & opts){
 
   MPObj o;
@@ -139,9 +151,14 @@ void read_mp(istream & f, MP & data, const Opt & opts){
 
   if (*data.Levels.rbegin() == 0)
     throw Err() << "read_mp: not all levels are set in the header";
- 
+
   // make encoding converter, convert name and comments in the header
-  IConv cnv(string("CP" + data.Codepage), "UTF-8");
+  // override codepage from options
+  std::string enc = "UTF-8"; // default
+  if (data.Codepage != "")   enc = "CP" + data.Codepage; // from file
+  if (opts.exists("mp_in_enc")) enc = opts.get("mp_in_enc"); // from opts
+
+  IConv cnv(enc, "UTF-8");
   data.Name = cnv(data.Name);
   for (auto & o: data.Opts) o.second = cnv(o.second);
   for (auto & c: data.Comment) c = cnv(c);
@@ -264,8 +281,10 @@ void read_mp(istream & f, MP & data, const Opt & opts){
 void write_mp(ostream & out, const MP & data, const Opt & opts){
 
   // converting some fields from UTF8 to MP codepage
-  string codepage=data.Opts.get("CodePage", "1251");   // override by file setting
-  IConv cnv("UTF-8", string("CP" + codepage));
+  string enc = "UTF-8";
+  if (data.Codepage != "")   enc = "CP" + data.Codepage; // from data
+  if (opts.exists("mp_out_enc")) enc = opts.get("mp_out_enc"); // from opts
+  IConv cnv("UTF-8", enc);
 
   for (auto c:data.Comment) out << ";" << cnv(c) << "\r\n";
 

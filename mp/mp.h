@@ -87,7 +87,7 @@ struct MP : std::list<MPObj>{
     MP(){
       ID=0;
       LblCoding               = 9;
-      Codepage                = "1251";
+      Codepage                = "";
       Elevation               = 'M';
       PreProcess              = 'F';
       Opts["Transparent"]     = "N";
@@ -111,20 +111,22 @@ struct MP : std::list<MPObj>{
 /******************************************************************/
 // reading/writing
 
-/// Common options:
-///  * mp_codepage <cpage> -- Codepage for text. Used for writing
-///    files and for reading files with unspecified codepage.
-///    Default value is 1251.
-///    Encoding = "CP" + codepage.
+#include "getopt/getopt.h"
 
-/// Read mp-file specified by <filename> into <world>. If some data
-/// already exists in <world> then objects are appended and the header
-/// is overwrited...
-/// Text is converted to UTF8 encoding
+// add MP group of options
+void ms2opt_add_mp(GetOptSet & opts);
+
+/// Read mp-file from a stream <f> into <data>. If some data
+/// already exists in <data> then objects are appended and the header
+/// is overwrited... (FIXME!)
+/// Text is converted to UTF8 encoding using CodePage parameter in the
+/// file header or "mp_in_enc" option.
 
 void read_mp(std::istream & f, MP & data, const Opt & opts = Opt());
 
-/// Write <world> into mp-file <filename>
+/// Write <data> to stream <f> in MP format.
+/// Text is converted from UTF8 encoding to the encoding specified
+/// by CodePage parameter or "mp_out_enc" option.
 void write_mp(std::ostream & f, const MP & data, const Opt & opts = Opt());
 
 
