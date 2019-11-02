@@ -13,9 +13,9 @@ void
 ms2opt_add_mp(GetOptSet & opts){
   const char *g = "MP";
   opts.add("mp_in_enc", 1,0,g,
-    "Override input encoding for MP-files");
+    "Override input encoding for MP-files (does not change CodePage setting)");
   opts.add("mp_out_enc", 1,0,g,
-    "Override output encoding for MP-files");
+    "Override output encoding for MP-files (does not change CodePage setting)");
 }
 
 /*********************************************************/
