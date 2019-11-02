@@ -177,25 +177,25 @@ void read_mp(istream & f, MP & data, const Opt & opts){
         icasecmp(l,"[DICTIOANRY]")  || icasecmp(l,"[BACKGROUND]") ||
         icasecmp(l,"[HIGHWAYS]")    || icasecmp(l,"[ZIPCODES]") ||
         icasecmp(l,"[DEFINITIONS]") || icasecmp(l,"[PLT]") ||
-        icasecmp(l,"WPT")           || icasecmp(l,"DBX") ||
-        icasecmp(l,"SHP")           || icasecmp(l,"[FILE]")) {mode=1; continue;}
+        icasecmp(l,"[WPT]")         || icasecmp(l,"[DBX]") ||
+        icasecmp(l,"[SHP]")         || icasecmp(l,"[FILE]")) {mode=1; continue;}
 
     // supported objects
-    if (icasecmp(l,"[POI]") || icasecmp(l,"RNG10") || icasecmp(l,"RNG20")) {
+    if (icasecmp(l,"[POI]") || icasecmp(l,"[RNG10]") || icasecmp(l,"[RNG20]")) {
       mode=2;
       o = MPObj();
       o.Class = MAP_POINT;
       o.Comment = comm;
       continue;
     }
-    if (icasecmp(l,"[POLYLINE]") || icasecmp(l,"RNG40")) {
+    if (icasecmp(l,"[POLYLINE]") || icasecmp(l,"[RNG40]")) {
       mode=2;
       o = MPObj();
       o.Class = MAP_LINE;
       o.Comment = comm;
       continue;
     }
-    if (icasecmp(l,"[POLYGON]") || icasecmp(l,"RNG80")) {
+    if (icasecmp(l,"[POLYGON]") || icasecmp(l,"[RNG80]")) {
       mode=2;
       o = MPObj();
       o.Class = MAP_POLYGON;
