@@ -282,7 +282,7 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
 
   if (opts.exists("cnv_points")) cnvs[0] = opts.get<dLine>("cnv_points");
   if (opts.exists("cnv_lines"))  cnvs[1] = opts.get<dLine>("cnv_lines");
-  if (opts.exists("cnv_areass")) cnvs[2] = opts.get<dLine>("cnv_areas");
+  if (opts.exists("cnv_areas")) cnvs[2] = opts.get<dLine>("cnv_areas");
   if (opts.exists("codepage"))   mp_data.Codepage = opts.get("codepage");
   if (opts.exists("name"))       mp_data.Name = opts.get("name");
   if (opts.exists("id"))         mp_data.ID = opts.get("id", 0);
