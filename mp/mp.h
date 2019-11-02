@@ -118,7 +118,7 @@ void ms2opt_add_mp(GetOptSet & opts);
 
 /// Read mp-file from a stream <f> into <data>. If some data
 /// already exists in <data> then objects are appended and the header
-/// is overwrited... (FIXME!)
+/// is overwrited...
 /// Text is converted to UTF8 encoding using CodePage parameter in the
 /// file header or "mp_in_enc" option.
 

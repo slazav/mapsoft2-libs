@@ -56,10 +56,8 @@ void read_mp(istream & f, MP & data, const Opt & opts){
 
   // overwrite header
   MP tmp;
-  data.Opts = tmp.Opts;
-  data.ID = 0;
-  data.Name = "";
-  data.Comment.clear();
+  tmp.std::list<MPObj>::operator=(data); // copy objects if any
+  data = tmp;
 
   // comments and empty lines
   string l = getl(f);
