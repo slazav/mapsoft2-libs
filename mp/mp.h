@@ -11,9 +11,9 @@
 #include "geom/rect.h"
 #include "opt/opt.h"
 
-#define MAP_POINT    0
-#define MAP_LINE     1
-#define MAP_POLYGON  2
+#define MP_POINT    0
+#define MP_LINE     1
+#define MP_POLYGON  2
 
 // format description can be found in cGPSmapper-UsrMan-v02.4.pdf
 
@@ -28,7 +28,7 @@ struct MPObj {
     std::vector<dMultiLine> Data; // Data for different levels
 
     MPObj(){
-      Class=MAP_POINT; Type=-1; EndLevel=0; Direction=0;
+      Class=MP_POINT; Type=-1; EndLevel=0; Direction=0;
     }
 
     bool operator== (const MPObj & o) const{

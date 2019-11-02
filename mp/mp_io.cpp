@@ -182,21 +182,21 @@ void read_mp(istream & f, MP & data, const Opt & opts){
     if (icasecmp(l,"[POI]") || icasecmp(l,"[RNG10]") || icasecmp(l,"[RNG20]")) {
       mode=2;
       o = MPObj();
-      o.Class = MAP_POINT;
+      o.Class = MP_POINT;
       o.Comment = comm;
       continue;
     }
     if (icasecmp(l,"[POLYLINE]") || icasecmp(l,"[RNG40]")) {
       mode=2;
       o = MPObj();
-      o.Class = MAP_LINE;
+      o.Class = MP_LINE;
       o.Comment = comm;
       continue;
     }
     if (icasecmp(l,"[POLYGON]") || icasecmp(l,"[RNG80]")) {
       mode=2;
       o = MPObj();
-      o.Class = MAP_POLYGON;
+      o.Class = MP_POLYGON;
       o.Comment = comm;
       continue;
     }
@@ -324,9 +324,9 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
     for (auto c:obj.Comment) out << ";" << cnv(c) << "\r\n";
 
     switch (obj.Class) {
-      case MAP_POINT:   out << "[POI]\r\n"; break;
-      case MAP_LINE:    out << "[POLYLINE]\r\n"; break;
-      case MAP_POLYGON: out << "[POLYGON]\r\n"; break;
+      case MP_POINT:   out << "[POI]\r\n"; break;
+      case MP_LINE:    out << "[POLYLINE]\r\n"; break;
+      case MP_POLYGON: out << "[POLYGON]\r\n"; break;
       default: throw Err() << "mp_write: unknown object class: " << obj.Class;
     }
     out << "Type=0x"     << setbase(16) << obj.Type << setbase(10) << "\r\n";
