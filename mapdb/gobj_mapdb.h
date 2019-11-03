@@ -118,17 +118,33 @@ public:
 
   struct Feature {
     // check number of arguments
-    void check_args(const std::vector<std::string> & vs,
-                    const std::vector<std::string> & args){
-      if (vs.size()!=args.size()){
-        std::string list;
-        for (auto const & a:args){
-          if (list.size()) list += ", ";
-          list += "<" + a + ">";
-        }
+    // args -- given arguments
+    // templ -- argument template: name, ?name, ...
+    void check_args(const std::vector<std::string> & args,
+                    const std::vector<std::string> & templ){
+
+      std::string list;
+      for (auto const & a:templ){
+        if (list.size()) list += " ";
+        if (a.substr(0,1) == "?")
+          list += "[" + a.substr(1,0) + "]";
+        else
+          list += a;
+      }
+
+      if (args.size()>templ.size()){
+        if (templ.size() == 0) throw Err()
+          << "Too many arguments. No arguments needed";
+        if (*templ.rbegin() != "...") throw Err()
+            << "Too many arguments. Expected arguments: " << list;
+      }
+
+      for (int i=0; i<templ.size(); i++){
+        if (i<args.size()) continue;
+        if (templ[i].substr(0,1) == "?") continue;
+        if (templ[i] == "...") break;
         throw Err()
-          << args.size() << " argument" << (args.size()>1 ? "s":"")
-          << " expected: " << list;
+          << "Too few arguments. Expected arguments: " << list;
       }
     }
   };
@@ -136,7 +152,7 @@ public:
   struct FeatureStroke : Feature {
     uint32_t col; double th;
     FeatureStroke(const std::vector<std::string> & vs){
-      check_args(vs, {"color", "line width"});
+      check_args(vs, {"<color>", "<line width>"});
       col = str_to_type<uint32_t>(vs[0]);
       th  = str_to_type<double>(vs[1]);
     }
@@ -145,7 +161,7 @@ public:
   struct FeatureFill : Feature {
     uint32_t col;
     FeatureFill(const std::vector<std::string> & vs){
-      check_args(vs, {"fill color"});
+      check_args(vs, {"<fill color>"});
       col = str_to_type<uint32_t>(vs[0]);
     }
   };
@@ -156,7 +172,7 @@ public:
     Cairo::RefPtr<Cairo::SurfacePattern> patt;
     FeaturePatt(const std::string & mapdir,
                 const std::vector<std::string> & vs){
-      check_args(vs, {"file", "scale"});
+      check_args(vs, {"<file>", "<scale>"});
       double k = str_to_type<double>(vs[1]);
       img = image_load(mapdir + "/" + vs[0]);
       if (img.is_empty()) throw Err() << "empty image: " << vs[0];
@@ -169,7 +185,7 @@ public:
   struct FeatureSmooth : Feature {
     double dist;
     FeatureSmooth(const std::vector<std::string> & vs){
-      check_args(vs, {"distance"});
+      check_args(vs, {"<distance>"});
       dist = str_to_type<double>(vs[0]);
     }
   };
@@ -177,9 +193,7 @@ public:
   struct FeatureDash : Feature {
     std::vector<double> vd;
     FeatureDash(const std::vector<std::string> & vs){
-      if (vs.size()<1)
-        throw Err()
-          << "at least one argument expected: <dist1> <dist2> ...";
+      check_args(vs, {"<dist>", "..."});
       for (auto const & s:vs)
         vd.push_back(str_to_type<double>(s));
     }
@@ -199,7 +213,7 @@ public:
   struct FeatureJoin : Feature {
     Cairo::LineJoin join;
     FeatureJoin(const std::vector<std::string> & vs){
-      check_args(vs, {"<miter|round>"});
+      check_args(vs, {"miter|round"});
       if      (vs[0] == "miter")  join = Cairo::LINE_JOIN_MITER;
       else if (vs[0] == "round")  join = Cairo::LINE_JOIN_ROUND;
       else throw Err() << "wrong value: round or miter expected";
@@ -234,7 +248,7 @@ public:
   struct FeatureGroup : Feature {
     std::string name;
     FeatureGroup(const std::vector<std::string> & vs){
-      check_args(vs, {"name"});
+      check_args(vs, {"<name>"});
       name = vs[0];
     }
   };
@@ -242,7 +256,7 @@ public:
   struct FeatureName : Feature {
     std::string name;
     FeatureName(const std::vector<std::string> & vs){
-      check_args(vs, {"name"});
+      check_args(vs, {"<name>"});
       name = vs[0];
     }
   };
@@ -254,7 +268,7 @@ public:
     double dist;
     FeatureMoveTo(const std::vector<std::string> & vs, const bool rotate):
         rotate(rotate){
-      check_args(vs, {"area|line","type", "dist"});
+      check_args(vs, {"area|line", "<type>", "<dist>"});
       target = str_to_type<uint32_t>(vs[1]);
       dist   = str_to_type<double>(vs[2]);
       if      (vs[0] == "area")      target |= MAPDB_POLYGON << 16;
