@@ -38,7 +38,7 @@ class PanelMapDB : public Gtk::Notebook, public GObjMapDB {
 
 public:
   PanelMapDB(const std::string & mapdir):
-      GObjMapDB(mapdir) {
+      GObjMapDB(mapdir, Opt()) {
 
     /*******************************/
     // Setup group view
