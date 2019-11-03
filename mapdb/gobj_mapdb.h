@@ -48,6 +48,8 @@ where possible features are:
                               dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
     group <name>           -- set group name for a drawing step
     name  <name>           -- set name for a drawing step
+    move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
+    rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.

@@ -215,7 +215,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
         continue;
       }
 
-      // move_to area|line <type>
+      // move_to area|line <type> <max distance>
       if (ftr == "move_to"){
         st->check_type(STEP_DRAW_POINT);
         st->features.emplace(FEATURE_MOVETO,
@@ -223,7 +223,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
         continue;
       }
 
-      // rotate_to area|line <type>
+      // rotate_to area|line <type> <max distance>
       if (ftr == "rotate_to"){
         st->check_type(STEP_DRAW_POINT);
         st->features.emplace(FEATURE_MOVETO,
