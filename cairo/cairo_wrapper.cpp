@@ -23,7 +23,7 @@ image_to_pattern(const Image & img, double sc, double dx, double dy){
       Cairo::SurfacePattern::create(surf);
     Cairo::Matrix M=Cairo::identity_matrix();
     M.translate(surf->get_width()*(0.5+dx), surf->get_height()*(0.5+dy));
-    M.scale(sc,sc);
+    M.scale(1/sc,1/sc);
     patt->set_matrix(M);
     return patt;
   }
