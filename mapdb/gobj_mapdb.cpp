@@ -343,7 +343,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   if (features.count(FEATURE_PATT)){
     auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
     cr->set_source(data->patt);
-    cr->fill();
+    if (action == STEP_DRAW_MAP)
+      cr->paint();
+    else
+      cr->fill_preserve();
   }
 
   // Fill feature
