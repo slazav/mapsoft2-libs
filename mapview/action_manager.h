@@ -31,7 +31,6 @@ private:
   // Menus
   Glib::RefPtr<Gtk::ActionGroup> actions;
   Glib::RefPtr<Gtk::UIManager> ui_manager;
-  Gtk::Menu *popup_trks, *popup_wpts, *popup_maps, *popup_srtm;
 
   // Add action to a menu. Menu name is Popup* for pop-up menus
   // or Group name in Main menu (File, View, etc...)
