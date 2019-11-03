@@ -66,7 +66,7 @@ other commands in the configuration file
 #include "getopt/getopt.h"
 
 // add MS2OPT_DRAWMAPDB options
-void ms2opt_add_drawmapdb(GetOptSet & opts);
+void ms2opt_add_mapdb_render(GetOptSet & opts);
 
 /********************************************************************/
 
@@ -74,7 +74,7 @@ void ms2opt_add_drawmapdb(GetOptSet & opts);
 class GObjMapDB : public GObjMulti{
 private:
 
-  std::string mapdir;
+  std::string cfgdir;
   std::shared_ptr<MapDB> map;
   std::vector<std::string> groups; // ordered list of all groups
   GeoMap ref; // default map reference
@@ -170,13 +170,13 @@ public:
   struct FeaturePatt : Feature {
     Image img; // actual data
     Cairo::RefPtr<Cairo::SurfacePattern> patt;
-    FeaturePatt(const std::string & mapdir,
+    FeaturePatt(const std::string & imgdir,
                 const std::vector<std::string> & vs){
       check_args(vs, {"<file>", "<scale>", "?<dx>", "?<dy>"});
       double sc = str_to_type<double>(vs[1]);
       double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
       double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
-      img = image_load(mapdir + "/" + vs[0]);
+      img = image_load(imgdir + "/" + vs[0]);
       if (img.is_empty()) throw Err() << "empty image: " << vs[0];
       if (img.type() != IMAGE_32ARGB)
         img = image_to_argb(img);
@@ -322,7 +322,7 @@ public:
   GeoMap get_ref() const { return ref; }
 
   // constructor -- open new map
-  GObjMapDB(const std::string & mapdir);
+  GObjMapDB(const std::string & mapdir, const Opt & o);
 
 };
 

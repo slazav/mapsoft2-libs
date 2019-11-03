@@ -8,23 +8,26 @@
 #include "read_words/read_words.h"
 #include "geo_data/geo_io.h"
 #include "geo_mkref/geo_mkref.h"
+#include "filename/filename.h"
 
 using namespace std;
 
 /**********************************************************/
 void
-ms2opt_add_drawmapdb(GetOptSet & opts){
-//  int m = MS2OPT_DRAWMAPDB;
-//  opts.add("config", 1,'c',m, "Configuration file for vector map rendering.");
+ms2opt_add_mapdb_render(GetOptSet & opts){
+  const char *g = "MAPDB_RENDER";
+  opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
 }
 /**********************************************************/
 
-GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
+GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
+  opt = std::shared_ptr<Opt>(new Opt(o));
   map = std::shared_ptr<MapDB>(new MapDB(mapdir, false));
 
   // Read configuration file.
   std::string cfgfile = opt->get<string>("config", mapdir + "/render.cfg");
+  cfgdir = file_get_prefix(cfgfile);
 
   ifstream ff(cfgfile);
   if (!ff) throw Err()
@@ -143,7 +146,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       if (ftr == "patt"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP);
         st->features.emplace(FEATURE_PATT,
-          std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
+          std::shared_ptr<Feature>(new FeaturePatt(cfgdir, vs)));
         continue;
       }
 
@@ -151,7 +154,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
       if (ftr == "img"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT);
         st->features.emplace(FEATURE_IMG,
-          std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
+          std::shared_ptr<Feature>(new FeaturePatt(cfgdir, vs)));
         continue;
       }
 
