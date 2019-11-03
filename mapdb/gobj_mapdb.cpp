@@ -141,7 +141,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir): mapdir(mapdir){
 
       // patt <file> <scale>
       if (ftr == "patt"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_MAP);
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP);
         st->features.emplace(FEATURE_PATT,
           std::shared_ptr<Feature>(new FeaturePatt(mapdir, vs)));
         continue;
