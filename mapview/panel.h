@@ -28,7 +28,9 @@ template <typename Tl, typename Td>
 class Panel : public Gtk::ScrolledWindow, public GObjMulti {
   sigc::signal<void> signal_data_changed_;
   Gtk::TreeView *treeview;
+
 public:
+  Gtk::Menu *popup_menu; // access from ActionManager
 
   // This signal is emitted when data is changed
   // (everything we want to save in the file:
@@ -63,6 +65,11 @@ public:
 
     set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     Gtk::ScrolledWindow::add(*treeview);
+
+    treeview->set_events(Gdk::BUTTON_PRESS_MASK);
+    treeview->signal_button_press_event().connect(
+      sigc::mem_fun (this, &Panel::on_button_press), false);
+
   }
 
   // Add data
@@ -199,6 +206,14 @@ public:
     upd_wp();
     upd_name();
   }
+
+  // callback for opening the popup menu
+  bool on_button_press (GdkEventButton * event) {
+    if (event->button != 3) return false;
+    if (popup_menu) popup_menu->popup(event->button, event->time);
+    return true;
+  }
+
 
   // update names in data (no need to redraw)
   virtual bool upd_name(Tl * sel_gobj = NULL, bool dir=true) = 0;

@@ -133,29 +133,9 @@ ActionManager::ActionManager (Mapview * mapview_):
     actions->add(Gtk::Action::create("MenuFile",  "_File"));
     actions->add(Gtk::Action::create("MenuView",  "_View"));
 
-//    actions->add(Gtk::Action::create("MenuWaypoints", "_Waypoints"));
-//    actions->add(Gtk::Action::create("MenuTracks", "_Tracks"));
-//    actions->add(Gtk::Action::create("MenuMaps", "_Maps"));
-//    actions->add(Gtk::Action::create("MenuSRTM", "_SRTM"));
-//    actions->add(Gtk::Action::create("MenuMisc", "Mi_sc"));
-    popup_wpts = (Gtk::Menu *)ui_manager->get_widget("/PopupWPTs");
-    popup_trks = (Gtk::Menu *)ui_manager->get_widget("/PopupTRKs");
-    popup_maps = (Gtk::Menu *)ui_manager->get_widget("/PopupMAPs");
-//    popup_srtm = (Gtk::Menu *)ui_manager->get_widget("/PopupSRTM");
-
-    // panels mouse button events -> popup menus
-    mapview->panel_wpts->set_events(Gdk::BUTTON_PRESS_MASK);
-    mapview->panel_trks->set_events(Gdk::BUTTON_PRESS_MASK);
-    mapview->panel_maps->set_events(Gdk::BUTTON_PRESS_MASK);
-//    mapview->panel_misc->set_events(Gdk::BUTTON_PRESS_MASK);
-    mapview->panel_wpts->signal_button_press_event().connect(
-      sigc::mem_fun (this, &ActionManager::on_panel_button_press), false);
-    mapview->panel_trks->signal_button_press_event().connect(
-      sigc::mem_fun (this, &ActionManager::on_panel_button_press), false);
-    mapview->panel_maps->signal_button_press_event().connect(
-      sigc::mem_fun (this, &ActionManager::on_panel_button_press), false);
-//    mapview->panel_misc->signal_button_press_event().connect(
-//      sigc::mem_fun (this, &ActionManager::on_panel_button_press), false);
+    mapview->panel_wpts->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupWPTs");
+    mapview->panel_trks->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupTRKs");
+    mapview->panel_maps->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupMAPs");
 
     /// viewer mouse click -> action manager click
     mapview->viewer.signal_click().connect (
@@ -230,22 +210,6 @@ ActionManager::AddAction(ActionMode *action,
       "</ui>"
     );
   }
-}
-
-bool
-ActionManager::on_panel_button_press (GdkEventButton * event) {
-  if (event->button == 3) {
-    Gtk::Menu * M = 0;
-    switch (mapview->panels->get_current_page()){
-      case PAGE_WPTS: M = popup_wpts; break;
-      case PAGE_TRKS: M = popup_trks; break;
-//      case PAGE_VMAP: M = popup_vmap; break;
-      case PAGE_MAPS: M = popup_maps; break;
-    }
-    if (M) M->popup(event->button, event->time);
-    return true;
-  }
-  return false;
 }
 
 void
