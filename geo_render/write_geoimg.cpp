@@ -1,23 +1,13 @@
 #include "cairo/cairo_wrapper.h"
 #include "filename/filename.h"
-#include "geo_mkref/geo_mkref.h"
 #include "geo_data/geo_io.h"
 #include "geo_data/conv_geo.h"
-#include "viewer/gobj_multi.h"
-#include "gobj_trk.h"
-#include "gobj_wpts.h"
-#include "gobj_maps.h"
-#include "draw_pulk_grid.h"
 #include "write_geoimg.h"
 
 
 void
 ms2opt_add_geoimg(GetOptSet & opts){
-  ms2opt_add_mkref(opts);
-  ms2opt_add_drawwpt(opts);
-  ms2opt_add_drawtrk(opts);
-  ms2opt_add_drawmap(opts);
-//  ms2opt_add_drawgrd(opts);
+  ms2opt_add_out(opts);
   ms2opt_add_image(opts);
   ms2opt_add_ozimap_o(opts);
 
@@ -38,7 +28,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
 }
 
 void
-write_geoimg(const std::string & fname, GeoData & data, const Opt & opts){
+write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts){
 
   std::string fmt;
   if      (file_ext_check(fname, ".pdf"))  fmt="pdf";
@@ -52,24 +42,25 @@ write_geoimg(const std::string & fname, GeoData & data, const Opt & opts){
   else if (file_ext_check(fname, ".gif"))  fmt="gif";
 
   if (opts.get("out_fmt","") != "") fmt = opts.get("out_fmt", "");
-  // make reference and conversion map -> WGS84
-  GeoMap map = geo_mkref(data, opts);
-  std::shared_ptr<ConvMap> cnv(new ConvMap(map));
+
 
   // write map file
   if (opts.exists("map")){
-    map.image = fname;
-    write_ozi_map(opts.get("map","").c_str(), map, opts);
+    GeoMap r(ref);
+    r.image = fname;
+    write_ozi_map(opts.get("map","").c_str(), r, opts);
   }
 
   // exit if --skip_image option exists
-  if (opts.exists("skip_image")){
-    return;
-  }
+  if (opts.exists("skip_image")){ return; }
+
+  std::shared_ptr<ConvMap> cnv(new ConvMap(ref));
+  obj.set_opt(std::shared_ptr<Opt>(new Opt(opts)));
+  obj.set_cnv(cnv);
 
   // find image dimensions
-  dRect box = dRect(dPoint(), (dPoint)map.image_size);
-  if (box.is_zsize()) box = map.border.bbox();
+  dRect box = dRect(dPoint(), (dPoint)ref.image_size);
+  if (box.is_zsize()) box = ref.border.bbox();
   if (box.is_zsize()) throw Err() << "write_img: can't get map dimensions";
 
   // setup cairo context
@@ -91,27 +82,8 @@ write_geoimg(const std::string & fname, GeoData & data, const Opt & opts){
   cr->set_color_a(opts.get<int>("bgcolor", 0xFFFFFFFF));
   cr->paint();
 
-  // construct GObjMulti with all the objects we want to draw:
-  GObjMulti obj;
-  obj.set_opt(std::shared_ptr<Opt>(new Opt(opts)));
-  obj.set_cnv(cnv);
-
-  for (auto & m:data.maps)
-    obj.add(3, std::shared_ptr<GObjMaps>(new GObjMaps(m)));
-
-  for (auto & t:data.trks)
-    obj.add(2, std::shared_ptr<GObjTrk>(new GObjTrk(t)));
-
-  for (auto & w:data.wpts)
-    obj.add(1, std::shared_ptr<GObjWpts>(new GObjWpts(w)));
-
   // draw tracks and waypoints
   obj.draw(cr, box);
-
-// // draw grid
-//  dPoint origin(0,0);
-//  if (opts.get("grid", 0))
-//    draw_pulk_grid(cr, origin, cnv, opts);
 
   // write raster formats
   if (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif"){
