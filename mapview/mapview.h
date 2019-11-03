@@ -32,7 +32,7 @@
 #define PAGE_MAPS 2
 #define PAGE_VMAP 3
 
-class Mapview : public Gtk::Window {
+class Mapview : public Gtk::ApplicationWindow {
 public:
     /// Mapview components (order is important for constructing):
     GObjMulti     gobj;            // Main object
