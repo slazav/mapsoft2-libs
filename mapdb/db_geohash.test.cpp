@@ -14,6 +14,8 @@ main(){
       unlink("a.dbh");
       GeoHashDB db("a.dbh", NULL, 1);
 
+      assert_eq(db.get_types().size(), 0);
+
       db.put(1, 0, dRect(-0.01,-0.01, 0.02,0.02));
       db.put(2, 0, dRect(1,-0.01,     0.02,0.02));
       db.put(3, 0, dRect(-0.01,1,     0.02,0.02));
@@ -29,6 +31,7 @@ main(){
       std::set<uint32_t> v1 = db.get(0, dRect());
       assert_eq(v1.size(),0);
 
+      assert_eq(db.get_types().size(), 1);
       v1 = db.get_types();
       assert_eq(v1.size(), 1);
       assert_eq(v1.count(0),1);
