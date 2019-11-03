@@ -145,7 +145,7 @@ GObjMaps::on_set_cnv(){
       false);
 
     // border in viewer coordinates
-    d.brd = d.cnv.bck_acc(d.src->border);
+    d.brd = d.cnv.bck_acc(close(d.src->border));
 
     // reference points in viewer coordinates
     d.refs = dLine();
