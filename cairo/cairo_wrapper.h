@@ -21,7 +21,8 @@ Cairo::RefPtr<Cairo::ImageSurface> image_to_surface(const Image & img);
 // Convert image to a Cairo::SurfacePattern.
 // Data is kept in the Image, it should be alive while
 // the ImageSurface is used.
-Cairo::RefPtr<Cairo::SurfacePattern> image_to_pattern(const Image & img, double sc);
+Cairo::RefPtr<Cairo::SurfacePattern> image_to_pattern(
+  const Image & img, double sc, double dx=0, double dy=0);
 
 //////////////////////////////////////////////////////////////////
 /// This class contains functions
