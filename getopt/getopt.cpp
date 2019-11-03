@@ -248,7 +248,8 @@ HelpPrinter::~HelpPrinter(){
   // check if we have printed all options
   for (auto const & o:opts_){
     if (printed.count(o.name) == 0)
-      s << "\nWARNING: options have not been printed: " << o.name;
+      s << "\nWARNING: options have not been printed: " << o.name
+        << " (group: " << o.group << ")\n";;
   }
 }
 
