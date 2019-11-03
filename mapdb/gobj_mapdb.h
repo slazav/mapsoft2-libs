@@ -38,8 +38,8 @@ where possible features are:
 
     stroke <width> <color> -- Draw a point, a line or an area contour.
     fill <color> -- Fill an area or the map.
-    patt <image file> <scale> -- Fill an area with the pattern.
-    img  <image file> <scale> -- Draw an image (point or area)
+    patt <image file> <scale> [<dx>] [<dy>] -- Fill an area with the pattern.
+    img  <image file> <scale> [<dx>] [<dy>] -- Draw an image (point or area)
     smooth <distance> -- Use smoothed paths.
     dash <len1> ...  -- Setup dashed line. Valid for lines and areas together with stroke feature.
     cap  round|butt|square -- Set line cup (default round). Use with stroke feature.
@@ -172,13 +172,15 @@ public:
     Cairo::RefPtr<Cairo::SurfacePattern> patt;
     FeaturePatt(const std::string & mapdir,
                 const std::vector<std::string> & vs){
-      check_args(vs, {"<file>", "<scale>"});
-      double k = str_to_type<double>(vs[1]);
+      check_args(vs, {"<file>", "<scale>", "?<dx>", "?<dy>"});
+      double sc = str_to_type<double>(vs[1]);
+      double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
+      double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
       img = image_load(mapdir + "/" + vs[0]);
       if (img.is_empty()) throw Err() << "empty image: " << vs[0];
       if (img.type() != IMAGE_32ARGB)
         img = image_to_argb(img);
-      patt = image_to_pattern(img, k);
+      patt = image_to_pattern(img, sc, dx, dy);
     }
   };
 
