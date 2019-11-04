@@ -42,7 +42,7 @@ MapDBObj::pack() const {
     string_pack_str(s, "tags", t);
 
   // coordinates
-  string_pack_crds(s, "crds,", *this);
+  string_pack_crds(s, "crds", *this);
 
   return s.str();
 }
