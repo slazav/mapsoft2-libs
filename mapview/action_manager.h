@@ -45,9 +45,6 @@ private:
   Mapview * mapview;
   std::vector<std::shared_ptr<ActionMode> > modes;
   int current_mode;
-
-  // Control menu popups for the right panel
-  bool on_panel_button_press (GdkEventButton * event);
 };
 
 #endif
