@@ -32,6 +32,7 @@ class IFilter {
     std::istream & stream();
 };
 
+/**************************/
 class OFilter {
   private:
     class Impl;
@@ -45,6 +46,25 @@ class OFilter {
     ~OFilter();
 
     std::ostream & stream();
+};
+
+/**************************/
+
+class IOFilter {
+  private:
+    class Impl;
+    std::unique_ptr<Impl> impl;
+
+  public:
+    IOFilter(std::ostream & ostr, const std::string & prog);
+
+    IOFilter(const std::string & prog);
+
+    ~IOFilter();
+
+    std::istream & istream();
+    std::ostream & ostream();
+    void close();
 };
 
 #endif

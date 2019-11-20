@@ -289,3 +289,83 @@ OFilter::~OFilter() {}
 
 std::ostream &
 OFilter::stream(){ return impl->stream(); }
+
+/***********************************************************/
+/***********************************************************/
+// same for IOFilter
+class IOFilter::Impl{
+  private:
+    std::unique_ptr<std::istream> istrp;
+    std::unique_ptr<std::ostream> ostrp;
+    __gnu_cxx::stdio_filebuf<char> ifilebuf, ofilebuf;
+
+  public:
+
+  std::istream & istream() {return *istrp;}
+  std::ostream & ostream() {return *ostrp;}
+
+  ~Impl() {};
+
+  /***********************************************************/
+  Impl(const std::string & prog){
+
+    int fd1[2], fd2[2];
+    int pid;
+    if (pipe(fd1)<0 || pipe(fd2)<0) throw Err() << "iofilter: pipe error";
+    if ( (pid = fork()) < 0 ) throw Err() << "iofilter: fork1 error";
+
+    /******** child process ********/
+    if (pid == 0) {
+      ::close(fd1[1]);
+      ::close(fd2[0]);
+      try {
+        // attach stdin/stdout to pipes and execute the filter
+        if (fd1[0] != STDIN_FILENO &&
+            dup2(fd1[0], STDIN_FILENO) != STDIN_FILENO)
+              throw Err() << "iofilter: dup2 to stdin error";
+
+        if (fd2[1] != STDOUT_FILENO &&
+            dup2(fd2[1], STDOUT_FILENO) != STDOUT_FILENO)
+              throw Err() << "iofilter: dup2 to stdout error";
+
+        if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
+           throw Err() << "iofilter: exec error";
+      }
+      catch (Err e) {
+        std::cerr << e.str() << "\n";
+      }
+      ::close(fd1[0]);
+      ::close(fd2[1]);
+      std::_Exit(0);
+    }
+
+    /******** parent process ********/
+
+    ::close(fd1[0]);
+    ::close(fd2[1]);
+
+    ofilebuf = __gnu_cxx::stdio_filebuf<char>(fd1[1], std::ios::out);
+    ostrp = std::unique_ptr<std::ostream>(new std::ostream(&ofilebuf));
+    ifilebuf = __gnu_cxx::stdio_filebuf<char>(fd2[0], std::ios::in);
+    istrp = std::unique_ptr<std::istream>(new std::istream(&ifilebuf));
+  }
+
+  void close() { ofilebuf.close(); }
+
+};
+
+/***********************************************************/
+
+IOFilter::IOFilter(const std::string & prog):
+   impl(new Impl(prog)) {}
+
+IOFilter::~IOFilter() {}
+
+std::istream &
+IOFilter::istream(){ return impl->istream(); }
+
+std::ostream &
+IOFilter::ostream(){ return impl->ostream(); }
+
+void IOFilter::close(){ impl->close(); }
+

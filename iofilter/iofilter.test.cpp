@@ -63,6 +63,18 @@ sleep(1);
     unlink("test2.tmp");
   }
 
+  {
+    IOFilter flt("tac");
+    flt.ostream() << "test1\ntest2\n";
+    flt.close();
+sleep(1);
+    std::string l;
+    std::getline(flt.istream(), l);
+    assert_eq(l, "test2");
+    std::getline(flt.istream(), l);
+    assert_eq(l, "test1");
+  }
+
 
   return 0;
 }
