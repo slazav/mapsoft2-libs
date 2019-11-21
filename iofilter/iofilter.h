@@ -64,7 +64,7 @@ class IOFilter {
 
     std::istream & istream();
     std::ostream & ostream();
-    void close();
+    void close_input();
 };
 
 #endif
