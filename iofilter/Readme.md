@@ -60,6 +60,26 @@ child process. It is usually needed to close the filter input
 stream without destroing IOFilter object (to finish reading from it).
 This can be done with `close_input()` method.
 
+### Timers
+
+Somtimes it is needed to stop the filter program after a timeout. There
+is a timer in IOFilter (later it will be added to other classes). Two
+functions implemented:
+```c++
+filter.timer_start(int msec);
+filter.timer_stop();
+```
+
+Both can be run in any order as many times as needed (they just reset
+the timer counter). After the timer is expired the filter process is
+terminated by SIGTERM signal.
+
+### Known problems
+
+If the filter process is killed, then pipes are left in bad condition
+(???) and operations with iostreams (closing or distructing) fail. This
+is always seen when you use timer, but it is not a timer-related issue.
+
 ------------
 ## Changelog:
 

@@ -4,8 +4,10 @@
 #include <exception>
 #include <ext/stdio_filebuf.h>
 #include <unistd.h> // pipe
+#include <signal.h> // kill
 #include <sys/wait.h> // wait
 
+#include "timer.h"
 #include "iofilter.h"
 #include "err/err.h"
 
@@ -19,12 +21,11 @@
 // second process execute a program:
 //  istream -> [pid1] -> fd1 -> [pid2] -> df2 -> new_istream
 //                      1   0            1   0
-// Next problem is returning the stream: if it is constructed form fd
+// Next problem is returning the stream: if it is constructed from fd
 // using __gnu_cxx::stdio_filebuf the buffer should be also kept
 // until the stream is alive.
 //
-// Here I wrap everything what I want to keep in a class and hide it
-// using Pimpl technique.
+// Here I use Pimpl technique to hide all class details.
 /***********************************************************/
 
 
@@ -311,6 +312,7 @@ class IOFilter::Impl{
     std::unique_ptr<std::istream> istrp;
     std::unique_ptr<std::ostream> ostrp;
     __gnu_cxx::stdio_filebuf<char> ifilebuf, ofilebuf;
+    Timer timer;
     int pid;
     int fd1[2], fd2[2];
 
@@ -320,8 +322,7 @@ class IOFilter::Impl{
   std::ostream & ostream() {return *ostrp;}
 
   ~Impl() {
-    ofilebuf.close(); // close the process input stream
-    ::close(fd1[1]); // should be after filebuf.close()
+    close_input();
     int st=0;
     if (pid!=0) waitpid(pid, &st, 0);
     ifilebuf.close();
@@ -364,6 +365,7 @@ class IOFilter::Impl{
 
     ::close(fd1[0]);
     ::close(fd2[1]);
+    timer.create(pid);
 
     ofilebuf = __gnu_cxx::stdio_filebuf<char>(fd1[1], std::ios::out);
     ostrp = std::unique_ptr<std::ostream>(new std::ostream(&ofilebuf));
@@ -376,6 +378,8 @@ class IOFilter::Impl{
     ::close(fd1[1]); // should be after filebuf.close()
   }
 
+  void timer_start(int usec){ timer.start(pid, usec); }
+  void timer_stop(){ timer.stop(); }
 };
 
 /***********************************************************/
@@ -392,4 +396,8 @@ std::ostream &
 IOFilter::ostream(){ return impl->ostream(); }
 
 void IOFilter::close_input(){ impl->close_input(); }
+
+void IOFilter::timer_start(int usec){ impl->timer_start(usec); }
+
+void IOFilter::timer_stop(){ impl->timer_stop(); }
 
