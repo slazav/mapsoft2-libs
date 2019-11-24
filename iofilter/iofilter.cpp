@@ -56,6 +56,8 @@ class IFilter::Impl{
     if (pipe(fd1)<0 || pipe(fd2)<0) throw Err() << "iofilter: pipe error";
     if ( (pid1 = fork()) < 0 ) throw Err() << "iofilter: fork1 error";
 
+    signal(SIGPIPE, SIG_IGN); // ignore sigpipe (to avoid program exit)
+
     /******** process 1 ********/
     if (pid1 == 0) {
       ::close(fd1[0]);
@@ -199,6 +201,7 @@ class OFilter::Impl{
 
     if (pipe(fd1)<0 || pipe(fd2)<0) throw Err() << "iofilter: pipe error";
     if ( (pid1 = fork()) < 0 ) throw Err() << "iofilter: fork1 error";
+    signal(SIGPIPE, SIG_IGN); // ignore sigpipe (to avoid program exit)
 
     /******** process 1 ********/
     if (pid1 == 0) {
@@ -335,6 +338,7 @@ class IOFilter::Impl{
 
     if (pipe(fd1)<0 || pipe(fd2)<0) throw Err() << "iofilter: pipe error";
     if ( (pid = fork()) < 0 ) throw Err() << "iofilter: fork1 error";
+    signal(SIGPIPE, SIG_IGN); // ignore sigpipe (to avoid program exit)
 
     /******** child process ********/
     if (pid == 0) {

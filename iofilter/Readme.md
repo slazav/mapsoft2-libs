@@ -74,11 +74,14 @@ Both can be run in any order as many times as needed (they just reset
 the timer counter). After the timer is expired the filter process is
 terminated by SIGTERM signal.
 
-### Known problems
+### SIGPIPE problem
 
-If the filter process is killed, then pipes are left in bad condition
-(???) and operations with iostreams (closing or distructing) fail. This
-is always seen when you use timer, but it is not a timer-related issue.
+If the filter is terminated (by the timer or external signal or by itself)
+the program will recieve SIGPIPE signal from the kernel and will exit with
+errorcode 141. To avoid this one can ignore the signal:
+```c++
+  signal(SIGPIPE, SIG_IGN);
+```
 
 ------------
 ## Changelog:

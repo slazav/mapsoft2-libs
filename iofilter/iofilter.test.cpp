@@ -13,6 +13,7 @@
 int
 main(){
 try{
+
   {
     // We have an istream which reads from a file.
     // We want to read from this stream, not directly but
@@ -104,7 +105,6 @@ try{
     assert_eq(l, "test1");
   }
 
-
   {
     IOFilter flt("tac");
     flt.ostream() << "test1\ntest2\n";
@@ -124,11 +124,10 @@ try{
     IOFilter flt("tac");
     flt.ostream() << "test1\ntest2\n";
     // without close_input it will wait forever
-    flt.timer_start(1000); // kill it after 1s
-    usleep(100000); // sleep 100ms
-    flt.ostream() << "test3\ntest4\n"; // we have time to send something
-
+    flt.timer_start(10); // kill it after 10ms
     flt.timer_stop(); // stop timer
+    usleep(200000); // sleep 100ms
+    flt.ostream() << "test3\ntest4\n"; // we have time to send something
     flt.close_input();
 
     std::string l;
@@ -136,7 +135,20 @@ try{
     assert_eq(l, "test4");
     std::getline(flt.istream(), l);
     assert_eq(l, "test3");
+  }
 
+  {
+    IOFilter flt("tac");
+    flt.ostream() << "test1\ntest2\n";
+    // without close_input it will wait forever
+    flt.timer_start(100); // kill it after 10ms
+    flt.ostream() << "test3\ntest4\n"; // we have time to send something
+
+    // filter was killed, we will not read anything but get eof.
+    std::string l;
+    std::getline(flt.istream(), l);
+    assert_eq(flt.istream().eof(), true);
+    assert_eq(l, "");
   }
 
   return 0;
