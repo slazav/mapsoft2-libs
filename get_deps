@@ -167,10 +167,13 @@ sub optimize_deps {
 ######################################################################
 # Read library deps for a given Makefile.
 sub add_lib_dep {
+  my $pkgc = shift;
   my $libs = shift;
   my $mfile = shift;
   my %info = read_make $mfile;
-  my @libs = split /\s+/, ($info{PKG_CONFIG}||'');
+  my @pkgc = split /\s+/, ($info{PKG_CONFIG}||'');
+  my @libs = split /\s+/, ($info{LDLIBS}||'');
+  $pkgc->{$_} = 1 foreach @pkgc;
   $libs->{$_} = 1 foreach @libs;
 }
 
@@ -226,8 +229,10 @@ print "\n\n";
 
 print "# 4. library dependencies\n\n";
 my %libs;
-add_lib_dep(\%libs, "$mod_dir/Makefile");
-add_lib_dep(\%libs, "$lib_dir/$_/Makefile") foreach (@list);
-print "LDEPS := ", join(" ", keys %libs), "\n\n";
+my %pkgc;
+add_lib_dep(\%pkgc, \%libs, "$mod_dir/Makefile");
+add_lib_dep(\%pkgc,\%libs, "$lib_dir/$_/Makefile") foreach (@list);
+print "LDLIBS := ", join(" ", keys %libs), "\n\n";
+print "PKG_CONFIG := ", join(" ", keys %pkgc), "\n\n";
 
 
