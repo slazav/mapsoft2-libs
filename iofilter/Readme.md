@@ -78,17 +78,19 @@ terminated by SIGTERM signal.
 
 If the filter is terminated (by the timer or external signal or by itself)
 the program will recieve SIGPIPE signal from the kernel and will exit with
-errorcode 141. To avoid this one can ignore the signal:
-```c++
-  signal(SIGPIPE, SIG_IGN);
-```
+errorcode 141. To avoid this constructors of all filter classes set SIGPIPE
+to SIG_IGN (ignore).
 
 ------------
 ## Changelog:
 
+2019.11.24 V.Zavjalov 1.4:
+- add timers to IOFilter
+- ignore SIGPIPE to avoid main program exit when the filter program terminates
+
 2019.11.21 V.Zavjalov 1.3:
 - fix process handling; add close_input function;
-  update documentation
+- update documentation
 
 2019.11.20 V.Zavjalov 1.2:
 - add IOFilter class (get istream and ostream for
