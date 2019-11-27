@@ -37,7 +37,7 @@ sub read_make ($) {
   my %info;
   open F, $fname or die "can't read $fname file: $fname: $!";
   while (my $line = <F>){
-    next unless $line =~ /^\s*([A-Za-z0-9_]+)\s*:?=\s*(.*)/;
+    next unless $line =~ /^\s*([A-Za-z0-9_]+)\s*[+:]?=\s*(.*)/;
     my $key = $1;
     $line = $2;
     # join lines with \ at the end, remove extra spaces
