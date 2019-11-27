@@ -39,7 +39,7 @@ SHARED_LIB_SO := $(patsubst %, %.so, $(SHARED_LIB))
 # Main building rules
 all: make_deps make_nodeps
 clean:
-	rm -f *.o *.a *.so *.test *.passed $(PROGRAMS)
+	rm -f *.o *.a *.so *.test *.passed Makefile.deps $(PROGRAMS)
 
 ######################################################
 # Build and include dependency file (using get_deps script).
