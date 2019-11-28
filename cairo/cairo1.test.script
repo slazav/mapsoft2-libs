@@ -1,12 +1,12 @@
 #!/bin/sh -efu
 
-. ../../programs/test_lib.sh
+. ../test_lib.sh
 
 prog=${1:-./cairo1.test}
 
 [ -z "${SKIP_IMG_DIFFS:-}" ] || exit 0
 
-assert $prog "" 0
+assert_cmd $prog "" 0
 fix_pdf tmp{1,2,3}.pdf
 
 assert_diff test_data/cairo1.pdf tmp1.pdf
