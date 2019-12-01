@@ -67,6 +67,7 @@ class IOFilter {
     void close_input();
     void timer_start(int usec); // set timer to kill the filter process after usec
     void timer_stop(); // stop the timer
+    long int timer_get(); // get timer value
 
 };
 

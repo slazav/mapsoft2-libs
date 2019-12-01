@@ -384,6 +384,7 @@ class IOFilter::Impl{
 
   void timer_start(int usec){ timer.start(pid, usec); }
   void timer_stop(){ timer.stop(); }
+  long int timer_get(){ return timer.get(); }
 };
 
 /***********************************************************/
@@ -404,4 +405,6 @@ void IOFilter::close_input(){ impl->close_input(); }
 void IOFilter::timer_start(int usec){ impl->timer_start(usec); }
 
 void IOFilter::timer_stop(){ impl->timer_stop(); }
+
+long int IOFilter::timer_get(){ return impl->timer_get(); }
 

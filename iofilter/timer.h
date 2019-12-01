@@ -43,17 +43,27 @@ class Timer {
 
     ~Timer() { timer_delete(*timer.get()); }
 
-    void start(int pid, int msec){
+    // start timer
+    void start(int pid, long int msec){
       struct itimerspec new_value;
       new_value.it_interval.tv_sec = new_value.it_interval.tv_nsec = 0;
       new_value.it_value.tv_sec=msec/1000;
       new_value.it_value.tv_nsec = (msec%1000)*1000000;
-
       if (timer_settime(*timer.get(), 0, &new_value, NULL)!=0)
          throw Err() << "IOFilter: can't start/stop POSIX timer";
     }
 
+    // stop the timer
     void stop(){start(0, 0);}
+
+    // get time in ms
+    long int get(){
+      struct itimerspec value;
+      if (timer_gettime(*timer.get(), &value)!=0)
+         throw Err() << "IOFilter: can't get value from POSIX timer";
+      return value.it_value.tv_sec*1000
+           + value.it_value.tv_nsec/1000000;
+    }
 };
 
 #endif
