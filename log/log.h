@@ -44,7 +44,10 @@ public:
   /// Operator << for log messages.
   template <typename T>
   Log & operator<<(const T & o){
-    if (!empty) (*log) << o;
+    if (!empty) {
+      (*log) << o;
+      log->flush();
+    }
     return *this;
   }
 
