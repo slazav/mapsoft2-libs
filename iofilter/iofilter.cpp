@@ -382,9 +382,10 @@ class IOFilter::Impl{
     ::close(fd1[1]); // should be after filebuf.close()
   }
 
-  void timer_start(int usec){ timer.start(pid, usec); }
+  void timer_start(double sec){ timer.start(pid, sec); }
   void timer_stop(){ timer.stop(); }
-  long int timer_get(){ return timer.get(); }
+  double timer_get(){ return timer.get(); }
+  bool   timer_expired(){ return timer.expired(); }
 };
 
 /***********************************************************/
@@ -402,9 +403,11 @@ IOFilter::ostream(){ return impl->ostream(); }
 
 void IOFilter::close_input(){ impl->close_input(); }
 
-void IOFilter::timer_start(int usec){ impl->timer_start(usec); }
+void IOFilter::timer_start(double sec){ impl->timer_start(sec); }
 
 void IOFilter::timer_stop(){ impl->timer_stop(); }
 
-long int IOFilter::timer_get(){ return impl->timer_get(); }
+double IOFilter::timer_get(){ return impl->timer_get(); }
+
+bool IOFilter::timer_expired(){ return impl->timer_expired(); }
 

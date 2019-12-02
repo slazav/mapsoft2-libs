@@ -109,7 +109,7 @@ try{
     IOFilter flt("tac");
     flt.ostream() << "test1\ntest2\n";
     // without close_input it will wait forever
-    flt.timer_start(100); // kill it after 100ms
+    flt.timer_start(0.1); // kill it after 100ms
     flt.ostream() << "test3\ntest4\n"; // we have time to send something
     flt.close_input();
 
@@ -124,10 +124,11 @@ try{
     IOFilter flt("tac");
     flt.ostream() << "test1\ntest2\n";
     // without close_input it will wait forever
-    flt.timer_start(10); // kill it after 10ms
-    assert(flt.timer_get() > 1); // 9
+    flt.timer_start(0.01); // kill it after 10ms
+    assert(flt.timer_get() > 0.001);
+    assert_eq(flt.timer_expired(), false);
     flt.timer_stop(); // stop timer
-    assert(flt.timer_get() == 0); // 9
+    assert_eq(flt.timer_expired(), true);
     usleep(200000); // sleep 100ms
     flt.ostream() << "test3\ntest4\n"; // we have time to send something
     flt.close_input();
@@ -143,10 +144,10 @@ try{
     IOFilter flt("tac");
     flt.ostream() << "test1\ntest2\n";
     // without close_input it will wait forever
-    flt.timer_start(100); // kill it after 10ms
+    flt.timer_start(0.1); // kill it after 10ms
     flt.ostream() << "test3\ntest4\n"; // we have time to send something
 
-    assert(flt.timer_get() > 1); // 99
+    assert(flt.timer_get() > 0.001);
 
     // filter was killed, we will not read anything but get eof.
     std::string l;

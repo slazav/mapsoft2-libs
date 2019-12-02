@@ -63,16 +63,18 @@ This can be done with `close_input()` method.
 ### Timers
 
 Somtimes it is needed to stop the filter program after a timeout. There
-is a timer in IOFilter (later it will be added to other classes). Two
-functions implemented:
+is a timer in IOFilter (later it will be added to other classes). Following
+functions are implemented:
 ```c++
-filter.timer_start(int msec);
+filter.timer_start(double sec);
 filter.timer_stop();
+double filter.timer_get();
+bool   filter.timer_expired();
 ```
 
-Both can be run in any order as many times as needed (they just reset
-the timer counter). After the timer is expired the filter process is
-terminated by SIGTERM signal.
+Start/stop functions can be run in any order as many times as needed
+(they just reset the timer counter). After the timer is expired the
+filter process is terminated by SIGABRT signal.
 
 ### SIGPIPE problem
 
