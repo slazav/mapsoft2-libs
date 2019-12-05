@@ -7,7 +7,6 @@
 #include <signal.h> // kill
 #include <sys/wait.h> // wait
 
-#include "timer.h"
 #include "iofilter.h"
 #include "err/err.h"
 
@@ -27,7 +26,6 @@
 //
 // Here I use Pimpl technique to hide all class details.
 /***********************************************************/
-
 
 class IFilter::Impl{
   private:
@@ -315,7 +313,6 @@ class IOFilter::Impl{
     std::unique_ptr<std::istream> istrp;
     std::unique_ptr<std::ostream> ostrp;
     __gnu_cxx::stdio_filebuf<char> ifilebuf, ofilebuf;
-    Timer timer;
     int pid;
     int fd1[2], fd2[2];
 
@@ -337,8 +334,10 @@ class IOFilter::Impl{
   Impl(const std::string & prog): pid(0){
 
     if (pipe(fd1)<0 || pipe(fd2)<0) throw Err() << "iofilter: pipe error";
+
+    signal(SIGPIPE, SIG_IGN)!=0; // ignore sigpipe (to avoid program exit)
+
     if ( (pid = fork()) < 0 ) throw Err() << "iofilter: fork1 error";
-    signal(SIGPIPE, SIG_IGN); // ignore sigpipe (to avoid program exit)
 
     /******** child process ********/
     if (pid == 0) {
@@ -355,7 +354,7 @@ class IOFilter::Impl{
               throw Err() << "iofilter: dup2 to stdout error";
 
         if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
-           throw Err() << "iofilter: exec error";
+           throw Err() << "iofilter: exec error: " << prog;
       }
       catch (Err e) {
         std::cerr << e.str() << "\n";
@@ -369,7 +368,6 @@ class IOFilter::Impl{
 
     ::close(fd1[0]);
     ::close(fd2[1]);
-    timer.create(pid);
 
     ofilebuf = __gnu_cxx::stdio_filebuf<char>(fd1[1], std::ios::out);
     ostrp = std::unique_ptr<std::ostream>(new std::ostream(&ofilebuf));
@@ -382,10 +380,29 @@ class IOFilter::Impl{
     ::close(fd1[1]); // should be after filebuf.close()
   }
 
-  void timer_start(double sec){ timer.start(pid, sec); }
-  void timer_stop(){ timer.stop(); }
-  double timer_get(){ return timer.get(); }
-  bool   timer_expired(){ return timer.expired(); }
+  int getline(std::string & l, double timeout) {
+    struct timespec timeout_s;
+    timeout_s.tv_sec = int(timeout);
+    timeout_s.tv_nsec = (timeout - int(timeout))*1e9;
+
+    l.clear();
+    while (1) {
+      fd_set set;
+      FD_ZERO(&set); // clear the set
+      FD_SET(fd2[0], &set);
+      int res = pselect(fd2[0]+1, &set, NULL, NULL, &timeout_s, NULL);
+      if (res == -1) throw Err() << "IOFilter select error";
+      if (res == 0)  throw Err() << "Read timeout";
+      char c;
+      res = read(fd2[0], &c, 1);
+      if (res == 0) return -1;
+      if (c == '\n') return l.size();
+      l += c;
+      if (res < 0) throw Err() << "IOFilter read error";
+    }
+  }
+
+  void kill() {::kill(pid, SIGTERM);}
 };
 
 /***********************************************************/
@@ -403,11 +420,6 @@ IOFilter::ostream(){ return impl->ostream(); }
 
 void IOFilter::close_input(){ impl->close_input(); }
 
-void IOFilter::timer_start(double sec){ impl->timer_start(sec); }
+int IOFilter::getline(std::string & l, double timeout) { return impl->getline(l, timeout);}
 
-void IOFilter::timer_stop(){ impl->timer_stop(); }
-
-double IOFilter::timer_get(){ return impl->timer_get(); }
-
-bool IOFilter::timer_expired(){ return impl->timer_expired(); }
-
+void IOFilter::kill() { impl->kill();}

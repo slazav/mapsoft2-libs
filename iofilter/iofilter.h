@@ -65,11 +65,9 @@ class IOFilter {
     std::istream & istream();
     std::ostream & ostream();
     void close_input();
-    void timer_start(double sec); // set timer to kill the filter process after `sec` seconds
-    void timer_stop(); // stop the timer
-    double timer_get(); // get timer value in seconds
-    bool   timer_expired();   // is timer has value 0?
 
+    int getline(std::string & l, double timeout);
+    void kill();
 };
 
 #endif

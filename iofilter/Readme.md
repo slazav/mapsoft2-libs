@@ -60,28 +60,28 @@ child process. It is usually needed to close the filter input
 stream without destroing IOFilter object (to finish reading from it).
 This can be done with `close_input()` method.
 
-### Timers
+### Timeout
 
-Somtimes it is needed to stop the filter program after a timeout. There
-is a timer in IOFilter (later it will be added to other classes). Following
-functions are implemented:
+Reading with timeout can be done using function:
 ```c++
-filter.timer_start(double sec);
-filter.timer_stop();
-double filter.timer_get();
-bool   filter.timer_expired();
+int IOFilter::getline(std::string & line, double timeout);
 ```
 
-Start/stop functions can be run in any order as many times as needed
-(they just reset the timer counter). After the timer is expired the
-filter process is terminated by SIGABRT signal.
+Function returns number of bytes read of -1 in eof
+On timeout and other errors an `Err()` exception will be thrown.
+
+Killing a running filter program (by SIGTERM signal)
+can be done using function:
+```c++
+void IOFilter::kill();
+```
+
 
 ### SIGPIPE problem
 
-If the filter is terminated (by the timer or external signal or by itself)
-the program will recieve SIGPIPE signal from the kernel and will exit with
-errorcode 141. To avoid this constructors of all filter classes set SIGPIPE
-to SIG_IGN (ignore).
+If the filter is terminated the program will recieve SIGPIPE signal from
+the kernel. To avoid program exit with errorcode 141 constructors
+of all filter classes set SIGPIPE to SIG_IGN (ignore).
 
 ------------
 ## Changelog:

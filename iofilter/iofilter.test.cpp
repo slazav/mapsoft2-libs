@@ -108,54 +108,31 @@ try{
   {
     IOFilter flt("tac");
     flt.ostream() << "test1\ntest2\n";
-    // without close_input it will wait forever
-    flt.timer_start(0.1); // kill it after 100ms
+
     flt.ostream() << "test3\ntest4\n"; // we have time to send something
-    flt.close_input();
+    flt.close_input(); // without close_input it will wait forever
 
     std::string l;
-    std::getline(flt.istream(), l);
+    assert_eq(flt.getline(l, 10), 5); // timeout: 10, read 5 chars
     assert_eq(l, "test4");
-    std::getline(flt.istream(), l);
+    assert_eq(flt.getline(l, 10), 5);
     assert_eq(l, "test3");
+    assert_eq(flt.getline(l, 10), 5);
+    assert_eq(l, "test2");
+    assert_eq(flt.getline(l, 10), 5);
+    assert_eq(l, "test1");
+    assert_eq(flt.getline(l, 10), -1); //eof
   }
 
   {
-    IOFilter flt("tac");
+    IOFilter flt("sleep 5; sleep 5");
     flt.ostream() << "test1\ntest2\n";
-    // without close_input it will wait forever
-    flt.timer_start(0.01); // kill it after 10ms
-    assert(flt.timer_get() > 0.001);
-    assert_eq(flt.timer_expired(), false);
-    flt.timer_stop(); // stop timer
-    assert_eq(flt.timer_expired(), true);
-    usleep(200000); // sleep 100ms
-    flt.ostream() << "test3\ntest4\n"; // we have time to send something
-    flt.close_input();
+    // without close_input it will wait for 10s
 
     std::string l;
-    std::getline(flt.istream(), l);
-    assert_eq(l, "test4");
-    std::getline(flt.istream(), l);
-    assert_eq(l, "test3");
-  }
-
-  {
-    IOFilter flt("tac");
-    flt.ostream() << "test1\ntest2\n";
-    // without close_input it will wait forever
-    flt.timer_start(0.1); // kill it after 10ms
-    flt.ostream() << "test3\ntest4\n"; // we have time to send something
-
-    assert(flt.timer_get() > 0.001);
-
-    // filter was killed, we will not read anything but get eof.
-    std::string l;
-    std::getline(flt.istream(), l);
-    assert_eq(flt.istream().eof(), true);
+    assert_err(flt.getline(l, 0.1), "Read timeout");
     assert_eq(l, "");
-    assert_eq(flt.timer_get(), 0);
-
+    flt.kill(); // IOFilter will wait for process termination
   }
 
   return 0;
