@@ -125,13 +125,40 @@ try{
   }
 
   {
+    IOFilter flt("tac");
+    flt.ostream() << "test1\ntest2\n";
+
+    flt.ostream() << "test3\ntest4\n"; // we have time to send something
+    // without close_input it will wait forever
+
+    std::string l;
+    assert_err(flt.getline(l, 0.1), "Read timeout");
+  }
+
+  {
     IOFilter flt("sleep 5; sleep 5");
     flt.ostream() << "test1\ntest2\n";
-    // without close_input it will wait for 10s
+    flt.close_input();
 
     std::string l;
     assert_err(flt.getline(l, 0.1), "Read timeout");
     assert_eq(l, "");
+    flt.kill(); // IOFilter will wait for process termination
+  }
+
+  {
+    IOFilter flt("echo a; echo b; sleep 10");
+
+    std::string l;
+    assert_eq(flt.getline(l, 0.1), 1);
+    assert_eq(l, "a");
+
+    assert_eq(flt.getline(l, 0.1), 1);
+    assert_eq(l, "b");
+
+    assert_err(flt.getline(l, 0.1), "Read timeout");
+    assert_eq(l, "");
+
     flt.kill(); // IOFilter will wait for process termination
   }
 
