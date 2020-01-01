@@ -7,6 +7,8 @@
 #include <cassert>
 #include <jansson.h>
 
+#include "err/err.h"
+
 #define DEBUG_MEM false
 
 // Simple C++ wrapper for jansson library.
@@ -18,23 +20,6 @@
 // See another wrapper here: https://github.com/bvakili-evault/janssonxx
 
 class Json{
-
-  /************************************/
-  // Error class for exceptions
-  public:
-    class Err {
-      std::ostringstream s;
-      public:
-        Err(){}
-        Err(const Err & o) { s << o.s.str(); }
-        template <typename T>
-        Err & operator<<(const T & o){ s << o; return *this; }
-        std::string json() const {
-          return std::string("{\"error_type\": \"jsonxx\", ") +
-                              "\"error_message\":\"" + s.str() + "\"}"; }
-        std::string text() const { return "jsonxx error: " + s.str(); }
-        std::string str()  const { return s.str(); }
-    };
 
   /************************************/
   // The json data. It contains its own memory management

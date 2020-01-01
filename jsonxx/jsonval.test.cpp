@@ -3,7 +3,7 @@
 #include <malloc.h>
 #include <map>
 
-#include "tests.h"
+#include "err/assert_err.h"
 #include "jsonxx.h"
 
 int main() {
@@ -15,13 +15,11 @@ int main() {
                            " \"minlen\":3, \"maxlen\":6,"
                            " \"charset\": \"id\"}";
     Json("abc").validate(strmask);
-    ASSERT_EX(Json("ab").validate(strmask), "teststr: string is too short", "");
-    ASSERT_EX(Json("abcdefg").validate(strmask), "teststr: string is too long", "");
-    ASSERT_EX(Json("abc&ef").validate(strmask), "teststr: only letters, numbers and _ are allowed", "");
-    ASSERT_EX(Json("abc").validate("{\"type\": \"number\"}"),
-      "unexpected string", "");
-    ASSERT_EX(Json("abc").validate("[]"),
-      "unexpected string", "");
+    assert_err(Json("ab").validate(strmask), "teststr: string is too short");
+    assert_err(Json("abcdefg").validate(strmask), "teststr: string is too long");
+    assert_err(Json("abc&ef").validate(strmask), "teststr: only letters, numbers and _ are allowed");
+    assert_err(Json("abc").validate("{\"type\": \"number\"}"), "unexpected string");
+    assert_err(Json("abc").validate("[]"), "unexpected string");
 
 
     // numbers
@@ -31,11 +29,11 @@ int main() {
 
     Json(6).validate(nummask);
     Json(5.9).validate(nummask);
-    ASSERT_EX(Json(6.1).validate(nummask), "testnum: number is too big", "");
-    ASSERT_EX(Json(1).validate(nummask),  "testnum: number is too small", "");
-    ASSERT_EX(Json(-10).validate(nummask), "testnum: number is too small", "");
-    ASSERT_EX(Json(1e99).validate(nummask), "testnum: number is too big", "");
-    ASSERT_EX(Json(10).validate(strmask), "unexpected number", "");
+    assert_err(Json(6.1).validate(nummask), "testnum: number is too big");
+    assert_err(Json(1).validate(nummask),  "testnum: number is too small");
+    assert_err(Json(-10).validate(nummask), "testnum: number is too small");
+    assert_err(Json(1e99).validate(nummask), "testnum: number is too big");
+    assert_err(Json(10).validate(strmask), "unexpected number");
 
     // boolean and null - not too useful
     Json(true).validate("{\"type\": \"boolean\"}");
@@ -60,14 +58,14 @@ int main() {
       " \"obj\": {\"nn\": \"123\"}}"
     ).validate(M1);
 
-    ASSERT_EX(Json::load_string("{\"uname\": \"myname\"}").validate(M1),
-      "unexpected key: uname", "");
+    assert_err(Json::load_string("{\"uname\": \"myname\"}").validate(M1),
+      "unexpected key: uname");
 
-    ASSERT_EX(Json::load_string("{\"name\": [\"aaa\"]}").validate(M1),
-      "unexpected array", "");
+    assert_err(Json::load_string("{\"name\": [\"aaa\"]}").validate(M1),
+      "unexpected array");
 
   }
-  catch(Json::Err e){
+  catch(Err e){
     std::cerr << "error: " << e.str() << "\n";
   }
   return 0;
