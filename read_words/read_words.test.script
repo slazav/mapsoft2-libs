@@ -16,24 +16,28 @@ function assert(){
 
 assert "$(cat read_words.test_data1 | "$prog")" \
 "$(cat <<EOF
-1: [a] [#] [ABc] [aBC] [ a' s ]
+1: [a] [#] [ABc] [aBCDe] [ a' s ]
 2: [d] [e] [f] [ a' s]
 3: [\]
 6: [abc
 def]
-8: [aa] [bb] [cc""dd''ee]
+8: [abc
+] [def]
+10: [aa] [bb] [cc""dd''ee]
 EOF
 )"
 
 # same with lowercase option
 assert "$(cat read_words.test_data1 | "$prog" -l)" \
 "$(cat <<EOF
-1: [a] [#] [abc] [abc] [ a' s ]
+1: [a] [#] [abc] [abcDe] [ a' s ]
 2: [d] [e] [f] [ a' s]
 3: [\]
 6: [abc
 def]
-8: [aa] [bb] [cc""dd''ee]
+8: [abc
+] [def]
+10: [aa] [bb] [cc""dd''ee]
 EOF
 )"
 

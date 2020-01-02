@@ -10,8 +10,8 @@ Read one line from the stream and extract words, separated by spaces.
  - If line_num parameter is not NULL, it should be initialized
    by 0,0 before the first call. Then starting line number of the first
    word and number of the last line read is returned there.
- - If lc parameter is true then all Latin characters are converted
-   to lower case.
+ - If lc parameter is true then all Latin characters except ones protected
+   by '\\ are converted to lower case.
 
 `std::vector<std::string> read_words(
    std::istream & ss, int line_num[] = NULL, const bool lc=false);`
