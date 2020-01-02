@@ -3,21 +3,25 @@
 Read one line from the stream and extract words, separated by spaces.
  - Comments (everything from # symbol to end of the line) are skipped.
  - Empty lines are skipped.
- - Words are splitted by ' ' or '\t' symbols.
+ - Words are splitted by ' ' or '\t' symbols, or by '\' + '\n' sequence.
  - Words can be quoted by " or '.
- - Any symbol (including newline) can be escaped by '\'.
+ - Any symbol (including newline) can be escaped by '\'. Protected newline
+   symbol works as word separator.
  - Empty vector is returned only at the end of input.
  - If line_num parameter is not NULL, it should be initialized
    by 0,0 before the first call. Then starting line number of the first
    word and number of the last line read is returned there.
  - If lc parameter is true then all Latin characters except ones protected
-   by '\\ are converted to lower case.
+   by '\' are converted to lower case.
 
 `std::vector<std::string> read_words(
    std::istream & ss, int line_num[] = NULL, const bool lc=false);`
 
 ------------
 ## Changelog:
+2020.01.02 V.Zavjalov 1.3:
+- symbol \n protected by \ works as word separator, not as literal \n
+
 2019.10.23 V.Zavjalov 1.2:
 - lc parameter affects only Latin characters.
   Reasons: tolower() anyway did not work with UTF characters,

@@ -30,9 +30,15 @@ std::vector<std::string> read_words(
     // escape character (all chars including newline can be escaped!)
     if (c == '\\') {
       ss.get(c);
-      str += c;
-      if (first && line_num) {line_num[0] = line_num[1]+1; first=false;}
-      if (c == '\n' && line_num) line_num[1]++;
+      if (c=='\n') { //protected \n works as word separator
+        if (line_num) line_num[1]++;
+        if (str!="") ret.push_back(str);
+        str="";
+      }
+      else {
+        str += c;
+        if (first && line_num) {line_num[0] = line_num[1]+1; first=false;}
+      }
       continue;
     }
 
