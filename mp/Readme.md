@@ -19,7 +19,11 @@
   sections are suppored, other sections are skipped.
 
 - For objects only `Type`, `Data#` (or `Origin#`), `Label`,
-  `Direction`, and `EndLevel` fields are supported.
+  and `EndLevel` fields are supported.
+
+- There was a non-standard field `Direction` used in mapsoft1.
+  On input coordinates of objects with `Direction == 2`
+  are saved in reversed order. On output this field is not used.
 
 - Comments before object sections are converted to UTF-8 according to the
   `Codepage` field and attached to corresponding objects. Object label is

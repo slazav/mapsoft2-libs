@@ -45,7 +45,6 @@ typedef enum{
 
 struct VMapObj: public dMultiLine {
   int             type;  // MP type
-  int             dir;   // direction from mp, arrows from fig
   std::string     text;  // label text
   std::list<VMapLab> labels;
   Opt                      opts; // some Key=Value fields

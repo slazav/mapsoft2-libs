@@ -166,6 +166,7 @@ void read_mp(istream & f, MP & data, const Opt & opts){
   // mode=1 -- skip
   // mode=2 -- point, polyline, polygon
   vector<string> comm;
+  bool inv = false; // for handling Direction field
   while (!f.eof()) {
     l = getl(f);
     if (l.size()==0) continue;
@@ -203,8 +204,10 @@ void read_mp(istream & f, MP & data, const Opt & opts){
 
     // end of object, known or unknown
     if (mode>0 && icasencmp(l,"[END",4)){
-      if (mode>1) data.push_back(o);
-      mode=0;
+      if (mode>1){
+         data.push_back(o);
+      }
+      mode=0; inv=false;
       comm.clear();
       continue;
     }
@@ -243,7 +246,9 @@ void read_mp(istream & f, MP & data, const Opt & opts){
       continue;
     }
     if (icasecmp(key, "Direction")){
-      o.Direction=str_to_type<int>(val);
+      // Direction field is a non-standard field used in
+      // in mapsoft1. Invert lines if Direction==2
+      inv = (str_to_type<int>(val) == 2);
       continue;
     }
     if (icasencmp(key, "Data", 4) ||
@@ -268,6 +273,7 @@ void read_mp(istream & f, MP & data, const Opt & opts){
           throw Err() << "read_mp: bad Data line:\n"
                          " [" << l << "]";
       }
+      if (inv) ll.invert();
       o.Data[n].push_back(ll);
       continue;
     }
@@ -332,7 +338,6 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
     out << "Type=0x"     << setbase(16) << obj.Type << setbase(10) << "\r\n";
     if (obj.Label != "")   out << "Label=" << cnv(obj.Label) << "\r\n";
     if (obj.EndLevel  != 0) out << "EndLevel=" << obj.EndLevel << "\r\n";
-    if (obj.Direction != 0) out << "Direction=" << obj.Direction << "\r\n";
 
     // other options
     for (auto o:obj.Opts)  out << o.first << "=" << cnv(o.second) << "\r\n";

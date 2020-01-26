@@ -171,11 +171,6 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     for (auto const & c:o.Comment) o1.comm += c + '\n';
     if (o1.comm.size()) o1.comm.resize(o1.comm.size()-1); // cut trailing '\n'
 
-    // direction
-    if (o.Direction<0 || o.Direction>2)
-      throw Err() << "wrong MP direction: "<< o.Direction;
-    o1.dir = (MapDBObjDir)o.Direction;
-
     // source
     if (o.Opts.exists("Source")) o1.tags.insert(o.Opts.get<string>("Source"));
 
@@ -327,9 +322,6 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
           pos1 = pos2+1;
         } while (pos2!=string::npos);
       }
-
-      // direction
-      o1.Direction = o.dir;
 
       // source
       if (o.tags.size()>0) o1.Opts.put("Source", *o.tags.begin());

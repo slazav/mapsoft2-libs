@@ -21,14 +21,13 @@ struct MPObj {
     int  Class; // 0:POI, 1:POLYLINE, 2:POLYGON
     int  Type;  // mp type
     int  EndLevel;
-    int  Direction;
     std::string    Label;
     Opt            Opts;  // other options
     std::vector<std::string> Comment;
     std::vector<dMultiLine> Data; // Data for different levels
 
     MPObj(){
-      Class=MP_POINT; Type=-1; EndLevel=0; Direction=0;
+      Class=MP_POINT; Type=-1; EndLevel=0;
     }
 
     bool operator== (const MPObj & o) const{
@@ -38,7 +37,6 @@ struct MPObj {
         if (*i!=*j) return false;
       return (
         (Class==o.Class) && (Type==o.Type) && (EndLevel == o.EndLevel) &&
-        (Direction == o.Direction) &&
         (Label==o.Label) && (Comment==o.Comment) && (Opts==o.Opts) );
     }
     MPObj & operator= (const dLine & l){

@@ -47,13 +47,10 @@ bool
 VMapObj::operator< (const VMapObj & o) const{
   if (type != o.type) return (type < o.type);
   if (text != o.text) return (text < o.text);
-  if (dir  != o.dir)  return (dir < o.dir);
   return dMultiLine::operator<(o);
 }
 
-VMapObj::VMapObj(){
-  type=0; dir=0;
-}
+VMapObj::VMapObj(){ type=0; }
 
 dRect
 VMap::range() const{

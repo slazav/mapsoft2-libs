@@ -130,6 +130,7 @@ read_vmap_object(istream & IN, string & s, double ver){
   IN1 >> setbase(16) >> ret.type >> ws;
   getline(IN1,ret.text);
 
+  bool inv = false;
   while (!IN.eof() || read_ahead){
     if (!read_ahead) getline(IN, s);
     else read_ahead=false;
@@ -140,7 +141,7 @@ read_vmap_object(istream & IN, string & s, double ver){
       continue;
     }
     if (key=="DIR"){
-      ret.dir=atoi(val.c_str());
+      inv = true;
       continue;
     }
     if (key=="OPT"){
@@ -167,6 +168,8 @@ read_vmap_object(istream & IN, string & s, double ver){
     }
     break; // end of object
   }
+  if (inv)
+    for (auto & i:ret) i.invert();
   return ret;
 }
 
@@ -318,8 +321,6 @@ write_vmap(ostream & OUT, const VMap & W){
     if (o.text != "") OUT << " " << o.text;
     OUT << "\n";
 
-    if (o.dir != 0)
-      OUT << "  DIR\t" << o.dir << "\n";
     for (auto const &i:o.opts){
       OUT << "  OPT\t" << i.first << "\t" << i.second << "\n"; // protect \n!
     }
