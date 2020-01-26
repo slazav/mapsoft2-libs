@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <algorithm>
 #include <fstream>
 #include <cstring>
 
@@ -19,18 +20,35 @@ ms2opt_add_mp(GetOptSet & opts){
 }
 
 /*********************************************************/
-// get line, trim \r, skip empty lines
-string getl(istream & f){
+// get line, trim \r
+string
+getl(istream & f){
   string l;
-  do {
-    getline(f, l);
-    if (l.size() && *l.rbegin()=='\r') l.resize(l.size()-1);
-  } while (l.size()==0 && !f.eof());
+  getline(f, l);
+  if (l.size() && *l.rbegin()=='\r') l.resize(l.size()-1);
   return l;
 }
 
+// write comments
+void
+write_comm(ostream & oo, const string & s){
+  if (s.size() == 0) return;
+  std::istringstream ii(s);
+  while (!ii.eof()) oo << ";" << getl(ii) << "\r\n";
+}
+
+// replace \r, \n with spaces (for Name, Title fields)
+std::string
+protect_name(const string & s){
+  string ret = s;
+  std::replace(ret.begin(), ret.end(), '\n', ' ');
+  std::replace(ret.begin(), ret.end(), '\r', ' ');
+  return ret;
+}
+
 // icasecmp for std::strings
-bool icasecmp(const string& l, const string& r) {
+bool
+icasecmp(const string& l, const string& r) {
   if (l.size() != r.size()) return false;
   for (int i=0; i<l.size(); i++)
     if (toupper(l[i]) != toupper(r[i])) return false;
@@ -38,7 +56,8 @@ bool icasecmp(const string& l, const string& r) {
 }
 
 // icasencmp for std::strings
-bool icasencmp(const string& l, const string& r, const int n) {
+bool
+icasencmp(const string& l, const string& r, const int n) {
   if (l.size()<n || r.size()<n) return false;
   for (int i=0; i<n; i++)
     if (toupper(l[i]) != toupper(r[i])) return false;
@@ -62,7 +81,10 @@ void read_mp(istream & f, MP & data, const Opt & opts){
   // comments and empty lines
   string l = getl(f);
   while (l.size()==0 || l[0]==';'){
-    if (l.size()>0) data.Comment.push_back(l.substr(1));
+    if (l.size()>0){
+      if (data.Comment.size()>0) data.Comment += '\n';
+      data.Comment += l.substr(1);
+    }
     l = getl(f);
   }
 
@@ -159,13 +181,13 @@ void read_mp(istream & f, MP & data, const Opt & opts){
   IConv cnv(enc, "UTF-8");
   data.Name = cnv(data.Name);
   for (auto & o: data.Opts) o.second = cnv(o.second);
-  for (auto & c: data.Comment) c = cnv(c);
+  data.Comment = cnv(data.Comment);
 
   int mode=0;
   // mode=0 -- between objects
   // mode=1 -- skip
   // mode=2 -- point, polyline, polygon
-  vector<string> comm;
+  string comm;
   bool inv = false; // for handling Direction field
   while (!f.eof()) {
     l = getl(f);
@@ -214,7 +236,8 @@ void read_mp(istream & f, MP & data, const Opt & opts){
 
     // comments between objects
     if (mode==0 && l[0]==';') {
-      comm.push_back(cnv(l.substr(1)));
+      if (comm.size()>0) comm += '\n';
+      comm+=cnv(l.substr(1));
       continue;
     }
 
@@ -290,7 +313,7 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
   if (opts.exists("mp_out_enc")) enc = opts.get("mp_out_enc"); // from opts
   IConv cnv("UTF-8", enc);
 
-  for (auto c:data.Comment) out << ";" << cnv(c) << "\r\n";
+  write_comm(out, cnv(data.Comment));
 
   if (data.LblCoding!=6 && data.LblCoding!=9 && data.LblCoding!=10)
     throw Err() << "mp_write: unsupported LblCoding: " << data.LblCoding;
@@ -305,7 +328,7 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
   out << setprecision(6) << fixed
       << "[IMG ID]\r\n"
       << "ID=" << data.ID << "\r\n"
-      << "Name="       << cnv(data.Name)  << "\r\n"
+      << "Name="       << protect_name(cnv(data.Name)) << "\r\n"
       << "LblCoding="  << data.LblCoding  << "\r\n"
       << "Codepage="   << data.Codepage   << "\r\n"
       << "Elevation="  << data.Elevation  << "\r\n"
@@ -327,7 +350,7 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
   out << "[END-IMG ID]\r\n";
 
   for (auto obj:data){
-    for (auto c:obj.Comment) out << ";" << cnv(c) << "\r\n";
+    write_comm(out, cnv(obj.Comment));
 
     switch (obj.Class) {
       case MP_POINT:   out << "[POI]\r\n"; break;
@@ -336,11 +359,11 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
       default: throw Err() << "mp_write: unknown object class: " << obj.Class;
     }
     out << "Type=0x"     << setbase(16) << obj.Type << setbase(10) << "\r\n";
-    if (obj.Label != "")   out << "Label=" << cnv(obj.Label) << "\r\n";
+    if (obj.Label != "")   out << "Label=" << protect_name(cnv(obj.Label)) << "\r\n";
     if (obj.EndLevel  != 0) out << "EndLevel=" << obj.EndLevel << "\r\n";
 
     // other options
-    for (auto o:obj.Opts)  out << o.first << "=" << cnv(o.second) << "\r\n";
+    for (auto o:obj.Opts)  out << o.first << "=" << protect_name(cnv(o.second)) << "\r\n";
 
     // data
     if (obj.Data.size() > data.Levels.size()-1)

@@ -29,6 +29,8 @@
   `Codepage` field and attached to corresponding objects. Object label is
   also converted fo UTF-8.
 
+- Unknown object parameters are read to Opt structure
+
 - When reading a few files the header will be overwritten and
   objects will be added.
 

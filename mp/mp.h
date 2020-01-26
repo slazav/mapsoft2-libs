@@ -23,7 +23,7 @@ struct MPObj {
     int  EndLevel;
     std::string    Label;
     Opt            Opts;  // other options
-    std::vector<std::string> Comment;
+    std::string    Comment;
     std::vector<dMultiLine> Data; // Data for different levels
 
     MPObj(){
@@ -79,7 +79,7 @@ struct MP : std::list<MPObj>{
     //int DrawPriority; // 0..31
     //bool Marine;      // marine map?
 
-    std::vector<std::string> Comment;
+    std::string Comment;
     Opt Opts;  // other options
 
     MP(){
