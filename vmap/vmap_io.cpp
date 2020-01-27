@@ -154,7 +154,8 @@ read_vmap_object(istream & IN, string & s, double ver){
       continue;
     }
     if (key=="COMM"){
-      ret.comm.push_back(val);
+      if (ret.comm.size()>0) ret.comm+="\n";
+       ret.comm+=val;
       continue;
     }
     if (key=="LABEL"){
@@ -324,9 +325,16 @@ write_vmap(ostream & OUT, const VMap & W){
     for (auto const &i:o.opts){
       OUT << "  OPT\t" << i.first << "\t" << i.second << "\n"; // protect \n!
     }
-    for (auto const &i:o.comm){
-      OUT << "  COMM\t" << i << "\n";
+
+    if (o.comm.size()>0){
+      std::istringstream ii(o.comm);
+      while (!ii.eof()){
+        string l;
+        getline(ii, l);
+        OUT << "  COMM\t" << l << "\n";
+      }
     }
+
     o.labels.sort();
     for (auto const &i:o.labels){
       OUT << "  LABEL\t";  write_vmap_lpos(OUT, i); OUT << "\n";

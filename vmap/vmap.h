@@ -47,8 +47,8 @@ struct VMapObj: public dMultiLine {
   int             type;  // MP type
   std::string     text;  // label text
   std::list<VMapLab> labels;
-  Opt                      opts; // some Key=Value fields
-  std::vector<std::string> comm; // comments
+  Opt         opts; // some Key=Value fields
+  std::string comm; // comments
 
   object_class get_class() const;
   bool operator< (const VMapObj & o) const;

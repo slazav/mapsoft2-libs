@@ -164,12 +164,9 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     // skip unknown types
     if (!o1.type) continue;
 
-    // name
+    // name, comments
     o1.name = o.Label;
-
-    // comments
-    for (auto const & c:o.Comment) o1.comm += c + '\n';
-    if (o1.comm.size()) o1.comm.resize(o1.comm.size()-1); // cut trailing '\n'
+    o1.comm = o.Comment;
 
     // source
     if (o.Opts.exists("Source")) o1.tags.insert(o.Opts.get<string>("Source"));
@@ -310,18 +307,9 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
     // skip unknown types
     if (o1.Type!=-1){
 
-      // name
+      // name, comments
       o1.Label = o.name;
-
-      // comments
-      if (o.comm.size()){
-        int pos1=0, pos2=0;
-        do {
-          pos2 = o.comm.find('\n', pos1);
-          o1.Comment.push_back(o.comm.substr(pos1,pos2));
-          pos1 = pos2+1;
-        } while (pos2!=string::npos);
-      }
+      o1.Comment = o.comm;
 
       // source
       if (o.tags.size()>0) o1.Opts.put("Source", *o.tags.begin());

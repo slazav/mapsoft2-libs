@@ -157,11 +157,9 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
     if (!o1.type) continue;
 
 
-    // name
+    // name and comments
     o1.name = o.text;
-    // comments
-    for (auto const & c:o.comm) o1.comm += c + '\n';
-    if (o1.comm.size()) o1.comm.resize(o1.comm.size()-1); // cut trailing '\n'
+    o1.comm = o.comm;
 
     // source
     if (o.opts.exists("Source")) o1.tags.insert(o.opts.get<string>("Source"));
@@ -282,16 +280,7 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
       // name
       o1.text = o.name;
-
-      // comments
-      if (o.comm.size()){
-        int pos1=0, pos2=0;
-        do {
-          pos2 = o.comm.find('\n', pos1);
-          o1.comm.push_back(o.comm.substr(pos1,pos2));
-          pos1 = pos2+1;
-        } while (pos2!=string::npos);
-      }
+      o1.comm = o.comm;
 
       // source
       if (o.tags.size()>0) o1.opts.put("Source", *o.tags.begin());
