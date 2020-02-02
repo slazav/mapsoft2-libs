@@ -18,7 +18,6 @@ main(){
       // defaults
       assert_eq(o1.cl, MAPDB_POINT);
       assert_eq(o1.type, 0);
-      assert_eq(o1.dir, MAPDB_DIR_NO);
       assert_eq(o1.angle, 0);
       assert_eq(o1.name, "");
       assert_eq(o1.comm, "");
@@ -37,13 +36,6 @@ main(){
       assert(o2 >= o1);
 
       o2=o1; o2.type = 1;
-      assert(o1 != o2);
-      assert(o1 < o2);
-      assert(o1 <= o2);
-      assert(o2 > o1);
-      assert(o2 >= o1);
-
-      o2=o1; o2.dir = MAPDB_DIR_BCK;
       assert(o1 != o2);
       assert(o1 < o2);
       assert(o1 <= o2);
@@ -98,7 +90,6 @@ main(){
       MapDBObj o1,o2;
       o1.cl = MAPDB_LINE;
       o1.type = 0x2342;
-      o1.dir  = MAPDB_DIR_NO;
       o1.angle  = 60;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
@@ -110,7 +101,6 @@ main(){
 
       o1.cl = MAPDB_POINT;
       o1.type = 0x12;
-      o1.dir  = MAPDB_DIR_FRW;
       o1.angle  = 0;
       o1.name = "";
       o1.comm = "";
@@ -149,7 +139,6 @@ main(){
       MapDBObj o1;
       o1.cl = MAPDB_LINE;
       o1.type = 0x2342;
-      o1.dir  = MAPDB_DIR_NO;
       o1.angle  = 60;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";

@@ -30,9 +30,6 @@ MapDBObj::pack() const {
   // optional angle (integer value, 1/1000 degrees)
   if (angle!=0) string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
 
-  // optional direction (int value)
-  if (dir!=MAPDB_DIR_NO) string_pack<uint32_t>(s, "dir ", (uint32_t)dir);
-
   // optional text fields (4-byte tag, 4-byte length, data);
   if (name!="") string_pack_str(s, "name", name);
   if (comm!="") string_pack_str(s, "comm", comm);
@@ -69,7 +66,6 @@ MapDBObj::unpack(const std::string & str) {
   while (1){
     string tag = string_unpack_tag(s);
     if (tag == "") break;
-    else if (tag == "dir ") dir = (MapDBObjDir)string_unpack<uint32_t>(s);
     else if (tag == "angl") angle = string_unpack<int32_t>(s)/1000.0;
     else if (tag == "name") name  = string_unpack_str(s);
     else if (tag == "comm") comm  = string_unpack_str(s);

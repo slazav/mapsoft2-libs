@@ -27,26 +27,19 @@ typedef enum{
   MAPDB_POLYGON  = 2
 } MapDBObjClass;
 
-typedef enum{
-  MAPDB_DIR_NO    = 0,
-  MAPDB_DIR_FRW   = 1,
-  MAPDB_DIR_BCK   = 2
-} MapDBObjDir;
-
 /*********************************************************************/
 // MapDBObj -- a single map object
 
 struct MapDBObj: public dMultiLine {
   MapDBObjClass   cl;      // object class: MAPDB_POINT, MAPDB_LINE, MAPDB_POLYGON
   uint16_t        type;    // = MP type
-  MapDBObjDir     dir;     // object direction: MAPDB_DIR_NO, MAPDB_DIR_FRW, MAPDB_DIR_BCK
   float           angle;   // object angle, deg
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
 
   // defaults
-  MapDBObj() {cl=MAPDB_POINT; type=0; dir=MAPDB_DIR_NO; angle=0;}
+  MapDBObj() {cl=MAPDB_POINT; type=0; angle=0;}
 
   // pack object to a string (for DB storage)
   std::string pack() const;
@@ -60,7 +53,6 @@ struct MapDBObj: public dMultiLine {
   bool operator< (const MapDBObj & o) const {
     if (cl!=o.cl)       return cl<o.cl;
     if (type!=o.type)   return type<o.type;
-    if (dir!=o.dir)     return dir<o.dir;
     if (angle!=o.angle) return angle<o.angle;
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
@@ -70,7 +62,7 @@ struct MapDBObj: public dMultiLine {
 
   /// Equal opertator.
   bool operator== (const MapDBObj & o) const {
-    return cl==o.cl && type==o.type && dir==o.dir && angle==o.angle &&
+    return cl==o.cl && type==o.type && angle==o.angle &&
         name==o.name && comm==o.comm && tags==o.tags &&
         dMultiLine::operator==(o);
   }
