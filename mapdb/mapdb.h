@@ -97,7 +97,7 @@ private:
 public:
 
   // Constructor. Open all databases, check map version.
-  MapDB(std::string name, bool create);
+  MapDB(std::string name, bool create = false);
 
   ///////////////
   /* Function for working with map information (mapinfo.db) */
