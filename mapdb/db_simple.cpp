@@ -71,7 +71,7 @@ DBSimple::~DBSimple(){}
 
 DBSimple::Impl::Impl(std::string fname, const char *dbname, bool create, bool dup){
   // set flags
-  int open_flags = create? DB_CREATE:0;
+  int open_flags = create? DB_CREATE|DB_EXCL:0;
 
   /* Initialize the DB handle */
   DB *dbp;

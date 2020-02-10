@@ -103,6 +103,8 @@ main(){
     }
     {
       // open existing file
+      assert_err(DBSimple("a.dbp", NULL, 1), "db_simple: a.dbp: File exists");
+
       DBSimple db("a.dbp", NULL, 0);
       uint32_t key = 2;
       assert_eq(db.get(key), "fgh");
