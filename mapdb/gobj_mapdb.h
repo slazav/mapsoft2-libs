@@ -265,17 +265,15 @@ public:
 
   // for both move_to and rotate_to features
   struct FeatureMoveTo : Feature {
-    uint32_t target; // target object etype
+    std::set<uint32_t> targets; // target object types
     bool rotate;
     double dist;
     FeatureMoveTo(const std::vector<std::string> & vs, const bool rotate):
         rotate(rotate){
-      check_args(vs, {"area|line", "<type>", "<dist>"});
-      target = str_to_type<uint32_t>(vs[1]);
-      dist   = str_to_type<double>(vs[2]);
-      if      (vs[0] == "area")      target |= MAPDB_POLYGON << 16;
-      else if (vs[0] == "line")      target |= MAPDB_LINE << 16;
-      else throw Err() << "Wrong parameter: line or area expected";
+      check_args(vs, {"<dist>", "(area|line):<type>", "..."});
+      dist   = str_to_type<double>(vs[0]);
+      for (size_t i=1; i<vs.size(); ++i)
+        targets.insert(MapDBObj::make_type(vs[i]));
     }
   };
 

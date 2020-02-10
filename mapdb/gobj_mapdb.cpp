@@ -45,36 +45,19 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
     try{
 
-      // draw a point object
-      if (vs.size() > 2 && vs[0] == "point") {
+      // draw an object (point, line, area)
+      if (vs.size() > 1 && vs[0].find(':')!=std::string::npos) {
         st.reset(new DrawingStep(map.get()));
-        st->action = STEP_DRAW_POINT;
-        st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POINT<<16);
-        st->step_name = vs[0] + " " + vs[1];
-        ftr = vs[2];
-        vs.erase(vs.begin(), vs.begin()+3);
-        add(depth--, st);
-      }
-
-      // draw a line object
-      else if (vs.size() > 2 && vs[0] == "line") {
-        st.reset(new DrawingStep(map.get()));
-        st->action = STEP_DRAW_LINE;
-        st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_LINE<<16);
-        st->step_name = vs[0] + " " + vs[1];
-        ftr = vs[2];
-        vs.erase(vs.begin(), vs.begin()+3);
-        add(depth--, st);
-      }
-
-      // draw an area object
-      else if (vs.size() > 2 && vs[0] == "area") {
-        st.reset(new DrawingStep(map.get()));
-        st->action = STEP_DRAW_AREA;
-        st->etype = (uint32_t)str_to_type<uint16_t>(vs[1]) | (MAPDB_POLYGON<<16);
-        st->step_name = vs[0] + " " + vs[1];
-        ftr = vs[2];
-        vs.erase(vs.begin(), vs.begin()+3);
+        st->etype = MapDBObj::make_type(vs[0]);
+        switch (st->etype >> 24) {
+          case MAPDB_POINT:   st->action = STEP_DRAW_POINT; break;
+          case MAPDB_LINE:    st->action = STEP_DRAW_LINE; break;
+          case MAPDB_POLYGON: st->action = STEP_DRAW_AREA; break;
+          default: throw Err() << "Bad map object type: " << hex << st->etype;
+        }
+        st->step_name = vs[0];
+        ftr = vs[1];
+        vs.erase(vs.begin(), vs.begin()+2);
         add(depth--, st);
       }
 
@@ -265,12 +248,14 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
         if (cnv) r = cnv->frw_acc(r);
 
         dMultiLine lines;
-        auto ids = map->find(ftr->target, r);
-        for (int i:ids){
-          auto O1 = map->get(i);
-          if (cnv) cnv->bck(O1);
-          for (auto const & l:O1)
-            lines.push_back(l);
+        for (auto & t: ftr->targets){
+          auto ids = map->find(t, r);
+            for (int i:ids){
+            auto O1 = map->get(i);
+            if (cnv) cnv->bck(O1);
+            for (auto const & l:O1)
+              lines.push_back(l);
+          }
         }
 
         dPoint t(1,0);
