@@ -134,28 +134,22 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
     // skip empty objects
     if (o.is_empty()) continue;
 
-    MapDBObj o1;
-    int cl = o.type >> 20;
-    switch (cl){
-      case 0: o1.cl = MAPDB_POINT; break;
-      case 1: o1.cl = MAPDB_LINE; break;
-      case 2: o1.cl = MAPDB_POLYGON; break;
-      default:
-        throw Err() << "wrong VMAP object class: "<< cl;
-    }
-
     // convert type
-    o1.type = 0;
-    for (auto const & cnv: cnvs[o1.cl]){
+    uint16_t cl = o.type >> 20;
+    if (cl>2) throw Err() << "bad object class: " << cl;
+    uint16_t tnum = 0;
+    for (auto const & cnv: cnvs[cl]){
       if (cnv.x == 0 || cnv.x == (o.type & 0xFFFFF)) {
-        o1.type = cnv.y? cnv.y : (o.type & 0xFFFFF);
+        tnum = cnv.y? cnv.y : (o.type & 0xFFFFF);
         break;
       }
     }
 
     // skip unknown types
-    if (!o1.type) continue;
+    if (tnum==0) continue;
 
+    MapDBObj o1;
+    o1.set_type(cl, tnum);
 
     // name and comments
     o1.name = o.text;
@@ -260,9 +254,11 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
     o1.type = 0;
 
     // convert type
-    for (auto const & cnv: cnvs[o.cl]){
-      if (cnv.x == 0 || cnv.x == o.type) {
-        o1.type = cnv.y? cnv.y : o.type;
+    uint16_t cl = o.get_class();
+    uint16_t tnum = o.get_tnum();
+    for (auto const & cnv: cnvs[cl]){
+      if (cnv.x == 0 || cnv.x == tnum) {
+        o1.type = cnv.y? cnv.y : tnum;
         break;
       }
     }
@@ -270,12 +266,12 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
     // skip unknown types
     if (o1.type != 0) {
 
-      switch (o.cl){
+      switch (cl){
         case MAPDB_POINT:   break;
         case MAPDB_LINE:    o1.type |= 0x100000; break;
         case MAPDB_POLYGON: o1.type |= 0x200000; break;
         default:
-          throw Err() << "wrong MapDB object class: "<< o.cl;
+          throw Err() << "wrong MapDB object class: "<< cl;
       }
 
       // name

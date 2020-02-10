@@ -31,15 +31,43 @@ typedef enum{
 // MapDBObj -- a single map object
 
 struct MapDBObj: public dMultiLine {
-  MapDBObjClass   cl;      // object class: MAPDB_POINT, MAPDB_LINE, MAPDB_POLYGON
-  uint16_t        type;    // = MP type
+
+  // object type is assembled from following parts:
+  // - first byte: object classification (MapDBObjClass)
+  // - second byte: reserved;
+  // - two last bytes: type number (= MP type)
+  uint32_t        type;
   float           angle;   // object angle, deg
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
 
   // defaults
-  MapDBObj() {cl=MAPDB_POINT; type=0; angle=0;}
+  MapDBObj() {type=0; angle=0;}
+
+
+  // assemble object type:
+  static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
+
+  // parse object type from string (point|line|area):<number>
+  static uint32_t make_type(const std::string & s);
+
+  // set object type
+  void set_type(const uint16_t cl, const uint16_t tnum){ type = make_type(cl, tnum);}
+
+  // set object type from string
+  void set_type(const std::string & s) {type = make_type(s);}
+
+  // get object classification (MapDBObjClass)
+  MapDBObjClass get_class() const;
+
+  // get object type number
+  uint16_t get_tnum()  const;
+
+  // parse object type from string (point|line|area):<number>
+  static uint32_t parse_type(const std::string & s);
+
+  /***********************************************/
 
   // pack object to a string (for DB storage)
   std::string pack() const;
@@ -51,7 +79,6 @@ struct MapDBObj: public dMultiLine {
   // operators <=>
   /// Less then operator.
   bool operator< (const MapDBObj & o) const {
-    if (cl!=o.cl)       return cl<o.cl;
     if (type!=o.type)   return type<o.type;
     if (angle!=o.angle) return angle<o.angle;
     if (name!=o.name)   return name<o.name;
@@ -62,7 +89,7 @@ struct MapDBObj: public dMultiLine {
 
   /// Equal opertator.
   bool operator== (const MapDBObj & o) const {
-    return cl==o.cl && type==o.type && angle==o.angle &&
+    return type==o.type && angle==o.angle &&
         name==o.name && comm==o.comm && tags==o.tags &&
         dMultiLine::operator==(o);
   }
@@ -172,7 +199,7 @@ public:
 
   /// Find objects with given type and range
   std::set<uint32_t> find(MapDBObjClass cl, uint16_t type, const dRect & range){
-    return geohash.get((cl  << 16) | type, range); }
+    return geohash.get((cl  << 24) | type, range); }
 
   /// Find objects with given type and range
   std::set<uint32_t> find(uint32_t etype, const dRect & range){

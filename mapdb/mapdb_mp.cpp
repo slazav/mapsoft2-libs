@@ -143,26 +143,30 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
 
   for (auto const & o:mp_data){
 
-    MapDBObj o1;
-
+    uint16_t cl;
     switch (o.Class){
-      case MP_POINT:   o1.cl = MAPDB_POINT; break;
-      case MP_LINE:    o1.cl = MAPDB_LINE; break;
-      case MP_POLYGON: o1.cl = MAPDB_POLYGON; break;
+      case MP_POINT:   cl = MAPDB_POINT;   break;
+      case MP_LINE:    cl = MAPDB_LINE;    break;
+      case MP_POLYGON: cl = MAPDB_POLYGON; break;
       default:
         throw Err() << "wrong MP class: "<< o.Class;
     }
 
     // convert type
-    for (auto const & cnv: cnvs[o1.cl]){
+    uint16_t tnum=0;
+    for (auto const & cnv: cnvs[cl]){
       if (cnv.x == 0 || cnv.x == o.Type) {
-        o1.type = cnv.y? cnv.y : o.Type;
+        tnum = cnv.y? cnv.y : o.Type;
         break;
       }
     }
 
     // skip unknown types
-    if (!o1.type) continue;
+    if (tnum==0) continue;
+
+    MapDBObj o1;
+    o1.set_type(cl, tnum);
+
 
     // name, comments
     o1.name = o.Label;
@@ -288,22 +292,26 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
     o.unpack(str);
 
     MPObj o1;
-    o1.Class = o.cl;
-    switch (o.cl){
+
+    // convert type
+    uint16_t tnum = o.get_tnum();
+    uint16_t cl = o.get_class();
+    if (cl>2) throw Err() << "bad object class: " << cl;
+    for (auto const & cnv: cnvs[cl]){
+      if (cnv.x == 0 || cnv.x == tnum) {
+        o1.Type = cnv.y? cnv.y : tnum;
+        break;
+      }
+    }
+
+    switch (cl){
       case MAPDB_POINT:   o1.Class = MP_POINT; break;
       case MAPDB_LINE:    o1.Class = MP_LINE; break;
       case MAPDB_POLYGON: o1.Class = MP_POLYGON; break;
       default:
-        throw Err() << "wrong MapDB object class: "<< o.cl;
+        throw Err() << "wrong MapDB object class: "<< cl;
     }
 
-    // convert type
-    for (auto const & cnv: cnvs[o.cl]){
-      if (cnv.x == 0 || cnv.x == o.type) {
-        o1.Type = cnv.y? cnv.y : o.type;
-        break;
-      }
-    }
     // skip unknown types
     if (o1.Type!=-1){
 

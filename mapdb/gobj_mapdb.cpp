@@ -23,7 +23,7 @@ ms2opt_add_mapdb_render(GetOptSet & opts){
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   opt = std::shared_ptr<Opt>(new Opt(o));
-  map = std::shared_ptr<MapDB>(new MapDB(mapdir, false));
+  map = std::shared_ptr<MapDB>(new MapDB(mapdir));
 
   // Read configuration file.
   std::string cfgfile = opt->get<string>("config", mapdir + "/render.cfg");

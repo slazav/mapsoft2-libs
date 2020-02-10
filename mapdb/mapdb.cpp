@@ -6,6 +6,7 @@
 
 #include "mapdb.h"
 #include "mp/mp.h"
+#include "opt/opt.h"
 #include "string_pack.h"
 
 #include <sys/types.h> // FolderMaker
@@ -24,8 +25,7 @@ MapDBObj::pack() const {
   ostringstream s;
 
   // two integer numbers: flags, type are packed in a single 32-bit integer:
-  uint32_t v = (cl << 16) | type;
-  s.write((char *)&v, sizeof(uint32_t));
+  s.write((char *)&type, sizeof(uint32_t));
 
   // optional angle (integer value, 1/1000 degrees)
   if (angle!=0) string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
@@ -53,14 +53,8 @@ MapDBObj::unpack(const std::string & str) {
 
   istringstream s(str);
 
-  // type + class
-  uint32_t v;
-  s.read((char*)&v, sizeof(int32_t));
-
-  type = v & 0xFFFF;
-  v >>= 16;
-  if (v<0 || v>2) throw Err() << "MapDBObj::unpack: bad class value: " << v;
-  cl   = (MapDBObjClass)v;
+  // type
+  s.read((char*)&type, sizeof(int32_t));
 
   // other fields
   while (1){
@@ -73,8 +67,56 @@ MapDBObj::unpack(const std::string & str) {
     else if (tag == "crds") push_back(string_unpack_crds(s));
     else throw Err() << "Unknown tag: " << tag;
   }
-
 }
+
+/**********************************************************/
+
+uint32_t
+MapDBObj::make_type(const uint16_t cl, const uint16_t tnum){
+  switch (cl){
+    case MAPDB_POINT:   return  tnum;
+    case MAPDB_LINE:    return (1<<24) | tnum;
+    case MAPDB_POLYGON: return (2<<24) | tnum;
+    default: throw Err() << "unknown object class: " << cl;
+  }
+}
+
+uint32_t
+MapDBObj::make_type(const std::string & s){
+  try{
+    if (s == "") throw Err() << "empty string";
+    size_t n = s.find(':');
+    if (n==std::string::npos) throw Err() << "':' separator not found";
+    int tnum = str_to_type<int>(s.substr(n+1));
+    if (tnum>0xFFFF) throw Err() << "too large number";
+    if (s.substr(0,n) == "point") return make_type(MAPDB_POINT,   tnum);
+    if (s.substr(0,n) == "line")  return make_type(MAPDB_LINE,    tnum);
+    if (s.substr(0,n) == "area")  return make_type(MAPDB_POLYGON, tnum);
+    throw Err() << "point, line, or area word expected";
+  }
+  catch (Err & e) {
+    throw Err() << "can't parse MapDB object type"
+                << (s!=""? string(" \"") + s + "\"": "")
+                << ": " << e.str();
+  }
+}
+
+MapDBObjClass
+MapDBObj::get_class() const {
+  switch (type>>24){
+    case 0: return MAPDB_POINT;
+    case 1: return MAPDB_LINE;
+    case 2: return MAPDB_POLYGON;
+    default: throw Err() << "unknown object class: " << (type>>24);
+  }
+}
+
+uint16_t
+MapDBObj::get_tnum()  const {
+  return type & 0xFFFF; }
+
+
+
 /**********************************************************/
 MapDB::MapDB(std::string name, bool create):
     folder(name, create),
@@ -163,7 +205,6 @@ MapDB::add(const MapDBObj & o){
 
   // get last id + 1
   uint32_t id;
-  uint32_t ct = (o.cl << 16) | o.type;
   objects.get_last(id);
   if (id == 0xFFFFFFFF) id=0;
   else id++;
@@ -175,7 +216,7 @@ MapDB::add(const MapDBObj & o){
   objects.put(id, o.pack());
 
   // write geohash
-  geohash.put(id, ct, o.bbox());
+  geohash.put(id, o.type, o.bbox());
 
   return id;
 }
@@ -194,17 +235,15 @@ MapDB::put(const uint32_t id, const MapDBObj & o){
 
   MapDBObj o1;
   o1.unpack(str);
-  uint32_t ct1 = (o1.cl << 16) | o1.type;
-  uint32_t ct  = (o.cl  << 16) | o.type;
 
   // Delete geohashes
-  geohash.del(id, ct1, o1.bbox());
+  geohash.del(id, o1.type, o1.bbox());
 
   // write new object
   objects.put(id, o.pack());
 
   // write geohash
-  geohash.put(id, ct, o.bbox());
+  geohash.put(id, o.type, o.bbox());
 
 }
 
@@ -231,10 +270,9 @@ MapDB::del(const uint32_t id){
 
   MapDBObj o;
   o.unpack(str);
-  uint32_t ct  = (o.cl  << 16) | o.type;
 
   // Delete heohashes
-  geohash.del(id, ct, o.bbox());
+  geohash.del(id, o.type, o.bbox());
 
   // Delete the object
   objects.del(id);

@@ -12,12 +12,34 @@ int
 main(){
   try{
 
+    // MapDBObj types
+    {
+      assert_eq(MapDBObj::make_type(MAPDB_POINT,   0xFFFF), 0xFFFF);
+      assert_eq(MapDBObj::make_type(MAPDB_LINE,    0xFFFF), 0x100FFFF);
+      assert_eq(MapDBObj::make_type(MAPDB_POLYGON, 0xFFFF), 0x200FFFF);
+
+      assert_eq(MapDBObj::make_type("point:0xFFFF"), 0xFFFF);
+      assert_eq(MapDBObj::make_type("line:0xFFFF"),  0x100FFFF);
+      assert_eq(MapDBObj::make_type("area:0xFFFF"),  0x200FFFF);
+
+      assert_eq(MapDBObj::make_type("point:123"), 123);
+
+      std::string err("bad MapDB object type, (point|line|area):<number> expected: ");
+      assert_err(MapDBObj::make_type(""), "can't parse MapDB object type: empty string");
+      assert_err(MapDBObj::make_type("a"), "can't parse MapDB object type \"a\": ':' separator not found");
+      assert_err(MapDBObj::make_type("point:"), "can't parse MapDB object type \"point:\": can't parse value: \"\"");
+      assert_err(MapDBObj::make_type("point:a"), "can't parse MapDB object type \"point:a\": can't parse value: \"a\"");
+      assert_err(MapDBObj::make_type("point:0xFFFFFF"), "can't parse MapDB object type \"point:0xFFFFFF\": too large number");
+      assert_err(MapDBObj::make_type("abc:0xFFFF"), "can't parse MapDB object type \"abc:0xFFFF\": point, line, or area word expected");
+
+    }
+
     // MapDBObj structure
     {
       MapDBObj o1,o2;
       // defaults
-      assert_eq(o1.cl, MAPDB_POINT);
-      assert_eq(o1.type, 0);
+      assert_eq(o1.get_class(), MAPDB_POINT);
+      assert_eq(o1.get_tnum(),  0);
       assert_eq(o1.angle, 0);
       assert_eq(o1.name, "");
       assert_eq(o1.comm, "");
@@ -28,14 +50,15 @@ main(){
       assert_eq(o1, o2);
       assert(o1 >= o2);
       assert(o1 <= o2);
-      o2.cl = MAPDB_LINE;
+      o2.set_type(MAPDB_LINE, 0);
       assert(o1 != o2);
       assert(o1 < o2);
       assert(o1 <= o2);
       assert(o2 > o1);
       assert(o2 >= o1);
 
-      o2=o1; o2.type = 1;
+      o2=o1;
+      o2.set_type(MAPDB_LINE, 1);
       assert(o1 != o2);
       assert(o1 < o2);
       assert(o1 <= o2);
@@ -88,8 +111,7 @@ main(){
     // for OBJ database
     {
       MapDBObj o1,o2;
-      o1.cl = MAPDB_LINE;
-      o1.type = 0x2342;
+      o1.set_type(MAPDB_LINE, 0x2342);
       o1.angle  = 60;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
@@ -99,8 +121,7 @@ main(){
       o2.unpack(pack);
       assert_eq(o1,o2);
 
-      o1.cl = MAPDB_POINT;
-      o1.type = 0x12;
+      o1.set_type(MAPDB_POINT, 0x12);
       o1.angle  = 0;
       o1.name = "";
       o1.comm = "";
@@ -137,8 +158,7 @@ main(){
 
       // get/set object
       MapDBObj o1;
-      o1.cl = MAPDB_LINE;
-      o1.type = 0x2342;
+      o1.set_type(MAPDB_LINE, 0x2342);
       o1.angle  = 60;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
@@ -165,7 +185,7 @@ main(){
       assert_err(m.get(1), "MapDB::get: object does not exists: 1");
 
       // update object
-      o1.type = 0x2342;
+      o1.set_type(MAPDB_LINE, 0x2342);
       o1.dMultiLine::operator=(dMultiLine());
       assert_err(m.put(id, o1), "MapDB::put: empty object");
 
@@ -180,10 +200,10 @@ main(){
       // find
       id = m.add(o1);
       assert_eq(o1, m.get(id));
-      assert_eq(m.find(o1.cl, o1.type+1, dRect("[1,1,1,1]")).size(), 0);
-      assert_eq(m.find(MAPDB_POINT, o1.type, dRect("[1,1,1,1]")).size(), 0);
-      assert_eq(m.find(o1.cl, o1.type, dRect("[10,1,1,1]")).size(), 0);
-      std::set<uint32_t> ii = m.find(o1.cl, o1.type, dRect("[1,1,1,1]"));
+      assert_eq(m.find(o1.get_class(), o1.get_tnum()+1, dRect("[1,1,1,1]")).size(), 0);
+      assert_eq(m.find(MAPDB_POINT, o1.get_tnum(), dRect("[1,1,1,1]")).size(), 0);
+      assert_eq(m.find(o1.get_class(), o1.get_tnum(), dRect("[10,1,1,1]")).size(), 0);
+      std::set<uint32_t> ii = m.find(o1.get_class(), o1.get_tnum(), dRect("[1,1,1,1]"));
       assert_eq(ii.size(),1);
 
       assert_eq(m.get_etypes().size(), 1);
