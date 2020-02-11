@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <string>
+#include <cstdio>
 
 #include "mapdb.h"
 #include "mp/mp.h"
@@ -142,6 +143,14 @@ MapDB::MapDB(std::string name, bool create):
     throw Err() << "MapDB version is too new, update mapsoft:" << map_version;
 };
 
+/**********************************************************/
+void
+MapDB::delete_db(std::string name){
+  remove((name + "/mapinfo.db").c_str());
+  remove((name + "/objects.db").c_str());
+  remove((name + "/labels.db").c_str());
+  remove((name + "/geohash.db").c_str());
+}
 
 /**********************************************************/
 

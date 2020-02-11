@@ -161,6 +161,9 @@ public:
   // Constructor. Open all databases, check map version.
   MapDB(std::string name, bool create = false);
 
+  // delete map databases
+  static void delete_db(std::string name);
+
   ///////////////
   /* Function for working with map information (mapinfo.db) */
 
