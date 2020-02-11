@@ -66,7 +66,11 @@ struct MapDBObj: public dMultiLine {
   MapDBObj(const uint16_t cl, const uint16_t tnum): MapDBObj() { set_type(cl,tnum); }
   MapDBObj(const std::string & s): MapDBObj() { set_type(s); }
 
+  /***********************************************/
 
+  // Set object coordinates from a string.
+  // For point objects point expected, for lines and areas - line/multilines.
+  void set_coords(const std::string & s);
 
   /***********************************************/
 

@@ -116,7 +116,18 @@ uint16_t
 MapDBObj::get_tnum()  const {
   return type & 0xFFFF; }
 
-
+void
+MapDBObj::set_coords(const std::string & s){
+  if (get_class() == MAPDB_POINT){
+    dLine l;
+    l.push_back(dPoint(s));
+    clear();
+    push_back(l);
+  }
+  else {
+    dMultiLine::operator=(dMultiLine(s));
+  }
+}
 
 /**********************************************************/
 MapDB::MapDB(std::string name, bool create):

@@ -116,7 +116,9 @@ main(){
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
       o1.tags.insert("object source\nsecond line");
-      o1.dMultiLine::operator=(dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
+      o1.set_coords("[[[0,0],[1,1]],[[1,1],[2,2]]]");
+      assert_err(o1.set_coords("[0,0]"), "can't parse multisegment line: \"[0,0]\": a JSON array expected");
+      assert_eq(dMultiLine(o1), dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
       std::string pack = o1.pack();
       o2.unpack(pack);
       assert_eq(o1,o2);
@@ -129,6 +131,12 @@ main(){
       pack = o1.pack();
       o2.unpack(pack);
       assert_eq(o1,o2);
+
+      o1.set_type(MAPDB_POINT, 0x2342);
+      o1.set_coords("[1,1]");
+      assert_err(o1.set_coords("[[0,0],[1,1]]"), "can't parse point: \"[[0,0],[1,1]]\": can't extract a number from array index 0");
+      assert_eq(dMultiLine(o1), dMultiLine("[[[1,1]]]"));
+
     }
 
 
