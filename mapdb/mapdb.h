@@ -45,7 +45,6 @@ struct MapDBObj: public dMultiLine {
   // defaults
   MapDBObj() {type=0; angle=0;}
 
-
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
 
@@ -64,8 +63,10 @@ struct MapDBObj: public dMultiLine {
   // get object type number
   uint16_t get_tnum()  const;
 
-  // parse object type from string (point|line|area):<number>
-  static uint32_t parse_type(const std::string & s);
+  MapDBObj(const uint16_t cl, const uint16_t tnum): MapDBObj() { set_type(cl,tnum); }
+  MapDBObj(const std::string & s): MapDBObj() { set_type(s); }
+
+
 
   /***********************************************/
 

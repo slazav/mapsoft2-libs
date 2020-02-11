@@ -148,8 +148,7 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
     // skip unknown types
     if (tnum==0) continue;
 
-    MapDBObj o1;
-    o1.set_type(cl, tnum);
+    MapDBObj o1(cl, tnum);
 
     // name and comments
     o1.name = o.text;

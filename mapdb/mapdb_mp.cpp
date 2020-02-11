@@ -164,8 +164,7 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     // skip unknown types
     if (tnum==0) continue;
 
-    MapDBObj o1;
-    o1.set_type(cl, tnum);
+    MapDBObj o1(cl, tnum);
 
 
     // name, comments
