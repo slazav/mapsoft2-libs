@@ -49,8 +49,8 @@ int main() {
     assert_eq(ff.size(), 0);
 
     // file_get_prefix
-    assert_eq(file_get_prefix(""), "");
-    assert_eq(file_get_prefix("aaa"), "");
+    assert_eq(file_get_prefix(""), ".");
+    assert_eq(file_get_prefix("aaa"), ".");
     assert_eq(file_get_prefix("/aaa"), "/");
     assert_eq(file_get_prefix("/abc/def/aaa"), "/abc/def/");
     assert_eq(file_get_prefix("/abc//aaa.bbb"), "/abc//");
