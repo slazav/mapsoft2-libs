@@ -330,6 +330,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // Pattern feature
   if (features.count(FEATURE_PATT)){
     auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+//    data->patt->set_filter(patt_filter);
+    data->patt->set_extend(Cairo::EXTEND_REPEAT);
     cr->set_source(data->patt);
     if (action == STEP_DRAW_MAP)
       cr->paint();
