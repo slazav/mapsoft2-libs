@@ -100,7 +100,7 @@ public:
     FEATURE_SMOOTH,  // set line smoothing
     FEATURE_DASH,    // set dashed line
     FEATURE_CAP,     // set line cap
-    FEATURE_JOIN,    // set line cap
+    FEATURE_JOIN,    // set line join
     FEATURE_OP,      // set drawing operator
     FEATURE_GROUP,   // set drawing step group
     FEATURE_NAME,    // set drawing step name

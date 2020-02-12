@@ -159,7 +159,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // cap round|butt|square
       if (ftr == "cap"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_POINT);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
         st->features.emplace(FEATURE_CAP,
           std::shared_ptr<Feature>(new FeatureCap(vs)));
         continue;
