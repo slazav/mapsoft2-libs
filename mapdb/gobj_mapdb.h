@@ -175,14 +175,19 @@ public:
     FeaturePatt(const std::string & imgdir,
                 const std::vector<std::string> & vs){
       check_args(vs, {"<file>", "<scale>", "?<dx>", "?<dy>"});
-      double sc = str_to_type<double>(vs[1]);
+      double scx = str_to_type<double>(vs[1]);
+      double scy = scx;
       double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
       double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
       img = image_load(imgdir + "/" + vs[0]);
       if (img.is_empty()) throw Err() << "empty image: " << vs[0];
       if (img.type() != IMAGE_32ARGB)
         img = image_to_argb(img);
-      patt = image_to_pattern(img, sc, dx, dy);
+      // Images with too small scales are not drawn.
+      // Let's limit scale to have at least 1-pixel image size:
+      if (img.width()*scx  < 1.0) scx = 1.0/img.width();
+      if (img.height()*scy < 1.0) scy = 1.0/img.height();
+      patt = image_to_pattern(img, scx, scy, dx, dy);
     }
   };
 
