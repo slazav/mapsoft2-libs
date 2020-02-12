@@ -16,14 +16,14 @@ image_to_surface(const Image & img) {
 }
 
 Cairo::RefPtr<Cairo::SurfacePattern>
-image_to_pattern(const Image & img, double sc, double dx, double dy){
+image_to_pattern(const Image & img, double scx, double scy, double dx, double dy){
   try{
     auto surf = image_to_surface(img);
     Cairo::RefPtr<Cairo::SurfacePattern> patt =
       Cairo::SurfacePattern::create(surf);
     Cairo::Matrix M=Cairo::identity_matrix();
     M.translate(surf->get_width()*(0.5+dx), surf->get_height()*(0.5+dy));
-    M.scale(1/sc,1/sc);
+    M.scale(1/scx,1/scy);
     patt->set_matrix(M);
     return patt;
   }
