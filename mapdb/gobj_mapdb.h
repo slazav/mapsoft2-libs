@@ -40,8 +40,9 @@ where possible features are:
     fill <color> -- Fill an area or the map.
     patt <image file> <scale> [<dx>] [<dy>] -- Fill an area with the pattern.
     img  <image file> <scale> [<dx>] [<dy>] -- Draw an image (point or area)
+    img_filter <flt>  -- Set image filter fast|good|best|nearest|bilinear
     smooth <distance> -- Use smoothed paths.
-    dash <len1> ...  -- Setup dashed line. Valid for lines and areas together with stroke feature.
+    dash <len1> ...   -- Setup dashed line. Valid for lines and areas together with stroke feature.
     cap  round|butt|square -- Set line cup (default round). Use with stroke feature.
     join round|miter       -- Set line join (default round). Use with stroke feature.
     operator <op>          -- Set drawing operator (clear|source|over|in|out|atop|dest|
@@ -93,18 +94,19 @@ public:
 
   // known drawing features for each step
   enum StepFeature {
-    FEATURE_STROKE, // draw the contour with some thickness and color
-    FEATURE_FILL,    // fill the area with some color
-    FEATURE_PATT,    // fill the area with a pattern
-    FEATURE_IMG,     // draw an image
-    FEATURE_SMOOTH,  // set line smoothing
-    FEATURE_DASH,    // set dashed line
-    FEATURE_CAP,     // set line cap
-    FEATURE_JOIN,    // set line join
-    FEATURE_OP,      // set drawing operator
-    FEATURE_GROUP,   // set drawing step group
-    FEATURE_NAME,    // set drawing step name
-    FEATURE_MOVETO,  // move point to a nearest object
+    FEATURE_STROKE,     // draw the contour with some thickness and color
+    FEATURE_FILL,       // fill the area with some color
+    FEATURE_PATT,       // fill the area with a pattern
+    FEATURE_IMG,        // draw an image
+    FEATURE_IMG_FILTER, // set image filter
+    FEATURE_SMOOTH,     // set line smoothing
+    FEATURE_DASH,       // set dashed line
+    FEATURE_CAP,        // set line cap
+    FEATURE_JOIN,       // set line join
+    FEATURE_OP,         // set drawing operator
+    FEATURE_GROUP,      // set drawing step group
+    FEATURE_NAME,       // set drawing step name
+    FEATURE_MOVETO,     // move point to a nearest object
  };
 
 
@@ -181,6 +183,19 @@ public:
       if (img.type() != IMAGE_32ARGB)
         img = image_to_argb(img);
       patt = image_to_pattern(img, sc, dx, dy);
+    }
+  };
+
+  struct FeatureImgFilter : Feature {
+    Cairo::Filter flt;
+    FeatureImgFilter(const std::vector<std::string> & vs){
+      check_args(vs, {"fast|good|best|nearest|bilinear"});
+      if      (vs[0] == "fast") flt = Cairo::FILTER_FAST;
+      else if (vs[0] == "good") flt = Cairo::FILTER_GOOD;
+      else if (vs[0] == "best") flt = Cairo::FILTER_BEST;
+      else if (vs[0] == "nearest")  flt = Cairo::FILTER_NEAREST;
+      else if (vs[0] == "bilinear") flt = Cairo::FILTER_BILINEAR;
+      else throw Err() << "wrong value: fast, good, best, nearest, or bilinear expected";
     }
   };
 

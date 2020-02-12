@@ -141,6 +141,14 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
+      // img <file> <scale>
+      if (ftr == "img_filter"){
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT | STEP_DRAW_MAP);
+        st->features.emplace(FEATURE_IMG_FILTER,
+          std::shared_ptr<Feature>(new FeatureImgFilter(vs)));
+        continue;
+      }
+
       // smooth <distance>
       if (ftr == "smooth"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
@@ -330,7 +338,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // Pattern feature
   if (features.count(FEATURE_PATT)){
     auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-//    data->patt->set_filter(patt_filter);
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
+    }
     data->patt->set_extend(Cairo::EXTEND_REPEAT);
     cr->set_source(data->patt);
     if (action == STEP_DRAW_MAP)
@@ -382,6 +393,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // Image feature (points)
   if (features.count(FEATURE_IMG) && action == STEP_DRAW_POINT){
     auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
+    }
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
@@ -403,6 +418,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // Image feature (areas)
   if (features.count(FEATURE_IMG) && action == STEP_DRAW_AREA){
     auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
+    }
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
