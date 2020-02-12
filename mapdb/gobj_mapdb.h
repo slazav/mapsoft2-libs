@@ -296,8 +296,8 @@ public:
 
     // check valid step types
     void check_type(const int step_mask){
-      if (action & step_mask == 0) throw Err()
-        << "feature can not be used for this drawing step";
+      if ((action & step_mask) == 0) throw Err()
+        << "can not be used for this drawing step";
     }
 
   };
