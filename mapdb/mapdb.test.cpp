@@ -176,7 +176,7 @@ main(){
       assert_err(m.del(0), "MapDB::del: object does not exists: 0");
       assert_err(m.get(0), "MapDB::get: object does not exists: 0");
 
-      assert_eq(m.get_etypes().size(), 0);
+      assert_eq(m.get_types().size(), 0);
 
       assert_err(m.add(o1), "MapDB::add: empty object");
       o1.dMultiLine::operator=(dMultiLine("[[0,0],[1,1]]"));
@@ -186,7 +186,7 @@ main(){
       assert_eq(id, 0);
       assert_eq(o1, m.get(id));
 
-      assert_eq(m.get_etypes().size(), 1);
+      assert_eq(m.get_types().size(), 1);
 
       assert_err(m.put(1,o1), "MapDB::put: object does not exists: 1");
       assert_err(m.del(1), "MapDB::del: object does not exists: 1");
@@ -214,7 +214,7 @@ main(){
       std::set<uint32_t> ii = m.find(o1.get_class(), o1.get_tnum(), dRect("[1,1,1,1]"));
       assert_eq(ii.size(),1);
 
-      assert_eq(m.get_etypes().size(), 1);
+      assert_eq(m.get_types().size(), 1);
 
 
     }
