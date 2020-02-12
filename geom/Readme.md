@@ -235,6 +235,7 @@ Class for walking alone a line (2D).
   - `lw.dist()`   -- get current distance from the line beginning.
   - `lw.tang()`   -- get unit tangent vector at current point.
   - `lw.norm()`   -- get unit normal vector at current point.
+  - `lw.ang()`    -- get line direction (radians, from x axis).
   - `lw.get_points(d)` -- get part of line with `d` length, starting from current point, move current point by `d`.
   - `lw.move_begin()` --  move current point to the first node.
   - `lw.move_end()` -- move current point to the last node.

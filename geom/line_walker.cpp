@@ -45,6 +45,14 @@ LineWalker::norm() const{
   return dPoint(-ret.y, ret.x);
 }
 
+double
+LineWalker::ang() const{
+  if (ls.size() < 2) return 0;
+  dPoint p1 = is_end() ? line[current_n-1] : line[current_n];
+  dPoint p2 = is_end() ? line[current_n]   : line[current_n+1];
+  return atan2(p2.y-p1.y, p2.x-p1.x);
+}
+
 dLine
 LineWalker::get_points(double dl){
   dLine ret;

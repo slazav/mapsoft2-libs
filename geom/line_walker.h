@@ -26,6 +26,7 @@ public:
   double dist() const;  ///< Get current distance from the line beginning.
   dPoint tang() const;  ///< Get unit tangent vector at current point.
   dPoint norm() const;  ///< Get unit normal vector at current point.
+  double ang() const;   ///< Get line direction (radians, from x axis).
 
   /// Get part of line with dl length, starting from current point;
   /// move current point by dl
