@@ -47,38 +47,46 @@ CairoExtra::mkpath_smline(const dLine & o, bool close, double curve_l){
     line_to(*o.begin());
     return;
   }
-  dPoint old;
-  bool first = true;
-  for (dLine::const_iterator p=o.begin(); p!=o.end(); p++){
-    if (p==o.begin()){
-      move_to(*p);
-      old=*p;
-      continue;
+
+  // simple lines, no smoothing
+  if (curve_l==0){
+    for (int i=0; i<o.size(); i++) {
+      dPoint p = o[i];
+      if (i==0) move_to(p);
+      else line_to(p);
     }
-    if (curve_l==0){
-      line_to(*p);
+    if (close) close_path();
+    return;
+  }
+
+  // lines with smoothing
+  for (int i=0; i<o.size(); i++) {
+    dPoint p = o[i];
+    dPoint pp = o[i>0? i-1: o.size()-1];
+    dPoint pn = o[i<o.size()-1? i+1: 0];
+    if (!close && i==0) pp=p;
+    if (!close && i==o.size()-1) pn=p;
+
+    dPoint pp2, pn1, pn2;
+    if (len2d(p-pp) > 2*curve_l){
+      pp2 = p - norm2d(p - pp)*curve_l;
     }
     else {
-      dPoint p1,p2;
-      if (len2d(*p - old) > 2*curve_l){
-        p1 = old + norm2d(*p - old)*curve_l;
-        p2 = *p - norm2d(*p - old)*curve_l;
-      }
-      else {
-        p1=p2=(*p+old)/2.0;
-      }
-      if (!first){
-        curve_to(old, old, p1);
-      }
-      else {
-        first=false;
-      }
-      line_to(p2);
+      pp2=(p+pp)/2.0;
     }
-    old=*p;
+    if (len2d(p-pn) > 2*curve_l){
+      pn1 = p + norm2d(pn - p)*curve_l;
+      pn2 = pn - norm2d(pn - p)*curve_l;
+    }
+    else {
+      pn1=pn2=(p+pn)/2.0;
+    }
+
+    if (i==0) move_to(pp2);
+
+    curve_to(p, p, pn1);
+    line_to(pn2);
   }
-  if (curve_l!=0)  line_to(old);
-  if (close) close_path();
 }
 
 
