@@ -72,8 +72,8 @@ main(){
     assert_eq(lw.is_end(), true);
     assert_feq(lw.dist(), lw.length(), 1e-6);
     assert_deq(lw.pt(), dPoint(5,4), 1e-6);
-    assert_deq(lw.norm(), dPoint(0,1), 1e-6);
-    assert_deq(lw.tang(), dPoint(1,0), 1e-6);
+    assert_deq(lw.norm(), rotate2d(dPoint(0,1),dPoint(),-M_PI/4), 1e-6);
+    assert_deq(lw.tang(), rotate2d(dPoint(1,0),dPoint(),-M_PI/4), 1e-6);
     assert_feq(lw.ang(), M_PI/4.0, 1e-6);
 
     // moving forward does not change anything
