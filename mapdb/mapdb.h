@@ -24,7 +24,8 @@
 typedef enum{
   MAPDB_POINT    = 0,
   MAPDB_LINE     = 1,
-  MAPDB_POLYGON  = 2
+  MAPDB_POLYGON  = 2,
+  MAPDB_TEXT     = 3
 } MapDBObjClass;
 
 /*********************************************************************/
@@ -41,6 +42,7 @@ struct MapDBObj: public dMultiLine {
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
+  std::set<uint32_t> children;   // id's of related objects (usually labels)
 
   // defaults
   MapDBObj() {type=0; angle=0;}
@@ -48,7 +50,7 @@ struct MapDBObj: public dMultiLine {
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
 
-  // parse object type from string (point|line|area):<number>
+  // parse object type from string (point|line|area|text):<number>
   static uint32_t make_type(const std::string & s);
 
   // set object type
@@ -69,7 +71,7 @@ struct MapDBObj: public dMultiLine {
   /***********************************************/
 
   // Set object coordinates from a string.
-  // For point objects point expected, for lines and areas - line/multilines.
+  // For point and text objects point expected, for lines and areas - line/multilines.
   void set_coords(const std::string & s);
 
   /***********************************************/
@@ -156,7 +158,6 @@ private:
 
   DBSimple   mapinfo; // map information
   DBSimple   objects; // object data
-  DBSimple   labels;  // label data
   GeoHashDB  geohash; // geohashes for spatial indexing
 
   int map_version; // set in the constructor

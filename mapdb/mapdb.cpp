@@ -78,6 +78,7 @@ MapDBObj::make_type(const uint16_t cl, const uint16_t tnum){
     case MAPDB_POINT:   return  tnum;
     case MAPDB_LINE:    return (1<<24) | tnum;
     case MAPDB_POLYGON: return (2<<24) | tnum;
+    case MAPDB_TEXT:    return (3<<24) | tnum;
     default: throw Err() << "unknown object class: " << cl;
   }
 }
@@ -93,7 +94,8 @@ MapDBObj::make_type(const std::string & s){
     if (s.substr(0,n) == "point") return make_type(MAPDB_POINT,   tnum);
     if (s.substr(0,n) == "line")  return make_type(MAPDB_LINE,    tnum);
     if (s.substr(0,n) == "area")  return make_type(MAPDB_POLYGON, tnum);
-    throw Err() << "point, line, or area word expected";
+    if (s.substr(0,n) == "text")  return make_type(MAPDB_TEXT,    tnum);
+    throw Err() << "point, line, area, or text word expected";
   }
   catch (Err & e) {
     throw Err() << "can't parse MapDB object type"
@@ -108,6 +110,7 @@ MapDBObj::get_class() const {
     case 0: return MAPDB_POINT;
     case 1: return MAPDB_LINE;
     case 2: return MAPDB_POLYGON;
+    case 3: return MAPDB_TEXT;
     default: throw Err() << "unknown object class: " << (type>>24);
   }
 }
@@ -118,7 +121,7 @@ MapDBObj::get_tnum()  const {
 
 void
 MapDBObj::set_coords(const std::string & s){
-  if (get_class() == MAPDB_POINT){
+  if (get_class() == MAPDB_POINT || get_class() == MAPDB_TEXT){
     dLine l;
     l.push_back(dPoint(s));
     clear();
@@ -134,7 +137,6 @@ MapDB::MapDB(std::string name, bool create):
     folder(name, create),
     mapinfo(name + "/mapinfo.db", NULL, create, false),
     objects(name + "/objects.db", NULL, create, false),
-    labels(name  + "/labels.db",  NULL, create, true),
     geohash(name + "/geohash.db", NULL, create){
 
   // get map version
@@ -159,7 +161,6 @@ void
 MapDB::delete_db(std::string name){
   remove((name + "/mapinfo.db").c_str());
   remove((name + "/objects.db").c_str());
-  remove((name + "/labels.db").c_str());
   remove((name + "/geohash.db").c_str());
 }
 

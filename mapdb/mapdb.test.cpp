@@ -30,7 +30,7 @@ main(){
       assert_err(MapDBObj::make_type("point:"), "can't parse MapDB object type \"point:\": can't parse value: \"\"");
       assert_err(MapDBObj::make_type("point:a"), "can't parse MapDB object type \"point:a\": can't parse value: \"a\"");
       assert_err(MapDBObj::make_type("point:0xFFFFFF"), "can't parse MapDB object type \"point:0xFFFFFF\": too large number");
-      assert_err(MapDBObj::make_type("abc:0xFFFF"), "can't parse MapDB object type \"abc:0xFFFF\": point, line, or area word expected");
+      assert_err(MapDBObj::make_type("abc:0xFFFF"), "can't parse MapDB object type \"abc:0xFFFF\": point, line, area, or text word expected");
 
     }
 
