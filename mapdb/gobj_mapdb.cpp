@@ -223,6 +223,14 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
+      // sel_range
+      if (ftr == "sel_range"){
+        st->check_type(STEP_DRAW_POINT|STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->features.emplace(FEATURE_SEL_RANGE,
+          std::shared_ptr<Feature>(new FeatureSelRange(vs)));
+        continue;
+      }
+
       // move_to area|line <type> <max distance>
       if (ftr == "move_to"){
         st->check_type(STEP_DRAW_POINT);
@@ -345,6 +353,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
   sel_range.expand(exp_dist);
 
+
   // convert to wgs84
   if (cnv) sel_range = cnv->frw_acc(sel_range);
 
@@ -355,6 +364,22 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     ids = map->find(etype, sel_range);
     if (ids.size()==0) return GObj::FILL_NONE;
+  }
+
+  // if SEL_RANGE feature exists, draw the rectangle
+  if (features.count(FEATURE_SEL_RANGE)) {
+    auto data = (FeatureSelRange *)features.find(FEATURE_SEL_RANGE)->second.get();
+    cr->begin_new_path();
+    cr->set_color_a(data->col);
+    cr->set_line_width(data->th);
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (!intersect(O.bbox(), sel_range)) continue;
+      dRect box = cnv->bck_acc(O.bbox()); //to points
+      box.expand(exp_dist);
+      cr->mkpath(rect_to_line(box), true);
+    }
+    cr->stroke();
   }
 
   // Make drawing path

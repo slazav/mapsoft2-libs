@@ -36,7 +36,7 @@ in following way:
 
 where possible features are:
 
-    stroke <width> <color> -- Draw a point, a line or an area contour.
+    stroke <color> <width> -- Draw a point, a line or an area contour.
     fill <color> -- Fill an area or the map.
     patt <image file> <scale> [<dx>] [<dy>] -- Fill an area with the pattern.
     img  <image file> <scale> [<dx>] [<dy>] -- Draw an image (point or area)
@@ -51,6 +51,7 @@ where possible features are:
     circles <circle> ...   -- draw circles
     draw_pos (point|begin|end|dist|adist) -- reference positions for lines/circles features
     draw_dist <dist> [<dist0>] -- distances for dist/adist position
+    sel_range <color> <width>  -- draw selection range instead if object
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
     group <name>           -- set group name for a drawing step
@@ -112,6 +113,7 @@ public:
     FEATURE_CIRCLES,    // circles to be drawn instead of the object
     FEATURE_DRAW_POS,   // position for lines/circles
     FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or adist)
+    FEATURE_SEL_RANGE,  // draw selection range instead of the object
     FEATURE_MOVETO,     // move point to a nearest object
     FEATURE_GROUP,      // set drawing step group
     FEATURE_NAME,       // set drawing step name
@@ -315,6 +317,15 @@ public:
       else if (vs[0] == "adist")  pos = ADIST;
       else throw Err() << "Wrong position. Possible values: "
         "point, begin, end, dist, adist.";
+    }
+  };
+
+  struct FeatureSelRange: Feature {
+    uint32_t col; double th;
+    FeatureSelRange(const std::vector<std::string> & vs){
+      check_args(vs, {"<color>", "<line width>"});
+      col = str_to_type<uint32_t>(vs[0]);
+      th  = str_to_type<double>(vs[1]);
     }
   };
 
