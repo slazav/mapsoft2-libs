@@ -315,33 +315,36 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // calculate range for object selecting
   dRect sel_range(range);
+  double exp_dist;
   {
     // expand by line width
     if (features.count(FEATURE_STROKE)){
       auto ftr = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-      sel_range.expand(ftr->th);
+      exp_dist = std::max(exp_dist, ftr->th);
     }
-    // expand by image size
+    // expand by image size (image may be rotated and arbitrarly centered, use hypot(w,h) as size)
     if (features.count(FEATURE_IMG)){
       auto ftr = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-      sel_range.expand(ftr->img.width(), ftr->img.height());
+      exp_dist = std::max(exp_dist, hypot(ftr->img.width(), ftr->img.height()));
     }
     // expand by move_to distance
     if (features.count(FEATURE_MOVETO)){
       auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
-      sel_range.expand(ftr->dist);
+      exp_dist = std::max(exp_dist, ftr->dist);
     }
-    // expand by lines bbox
+    // expand by lines bbox (again, can be rotated, at least for points)
     if (features.count(FEATURE_LINES)){
       auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
-      sel_range.expand(ftr->bbox.w, ftr->bbox.h);
+      exp_dist = std::max(exp_dist, hypot(ftr->bbox.w, ftr->bbox.h));
     }
     // expand by circles bbox
     if (features.count(FEATURE_LINES)){
       auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
-      sel_range.expand(ftr->bbox.w, ftr->bbox.h);
+      exp_dist = std::max(exp_dist, hypot(ftr->bbox.w, ftr->bbox.h));
     }
   }
+  sel_range.expand(exp_dist);
+
   // convert to wgs84
   if (cnv) sel_range = cnv->frw_acc(sel_range);
 
