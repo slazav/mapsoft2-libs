@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 
+#include "geom/line_walker.h"
 #include "gobj_mapdb.h"
 #include "read_words/read_words.h"
 #include "geo_data/geo_io.h"
@@ -225,6 +226,38 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
+      // lines <lines> ...
+      if (ftr == "lines"){
+        st->check_type(STEP_DRAW_POINT|STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->features.emplace(FEATURE_LINES,
+          std::shared_ptr<Feature>(new FeatureLines(vs)));
+        continue;
+      }
+
+      // circles <circle> ...
+      if (ftr == "circles"){
+        st->check_type(STEP_DRAW_POINT|STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->features.emplace(FEATURE_CIRCLES,
+          std::shared_ptr<Feature>(new FeatureCircles(vs)));
+        continue;
+      }
+
+      // draw_pos (point|begin|end|dist|adist) ...
+      if (ftr == "draw_pos"){
+        st->check_type(STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->features.emplace(FEATURE_DRAW_POS,
+          std::shared_ptr<Feature>(new FeatureDrawPos(vs)));
+        continue;
+      }
+
+      // draw_dist <dist> [<dist0>]
+      if (ftr == "draw_dist"){
+        st->check_type(STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->features.emplace(FEATURE_DRAW_DIST,
+          std::shared_ptr<Feature>(new FeatureDrawDist(vs)));
+        continue;
+      }
+
 
       throw Err() << "unknown feature";
     }
@@ -298,6 +331,16 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
       sel_range.expand(ftr->dist);
     }
+    // expand by lines bbox
+    if (features.count(FEATURE_LINES)){
+      auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
+      sel_range.expand(ftr->bbox.w, ftr->bbox.h);
+    }
+    // expand by circles bbox
+    if (features.count(FEATURE_LINES)){
+      auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
+      sel_range.expand(ftr->bbox.w, ftr->bbox.h);
+    }
   }
   // convert to wgs84
   if (cnv) sel_range = cnv->frw_acc(sel_range);
@@ -321,11 +364,94 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
       sm = ftr->dist;
     }
+    // for each object
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       convert_coords(O);
-      cr->mkpath_smline(O, action == STEP_DRAW_AREA, sm);
+      bool close = (action == STEP_DRAW_AREA);
+
+      // make path for Lines or Circles
+      if (features.count(FEATURE_LINES) ||
+          features.count(FEATURE_CIRCLES)) {
+
+        dMultiLine lines;
+        if (features.count(FEATURE_LINES)){
+          auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
+          lines = ftr->lines;
+        }
+
+        dLine circles;
+        if (features.count(FEATURE_CIRCLES)){
+          auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
+          circles = ftr->circles;
+        }
+
+        FeatureDrawPos::pos_t pos = FeatureDrawPos::POINT;
+        if (features.count(FEATURE_DRAW_POS)){
+          auto ftr = (FeatureDrawPos *)features.find(FEATURE_DRAW_POS)->second.get();
+          pos = ftr->pos;
+        }
+
+        double dist = 0, dist0 = 0;
+        if (features.count(FEATURE_DRAW_DIST)){
+          auto ftr = (FeatureDrawDist *)features.find(FEATURE_DRAW_DIST)->second.get();
+          dist = ftr->dist; dist0 = ftr->dist0;
+        }
+
+        dLine ref_points;
+
+        for (auto const & l:O){
+          LineWalker lw(l, close);
+          switch(pos){
+            case FeatureDrawPos::POINT:
+              lw.move_begin();
+              while (!lw.is_end()){
+                ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
+                lw.move_frw_to_node();
+              }
+              if (!close)
+                ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
+              break;
+            case FeatureDrawPos::BEGIN:
+              lw.move_begin();
+              ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
+              break;
+            case FeatureDrawPos::END:
+              lw.move_end();
+              ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
+              break;
+            case FeatureDrawPos::DIST:
+            case FeatureDrawPos::ADIST:
+              lw.move_begin();
+              lw.move_frw(dist0);
+              if (pos == FeatureDrawPos::ADIST) { // adjust distance
+                double n = floor((lw.length()-dist0*2)/dist);
+                dist = (lw.length()-dist0*2)/n;
+                dist *= (1-1e-10); // to be sure that last element will be drawn
+              }
+              if (dist==0) break;
+              while (lw.dist() <= lw.length()-dist0){
+                ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
+                lw.move_frw(dist);
+                if (lw.is_end()) break;
+              }
+              break;
+          }
+        }
+        for (auto const &p:ref_points){
+          cr->mkpath_smline(p + rotate2d(lines, dPoint(),p.z), sm);
+          for (auto const &c:circles){
+            cr->move_to(p.x+c.x+c.z, p.y+c.y);
+            cr->arc(p.x+c.x, p.y+c.y, c.z, 0, 2*M_PI);
+          }
+        }
+
+      }
+      // make path from original object
+      else {
+        cr->mkpath_smline(O, close, sm);
+      }
     }
   }
 

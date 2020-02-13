@@ -51,6 +51,10 @@ where possible features are:
     name  <name>           -- set name for a drawing step
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
+    circles
+    lines
+    draw_pos
+    draw_dist
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.
@@ -107,6 +111,10 @@ public:
     FEATURE_GROUP,      // set drawing step group
     FEATURE_NAME,       // set drawing step name
     FEATURE_MOVETO,     // move point to a nearest object
+    FEATURE_LINES,      // lines to be drawn instead of the object
+    FEATURE_CIRCLES,    // circles to be drawn instead of the object
+    FEATURE_DRAW_POS,   // position for lines/circles
+    FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or adist)
  };
 
 
@@ -294,6 +302,60 @@ public:
       dist   = str_to_type<double>(vs[0]);
       for (size_t i=1; i<vs.size(); ++i)
         targets.insert(MapDBObj::make_type(vs[i]));
+    }
+  };
+
+  struct FeatureLines : Feature {
+    dMultiLine lines;
+    dRect bbox;
+    FeatureLines(const std::vector<std::string> & vs){
+      check_args(vs, {"<lines>", "..."});
+      for (auto const & s:vs){
+        dMultiLine ml(s);
+        lines.insert(lines.end(), ml.begin(), ml.end());
+      }
+      bbox = lines.bbox();
+    }
+  };
+
+  struct FeatureCircles : Feature {
+    dLine circles; // z-coordinate = radius
+    dRect bbox;
+    FeatureCircles(const std::vector<std::string> & vs){
+      check_args(vs, {"<circle>", "..."});
+      for (auto const & s:vs){
+        dPoint p(s);
+        if (p.z<=0) throw Err() << "positive radius expected";
+        circles.push_back(p);
+        bbox.expand(p+dPoint(p.z,p.z));
+        bbox.expand(p-dPoint(p.z,p.z));
+      }
+    }
+  };
+
+  struct FeatureDrawPos : Feature {
+    enum pos_t { POINT, BEGIN, END, DIST, ADIST} pos;
+    FeatureDrawPos(const std::vector<std::string> & vs){
+      check_args(vs, {"(point|begin|end|dist|adist)"});
+      if      (vs[0] == "point")  pos = POINT;
+      else if (vs[0] == "begin")  pos = BEGIN;
+      else if (vs[0] == "end")    pos = END;
+      else if (vs[0] == "dist")   pos = DIST;
+      else if (vs[0] == "adist")  pos = ADIST;
+      else throw Err() << "Wrong position. Possible values: "
+        "point, begin, end, dist, adist.";
+    }
+  };
+
+  struct FeatureDrawDist : Feature {
+    double dist, dist0;
+    FeatureDrawDist(const std::vector<std::string> & vs){
+      check_args(vs, {"<dist>", "?<dist0>"});
+      dist = str_to_type<double>(vs[0]);
+      if (vs.size()>1)
+        dist0 = str_to_type<double>(vs[1]);
+      else
+        dist0 = dist/2;
     }
   };
 
