@@ -31,7 +31,7 @@
   - `p.to_floor()` -- set coordinates to nearest smaller integers.
   - `p.to_ceil()`  -- set coordinates to nearest larger integers.
   - `p.to_abs()` -- set coordinates to their absolute values.
-  - `p.rotate2d(pc,a)` -- rotate around central point pc by angle a (rad, clockwise) in x-y plane.
+  - `p.rotate2d(pc,a)` -- rotate around central point pc by angle a (rad, anticlockwise) in x-y plane.
   - `p.flatten()` -- project the point to x-y plane.
   - `rint(p)`, `floor(p)`, `ceil(p)`, `abs(p)`, `rotate2d(p,pc,a)`, `flatten(p)` --
     do same operations, returned modified point, keep original point unchanged.
@@ -157,7 +157,7 @@ Line is a std::vector of Point.
   - `l.to_floor()` -- set coordinates to nearest smaller integers.
   - `l.to_ceil()`  -- set coordinates to nearest larger integers.
   - `l.to_abs()` -- set coordinates to their absolute values.
-  - `l.rotate2d(pc,a)` -- rotate around central point pc by angle a (rad, clockwise) in x-y plane.
+  - `l.rotate2d(pc,a)` -- rotate around central point pc by angle a (rad, anticlockwise) in x-y plane.
   - `l.flatten()` -- project the line to x-y plane (set z to 0).
   - `l.close()` -- "close" the line (if it is not closed): add last point equals to the first one.
   - `l.open()` --  "open" the line: if the last point equals to the first one remove it.
@@ -203,7 +203,7 @@ Line with multiple segments (std::vector of Line).
   - `p.to_floor()` -- set coordinates to nearest smaller integers.
   - `p.to_ceil()`  -- set coordinates to nearest larger integers.
   - `p.to_abs()` -- set coordinates to their absolute values.
-  - `l.rotate2d(pc,a)` -- rotate around central point pc by angle a (rad, clockwise) in x-y plane.
+  - `l.rotate2d(pc,a)` -- rotate around central point pc by angle a (rad, anticlockwise) in x-y plane.
   - `l.flatten()` -- project the line to x-y plane (set z to 0).
   - `l.close()` -- "close" the line (if it is not closed): add last point equals to the first one.
   - `l.open()` --  "open" the line: if the last point equals to the first one remove it.

@@ -208,8 +208,8 @@ struct Line : std::vector<Point<T> > {
   void rotate2d(const Point<T> & c, const double a) {
     double C=cos(a), S=sin(a);
     for (auto & p:*this)
-      p=Point<T>(C*(double)(p.x-c.x)+S*(double)(p.y-c.y)+c.x,
-                 C*(double)(p.y-c.y)-S*(double)(p.x-c.x)+c.y, p.z);
+      p=Point<T>(C*(double)(p.x-c.x)-S*(double)(p.y-c.y)+c.x,
+                 C*(double)(p.y-c.y)+S*(double)(p.x-c.x)+c.y, p.z);
   }
 
   /// Project the line into x-y plane

@@ -151,7 +151,7 @@ main(){
   // rotate
   {
     iPoint p, p0(1000,0,323), c1(0,0,223),c2(500,500,41), pr1(866,-499,323), pr2(683,-183,323);
-    double a=30*M_PI/180.0;
+    double a=-30*M_PI/180.0;
 
     p=p0;
     assert_deq(rotate2d(p,c1, a), pr1, 1e-6);

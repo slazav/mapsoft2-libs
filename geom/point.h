@@ -136,8 +136,8 @@ struct Point {
   /// rotate the point around point c by the angle a (rad, clockwise) in x-y plane
   void rotate2d(const Point & c, const double a) {
     double C=cos(a), S=sin(a);
-    *this = Point(C*(double)(x-c.x) + S*(double)(y-c.y) + c.x,
-                  C*(double)(y-c.y) - S*(double)(x-c.x) + c.y, z);
+    *this = Point(C*(double)(x-c.x) - S*(double)(y-c.y) + c.x,
+                  C*(double)(y-c.y) + S*(double)(x-c.x) + c.y, z);
   }
 
   /// project the point to x-y plane

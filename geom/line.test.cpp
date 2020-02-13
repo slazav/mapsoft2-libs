@@ -113,7 +113,7 @@ main(){
     iLine lr1("[[0,0,10],[866,-499,5]]");
     iLine lr2("[[-183,316,10],[683,-183,5]]");
 
-    double a=30*M_PI/180.0;
+    double a=-30*M_PI/180.0;
     l=l0;
     assert_eq(rotate2d(l,c1,a), lr1);
     assert_eq(rotate2d(l,c2,a), lr2);

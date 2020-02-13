@@ -170,8 +170,8 @@ struct MultiLine : std::vector<Line<T> > {
     double C=cos(a), S=sin(a);
     for (auto & l:*this)
       for (auto & p:l)
-        p=Point<T>(C*(double)(p.x-c.x)+S*(double)(p.y-c.y)+c.x,
-                   C*(double)(p.y-c.y)-S*(double)(p.x-c.x)+c.y, p.z);
+        p=Point<T>(C*(double)(p.x-c.x)-S*(double)(p.y-c.y)+c.x,
+                   C*(double)(p.y-c.y)+S*(double)(p.x-c.x)+c.y, p.z);
   }
 
   /// Project the multiline into x-y plane
