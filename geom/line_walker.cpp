@@ -1,7 +1,8 @@
 #include "line_walker.h"
 
-LineWalker::LineWalker(const dLine & _line) {
+LineWalker::LineWalker(const dLine & _line, bool close) {
   line = flatten(_line);
+  if (close && line.size()>0) line.push_back(*line.begin());
   current_l=0;
   current_n=0;
 

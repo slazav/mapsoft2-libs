@@ -18,7 +18,7 @@ class LineWalker{
 
 public:
 
-  LineWalker(const dLine & _line); ///< Constructor: create LineWalker object from a line.
+  LineWalker(const dLine & _line, bool close=false); ///< Constructor: create LineWalker object from a line.
 
   double length() const; ///< Get line length.
 

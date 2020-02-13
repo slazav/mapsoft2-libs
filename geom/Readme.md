@@ -228,7 +228,7 @@ Line with multiple segments (std::vector of Line).
 
 Class for walking alone a line (2D).
 
-- Constructor: `LineWalker lw(dline)`.
+- Constructor: `LineWalker lw(dline, close=false)`.
 - Other methods:
   - `lw.length()` -- get line length.
   - `lw.pt()`     -- get current point (initially it is set to the beginning of the line).
