@@ -190,41 +190,6 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
-      // group <name>
-      if (ftr == "group"){
-        FeatureGroup f(vs); // parse parameters, but do not save feature data
-        st->group_name = f.name;
-
-        // if the group is not in the group list, add it there
-        bool known_group = false;
-        for (auto const & gr:groups)
-          if (gr == f.name){ known_group = true; break;}
-        if (!known_group) groups.push_back(f.name);
-        continue;
-      }
-
-      // name <name>
-      if (ftr == "name"){
-        FeatureName f(vs); // parse parameters, but do not save feature data
-        st->step_name = f.name;
-        continue;
-      }
-
-      // move_to area|line <type> <max distance>
-      if (ftr == "move_to"){
-        st->check_type(STEP_DRAW_POINT);
-        st->features.emplace(FEATURE_MOVETO,
-          std::shared_ptr<Feature>(new FeatureMoveTo(vs, false)));
-        continue;
-      }
-
-      // rotate_to area|line <type> <max distance>
-      if (ftr == "rotate_to"){
-        st->check_type(STEP_DRAW_POINT);
-        st->features.emplace(FEATURE_MOVETO,
-          std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
-        continue;
-      }
 
       // lines <lines> ...
       if (ftr == "lines"){
@@ -258,6 +223,41 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
+      // move_to area|line <type> <max distance>
+      if (ftr == "move_to"){
+        st->check_type(STEP_DRAW_POINT);
+        st->features.emplace(FEATURE_MOVETO,
+          std::shared_ptr<Feature>(new FeatureMoveTo(vs, false)));
+        continue;
+      }
+
+      // rotate_to area|line <type> <max distance>
+      if (ftr == "rotate_to"){
+        st->check_type(STEP_DRAW_POINT);
+        st->features.emplace(FEATURE_MOVETO,
+          std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
+        continue;
+      }
+
+      // group <name>
+      if (ftr == "group"){
+        FeatureGroup f(vs); // parse parameters, but do not save feature data
+        st->group_name = f.name;
+
+        // if the group is not in the group list, add it there
+        bool known_group = false;
+        for (auto const & gr:groups)
+          if (gr == f.name){ known_group = true; break;}
+        if (!known_group) groups.push_back(f.name);
+        continue;
+      }
+
+      // name <name>
+      if (ftr == "name"){
+        FeatureName f(vs); // parse parameters, but do not save feature data
+        st->step_name = f.name;
+        continue;
+      }
 
       throw Err() << "unknown feature";
     }

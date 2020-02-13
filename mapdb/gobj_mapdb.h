@@ -47,14 +47,14 @@ where possible features are:
     join round|miter       -- Set line join (default round). Use with stroke feature.
     operator <op>          -- Set drawing operator (clear|source|over|in|out|atop|dest|
                               dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
-    group <name>           -- set group name for a drawing step
-    name  <name>           -- set name for a drawing step
+    lines <lines> ...      -- draw lines
+    circles <circle> ...   -- draw circles
+    draw_pos (point|begin|end|dist|adist) -- reference positions for lines/circles features
+    draw_dist <dist> [<dist0>] -- distances for dist/adist position
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
-    circles
-    lines
-    draw_pos
-    draw_dist
+    group <name>           -- set group name for a drawing step
+    name  <name>           -- set name for a drawing step
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.
@@ -108,13 +108,13 @@ public:
     FEATURE_CAP,        // set line cap
     FEATURE_JOIN,       // set line join
     FEATURE_OP,         // set drawing operator
-    FEATURE_GROUP,      // set drawing step group
-    FEATURE_NAME,       // set drawing step name
-    FEATURE_MOVETO,     // move point to a nearest object
     FEATURE_LINES,      // lines to be drawn instead of the object
     FEATURE_CIRCLES,    // circles to be drawn instead of the object
     FEATURE_DRAW_POS,   // position for lines/circles
     FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or adist)
+    FEATURE_MOVETO,     // move point to a nearest object
+    FEATURE_GROUP,      // set drawing step group
+    FEATURE_NAME,       // set drawing step name
  };
 
 
@@ -275,35 +275,6 @@ public:
     }
   };
 
-  struct FeatureGroup : Feature {
-    std::string name;
-    FeatureGroup(const std::vector<std::string> & vs){
-      check_args(vs, {"<name>"});
-      name = vs[0];
-    }
-  };
-
-  struct FeatureName : Feature {
-    std::string name;
-    FeatureName(const std::vector<std::string> & vs){
-      check_args(vs, {"<name>"});
-      name = vs[0];
-    }
-  };
-
-  // for both move_to and rotate_to features
-  struct FeatureMoveTo : Feature {
-    std::set<uint32_t> targets; // target object types
-    bool rotate;
-    double dist;
-    FeatureMoveTo(const std::vector<std::string> & vs, const bool rotate):
-        rotate(rotate){
-      check_args(vs, {"<dist>", "(area|line):<type>", "..."});
-      dist   = str_to_type<double>(vs[0]);
-      for (size_t i=1; i<vs.size(); ++i)
-        targets.insert(MapDBObj::make_type(vs[i]));
-    }
-  };
 
   struct FeatureLines : Feature {
     dMultiLine lines;
@@ -356,6 +327,36 @@ public:
         dist0 = str_to_type<double>(vs[1]);
       else
         dist0 = dist/2;
+    }
+  };
+
+  // for both move_to and rotate_to features
+  struct FeatureMoveTo : Feature {
+    std::set<uint32_t> targets; // target object types
+    bool rotate;
+    double dist;
+    FeatureMoveTo(const std::vector<std::string> & vs, const bool rotate):
+        rotate(rotate){
+      check_args(vs, {"<dist>", "(area|line):<type>", "..."});
+      dist   = str_to_type<double>(vs[0]);
+      for (size_t i=1; i<vs.size(); ++i)
+        targets.insert(MapDBObj::make_type(vs[i]));
+    }
+  };
+
+  struct FeatureGroup : Feature {
+    std::string name;
+    FeatureGroup(const std::vector<std::string> & vs){
+      check_args(vs, {"<name>"});
+      name = vs[0];
+    }
+  };
+
+  struct FeatureName : Feature {
+    std::string name;
+    FeatureName(const std::vector<std::string> & vs){
+      check_args(vs, {"<name>"});
+      name = vs[0];
     }
   };
 
