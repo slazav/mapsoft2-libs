@@ -145,7 +145,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // img <file> <scale>
       if (ftr == "img_filter"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT | STEP_DRAW_MAP);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT | STEP_DRAW_MAP | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_IMG_FILTER,
           std::shared_ptr<Feature>(new FeatureImgFilter(vs)));
         continue;
@@ -161,7 +161,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // dash <length1> <length2> ...
       if (ftr == "dash"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_DASH,
           std::shared_ptr<Feature>(new FeatureDash(vs)));
         continue;
@@ -169,7 +169,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // cap round|butt|square
       if (ftr == "cap"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_CAP,
           std::shared_ptr<Feature>(new FeatureCap(vs)));
         continue;
@@ -177,7 +177,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // join round|miter
       if (ftr == "join"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_JOIN,
           std::shared_ptr<Feature>(new FeatureJoin(vs)));
         continue;
@@ -195,7 +195,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // lines <lines> ...
       if (ftr == "lines"){
-        st->check_type(STEP_DRAW_POINT|STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->features.emplace(FEATURE_LINES,
           std::shared_ptr<Feature>(new FeatureLines(vs)));
         continue;
@@ -203,13 +203,13 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // circles <circle> ...
       if (ftr == "circles"){
-        st->check_type(STEP_DRAW_POINT|STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->features.emplace(FEATURE_CIRCLES,
           std::shared_ptr<Feature>(new FeatureCircles(vs)));
         continue;
       }
 
-      // draw_pos (point|begin|end|dist|adist) ...
+      // draw_pos (point|begin|end|dist|edist) ...
       if (ftr == "draw_pos"){
         st->check_type(STEP_DRAW_LINE|STEP_DRAW_AREA);
         st->features.emplace(FEATURE_DRAW_POS,
@@ -475,10 +475,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
               ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
               break;
             case FeatureDrawPos::DIST:
-            case FeatureDrawPos::ADIST:
+            case FeatureDrawPos::EDIST:
               lw.move_begin();
               lw.move_frw(dist0);
-              if (pos == FeatureDrawPos::ADIST) { // adjust distance
+              if (pos == FeatureDrawPos::EDIST) { // adjust distance
                 double n = floor((lw.length()-dist0*2)/dist);
                 dist = (lw.length()-dist0*2)/n;
                 dist *= (1-1e-10); // to be sure that last element will be drawn

@@ -49,8 +49,8 @@ where possible features are:
                               dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
     lines <lines> ...      -- draw lines
     circles <circle> ...   -- draw circles
-    draw_pos (point|begin|end|dist|adist) -- reference positions for lines/circles features
-    draw_dist <dist> [<dist0>] -- distances for dist/adist position
+    draw_pos (point|begin|end|dist|edist) -- reference positions for lines/circles features
+    draw_dist <dist> [<dist0>] -- distances for dist/edist position
     sel_range <color> <width>  -- draw selection range instead if object
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
@@ -115,7 +115,7 @@ public:
     FEATURE_LINES,      // lines to be drawn instead of the object
     FEATURE_CIRCLES,    // circles to be drawn instead of the object
     FEATURE_DRAW_POS,   // position for lines/circles
-    FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or adist)
+    FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or edist)
     FEATURE_SEL_RANGE,  // draw selection range instead of the object
     FEATURE_MOVETO,     // move point to a nearest object
     FEATURE_FONT,       // set font for text objects
@@ -312,16 +312,16 @@ public:
   };
 
   struct FeatureDrawPos : Feature {
-    enum pos_t { POINT, BEGIN, END, DIST, ADIST} pos;
+    enum pos_t { POINT, BEGIN, END, DIST, EDIST} pos;
     FeatureDrawPos(const std::vector<std::string> & vs){
-      check_args(vs, {"(point|begin|end|dist|adist)"});
+      check_args(vs, {"(point|begin|end|dist|edist)"});
       if      (vs[0] == "point")  pos = POINT;
       else if (vs[0] == "begin")  pos = BEGIN;
       else if (vs[0] == "end")    pos = END;
       else if (vs[0] == "dist")   pos = DIST;
-      else if (vs[0] == "adist")  pos = ADIST;
+      else if (vs[0] == "edist")  pos = EDIST;
       else throw Err() << "Wrong position. Possible values: "
-        "point, begin, end, dist, adist.";
+        "point, begin, end, dist, edist.";
     }
   };
 
