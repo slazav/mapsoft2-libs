@@ -404,6 +404,28 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->stroke();
   }
 
+  // Operator feature
+  if (features.count(FEATURE_OP)){
+    auto data = (FeatureOp *)features.find(FEATURE_OP)->second.get();
+    cr->set_operator(data->op);
+  }
+
+
+  // Font feature (set font + font size)
+  if (features.count(FEATURE_FONT)){
+    auto data = (FeatureFont *)features.find(FEATURE_FONT)->second.get();
+    cr->set_font_size(data->size);
+    // For work with patterns see:
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
+    // For font properties see:
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x19.html
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-user.html
+    // https://wiki.archlinux.org/index.php/Font_configuration
+    FcPattern *patt = FcNameParse((const FcChar8 *)data->font.c_str());
+    cr->set_font_face( Cairo::FtFontFace::create(patt));
+    FcPatternDestroy(patt);
+  }
+
   // Make drawing path for points, lines, areas
   cr->begin_new_path();
   if ((action == STEP_DRAW_POINT ||
@@ -508,27 +530,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     }
   }
 
-  // Operator feature
-  if (features.count(FEATURE_OP)){
-    auto data = (FeatureOp *)features.find(FEATURE_OP)->second.get();
-    cr->set_operator(data->op);
-  }
-
-
-  // Font feature (set font + font size)
-  if (features.count(FEATURE_FONT)){
-    auto data = (FeatureFont *)features.find(FEATURE_FONT)->second.get();
-    cr->set_font_size(data->size);
-    // For work with patterns see:
-    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
-    // For font properties see:
-    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x19.html
-    // https://www.freedesktop.org/software/fontconfig/fontconfig-user.html
-    // https://wiki.archlinux.org/index.php/Font_configuration
-    FcPattern *patt = FcNameParse((const FcChar8 *)data->font.c_str());
-    cr->set_font_face( Cairo::FtFontFace::create(patt));
-    FcPatternDestroy(patt);
-  }
 
   // make path for TEXT objects
   if (action == STEP_DRAW_TEXT &&
