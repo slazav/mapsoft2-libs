@@ -136,6 +136,7 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
   int res = GObj::FILL_NONE;
   for (auto const & p:data){
     if (!p.second.on) continue;
+    if (stop_drawing) return GObj::FILL_NONE;
     cr->save();
     int res1 = p.second.obj->draw(cr, draw_range);
     cr->restore();
