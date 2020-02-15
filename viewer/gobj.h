@@ -78,37 +78,6 @@ public:
   // return data bounding box (in viewer coords)
   virtual iRect bbox(void) const {return range;}
 
-  // change scale
-  virtual void rescale(double k) {
-    stop_drawing = true;
-    auto lock = get_lock();
-    cnv->rescale_src(1.0/k);
-    on_rescale(k);
-    stop_drawing = false;
-    signal_redraw_me_.emit(dRect());
-  }
-
-  // change cnv
-  virtual void set_cnv(std::shared_ptr<ConvBase> c) {
-    stop_drawing = true;
-    auto lock = get_lock();
-    cnv = c;
-    on_set_cnv();
-    stop_drawing = false;
-    signal_redraw_me_.emit(dRect());
-  }
-  std::shared_ptr<ConvBase> get_cnv() const {return cnv;}
-
-  // change options
-  virtual void set_opt(std::shared_ptr<Opt> o) {
-    stop_drawing = true;
-    auto lock = get_lock();
-    opt = o;
-    on_set_opt();
-    stop_drawing = false;
-    signal_redraw_me_.emit(dRect());
-  }
-  std::shared_ptr<Opt> get_opt() const {return opt;}
 
   // This methods show to the caller if picture should be
   // repeated periodically in x or y direction
@@ -130,13 +99,65 @@ private:
 
 public:
 
-  // Can be redefined in the Object implementation to
-  // modify data after changing cnv.
+  /********************************************************/
+  // Coordinate transformations
+
+  // change coordinate transformation
+  virtual void set_cnv(std::shared_ptr<ConvBase> c) {
+    stop_drawing = true;
+    auto lock = get_lock();
+    cnv = c;
+    on_set_cnv();
+    stop_drawing = false;
+    signal_redraw_me_.emit(dRect());
+  }
+
+  // change scale
+  virtual void rescale(double k) {
+    stop_drawing = true;
+    auto lock = get_lock();
+    cnv->rescale_src(1.0/k);
+    on_rescale(k);
+    stop_drawing = false;
+    signal_redraw_me_.emit(dRect());
+  }
+
+  // get coordinate transformation
+  std::shared_ptr<ConvBase> get_cnv() const {return cnv;}
+
+  // Can be redefined in GObj implementation to
+  // modify internal data which depend on cnv.
   // If cnv is used directly in the draw() method then
   // there is no need to do it.
-  virtual void on_set_opt() {}
   virtual void on_set_cnv() {}
+
+  // Can be redefined in GObj implementation to
+  // modify internal data which depend on cnv.
+  // If cnv is used directly in the draw() method then
+  // there is no need to do it.
   virtual void on_rescale(double k) {}
+
+  /********************************************************/
+  // Options
+
+  // change options
+  virtual void set_opt(std::shared_ptr<Opt> o) {
+    stop_drawing = true;
+    auto lock = get_lock();
+    opt = o;
+    on_set_opt();
+    stop_drawing = false;
+    signal_redraw_me_.emit(dRect());
+  }
+
+  // get options
+  std::shared_ptr<Opt> get_opt() const {return opt;}
+
+  // Can be redefined in GObj implementation to
+  // modify internal data which depend on cnv.
+  // If opt is used directly in the draw() method then
+  // there is no need to do it.
+  virtual void on_set_opt() {}
 
   // If GObj is used from a DThreadViewer then the draw() method
   // is called from a sepereate thread. In this case all modifications
