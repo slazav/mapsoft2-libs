@@ -54,6 +54,8 @@ where possible features are:
     sel_range <color> <width>  -- draw selection range instead if object
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
+    font <size> <font>     -- установить шрифт
+    write <color>          -- написать текст
     group <name>           -- set group name for a drawing step
     name  <name>           -- set name for a drawing step
 
@@ -94,7 +96,8 @@ public:
     STEP_DRAW_POINT = 1<<0,
     STEP_DRAW_LINE  = 1<<1,
     STEP_DRAW_AREA  = 1<<2,
-    STEP_DRAW_MAP   = 1<<3
+    STEP_DRAW_TEXT  = 1<<3,
+    STEP_DRAW_MAP   = 1<<4
   };
 
   // known drawing features for each step
@@ -115,6 +118,8 @@ public:
     FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or adist)
     FEATURE_SEL_RANGE,  // draw selection range instead of the object
     FEATURE_MOVETO,     // move point to a nearest object
+    FEATURE_FONT,       // set font for text objects
+    FEATURE_WRITE,      // write a text object
     FEATURE_GROUP,      // set drawing step group
     FEATURE_NAME,       // set drawing step name
  };
@@ -352,6 +357,24 @@ public:
       dist   = str_to_type<double>(vs[0]);
       for (size_t i=1; i<vs.size(); ++i)
         targets.insert(MapDBObj::make_type(vs[i]));
+    }
+  };
+
+  struct FeatureFont : Feature {
+    double   size;
+    std::string font; // target object types
+    FeatureFont(const std::vector<std::string> & vs){
+      check_args(vs, {"<font size>", "<font>"});
+      size   = str_to_type<double>(vs[0]);
+      font   = vs[1];
+    }
+  };
+
+  struct FeatureWrite : Feature {
+    uint32_t color;
+    FeatureWrite(const std::vector<std::string> & vs){
+      check_args(vs, {"<color>"});
+      color  = str_to_type<uint32_t>(vs[0]);
     }
   };
 

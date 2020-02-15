@@ -54,6 +54,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
           case MAPDB_POINT:   st->action = STEP_DRAW_POINT; break;
           case MAPDB_LINE:    st->action = STEP_DRAW_LINE; break;
           case MAPDB_POLYGON: st->action = STEP_DRAW_AREA; break;
+          case MAPDB_TEXT:    st->action = STEP_DRAW_TEXT; break;
           default: throw Err() << "Bad map object type: " << hex << st->etype;
         }
         st->step_name = vs[0];
@@ -112,7 +113,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // stroke <color> <thickness>
       if (ftr == "stroke"){
-        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_STROKE,
           std::shared_ptr<Feature>(new FeatureStroke(vs)));
         continue;
@@ -120,7 +121,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // fill <color>
       if (ftr == "fill"){
-        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP);
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_FILL,
           std::shared_ptr<Feature>(new FeatureFill(vs)));
         continue;
@@ -128,7 +129,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // patt <file> <scale>
       if (ftr == "patt"){
-        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP);
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_PATT,
           std::shared_ptr<Feature>(new FeaturePatt(cfgdir, vs)));
         continue;
@@ -184,7 +185,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // operator <op>
       if (ftr == "operator"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_POINT | STEP_DRAW_MAP);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE |
+                       STEP_DRAW_POINT | STEP_DRAW_TEXT | STEP_DRAW_MAP);
         st->features.emplace(FEATURE_OP,
           std::shared_ptr<Feature>(new FeatureOp(vs)));
         continue;
@@ -244,6 +246,22 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         st->check_type(STEP_DRAW_POINT);
         st->features.emplace(FEATURE_MOVETO,
           std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
+        continue;
+      }
+
+      // font <size> <font>
+      if (ftr == "font"){
+        st->check_type(STEP_DRAW_TEXT);
+        st->features.emplace(FEATURE_FONT,
+          std::shared_ptr<Feature>(new FeatureFont(vs)));
+        continue;
+      }
+
+      // write <color>
+      if (ftr == "write"){
+        st->check_type(STEP_DRAW_TEXT);
+        st->features.emplace(FEATURE_WRITE,
+          std::shared_ptr<Feature>(new FeatureWrite(vs)));
         continue;
       }
 
@@ -323,8 +341,12 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // calculate range for object selecting
   dRect sel_range(range);
-  double exp_dist;
-  {
+  double exp_dist = 0;
+
+  if (action == STEP_DRAW_TEXT){
+    exp_dist = 1024; // TODO - max_text_size setting!
+  }
+  else {
     // expand by line width
     if (features.count(FEATURE_STROKE)){
       auto ftr = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
@@ -353,14 +375,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
   sel_range.expand(exp_dist);
 
-
   // convert to wgs84
   if (cnv) sel_range = cnv->frw_acc(sel_range);
 
   // Select objects in the range.
   if (action == STEP_DRAW_POINT ||
       action == STEP_DRAW_LINE ||
-      action == STEP_DRAW_AREA){
+      action == STEP_DRAW_AREA ||
+      action == STEP_DRAW_TEXT){
 
     ids = map->find(etype, sel_range);
     if (ids.size()==0) return GObj::FILL_NONE;
@@ -382,11 +404,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->stroke();
   }
 
-  // Make drawing path
+  // Make drawing path for points, lines, areas
   cr->begin_new_path();
-  if (features.count(FEATURE_STROKE) ||
-      features.count(FEATURE_FILL) ||
-      features.count(FEATURE_PATT)){
+  if ((action == STEP_DRAW_POINT ||
+       action == STEP_DRAW_LINE ||
+       action == STEP_DRAW_AREA) &&
+      (features.count(FEATURE_STROKE) ||
+       features.count(FEATURE_FILL) ||
+       features.count(FEATURE_PATT)) ){
     double sm = 0;
     if (features.count(FEATURE_SMOOTH)){
       auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
@@ -489,6 +514,39 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_operator(data->op);
   }
 
+
+  // Font feature (set font + font size)
+  if (features.count(FEATURE_FONT)){
+    auto data = (FeatureFont *)features.find(FEATURE_FONT)->second.get();
+    cr->set_font_size(data->size);
+    // For work with patterns see:
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
+    // For font properties see:
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x19.html
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-user.html
+    // https://wiki.archlinux.org/index.php/Font_configuration
+    FcPattern *patt = FcNameParse((const FcChar8 *)data->font.c_str());
+    cr->set_font_face( Cairo::FtFontFace::create(patt));
+    FcPatternDestroy(patt);
+  }
+
+  // make path for TEXT objects
+  if (action == STEP_DRAW_TEXT &&
+      (features.count(FEATURE_STROKE) ||
+       features.count(FEATURE_FILL) ||
+       features.count(FEATURE_PATT)) ){
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (O.size()==0 || O[0].size()==0) continue;
+      dPoint pt = O[0][0];
+      if (cnv) cnv->bck(pt);
+      dRect rng = cr->get_text_extents(O.name.c_str()) + pt;
+      if (!intersect(rng, range)) continue;
+      cr->move_to(pt);
+      cr->text_path(O.name);
+    }
+  }
+
   // Pattern feature
   if (features.count(FEATURE_PATT)){
     auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
@@ -513,6 +571,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     else
       cr->fill_preserve();
   }
+
 
   // Stroke feature
   if (features.count(FEATURE_STROKE)){
@@ -588,6 +647,21 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         cr->paint();
         cr->translate(-p.x, -p.y);
       }
+    }
+  }
+
+  if (features.count(FEATURE_WRITE)){
+    auto data = (FeatureWrite *)features.find(FEATURE_WRITE)->second.get();
+    cr->begin_new_path(); // this is needed if we have WRITE+STROKE/FILL feateres
+    cr->set_color(data->color);
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (O.size()==0 || O[0].size()==0) continue;
+      dPoint pt = O[0][0];
+      if (cnv) cnv->bck(pt);
+      dRect rng = cr->get_text_extents(O.name.c_str()) + pt;
+      if (!intersect(rng, range)) continue;
+      cr->text(O.name.c_str(), pt, 0, 0, 0); // TODO: scale, angle, halign, valign
     }
   }
 
