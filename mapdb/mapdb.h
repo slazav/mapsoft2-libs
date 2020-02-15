@@ -109,42 +109,6 @@ struct MapDBObj: public dMultiLine {
 };
 
 /*********************************************************************/
-// MapDBLabel -- label structure. Contains everything for drawing
-// the label:
-// - coordinates (wgs84) of the text
-// - text horizontal alignment (LEFT, CENTER, RIGHT)
-// - text vertical alignment (BOTTOM, CENTER, TOP)
-// - text angle (degrees)
-// - text
-// - type (used in drawing rules)
-// - scale (relative to drawing rule size)
-// Each label is attache to an object, but there is no reference
-// to this object from the label.
-struct MapDBLabel: public dPoint {
-  typedef enum{
-    LEFT    = 0,
-    CENTER  = 1,
-    RIGHT   = 2,
-  } HAlign;
-  HAlign halign;
-
-  typedef enum{
-    BOTTOM  = 0,
-    MIDDLE  = 1,
-    TOP     = 2,
-  } VAlign;
-  VAlign valign;
-
-  float angle; // degrees
-  float scale; // scale
-  std::string text;
-  uint32_t type;
-
-  // defaults
-  MapDBLabel(): halign(LEFT), valign(BOTTOM), angle(0), scale(1), type(0) {}
-};
-
-/*********************************************************************/
 // MapDB -- a storage for map objects
 
 class MapDB {
