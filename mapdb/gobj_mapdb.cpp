@@ -43,8 +43,11 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   while (1){
     vector<string> vs = read_words(ff, line_num, false);
     if (vs.size()==0) break;
-    ftr = "";
 
+    // apply definitions
+    for (auto & s:vs){ if (defs.exists(s)) s = defs.get(s, ""); }
+
+    ftr = "";
     try{
 
       // draw an object (point, line, area)
@@ -111,6 +114,15 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: max_text_size <number>";
         max_text_size = str_to_type<double>(vs[1]);
+        continue;
+      }
+
+      // define command
+      else if (vs[0] == "define") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: define <name> <definition>";
+        defs.put(vs[1],vs[2]);
         continue;
       }
 
