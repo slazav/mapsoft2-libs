@@ -141,7 +141,7 @@ read_vmap_object(istream & IN, string & s, double ver){
       continue;
     }
     if (key=="DIR"){
-      inv = true;
+      inv = (atoi(val.c_str()) == 2);
       continue;
     }
     if (key=="OPT"){
