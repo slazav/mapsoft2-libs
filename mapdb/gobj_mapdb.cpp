@@ -227,7 +227,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // sel_range
       if (ftr == "sel_range"){
-        st->check_type(STEP_DRAW_POINT|STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE |
+                       STEP_DRAW_AREA | STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_SEL_RANGE,
           std::shared_ptr<Feature>(new FeatureSelRange(vs)));
         continue;
