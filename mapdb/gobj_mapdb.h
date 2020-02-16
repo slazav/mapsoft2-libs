@@ -87,7 +87,6 @@ private:
   std::vector<std::string> groups; // ordered list of all groups
   GeoMap ref;            // default map reference
   double max_text_size;  // for selecting text objects
-  Opt defs;              // for `define` command
 
 public:
 

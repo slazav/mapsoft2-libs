@@ -37,8 +37,9 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   int line_num[2] = {0,0};
   int depth = 0;
-  std::shared_ptr<DrawingStep> st(NULL);
+  std::shared_ptr<DrawingStep> st(NULL); // current step
   std::string ftr; // current feature
+  Opt defs;        // for `define` command
 
   while (1){
     vector<string> vs = read_words(ff, line_num, false);
