@@ -368,7 +368,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       exp_dist = std::max(exp_dist, hypot(ftr->bbox.w, ftr->bbox.h));
     }
     // expand by circles bbox
-    if (features.count(FEATURE_LINES)){
+    if (features.count(FEATURE_CIRCLES)){
       auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
       exp_dist = std::max(exp_dist, hypot(ftr->bbox.w, ftr->bbox.h));
     }
