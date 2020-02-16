@@ -89,11 +89,11 @@ struct CairoExtra : public Cairo::Context {
 
   using Cairo::Context::get_text_extents;
   dRect get_text_extents(const std::string & utf8){
-    dPoint p;
-    get_current_point(p.x, p.y);
+    // dPoint p;
+    // get_current_point(p.x, p.y);
     Cairo::TextExtents extents;
     get_text_extents (utf8, extents);
-    return dRect(p.x+extents.x_bearing, p.y+extents.y_bearing,
+    return dRect(extents.x_bearing, extents.y_bearing,
                  extents.width, extents.height);
   }
 
