@@ -40,6 +40,7 @@ main(){
       // defaults
       assert_eq(o1.get_class(), MAPDB_POINT);
       assert_eq(o1.get_tnum(),  0);
+      assert_eq(o1.scale,       1.0);
       assert_eq(isnan(o1.angle), true);
       assert_eq(o1.name, "");
       assert_eq(o1.comm, "");
@@ -113,6 +114,7 @@ main(){
       MapDBObj o1,o2;
       o1.set_type(MAPDB_LINE, 0x2342);
       o1.angle  = 60;
+      o1.scale  = 2.5;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
       o1.tags.insert("object source\nsecond line");
@@ -125,6 +127,7 @@ main(){
 
       o1.set_type(MAPDB_POINT, 0x12);
       o1.angle  = 0;
+      o1.scale  = 1.0;
       o1.name = "";
       o1.comm = "";
       o1.tags.clear();

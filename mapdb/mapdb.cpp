@@ -29,7 +29,10 @@ MapDBObj::pack() const {
   s.write((char *)&type, sizeof(uint32_t));
 
   // optional angle (integer value, 1/1000 degrees)
-  if (!isnan(angle)) string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
+  if (!isnan(angle))
+    string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
+  if ((int32_t)(1000*scale) != 1000)
+    string_pack<int32_t>(s, "scle", (int32_t)(scale*1000));
 
   // optional text fields (4-byte tag, 4-byte length, data);
   if (name!="") string_pack_str(s, "name", name);
@@ -62,6 +65,7 @@ MapDBObj::unpack(const std::string & str) {
     string tag = string_unpack_tag(s);
     if (tag == "") break;
     else if (tag == "angl") angle = string_unpack<int32_t>(s)/1000.0;
+    else if (tag == "scle") scale = string_unpack<int32_t>(s)/1000.0;
     else if (tag == "name") name  = string_unpack_str(s);
     else if (tag == "comm") comm  = string_unpack_str(s);
     else if (tag == "tags") tags.insert(string_unpack_str(s));
