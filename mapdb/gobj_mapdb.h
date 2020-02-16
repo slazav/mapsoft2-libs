@@ -85,7 +85,8 @@ private:
   std::string cfgdir;
   std::shared_ptr<MapDB> map;
   std::vector<std::string> groups; // ordered list of all groups
-  GeoMap ref; // default map reference
+  GeoMap ref;            // default map reference
+  double max_text_size;  // for selecting text objects
 
 public:
 
@@ -402,9 +403,9 @@ public:
     std::string step_name;  // step name
     std::string group_name; // group name
     std::map<StepFeature, std::shared_ptr<Feature> > features;
-    MapDB * map;
+    GObjMapDB * mapdb_gobj; // back reference to the mapdb gobj
 
-    DrawingStep(MapDB * map): map(map), action(STEP_UNKNOWN), etype(0) {}
+    DrawingStep(GObjMapDB * mapdb_gobj): mapdb_gobj(mapdb_gobj), action(STEP_UNKNOWN), etype(0) {}
     std::string get_name() const {return step_name;}
     std::string get_group() const {return group_name;}
 

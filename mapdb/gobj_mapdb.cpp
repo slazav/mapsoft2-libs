@@ -23,6 +23,7 @@ ms2opt_add_mapdb_render(GetOptSet & opts){
 
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
+  max_text_size = 1024;
   opt = std::shared_ptr<Opt>(new Opt(o));
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
 
@@ -65,7 +66,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // draw on the whole map
       else if (vs.size() > 2 && vs[0] == "map") {
-        st.reset(new DrawingStep(map.get()));
+        st.reset(new DrawingStep(this));
         st->action = STEP_DRAW_MAP;
         st->step_name = vs[0];
         ftr = vs[1];
@@ -101,7 +102,15 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
           ref = geo_mkref(o);
         }
         else throw Err() << "setref command: 'file' or 'nom' word is expected";
-        vs.erase(vs.begin(),vs.begin()+2);
+        continue;
+      }
+
+      // max_text_size command
+      else if (vs[0] == "max_text_size") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: max_text_size <number>";
+        max_text_size = str_to_type<double>(vs[1]);
         continue;
       }
 
@@ -305,6 +314,9 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 void
 GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 
+  ConvBase *cnv = mapdb_gobj->cnv.get();
+  MapDB *map = mapdb_gobj->map.get();
+
   if (cnv) cnv->bck(O);
 
   if (features.count(FEATURE_MOVETO)){
@@ -317,7 +329,7 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 
         dMultiLine lines;
         for (auto & t: ftr->targets){
-          auto ids = map->find(t, r);
+          auto ids = mapdb_gobj->map->find(t, r);
             for (int i:ids){
             auto O1 = map->get(i);
             if (cnv) cnv->bck(O1);
@@ -338,6 +350,8 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 int
 GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
+  ConvBase *cnv = mapdb_gobj->cnv.get();
+  MapDB *map = mapdb_gobj->map.get();
   std::set<uint32_t> ids;
 
   // calculate range for object selecting
@@ -345,7 +359,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   double exp_dist = 0;
 
   if (action == STEP_DRAW_TEXT){
-    exp_dist = 1024; // TODO - max_text_size setting!
+    exp_dist = mapdb_gobj->max_text_size;
   }
   else {
     // expand by line width
