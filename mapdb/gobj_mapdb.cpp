@@ -47,8 +47,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
     try{
 
       // draw an object (point, line, area)
-      if (vs.size() > 1 && vs[0].find(':')!=std::string::npos) {
-        st.reset(new DrawingStep(map.get()));
+      if (vs.size() > 2 && vs[0].find(':')!=std::string::npos) {
+        st.reset(new DrawingStep(this));
         st->etype = MapDBObj::make_type(vs[0]);
         switch (st->etype >> 24) {
           case MAPDB_POINT:   st->action = STEP_DRAW_POINT; break;
