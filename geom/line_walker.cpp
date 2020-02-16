@@ -36,7 +36,7 @@ LineWalker::dist() const {
 
 dPoint
 LineWalker::tang() const{
-  if (ls.size() < 2) return dPoint(-1,0);
+  if (ls.size() < 2) return dPoint(1,0);
   dPoint p1 = is_end() ? line[current_n-1] : line[current_n];
   dPoint p2 = is_end() ? line[current_n]   : line[current_n+1];
   return ::norm(p2-p1);
