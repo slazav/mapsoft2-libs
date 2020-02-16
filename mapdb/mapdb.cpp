@@ -29,7 +29,7 @@ MapDBObj::pack() const {
   s.write((char *)&type, sizeof(uint32_t));
 
   // optional angle (integer value, 1/1000 degrees)
-  if (angle!=0) string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
+  if (!isnan(angle)) string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
 
   // optional text fields (4-byte tag, 4-byte length, data);
   if (name!="") string_pack_str(s, "name", name);

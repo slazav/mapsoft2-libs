@@ -40,7 +40,7 @@ main(){
       // defaults
       assert_eq(o1.get_class(), MAPDB_POINT);
       assert_eq(o1.get_tnum(),  0);
-      assert_eq(o1.angle, 0);
+      assert_eq(isnan(o1.angle), true);
       assert_eq(o1.name, "");
       assert_eq(o1.comm, "");
       assert_eq(o1.tags.size(), 0);
@@ -67,7 +67,7 @@ main(){
 
       o2=o1; o2.angle = 10;
       assert(o1 != o2);
-      assert(o1 < o2);
+      assert(o1 < o2); // nan < then any number
       assert(o1 <= o2);
       assert(o2 > o1);
       assert(o2 >= o1);

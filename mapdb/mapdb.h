@@ -45,7 +45,7 @@ struct MapDBObj: public dMultiLine {
   std::set<uint32_t> children;   // id's of related objects (usually labels)
 
   // defaults
-  MapDBObj(const uint32_t t = 0): type(t), angle(0) {}
+  MapDBObj(const uint32_t t = 0): type(t), angle(std::nan("")) {}
 
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
@@ -87,7 +87,9 @@ struct MapDBObj: public dMultiLine {
   /// Less then operator.
   bool operator< (const MapDBObj & o) const {
     if (type!=o.type)   return type<o.type;
-    if (angle!=o.angle) return angle<o.angle;
+    if (std::isnan(angle) && !std::isnan(o.angle)) return true;
+    if (std::isnan(o.angle) && !std::isnan(angle)) return false;
+    if (angle!=o.angle && !std::isnan(angle)) return angle<o.angle;
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
     if (tags!=o.tags)   return tags<o.tags;
@@ -96,7 +98,8 @@ struct MapDBObj: public dMultiLine {
 
   /// Equal opertator.
   bool operator== (const MapDBObj & o) const {
-    return type==o.type && angle==o.angle &&
+    bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
+    return type==o.type && ang_eq &&
         name==o.name && comm==o.comm && tags==o.tags &&
         dMultiLine::operator==(o);
   }
