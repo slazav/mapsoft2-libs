@@ -82,11 +82,19 @@ struct ConvBase{
   virtual dRect bck_acc(const dRect & R, double acc = 0.5) const {
     return bck_acc(rect_to_line(R), acc).bbox(); }
 
-  /// Convert angle (radians, ccw from y=const) at point p.
+  /// Forward conversion of angle a at point p.
+  /// Angle is measured in radians from x-axis in the direction of y axis.
+  /// Point p is in src coordinates.
+  /// x and y axes are assumed to be perpendicular.
   virtual double frw_ang(dPoint p, double a, double dx) const;
+
+  /// Backward conversion of angle a at point p.
+  /// Angle is measured in radians from x-axis in the direction of y axis.
+  /// Point p is in dst coordinates.
+  /// x and y axes are assumed to be perpendicular.
   virtual double bck_ang(dPoint p, double a, double dx) const;
 
-  /// Convert angle (degrees, ccw from y=const) at point p.
+  /// Convert angle (degrees, ccw from y=const) at point p (in dst coords).
   virtual double frw_angd(dPoint p, double a, double dx) const;
   virtual double bck_angd(dPoint p, double a, double dx) const;
 
