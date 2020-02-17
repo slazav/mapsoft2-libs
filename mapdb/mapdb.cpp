@@ -28,11 +28,9 @@ MapDBObj::pack() const {
   // two integer numbers: flags, type are packed in a single 32-bit integer:
   s.write((char *)&type, sizeof(uint32_t));
 
-  // optional angle (integer value, 1/1000 degrees)
-  if (!isnan(angle))
-    string_pack<int32_t>(s, "angl", (int32_t)(angle*1000));
-  if ((int32_t)(1000*scale) != 1000)
-    string_pack<int32_t>(s, "scle", (int32_t)(scale*1000));
+  // optional values
+  if (!isnan(angle)) string_pack<float>(s, "angl", angle);
+  if (scale != 1.0)  string_pack<float>(s, "scle", scale);
   if (align != MAPDB_ALIGN_SW)
     string_pack<int32_t>(s, "algn", (int32_t)(align));
 
@@ -66,9 +64,9 @@ MapDBObj::unpack(const std::string & str) {
   while (1){
     string tag = string_unpack_tag(s);
     if (tag == "") break;
-    else if (tag == "angl") angle = string_unpack<int32_t>(s)/1000.0;
+    else if (tag == "angl") angle = string_unpack<float>(s);
+    else if (tag == "scle") scale = string_unpack<float>(s);
     else if (tag == "algn") align = (MapDBObjAlign)string_unpack<int32_t>(s);
-    else if (tag == "scle") scale = string_unpack<int32_t>(s)/1000.0;
     else if (tag == "name") name  = string_unpack_str(s);
     else if (tag == "comm") comm  = string_unpack_str(s);
     else if (tag == "tags") tags.insert(string_unpack_str(s));
