@@ -28,6 +28,18 @@ typedef enum{
   MAPDB_TEXT     = 3
 } MapDBObjClass;
 
+typedef enum{
+  MAPDB_ALIGN_SW = 0,
+  MAPDB_ALIGN_W  = 1,
+  MAPDB_ALIGN_NW = 2,
+  MAPDB_ALIGN_N  = 3,
+  MAPDB_ALIGN_NE = 4,
+  MAPDB_ALIGN_E  = 5,
+  MAPDB_ALIGN_SE = 6,
+  MAPDB_ALIGN_S  = 7,
+  MAPDB_ALIGN_C  = 8,
+} MapDBObjAlign;
+
 /*********************************************************************/
 // MapDBObj -- a single map object
 
@@ -40,13 +52,16 @@ struct MapDBObj: public dMultiLine {
   uint32_t        type;
   float           angle;   // object angle, deg
   float           scale;   // object scale
+  MapDBObjAlign   align;   // align
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
   std::set<uint32_t> children;   // id's of related objects (usually labels)
 
   // defaults
-  MapDBObj(const uint32_t t = 0): type(t), angle(std::nan("")), scale(1.0) {}
+  MapDBObj(const uint32_t t = 0):
+      type(t), angle(std::nan("")),
+      scale(1.0), align(MAPDB_ALIGN_SW) {}
 
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
@@ -92,6 +107,7 @@ struct MapDBObj: public dMultiLine {
     if (std::isnan(o.angle) && !std::isnan(angle)) return false;
     if (angle!=o.angle && !std::isnan(angle)) return angle<o.angle;
     if (scale!=o.scale) return scale<o.scale;
+    if (align!=o.align) return align<o.align;
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
     if (tags!=o.tags)   return tags<o.tags;
@@ -101,7 +117,7 @@ struct MapDBObj: public dMultiLine {
   /// Equal opertator.
   bool operator== (const MapDBObj & o) const {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
-    return type==o.type && ang_eq && scale==o.scale &&
+    return type==o.type && ang_eq && scale==o.scale && align==o.align &&
         name==o.name && comm==o.comm && tags==o.tags &&
         dMultiLine::operator==(o);
   }

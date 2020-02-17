@@ -41,6 +41,7 @@ main(){
       assert_eq(o1.get_class(), MAPDB_POINT);
       assert_eq(o1.get_tnum(),  0);
       assert_eq(o1.scale,       1.0);
+      assert_eq(o1.align,       MAPDB_ALIGN_SW);
       assert_eq(isnan(o1.angle), true);
       assert_eq(o1.name, "");
       assert_eq(o1.comm, "");
