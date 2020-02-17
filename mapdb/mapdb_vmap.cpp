@@ -284,10 +284,40 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
     // points
     o1.dMultiLine::operator=(o);
+
+    // labels
+    for (auto const & li:o.children){
+      auto l = get(1);
+      VMapLab l1;
+      if (l.get_class() != MAPDB_TEXT) continue;
+      if (l.size()==0 || l[0].size()==0) continue;
+      l1.pos = l[0][0];
+      l1.ang = std::isnan(l.angle)? 0:l.angle;
+      l1.hor = std::isnan(l.angle);
+      switch (l.align) {
+        case MAPDB_ALIGN_NE:
+        case MAPDB_ALIGN_E:
+        case MAPDB_ALIGN_SE:
+          l1.dir = 0; break;
+        case MAPDB_ALIGN_N:
+        case MAPDB_ALIGN_C:
+        case MAPDB_ALIGN_S:
+          l1.dir = 1; break;
+        case MAPDB_ALIGN_NW:
+        case MAPDB_ALIGN_W:
+        case MAPDB_ALIGN_SW:
+          l1.dir = 2; break;
+      }
+      l1.fsize = 0; // todo: convert scale?
+      o1.labels.push_back(l1);
+    }
     vmap_data.push_back(o1);
 
     end:
-    str = objects.get_next(key);
+
+    // we can't use get_next because cursor is reset by getting labels:
+    key++;
+    str = objects.get_range(key);
   }
 
   // map border (convert to single-segment line)
