@@ -45,7 +45,10 @@ Note that in some cases forward and backward conversions are non-symmetric
 
 - `virtual double frw_ang(dPoint p, double a, double dx) const`
 - `virtual double bck_ang(dPoint p, double a, double dx) const` --
-  Convert angle (radians, ccw from y=const) at point p.
+  Forward/backward conversion of angle a at point p.
+  Angle is measured in radians from x-axis in the direction of y axis.
+  Point p is in src/dst coordinates.
+  x and y axes are assumed to be perpendicular.
 
 - `virtual double frw_angd(dPoint p, double a, double dx) const`
   `virtual double bck_angd(dPoint p, double a, double dx) const` --
