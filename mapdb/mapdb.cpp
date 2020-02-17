@@ -42,6 +42,10 @@ MapDBObj::pack() const {
   for (auto const & t: tags)
     string_pack_str(s, "tags", t);
 
+  // children
+  for (auto const & c: children)
+    string_pack<uint32_t>(s, "chld", c);
+
   // coordinates
   string_pack_crds(s, "crds", *this);
 
@@ -70,6 +74,7 @@ MapDBObj::unpack(const std::string & str) {
     else if (tag == "name") name  = string_unpack_str(s);
     else if (tag == "comm") comm  = string_unpack_str(s);
     else if (tag == "tags") tags.insert(string_unpack_str(s));
+    else if (tag == "chld") children.insert(string_unpack<uint32_t>(s));
     else if (tag == "crds") push_back(string_unpack_crds(s));
     else throw Err() << "Unknown tag: " << tag;
   }

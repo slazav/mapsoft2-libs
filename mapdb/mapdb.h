@@ -111,6 +111,7 @@ struct MapDBObj: public dMultiLine {
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
     if (tags!=o.tags)   return tags<o.tags;
+    if (children!=o.children)   return children<o.children;
     return dMultiLine::operator<(o);
   }
 
@@ -118,7 +119,7 @@ struct MapDBObj: public dMultiLine {
   bool operator== (const MapDBObj & o) const {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
     return type==o.type && ang_eq && scale==o.scale && align==o.align &&
-        name==o.name && comm==o.comm && tags==o.tags &&
+        name==o.name && comm==o.comm && tags==o.tags && children==o.children &&
         dMultiLine::operator==(o);
   }
   // derived operators:

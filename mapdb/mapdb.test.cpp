@@ -116,9 +116,12 @@ main(){
       o1.set_type(MAPDB_LINE, 0x2342);
       o1.angle  = 60;
       o1.scale  = 2.5;
+      o1.align  = MAPDB_ALIGN_C;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
       o1.tags.insert("object source\nsecond line");
+      o1.children.insert(123);
+      o1.children.insert(234);
       o1.set_coords("[[[0,0],[1,1]],[[1,1],[2,2]]]");
       assert_err(o1.set_coords("[0,0]"), "can't parse multisegment line: \"[0,0]\": a JSON array expected");
       assert_eq(dMultiLine(o1), dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
@@ -129,9 +132,11 @@ main(){
       o1.set_type(MAPDB_POINT, 0x12);
       o1.angle  = 0;
       o1.scale  = 1.0;
+      o1.align  = MAPDB_ALIGN_NW;
       o1.name = "";
       o1.comm = "";
       o1.tags.clear();
+      o1.children.clear();
       pack = o1.pack();
       o2.unpack(pack);
       assert_eq(o1,o2);
