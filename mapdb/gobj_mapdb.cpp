@@ -233,7 +233,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // draw_pos (point|begin|end|dist|edist) ...
       if (ftr == "draw_pos"){
-        st->check_type(STEP_DRAW_LINE|STEP_DRAW_AREA);
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->features.emplace(FEATURE_DRAW_POS,
           std::shared_ptr<Feature>(new FeatureDrawPos(vs)));
         continue;
@@ -269,6 +269,15 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         st->check_type(STEP_DRAW_POINT);
         st->features.emplace(FEATURE_MOVETO,
           std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
+        continue;
+      }
+
+      // rotate <angle,deg>
+      if (ftr == "rotate"){
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE |
+                       STEP_DRAW_AREA | STEP_DRAW_TEXT);
+        st->features.emplace(FEATURE_ROTATE,
+          std::shared_ptr<Feature>(new FeatureRotate(vs)));
         continue;
       }
 
@@ -324,11 +333,29 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
 #include "geom_tools/line_utils.h"
 // change object coordinates according to features
+// change object angle to radians
 void
 GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();
   MapDB *map = mapdb_gobj->map.get();
+
+  // deg -> rad
+  // Note:
+  // - bck_ang calculates angle from x axis, but O.angle is from vertical
+  // - on the picture we have inversed y axis
+  // - lonlat projection has different scales in x any, we can not use bck_ang/frw_ang
+  // - object angle is in deg, ccw
+  if (!std::isnan(O.angle) && O.size()>0 && O[0].size()>0 && cnv) {
+    dPoint pt = O[0][0]; // point where we calculate direction to geographic north:
+    cnv->bck(pt); // lonlat -> px
+    dPoint pt1 = pt + dPoint(0,-1); // up direction
+    cnv->frw(pt); cnv->frw(pt1);  pt1-=pt;
+    O.angle = O.angle*M_PI/180 + atan2(pt1.y, pt1.x) - M_PI/2; // from north, cw, rad
+  }
+  else {
+    O.angle = 0;
+  }
 
   if (cnv) cnv->bck(O);
 
@@ -353,10 +380,16 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 
         dPoint t(1,0);
         double dd = nearest_pt(lines, t, p, ftr->dist);
-        if (ftr->rotate) O.angle = -atan2(t.y, t.x);
+        if (ftr->rotate) O.angle = atan2(t.y, t.x);
       }
     }
   }
+
+  if (features.count(FEATURE_ROTATE)){
+    auto ftr = (FeatureRotate *)features.find(FEATURE_ROTATE)->second.get();
+    O.angle += ftr->val;
+  }
+
 
 }
 
@@ -543,11 +576,15 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
           }
         }
         for (auto const &p:ref_points){
-          cr->mkpath_smline(p + rotate2d(lines, dPoint(),p.z), sm);
+          cr->save();
+          cr->translate(p.x, p.y);
+          cr->rotate(O.angle + p.z);
+          cr->mkpath_smline(lines, sm);
           for (auto const &c:circles){
-            cr->move_to(p.x+c.x+c.z, p.y+c.y);
-            cr->arc(p.x+c.x, p.y+c.y, c.z, 0, 2*M_PI);
+            cr->move_to(c.x+c.z, c.y);
+            cr->arc(c.x, c.y, c.z, 0, 2*M_PI);
           }
+          cr->restore();
         }
 
       }
@@ -566,13 +603,19 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
        features.count(FEATURE_PATT)) ){
     for (auto const i: ids){
       auto O = map->get(i);
+      convert_coords(O);
       if (O.size()==0 || O[0].size()==0) continue;
       dPoint pt = O[0][0];
-      if (cnv) cnv->bck(pt);
-      dRect rng = cr->get_text_extents(O.name.c_str()) + pt;
+      dRect rng = cr->get_text_extents(O.name.c_str());
+      // To allow any rotated/align text do be in the range use diagonal
+      rng = expand(dRect(pt,pt), hypot(rng.w, rng.h));
       if (!intersect(rng, range)) continue;
-      cr->move_to(pt);
+      cr->save();
+      cr->translate(pt.x, pt.y);
+      cr->rotate(O.angle);
+      cr->move_to(0,0);
       cr->text_path(O.name);
+      cr->restore();
     }
   }
 
@@ -632,7 +675,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->stroke_preserve();
   }
 
-  // Image feature (points)
+  // Image feature (points and areas)
   if (features.count(FEATURE_IMG) && action == STEP_DRAW_POINT){
     auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
     if (features.count(FEATURE_IMG_FILTER)){
@@ -642,39 +685,28 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     for (auto const i: ids){
       auto O = map->get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
-      O.angle *= M_PI/180;
       convert_coords(O);
       for (auto const & l:O){
-        for (dPoint p:l){
+        if (action == STEP_DRAW_POINT) {
+          for (dPoint p:l){
+            cr->save();
+            cr->translate(p.x, p.y);
+            cr->rotate(O.angle);
+            cr->set_source(data->patt);
+            cr->paint();
+            cr->restore();
+          }
+        }
+        else {
+          dPoint p = l.bbox().cnt();
           cr->save();
           cr->translate(p.x, p.y);
-          cr->rotate(-O.angle);
+          cr->rotate(O.angle);
           cr->set_source(data->patt);
           cr->paint();
+          cr->translate(-p.x, -p.y);
           cr->restore();
         }
-      }
-    }
-  }
-
-  // Image feature (areas)
-  if (features.count(FEATURE_IMG) && action == STEP_DRAW_AREA){
-    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
-    for (auto const i: ids){
-      auto O = map->get(i);
-      if (!intersect(O.bbox(), sel_range)) continue;
-      convert_coords(O);
-      // each segment
-      for (auto const & l:O){
-        dPoint p = l.bbox().cnt();
-        cr->translate(p.x, p.y);
-        cr->set_source(data->patt);
-        cr->paint();
-        cr->translate(-p.x, -p.y);
       }
     }
   }
@@ -685,12 +717,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_color(data->color);
     for (auto const i: ids){
       auto O = map->get(i);
+      convert_coords(O);
       if (O.size()==0 || O[0].size()==0) continue;
       dPoint pt = O[0][0];
-      if (cnv) cnv->bck(pt);
-      dRect rng = cr->get_text_extents(O.name.c_str()) + pt;
+      dRect rng = cr->get_text_extents(O.name.c_str());
+      // To allow any rotated/align text do be in the range use diagonal
+      rng = expand(dRect(pt,pt), hypot(rng.w, rng.h));
       if (!intersect(rng, range)) continue;
-      cr->text(O.name.c_str(), pt, 0, 0, 0); // TODO: scale, angle, halign, valign
+      cr->text(O.name.c_str(), pt, O.angle, 0, 0); // TODO: scale, halign, valign
     }
   }
 

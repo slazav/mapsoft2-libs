@@ -119,6 +119,7 @@ public:
     FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or edist)
     FEATURE_SEL_RANGE,  // draw selection range instead of the object
     FEATURE_MOVETO,     // move point to a nearest object
+    FEATURE_ROTATE,     // rotate object pictures/test
     FEATURE_FONT,       // set font for text objects
     FEATURE_WRITE,      // write a text object
     FEATURE_GROUP,      // set drawing step group
@@ -358,6 +359,14 @@ public:
       dist   = str_to_type<double>(vs[0]);
       for (size_t i=1; i<vs.size(); ++i)
         targets.insert(MapDBObj::make_type(vs[i]));
+    }
+  };
+
+  struct FeatureRotate : Feature {
+    double val;
+    FeatureRotate(const std::vector<std::string> & vs){
+      check_args(vs, {"<val>"});
+      val = str_to_type<double>(vs[0]) * M_PI/180.0;
     }
   };
 
