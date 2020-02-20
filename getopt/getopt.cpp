@@ -153,8 +153,11 @@ HelpPrinter::HelpPrinter(
     usage_head(false), width(80) {
 
   struct winsize size;
-  ioctl(STDOUT_FILENO,TIOCGWINSZ,&size);
-  width = size.ws_col;
+  if (ioctl(STDOUT_FILENO,TIOCGWINSZ,&size) != -1) {
+    width = size.ws_col;
+  } else {
+    width = 80;
+  }
   if (width<1) width=80;
 }
 
