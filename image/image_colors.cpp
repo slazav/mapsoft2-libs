@@ -15,7 +15,7 @@ void ms2opt_add_image_cmap(GetOptSet & opts){
   const char *g = "IMAGE_CMAP";
   opts.add("cmap_colors", 1,0, g,
     "Colormap size for reducing image colors (2..256). "
-    "mage colors are reduced when saving to GIF, to PNG "
+    "Image colors are reduced when saving to GIF, to PNG "
     "with --png_format=pal, to TIFF with --tiff_format=pal");
   opts.add("cmap_alpha", 1,0, g,
     "Alpha channel: none (default) -- remove it; full -- treat it "
