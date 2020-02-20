@@ -32,6 +32,16 @@ main(){
       assert_err(MapDBObj::make_type("point:0xFFFFFF"), "can't parse MapDB object type \"point:0xFFFFFF\": too large number");
       assert_err(MapDBObj::make_type("abc:0xFFFF"), "can't parse MapDB object type \"abc:0xFFFF\": point, line, area, or text word expected");
 
+      assert_eq(MapDBObj::print_type(0x123), "point:0x123");
+      assert_eq(MapDBObj::print_type(0x100FFFF), "line:0xffff");
+      assert_eq(MapDBObj::print_type(0x200FFFF), "area:0xffff");
+      assert_eq(MapDBObj::print_type(0x300FFFF), "text:0xffff");
+      assert_eq(MapDBObj::print_type(0x400FFFF), "unknown:0xffff");
+
+      assert_eq(MapDBObj::print_type(0x312FFFF), "text:0xffff");
+      assert_eq(MapDBObj::print_type(0x412FFFF), "unknown:0xffff");
+
+
     }
 
     // MapDBObj structure

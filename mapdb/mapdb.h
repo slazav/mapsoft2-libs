@@ -69,6 +69,9 @@ struct MapDBObj: public dMultiLine {
   // parse object type from string (point|line|area|text):<number>
   static uint32_t make_type(const std::string & s);
 
+  // convert type to string
+  static std::string print_type(const uint32_t t);
+
   // set object type
   void set_type(const uint16_t cl, const uint16_t tnum){ type = make_type(cl, tnum);}
 

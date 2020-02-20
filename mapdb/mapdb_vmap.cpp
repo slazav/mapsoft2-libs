@@ -33,6 +33,15 @@ ms2opt_add_mapdb_vmap_exp(GetOptSet & opts){
 
 
 /**********************************************************/
+// what can be done with unknown types
+enum unknown_types_t {
+  UNKNOWN_TYPES_SKIP,
+  UNKNOWN_TYPES_WARN,
+  UNKNOWN_TYPES_CNV,
+  UNKNOWN_TYPES_ERR
+};
+
+/**********************************************************/
 /// Import objects from VMAP file.
 void
 MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
@@ -45,9 +54,10 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
-  // Do we want to skip objects wich are not listed explicetely in
+  // What do we want to do with objects wich are not listed explicetely in
   // the configuration file?
-  bool skip_unknown = false;
+  unknown_types_t unknown_types = UNKNOWN_TYPES_CNV;
+  std::set<uint32_t> unknowns;
 
   // Read configuration file.
   if (cfg_file != ""){
@@ -59,8 +69,13 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
 
-        if (vs.size()==1 && vs[0] == "skip_unknown"){
-          skip_unknown = true;
+        if (vs[0] == "unknown_types"){
+          if (vs.size()!=2) throw Err() << "unknown_types: one argument expected";
+          if      (vs[1] == "skip")    unknown_types = UNKNOWN_TYPES_SKIP;
+          else if (vs[1] == "warning") unknown_types = UNKNOWN_TYPES_WARN;
+          else if (vs[1] == "convert") unknown_types = UNKNOWN_TYPES_CNV;
+          else if (vs[1] == "error")   unknown_types = UNKNOWN_TYPES_ERR;
+          else throw Err() << "unknown_types: skip, warning, error or convert expected";
           continue;
         }
 
@@ -69,7 +84,7 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
         // object conversion (src, dst, [label])
         if (vs.size() == 2 || vs.size() == 3) {
           uint32_t src_type = MapDBObj::make_type(vs[0]);
-          uint32_t dst_type = MapDBObj::make_type(vs[1]);
+          uint32_t dst_type = (vs[1] == "-")? src_type : MapDBObj::make_type(vs[1]);
           MapDBObjClass scl = (MapDBObjClass)(src_type>>24);
           MapDBObjClass dcl = (MapDBObjClass)(dst_type>>24);
 
@@ -131,10 +146,21 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
     uint32_t type = (cl<<24) + tnum;
 
     // convert type
-    if (cfg_file != "") {
-      if (obj_map.count(type)!=0)
-        type = obj_map.find(type)->second;
-      else if (skip_unknown) continue;
+    if (obj_map.count(type)==0){
+      switch (unknown_types) {
+      case UNKNOWN_TYPES_SKIP:
+        continue;
+      case UNKNOWN_TYPES_WARN:
+        unknowns.insert(type);
+        continue;
+      case UNKNOWN_TYPES_ERR:
+        throw Err() << "unknown type: " << MapDBObj::print_type(type);
+      case UNKNOWN_TYPES_CNV:
+        break;
+      }
+    }
+    else {
+      type = obj_map.find(type)->second;
     }
 
     // make object
@@ -168,10 +194,12 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
     for (auto const & l:o.labels){
 
       uint32_t ltype = (MAPDB_TEXT<<24) + 1;
-      if (cfg_file != "") {
-        if (lbl_map.count(type)==0) continue;
+
+      if (obj_map.count(type)!=0 && lbl_map.count(type)==0)
+        continue;
+
+      if (lbl_map.count(type)!=0)
         ltype = lbl_map.find(type)->second;
-      }
 
       MapDBObj l1(ltype);
       l1.name = o.text;
@@ -211,6 +239,10 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
   // map name
   set_map_name(vmap_data.name);
 
+  // print unknown types (if any)
+  for (auto const t:unknowns)
+    std::cerr << "unknown type: " << MapDBObj::print_type(t) << "\n";
+
 }
 
 /**********************************************************/
@@ -225,9 +257,10 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
-  // Do we want to skip objects wich are not listed explicetely in
+  // What do we want to do with objects wich are not listed explicetely in
   // the configuration file?
-  bool skip_unknown = false;
+  unknown_types_t unknown_types = UNKNOWN_TYPES_CNV;
+  std::set<uint32_t> unknowns;
 
   // Read configuration file.
   if (cfg_file != ""){
@@ -240,8 +273,13 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
 
-        if (vs.size()==1 && vs[0] == "skip_unknown"){
-          skip_unknown = true;
+        if (vs[0] == "unknown_types"){
+          if (vs.size()!=2) throw Err() << "unknown_types: one argument expected";
+          if      (vs[1] == "skip")    unknown_types = UNKNOWN_TYPES_SKIP;
+          else if (vs[1] == "warning") unknown_types = UNKNOWN_TYPES_WARN;
+          else if (vs[1] == "convert") unknown_types = UNKNOWN_TYPES_CNV;
+          else if (vs[1] == "error")   unknown_types = UNKNOWN_TYPES_ERR;
+          else throw Err() << "unknown_types: skip, warning, error or convert expected";
           continue;
         }
 
@@ -250,7 +288,7 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
         // object conversion (src, dst)
         if (vs.size() == 2) {
           uint32_t src_type = MapDBObj::make_type(vs[0]);
-          uint32_t dst_type = MapDBObj::make_type(vs[1]);
+          uint32_t dst_type = (vs[1] == "-")? src_type : MapDBObj::make_type(vs[1]);
           MapDBObjClass scl = (MapDBObjClass)(src_type>>24);
           MapDBObjClass dcl = (MapDBObjClass)(dst_type>>24);
 
@@ -298,11 +336,25 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
     // convert type
     uint32_t type = o.type;
-    if (cfg_file != "") {
-      if (obj_map.count(type)!=0)
-        type = obj_map.find(type)->second;
-      else if (skip_unknown) goto end;
+
+    // convert type
+    if (obj_map.count(type)==0){
+      switch (unknown_types) {
+      case UNKNOWN_TYPES_SKIP:
+        goto end;
+      case UNKNOWN_TYPES_WARN:
+        unknowns.insert(type);
+        goto end;
+      case UNKNOWN_TYPES_ERR:
+        throw Err() << "unknown type: " << MapDBObj::print_type(type);
+      case UNKNOWN_TYPES_CNV:
+        break;
+      }
     }
+    else {
+      type = obj_map.find(type)->second;
+    }
+
 
     // convert type to vmap format
     switch (type>>24){
@@ -373,6 +425,10 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
   // map name
   vmap_data.name = get_map_name();
+
+  // print unknown types (if any)
+  for (auto const t:unknowns)
+    std::cerr << "unknown type: " << MapDBObj::print_type(t) << "\n";
 
   // write vmap file
   ofstream out(vmap_file);

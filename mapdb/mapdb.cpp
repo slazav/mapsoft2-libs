@@ -114,6 +114,21 @@ MapDBObj::make_type(const std::string & s){
   }
 }
 
+std::string
+MapDBObj::print_type(const uint32_t t){
+  std::ostringstream s;
+  switch (t>>24){
+    case 0: s << "point:"; break;
+    case 1: s << "line:";  break;
+    case 2: s << "area:";  break;
+    case 3: s << "text:";  break;
+    default: s << "unknown:";
+  }
+  s << "0x" << std::hex << (t&0xFFFF);
+  return s.str();
+}
+
+
 MapDBObjClass
 MapDBObj::get_class() const {
   switch (type>>24){
