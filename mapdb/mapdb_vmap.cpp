@@ -138,7 +138,18 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
     if (o.opts.exists("Source")) o1.tags.insert(o.opts.get<string>("Source"));
 
     // angle (deg -> deg)
-    if (o.opts.exists("Angle")) o1.angle=o.opts.get<float>("Angle");
+    // In my vmap maps angle has a strange meaning: atan2(dlat,dlon)
+    // (lonlat coordinates have different scales in horizontal and vertical directions)
+    // We want to convert the angle to real angle from north direction
+    // We can do it only if we know coordinates (object has at least one point).
+    // Direction of angle is also different (ccw instead of cw)
+    if (o.opts.exists("Angle")){
+      o1.angle=-o.opts.get<float>("Angle");
+      if (o.size()>0 && o[0].size()>0){
+        dPoint pt = o.bbox().cnt();
+        o1.angle = 180/M_PI*atan2(sin(M_PI/180*o1.angle), cos(M_PI/180*pt.y)*cos(M_PI/180*o1.angle));
+      }
+    }
 
     // set coordinates
     o1.dMultiLine::operator=(o);
@@ -154,7 +165,16 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
 
       MapDBObj l1(ltype);
       l1.name = o.text;
-      l1.angle = l.hor? std::nan("") : l.ang;
+
+      // angle: same conversion as above
+      if (l.hor){
+        l1.angle = std::nan("");
+      }
+      else {
+        l1.angle = -l.ang;
+        l1.angle = 180/M_PI*atan2(sin(M_PI/180*l1.angle), cos(M_PI/180*l.pos.y)*cos(M_PI/180*l1.angle));
+      }
+
       dLine pts; pts.push_back(l.pos);
       l1.push_back(pts);
       switch (l.dir){
@@ -280,7 +300,15 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
     if (o.tags.size()>0) o1.opts.put("Source", *o.tags.begin());
 
     // angle (deg->deg)
-    if (!std::isnan(o.angle)) o1.opts.put("Angle", o.angle);
+    // See note in vmap_import
+    if (!std::isnan(o.angle)){
+      double a = -o.angle;
+      if (o.size()>0 && o[0].size()>0){
+        dPoint pt = o.bbox().cnt();
+        a = 180/M_PI*atan2(cos(M_PI/180*pt.y)*sin(M_PI/180*a), cos(M_PI/180*a));
+      }
+      o1.opts.put("Angle", a);
+    }
 
     // points
     o1.dMultiLine::operator=(o);
