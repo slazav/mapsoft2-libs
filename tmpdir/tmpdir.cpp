@@ -17,8 +17,8 @@ using namespace std;
 
 TmpDir::TmpDir(const char *mask) {
   dir = mask;
-  std::string etmp = getenv("TMPDIR");
-  if (etmp != "") dir = etmp + "/" + dir;
+  const char * etmp = getenv("TMPDIR");
+  if (etmp && etmp[0] != 0) dir = string(etmp) + "/" + dir;
   if (mkdtemp((char *)dir.c_str()) == NULL)
     throw Err() << "TMPDIR: Can't create directory: "
                 << dir << ": " << strerror(errno);
