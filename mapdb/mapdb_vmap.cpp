@@ -45,6 +45,10 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
+  // Do we want to skip objects wich are not listed explicetely in
+  // the configuration file?
+  bool skip_unknown = false;
+
   // Read configuration file.
   if (cfg_file != ""){
 
@@ -54,6 +58,11 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
       while (1){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
+
+        if (vs.size()==1 && vs[0] == "skip_unknown"){
+          skip_unknown = true;
+          continue;
+        }
 
         // add other configuration commands here...
 
@@ -123,8 +132,9 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
 
     // convert type
     if (cfg_file != "") {
-      if (obj_map.count(type)==0) continue;
-      type = obj_map.find(type)->second;
+      if (obj_map.count(type)!=0)
+        type = obj_map.find(type)->second;
+      else if (skip_unknown) continue;
     }
 
     // make object
@@ -215,6 +225,10 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
+  // Do we want to skip objects wich are not listed explicetely in
+  // the configuration file?
+  bool skip_unknown = false;
+
   // Read configuration file.
   if (cfg_file != ""){
 
@@ -225,6 +239,11 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
       while (1){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
+
+        if (vs.size()==1 && vs[0] == "skip_unknown"){
+          skip_unknown = true;
+          continue;
+        }
 
         // add other configuration commands here...
 
@@ -280,8 +299,9 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
     // convert type
     uint32_t type = o.type;
     if (cfg_file != "") {
-      if (obj_map.count(type)==0) goto end;
-      type = obj_map.find(type)->second;
+      if (obj_map.count(type)!=0)
+        type = obj_map.find(type)->second;
+      else if (skip_unknown) goto end;
     }
 
     // convert type to vmap format
