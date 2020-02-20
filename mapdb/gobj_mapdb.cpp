@@ -389,8 +389,41 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
     auto ftr = (FeatureRotate *)features.find(FEATURE_ROTATE)->second.get();
     O.angle += ftr->val;
   }
+}
 
 
+// Draw a text object. Used in two places: in `write` feature
+// (with parameter path=false) and for making text path in
+// `fill`/`stroke`/`patt` features (with path=true).
+// `range` parameter is used for check if we should draw the object.
+void
+GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path){
+  if (O.size()==0 || O[0].size()==0) return; // no coordinates
+  dPoint pt = O[0][0];
+  dRect ext = cr->get_text_extents(O.name.c_str());
+  // To allow any rotated/align text do be in the range use diagonal
+  dRect rng = expand(dRect(pt,pt), hypot(ext.w, ext.h));
+  if (!intersect(rng, range)) return;
+
+  dPoint sh;
+  switch (O.align){
+    case MAPDB_ALIGN_SW: break;
+    case MAPDB_ALIGN_W:  sh.y=ext.h/2; break;
+    case MAPDB_ALIGN_NW: sh.y=ext.h;   break;
+    case MAPDB_ALIGN_N:  sh.y=ext.h;   sh.x=-ext.w/2; break;
+    case MAPDB_ALIGN_NE: sh.y=ext.h;   sh.x=-ext.w;   break;
+    case MAPDB_ALIGN_E:  sh.y=ext.h/2; sh.x=-ext.w;   break;
+    case MAPDB_ALIGN_SE:               sh.x=-ext.w;   break;
+    case MAPDB_ALIGN_S:                sh.x=-ext.w/2; break;
+    case MAPDB_ALIGN_C:  sh.y=ext.h/2; sh.x=-ext.w/2; break;
+  }
+  cr->save();
+  cr->translate(pt.x, pt.y);
+  cr->rotate(O.angle);
+  cr->move_to(sh);
+  if (path) cr->text_path(O.name);
+  else      cr->show_text(O.name);
+  cr->restore();
 }
 
 int
@@ -604,18 +637,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     for (auto const i: ids){
       auto O = map->get(i);
       convert_coords(O);
-      if (O.size()==0 || O[0].size()==0) continue;
-      dPoint pt = O[0][0];
-      dRect rng = cr->get_text_extents(O.name.c_str());
-      // To allow any rotated/align text do be in the range use diagonal
-      rng = expand(dRect(pt,pt), hypot(rng.w, rng.h));
-      if (!intersect(rng, range)) continue;
-      cr->save();
-      cr->translate(pt.x, pt.y);
-      cr->rotate(O.angle);
-      cr->move_to(0,0);
-      cr->text_path(O.name);
-      cr->restore();
+      draw_text(O, cr, range, true);
     }
   }
 
@@ -718,13 +740,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     for (auto const i: ids){
       auto O = map->get(i);
       convert_coords(O);
-      if (O.size()==0 || O[0].size()==0) continue;
-      dPoint pt = O[0][0];
-      dRect rng = cr->get_text_extents(O.name.c_str());
-      // To allow any rotated/align text do be in the range use diagonal
-      rng = expand(dRect(pt,pt), hypot(rng.w, rng.h));
-      if (!intersect(rng, range)) continue;
-      cr->text(O.name.c_str(), pt, O.angle, 0, 0); // TODO: scale, halign, valign
+      draw_text(O, cr, range, false);
     }
   }
 

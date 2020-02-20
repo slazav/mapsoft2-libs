@@ -418,7 +418,11 @@ public:
     std::string get_name() const {return step_name;}
     std::string get_group() const {return group_name;}
 
+    // helpers used in draw() method, see .cpp files for description
     void convert_coords(MapDBObj & O);
+    void draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path);
+
+    // main drawing function
     int draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
     // check valid step types
