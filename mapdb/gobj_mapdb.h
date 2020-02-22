@@ -49,7 +49,12 @@ where possible features are:
                               dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
     lines <lines> ...      -- draw lines
     circles <circle> ...   -- draw circles
-    draw_pos (point|begin|end|dist|edist) -- reference positions for lines/circles features
+    draw_pos (point|begin|end) -- reference positions for lines/circles features:
+                              at each point, at the beginning, at the end
+    draw_pos (dist|edist) <dist> [<dist_begin>] [<dist_end>] -- reference positions for lines/circles features:
+                              at dist period, starting at dist_begin (defaults: dist/2) from the first point
+                              and ending not further then dist_end from the last point.
+                              For `edist` distanse will be adjusted to have exact begin and end distances.
     draw_dist <dist> [<dist0>] -- distances for dist/edist position
     sel_range <color> <width>  -- draw selection range for each object
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
@@ -317,13 +322,22 @@ public:
 
   struct FeatureDrawPos : Feature {
     enum pos_t { POINT, BEGIN, END, DIST, EDIST} pos;
-    FeatureDrawPos(const std::vector<std::string> & vs){
-      check_args(vs, {"(point|begin|end|dist|edist)"});
-      if      (vs[0] == "point")  pos = POINT;
-      else if (vs[0] == "begin")  pos = BEGIN;
-      else if (vs[0] == "end")    pos = END;
-      else if (vs[0] == "dist")   pos = DIST;
-      else if (vs[0] == "edist")  pos = EDIST;
+    double dist, dist_b, dist_e;
+    FeatureDrawPos(const std::vector<std::string> & vs):
+            pos(POINT), dist(0), dist_b(0), dist_e(0){
+      if (vs.size()<1) throw Err() << "argument expected";
+      if      (vs[0] == "point"){ check_args(vs, {"point"}); pos = POINT; }
+      else if (vs[0] == "begin"){ check_args(vs, {"begin"}); pos = BEGIN; }
+      else if (vs[0] == "end")  { check_args(vs, {"end"}) ;  pos = END; }
+      else if (vs[0] == "dist" || vs[0] == "edist") {
+        check_args(vs, {"(dist|edist)", "dist", "?dist_b", "?dist_e"});
+        pos = (vs[0] == "dist") ? DIST : EDIST;
+        dist = str_to_type<double>(vs[1]);
+        if (vs.size()>2) dist_b = str_to_type<double>(vs[2]);
+        else dist_b = dist/2;
+        if (vs.size()>3) dist_e = str_to_type<double>(vs[3]);
+        else dist_e = dist/2;
+      }
       else throw Err() << "Wrong position. Possible values: "
         "point, begin, end, dist, edist.";
     }
@@ -335,18 +349,6 @@ public:
       check_args(vs, {"<color>", "<line width>"});
       col = str_to_type<uint32_t>(vs[0]);
       th  = str_to_type<double>(vs[1]);
-    }
-  };
-
-  struct FeatureDrawDist : Feature {
-    double dist, dist0;
-    FeatureDrawDist(const std::vector<std::string> & vs){
-      check_args(vs, {"<dist>", "?<dist0>"});
-      dist = str_to_type<double>(vs[0]);
-      if (vs.size()>1)
-        dist0 = str_to_type<double>(vs[1]);
-      else
-        dist0 = dist/2;
     }
   };
 

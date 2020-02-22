@@ -231,19 +231,13 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
-      // draw_pos (point|begin|end|dist|edist)
+      // draw_pos (point|begin|end)
+      // draw_pos dist <dist> [<dist_begin>]
+      // draw_pos edist <dist> [<dist_begin>] [<dist_end>]
       if (ftr == "draw_pos"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->features.emplace(FEATURE_DRAW_POS,
           std::shared_ptr<Feature>(new FeatureDrawPos(vs)));
-        continue;
-      }
-
-      // draw_dist <dist> [<dist0>]
-      if (ftr == "draw_dist"){
-        st->check_type(STEP_DRAW_LINE|STEP_DRAW_AREA);
-        st->features.emplace(FEATURE_DRAW_DIST,
-          std::shared_ptr<Feature>(new FeatureDrawDist(vs)));
         continue;
       }
 
@@ -504,7 +498,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_operator(data->op);
   }
 
-
   // Font feature (set font + font size)
   if (features.count(FEATURE_FONT)){
     auto data = (FeatureFont *)features.find(FEATURE_FONT)->second.get();
@@ -556,16 +549,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
           circles = ftr->circles;
         }
 
+        double dist = 0, dist_b = 0, dist_e = 0;
         FeatureDrawPos::pos_t pos = FeatureDrawPos::POINT;
         if (features.count(FEATURE_DRAW_POS)){
           auto ftr = (FeatureDrawPos *)features.find(FEATURE_DRAW_POS)->second.get();
           pos = ftr->pos;
-        }
-
-        double dist = 0, dist0 = 0;
-        if (features.count(FEATURE_DRAW_DIST)){
-          auto ftr = (FeatureDrawDist *)features.find(FEATURE_DRAW_DIST)->second.get();
-          dist = ftr->dist; dist0 = ftr->dist0;
+          dist = ftr->dist;
+          dist_b = ftr->dist_b;
+          dist_e = ftr->dist_e;
         }
 
         dLine ref_points;
@@ -593,14 +584,15 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
             case FeatureDrawPos::DIST:
             case FeatureDrawPos::EDIST:
               lw.move_begin();
-              lw.move_frw(dist0);
+              lw.move_frw(dist_b);
               if (pos == FeatureDrawPos::EDIST) { // adjust distance
-                double n = floor((lw.length()-dist0*2)/dist);
-                dist = (lw.length()-dist0*2)/n;
-                dist *= (1-1e-10); // to be sure that last element will be drawn
+                double span = lw.length()- dist_b - dist_e;
+                double n = floor(span/dist);
+                dist = span/n;
+                dist *= (1 - 1e-10); // to be sure that last element will be drawn
               }
               if (dist==0) break;
-              while (lw.dist() <= lw.length()-dist0){
+              while (lw.dist() <= lw.length()-dist_e){
                 ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
                 lw.move_frw(dist);
                 if (lw.is_end()) break;
@@ -660,6 +652,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   if (features.count(FEATURE_FILL)){
     auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
     cr->set_color_a(data->col);
+    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
     if (action == STEP_DRAW_MAP)
       cr->paint();
     else
