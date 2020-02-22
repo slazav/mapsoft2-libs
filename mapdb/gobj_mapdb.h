@@ -31,6 +31,8 @@ in following way:
     ...
     map <feature> <options> ...
     + <feature> <options> ...
+    brd <feature> <options> ...
+    + <feature> <options> ...
     ...
 
 
@@ -105,7 +107,8 @@ public:
     STEP_DRAW_LINE  = 1<<1,
     STEP_DRAW_AREA  = 1<<2,
     STEP_DRAW_TEXT  = 1<<3,
-    STEP_DRAW_MAP   = 1<<4
+    STEP_DRAW_MAP   = 1<<4,
+    STEP_DRAW_BRD   = 1<<5
   };
 
   // known drawing features for each step
@@ -453,6 +456,8 @@ public:
 
   // get default reference
   GeoMap get_ref() const { return ref; }
+
+  void set_ref(const GeoMap & r) { ref = r; }
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir, const Opt & o);

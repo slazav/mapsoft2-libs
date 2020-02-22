@@ -78,6 +78,16 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         add(depth--, st);
       }
 
+      // draw border
+      else if (vs.size() > 2 && vs[0] == "brd") {
+        st.reset(new DrawingStep(this));
+        st->action = STEP_DRAW_BRD;
+        st->step_name = vs[0];
+        ftr = vs[1];
+        vs.erase(vs.begin(), vs.begin()+2);
+        add(depth--, st);
+      }
+
       // add feature to a previous step
       else if (vs.size() > 1 && vs[0] == "+" && st) {
         ftr = vs[1];
@@ -135,7 +145,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // stroke <color> <thickness>
       if (ftr == "stroke"){
-        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
+                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_STROKE,
           std::shared_ptr<Feature>(new FeatureStroke(vs)));
         continue;
@@ -143,7 +154,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // fill <color>
       if (ftr == "fill"){
-        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP |
+                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_FILL,
           std::shared_ptr<Feature>(new FeatureFill(vs)));
         continue;
@@ -151,7 +163,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // patt <file> <scale>
       if (ftr == "patt"){
-        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP |
+                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_PATT,
           std::shared_ptr<Feature>(new FeaturePatt(cfgdir, vs)));
         continue;
@@ -167,7 +180,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // img <file> <scale>
       if (ftr == "img_filter"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT | STEP_DRAW_MAP | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT |
+                       STEP_DRAW_MAP | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_IMG_FILTER,
           std::shared_ptr<Feature>(new FeatureImgFilter(vs)));
         continue;
@@ -175,7 +189,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // smooth <distance>
       if (ftr == "smooth"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_SMOOTH,
           std::shared_ptr<Feature>(new FeatureSmooth(vs)));
         continue;
@@ -183,7 +197,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // dash <length1> <length2> ...
       if (ftr == "dash"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_DASH,
           std::shared_ptr<Feature>(new FeatureDash(vs)));
         continue;
@@ -191,7 +205,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // cap round|butt|square
       if (ftr == "cap"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_CAP,
           std::shared_ptr<Feature>(new FeatureCap(vs)));
         continue;
@@ -199,7 +213,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // join round|miter
       if (ftr == "join"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT);
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_JOIN,
           std::shared_ptr<Feature>(new FeatureJoin(vs)));
         continue;
@@ -208,7 +222,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
       // operator <op>
       if (ftr == "operator"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE |
-                       STEP_DRAW_POINT | STEP_DRAW_TEXT | STEP_DRAW_MAP);
+                       STEP_DRAW_POINT | STEP_DRAW_TEXT |
+                       STEP_DRAW_MAP | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_OP,
           std::shared_ptr<Feature>(new FeatureOp(vs)));
         continue;
@@ -524,6 +539,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_source(data->patt);
   }
 
+  // set up smooth feature
+  double sm = 0;
+  bool close = (action == STEP_DRAW_AREA);
+  if (features.count(FEATURE_SMOOTH)){
+    auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
+    sm = ftr->dist;
+  }
+
   // Set up fill feature
   if (features.count(FEATURE_FILL)){
     auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
@@ -584,13 +607,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         (features.count(FEATURE_STROKE) ||
          features.count(FEATURE_FILL) ||
          features.count(FEATURE_PATT)) ){
-      double sm = 0;
-      if (features.count(FEATURE_SMOOTH)){
-        auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
-        sm = ftr->dist;
-      }
-      // for each object
-      bool close = (action == STEP_DRAW_AREA);
 
       // make path for Lines or Circles
       if (features.count(FEATURE_LINES) ||
@@ -747,6 +763,35 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Pattern/Fill feature
     if (features.count(FEATURE_PATT) ||
         features.count(FEATURE_FILL)) cr->paint();
+  }
+
+  // BRD drawing step:
+  if (action == STEP_DRAW_BRD) {
+    cr->begin_new_path();
+    cr->mkpath_smline(mapdb_gobj->ref.border, true, sm);
+
+    // Pattern feature
+    if (features.count(FEATURE_PATT)){
+      cr->fill_preserve();
+    }
+
+    // Fill feature
+    // We want to set color for each object, because it can contain
+    // fill+stroke+draw features with different colors
+    if (features.count(FEATURE_FILL)){
+      auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
+      cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
+      cr->set_color_a(data->col);
+      cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+      cr->fill_preserve();
+    }
+
+    // Stroke feature
+    if (features.count(FEATURE_STROKE)){
+      auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
+      cr->set_color_a(data->col);
+      cr->stroke_preserve();
+    }
   }
 
   return GObj::FILL_PART;
