@@ -476,7 +476,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (ids.size()==0) return GObj::FILL_NONE;
   }
 
-  // if SEL_RANGE feature exists, draw the rectangle
+  // if SEL_RANGE feature exists, draw rectangles
   if (features.count(FEATURE_SEL_RANGE)) {
     auto data = (FeatureSelRange *)features.find(FEATURE_SEL_RANGE)->second.get();
     cr->begin_new_path();
@@ -513,24 +513,83 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     FcPatternDestroy(patt);
   }
 
-  // Make drawing path for points, lines, areas
-  cr->begin_new_path();
-  if ((action == STEP_DRAW_POINT ||
-       action == STEP_DRAW_LINE ||
-       action == STEP_DRAW_AREA) &&
-      (features.count(FEATURE_STROKE) ||
-       features.count(FEATURE_FILL) ||
-       features.count(FEATURE_PATT)) ){
-    double sm = 0;
-    if (features.count(FEATURE_SMOOTH)){
-      auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
-      sm = ftr->dist;
+  // Set up pattern feature
+  if (features.count(FEATURE_PATT)){
+    auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
     }
-    // for each object
-    for (auto const i: ids){
-      auto O = map->get(i);
-      if (!intersect(O.bbox(), sel_range)) continue;
-      convert_coords(O);
+    data->patt->set_extend(Cairo::EXTEND_REPEAT);
+    cr->set_source(data->patt);
+  }
+
+  // Set up fill feature
+  if (features.count(FEATURE_FILL)){
+    auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
+    cr->set_color_a(data->col);
+    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+  }
+
+  // Set up stroke feature
+  if (features.count(FEATURE_STROKE)){
+    // Setup dashed line
+    if (features.count(FEATURE_DASH)){
+      auto data = (FeatureDash *)features.find(FEATURE_DASH)->second.get();
+      cr->set_dash(data->vd, 0);
+    }
+
+    // Setup line cap
+    if (features.count(FEATURE_CAP)){
+      auto data = (FeatureCap *)features.find(FEATURE_CAP)->second.get();
+      cr->set_line_cap(data->cap);
+    }
+    else
+      cr->set_line_cap(Cairo::LINE_CAP_ROUND);
+
+    // Setup line join
+    if (features.count(FEATURE_JOIN)){
+      auto data = (FeatureJoin *)features.find(FEATURE_JOIN)->second.get();
+      cr->set_line_join(data->join);
+    }
+    else
+      cr->set_line_join(Cairo::LINE_JOIN_ROUND);
+
+    auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
+    cr->set_color_a(data->col);
+    cr->set_line_width(data->th);
+  }
+
+  // Set up image feature (points and areas)
+  if (features.count(FEATURE_IMG)){
+    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
+    }
+    cr->set_source(data->patt);
+  }
+
+  // Draw each object
+  for (auto const i: ids){
+    auto O = map->get(i);
+    if (!intersect(O.bbox(), sel_range)) continue;
+    convert_coords(O);
+    cr->begin_new_path();
+
+    // Make drawing path for points, lines, areas
+    if ((action == STEP_DRAW_POINT ||
+         action == STEP_DRAW_LINE ||
+         action == STEP_DRAW_AREA) &&
+        (features.count(FEATURE_STROKE) ||
+         features.count(FEATURE_FILL) ||
+         features.count(FEATURE_PATT)) ){
+      double sm = 0;
+      if (features.count(FEATURE_SMOOTH)){
+        auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
+        sm = ftr->dist;
+      }
+      // for each object
       bool close = (action == STEP_DRAW_AREA);
 
       // make path for Lines or Circles
@@ -618,89 +677,39 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         cr->mkpath_smline(O, close, sm);
       }
     }
-  }
 
-
-  // make path for TEXT objects
-  if (action == STEP_DRAW_TEXT &&
-      (features.count(FEATURE_STROKE) ||
-       features.count(FEATURE_FILL) ||
-       features.count(FEATURE_PATT)) ){
-    for (auto const i: ids){
-      auto O = map->get(i);
-      convert_coords(O);
+    // make path for TEXT objects
+    if (action == STEP_DRAW_TEXT &&
+        (features.count(FEATURE_STROKE) ||
+         features.count(FEATURE_FILL) ||
+         features.count(FEATURE_PATT)) ){
       draw_text(O, cr, range, true);
     }
-  }
 
-  // Pattern feature
-  if (features.count(FEATURE_PATT)){
-    auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
-    data->patt->set_extend(Cairo::EXTEND_REPEAT);
-    cr->set_source(data->patt);
-    if (action == STEP_DRAW_MAP)
-      cr->paint();
-    else
+    // Pattern feature
+    if (features.count(FEATURE_PATT)){
       cr->fill_preserve();
-  }
+    }
 
-  // Fill feature
-  if (features.count(FEATURE_FILL)){
-    auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
-    cr->set_color_a(data->col);
-    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
-    if (action == STEP_DRAW_MAP)
-      cr->paint();
-    else
+    // Fill feature
+    // We want to set color for each object, because it can contain
+    // fill+stroke+draw features with different colors
+    if (features.count(FEATURE_FILL)){
+      auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
+      cr->set_color_a(data->col);
       cr->fill_preserve();
-  }
-
-
-  // Stroke feature
-  if (features.count(FEATURE_STROKE)){
-    // Setup dashed line
-    if (features.count(FEATURE_DASH)){
-      auto data = (FeatureDash *)features.find(FEATURE_DASH)->second.get();
-      cr->set_dash(data->vd, 0);
     }
 
-    // Setup line cap
-    if (features.count(FEATURE_CAP)){
-      auto data = (FeatureCap *)features.find(FEATURE_CAP)->second.get();
-      cr->set_line_cap(data->cap);
+    // Stroke feature
+    if (features.count(FEATURE_STROKE)){
+      auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
+      cr->set_color_a(data->col);
+      cr->stroke_preserve();
     }
-    else
-      cr->set_line_cap(Cairo::LINE_CAP_ROUND);
 
-    // Setup line join
-    if (features.count(FEATURE_JOIN)){
-      auto data = (FeatureJoin *)features.find(FEATURE_JOIN)->second.get();
-      cr->set_line_join(data->join);
-    }
-    else
-      cr->set_line_join(Cairo::LINE_JOIN_ROUND);
-
-    auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-    cr->set_color_a(data->col);
-    cr->set_line_width(data->th);
-    cr->stroke_preserve();
-  }
-
-  // Image feature (points and areas)
-  if (features.count(FEATURE_IMG) && action == STEP_DRAW_POINT){
-    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
-    for (auto const i: ids){
-      auto O = map->get(i);
-      if (!intersect(O.bbox(), sel_range)) continue;
-      convert_coords(O);
+    // Image feature (points and areas)
+    if (features.count(FEATURE_IMG)){
+      auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
       for (auto const & l:O){
         if (action == STEP_DRAW_POINT) {
           for (dPoint p:l){
@@ -719,22 +728,25 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
           cr->rotate(O.angle);
           cr->set_source(data->patt);
           cr->paint();
-          cr->translate(-p.x, -p.y);
           cr->restore();
         }
       }
     }
-  }
 
-  if (features.count(FEATURE_WRITE)){
-    auto data = (FeatureWrite *)features.find(FEATURE_WRITE)->second.get();
-    cr->begin_new_path(); // this is needed if we have WRITE+STROKE/FILL feateres
-    cr->set_color(data->color);
-    for (auto const i: ids){
-      auto O = map->get(i);
-      convert_coords(O);
+    // Write feature
+    if (features.count(FEATURE_WRITE)){
+      auto data = (FeatureWrite *)features.find(FEATURE_WRITE)->second.get();
+      cr->begin_new_path(); // this is needed if we have WRITE+STROKE/FILL feateres
+      cr->set_color(data->color);
       draw_text(O, cr, range, false);
     }
+  }
+
+  // MAP drawing step:
+  if (action == STEP_DRAW_MAP) {
+    // Pattern/Fill feature
+    if (features.count(FEATURE_PATT) ||
+        features.count(FEATURE_FILL)) cr->paint();
   }
 
   return GObj::FILL_PART;
