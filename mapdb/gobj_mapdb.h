@@ -51,11 +51,12 @@ where possible features are:
     circles <circle> ...   -- draw circles
     draw_pos (point|begin|end|dist|edist) -- reference positions for lines/circles features
     draw_dist <dist> [<dist0>] -- distances for dist/edist position
-    sel_range <color> <width>  -- draw selection range instead if object
+    sel_range <color> <width>  -- draw selection range for each object
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
-    font <size> <font>     -- установить шрифт
-    write <color>          -- написать текст
+    rotate <angle>         -- rotate object pictures (img, lines, circles), degrees, cw
+    font <size> <font>     -- set font (fontconfig pattern)
+    write <color>          -- render the text (a bit different from `fill`)
     group <name>           -- set group name for a drawing step
     name  <name>           -- set name for a drawing step
 
@@ -66,7 +67,8 @@ other commands in the configuration file
 
     set_ref file <filename> -- set map reference from a file
     set_ref nom <name> <dpi> -- set map reference as a Soviet nomenclature name
-
+    max_text_size <value> -- set max_text_size value for selecting text objects in the database
+    define <name> <definition> -- redefine a word (substitution works on full words and done once)
 
 */
 

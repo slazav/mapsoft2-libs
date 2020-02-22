@@ -231,7 +231,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
-      // draw_pos (point|begin|end|dist|edist) ...
+      // draw_pos (point|begin|end|dist|edist)
       if (ftr == "draw_pos"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->features.emplace(FEATURE_DRAW_POS,
