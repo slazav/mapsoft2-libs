@@ -231,6 +231,13 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         continue;
       }
 
+      // pix_al <val>
+      if (ftr == "pix_align"){
+        st->check_type( STEP_DRAW_TEXT);
+        st->features.emplace(FEATURE_PIXAL,
+          std::shared_ptr<Feature>(new FeaturePixAl(vs)));
+        continue;
+      }
 
       // lines <lines> ...
       if (ftr == "lines"){
@@ -408,7 +415,7 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 // `fill`/`stroke`/`patt` features (with path=true).
 // `range` parameter is used for check if we should draw the object.
 void
-GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path){
+GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align){
   if (O.size()==0 || O[0].size()==0) return; // no coordinates
   dPoint pt = O[0][0];
   dRect ext = cr->get_text_extents(O.name.c_str());
@@ -427,6 +434,10 @@ GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const d
     case MAPDB_ALIGN_SE:               sh.x=-ext.w;   break;
     case MAPDB_ALIGN_S:                sh.x=-ext.w/2; break;
     case MAPDB_ALIGN_C:  sh.y=ext.h/2; sh.x=-ext.w/2; break;
+  }
+  if (pix_align) {
+    pt = rint(pt);
+    sh = rint(sh);
   }
   cr->save();
   cr->translate(pt.x, pt.y);
@@ -515,6 +526,13 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   if (features.count(FEATURE_OP)){
     auto data = (FeatureOp *)features.find(FEATURE_OP)->second.get();
     cr->set_operator(data->op);
+  }
+
+  // pix_align feature
+  bool pix_al = false;
+  if (features.count(FEATURE_PIXAL)){
+    auto data = (FeaturePixAl *)features.find(FEATURE_PIXAL)->second.get();
+    pix_al = data->val;
   }
 
   // Font feature (set font + font size)
@@ -711,7 +729,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         (features.count(FEATURE_STROKE) ||
          features.count(FEATURE_FILL) ||
          features.count(FEATURE_PATT)) ){
-      draw_text(O, cr, range, true);
+      draw_text(O, cr, range, true, pix_al);
     }
 
     // Pattern feature
@@ -769,7 +787,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data = (FeatureWrite *)features.find(FEATURE_WRITE)->second.get();
       cr->begin_new_path(); // this is needed if we have WRITE+STROKE/FILL feateres
       cr->set_color(data->color);
-      draw_text(O, cr, range, false);
+      draw_text(O, cr, range, false, pix_al);
     }
   }
 

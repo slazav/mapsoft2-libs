@@ -49,6 +49,7 @@ where possible features are:
     join round|miter       -- Set line join (default round). Use with stroke feature.
     operator <op>          -- Set drawing operator (clear|source|over|in|out|atop|dest|
                               dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
+    text_align (0|1)       -- align text positions to integer pixels (default: 0)
     lines <lines> ...      -- draw lines
     circles <circle> ...   -- draw circles
     draw_pos (point|begin|end) -- reference positions for lines/circles features:
@@ -124,6 +125,7 @@ public:
     FEATURE_CAP,        // set line cap
     FEATURE_JOIN,       // set line join
     FEATURE_OP,         // set drawing operator
+    FEATURE_PIXAL,      // set pix_al
     FEATURE_LINES,      // lines to be drawn instead of the object
     FEATURE_CIRCLES,    // circles to be drawn instead of the object
     FEATURE_DRAW_POS,   // position for lines/circles
@@ -370,6 +372,14 @@ public:
     }
   };
 
+  struct FeaturePixAl : Feature {
+    double val;
+    FeaturePixAl(const std::vector<std::string> & vs){
+      check_args(vs, {"<val>"});
+      val = str_to_type<bool>(vs[0]);
+    }
+  };
+
   struct FeatureRotate : Feature {
     double val;
     FeatureRotate(const std::vector<std::string> & vs){
@@ -428,7 +438,7 @@ public:
 
     // helpers used in draw() method, see .cpp files for description
     void convert_coords(MapDBObj & O);
-    void draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path);
+    void draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align=false);
 
     // main drawing function
     int draw(const CairoWrapper & cr, const dRect & draw_range) override;
