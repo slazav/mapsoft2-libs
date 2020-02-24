@@ -24,6 +24,8 @@ ms2opt_add_mapdb_render(GetOptSet & opts){
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   max_text_size = 1024;
+  obj_scale = o.get("obj_scale", 1.0);
+
   opt = std::shared_ptr<Opt>(new Opt(o));
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
 
@@ -440,6 +442,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();
   MapDB *map = mapdb_gobj->map.get();
+  double osc = mapdb_gobj->obj_scale;
+
   std::set<uint32_t> ids;
 
   // calculate range for object selecting
@@ -453,27 +457,27 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // expand by line width
     if (features.count(FEATURE_STROKE)){
       auto ftr = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-      exp_dist = std::max(exp_dist, ftr->th);
+      exp_dist = std::max(exp_dist, ftr->th*osc);
     }
     // expand by image size (image may be rotated and arbitrarly centered, use hypot(w,h) as size)
     if (features.count(FEATURE_IMG)){
       auto ftr = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-      exp_dist = std::max(exp_dist, hypot(ftr->img.width(), ftr->img.height()));
+      exp_dist = std::max(exp_dist, osc*hypot(ftr->img.width(), ftr->img.height()));
     }
     // expand by move_to distance
     if (features.count(FEATURE_MOVETO)){
       auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
-      exp_dist = std::max(exp_dist, ftr->dist);
+      exp_dist = std::max(exp_dist, osc*ftr->dist);
     }
     // expand by lines bbox (again, can be rotated, at least for points)
     if (features.count(FEATURE_LINES)){
       auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
-      exp_dist = std::max(exp_dist, hypot(ftr->bbox.w, ftr->bbox.h));
+      exp_dist = std::max(exp_dist, osc*hypot(ftr->bbox.w, ftr->bbox.h));
     }
     // expand by circles bbox
     if (features.count(FEATURE_CIRCLES)){
       auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
-      exp_dist = std::max(exp_dist, hypot(ftr->bbox.w, ftr->bbox.h));
+      exp_dist = std::max(exp_dist, osc*hypot(ftr->bbox.w, ftr->bbox.h));
     }
   }
   sel_range.expand(exp_dist);
@@ -516,7 +520,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // Font feature (set font + font size)
   if (features.count(FEATURE_FONT)){
     auto data = (FeatureFont *)features.find(FEATURE_FONT)->second.get();
-    cr->set_font_size(data->size);
+    cr->set_font_size(osc*data->size);
     // For work with patterns see:
     // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
     // For font properties see:
@@ -535,6 +539,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
+    auto M = data->patt->get_matrix();
+    M.scale(1.0/osc,1.0/osc);
+    data->patt->set_matrix(M);
     data->patt->set_extend(Cairo::EXTEND_REPEAT);
     cr->set_source(data->patt);
   }
@@ -544,7 +551,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   bool close = (action == STEP_DRAW_AREA);
   if (features.count(FEATURE_SMOOTH)){
     auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
-    sm = ftr->dist;
+    sm = osc*ftr->dist;
   }
 
   // Set up fill feature
@@ -559,7 +566,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Setup dashed line
     if (features.count(FEATURE_DASH)){
       auto data = (FeatureDash *)features.find(FEATURE_DASH)->second.get();
-      cr->set_dash(data->vd, 0);
+      auto vd = data->vd;
+      for (auto & d:vd) d*=osc;
+      cr->set_dash(vd, 0);
     }
 
     // Setup line cap
@@ -580,7 +589,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
     cr->set_color_a(data->col);
-    cr->set_line_width(data->th);
+    cr->set_line_width(osc*data->th);
   }
 
   // Set up image feature (points and areas)
@@ -590,6 +599,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
+    auto M = data->patt->get_matrix();
+    M.scale(1.0/osc,1.0/osc);
+    data->patt->set_matrix(M);
     cr->set_source(data->patt);
   }
 
@@ -704,7 +716,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
+      cr->save();
+      cr->scale(osc,osc);
       cr->fill_preserve();
+      cr->restore();
     }
 
     // Fill feature

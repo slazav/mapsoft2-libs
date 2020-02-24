@@ -96,6 +96,7 @@ private:
   std::vector<std::string> groups; // ordered list of all groups
   GeoMap ref;            // default map reference
   double max_text_size;  // for selecting text objects
+  double obj_scale;      // object scale
 
 public:
 
