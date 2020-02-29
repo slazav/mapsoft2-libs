@@ -209,7 +209,7 @@ public:
       double scy = scx;
       double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
       double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
-      img = image_load(imgdir + "/" + vs[0]);
+      img = image_load(imgdir + vs[0]);
       if (img.is_empty()) throw Err() << "empty image: " << vs[0];
       if (img.type() != IMAGE_32ARGB)
         img = image_to_argb(img);
