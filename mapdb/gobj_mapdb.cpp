@@ -799,10 +799,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
 
   // BRD drawing step:
-  if (action == STEP_DRAW_BRD) {
+  if (action == STEP_DRAW_BRD && mapdb_gobj->ref.border.size() > 2) {
     cr->begin_new_path();
     cr->mkpath_smline(mapdb_gobj->ref.border, true, sm);
-
     // Pattern feature
     if (features.count(FEATURE_PATT)){
       cr->fill_preserve();
