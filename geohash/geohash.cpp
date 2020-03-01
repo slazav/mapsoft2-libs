@@ -102,12 +102,13 @@ GEOHASH_decode(const std::string & hash) {
     }
 
 std::string
-GEOHASH_encode(const dPoint & p, unsigned int len) {
-    assert(p.y >= -90.0);
-    assert(p.y <= 90.0);
-    assert(p.x >= -180.0);
-    assert(p.x <= 180.0);
-    assert(len <= MAX_HASH_LENGTH);
+GEOHASH_encode(const dPoint & pt, unsigned int len) {
+    dPoint p(pt);
+    if (p.y<-90.0) p.y=-90.0;
+    if (p.y>+90.0) p.y=+90.0;
+    while (p.x<-180.0) p.x += 360.0;
+    while (p.x>+180.0) p.x -= 360.0;
+    if (len > MAX_HASH_LENGTH) len = MAX_HASH_LENGTH;
 
     std::string hash(len, ' ');
 
@@ -154,6 +155,7 @@ GEOHASH_encode(const dRect & r, unsigned int maxlen) {
 
 std::set<std::string>
 GEOHASH_encode4(const dRect & r, unsigned int maxlen) {
+    // todo: objects crossing +/-180 degrees!
     // encode 4 corners
     std::string h1 = GEOHASH_encode(r.tlc(), maxlen);
     std::string h2 = GEOHASH_encode(r.trc(), maxlen);
