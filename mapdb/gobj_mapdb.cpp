@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <string>
+#include <deque>
 
 #include "geom/line_walker.h"
 #include "gobj_mapdb.h"
@@ -42,6 +43,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   std::shared_ptr<DrawingStep> st(NULL); // current step
   std::string ftr; // current feature
   Opt defs;        // for `define` command
+  std::deque<bool> ifs;  // for if/endif commands
 
   while (1){
     vector<string> vs = read_words(ff, line_num, false);
@@ -52,6 +54,84 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
     ftr = "";
     try{
+
+      // endif command
+      if (vs[0] == "endif"){
+        if (ifs.size()<1) throw Err() << "unexpected endif command";
+        ifs.pop_back();
+        continue;
+      }
+      // else command
+      if (vs[0] == "else"){
+        if (ifs.size()<1) throw Err() << "unexpected else command";
+        ifs.back() = !ifs.back();
+        continue;
+      }
+      // if command
+      if (vs[0] == "if"){
+        if (vs.size() == 4 && vs[2] == "=="){
+          ifs.push_back(vs[1] == vs[3]);
+        }
+        else if (vs.size() == 4 && vs[2] == "!="){
+          ifs.push_back(vs[1] != vs[3]);
+        }
+        else
+          throw Err() << "wrong if syntax";
+        continue;
+      }
+
+      // check if conditions
+      bool skip = false;
+      for (auto const & c:ifs)
+        if (c == false) {skip = true; break;}
+      if (skip) continue;
+
+      // setref command
+      if (vs.size() > 1 && vs[0] == "set_ref") {
+        st.reset(); // "+" should not work after the command
+        if (vs[1] == "file") {
+          if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: setref file <filename>";
+          GeoData d;
+          read_geo(vs[2], d);
+          if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
+            << "setref: can't read any reference from file: " << vs[2];
+          ref = (*d.maps.begin())[0];
+        }
+        else if (vs[1] == "nom") {
+          if (vs.size()!=4) throw Err()
+            << "wrong number of arguments: setref nom <name> <dpi>";
+          Opt o;
+          o.put("mkref", "nom");
+          o.put("name", vs[2]);
+          o.put("dpi", vs[3]);
+          ref = geo_mkref(o);
+        }
+        else throw Err() << "setref command: 'file' or 'nom' word is expected";
+        continue;
+      }
+
+      // max_text_size command
+      if (vs[0] == "max_text_size") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: max_text_size <number>";
+        max_text_size = str_to_type<double>(vs[1]);
+        continue;
+      }
+
+      // define command
+      if (vs[0] == "define") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: define <name> <definition>";
+        defs.put(vs[1],vs[2]);
+        continue;
+      }
+
+
+      /**********************************************************/
+      /// Commands with features
 
       // draw an object (point, line, area)
       if (vs.size() > 2 && vs[0].find(':')!=std::string::npos) {
@@ -95,54 +175,11 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         ftr = vs[1];
         vs.erase(vs.begin(),vs.begin()+2);
       }
-
-      // setref command
-      else if (vs.size() > 1 && vs[0] == "set_ref") {
-        st.reset(); // "+" should not work after the command
-        if (vs[1] == "file") {
-          if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: setref file <filename>";
-          GeoData d;
-          read_geo(vs[2], d);
-          if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
-            << "setref: can't read any reference from file: " << vs[2];
-          ref = (*d.maps.begin())[0];
-        }
-        else if (vs[1] == "nom") {
-          if (vs.size()!=4) throw Err()
-            << "wrong number of arguments: setref nom <name> <dpi>";
-          Opt o;
-          o.put("mkref", "nom");
-          o.put("name", vs[2]);
-          o.put("dpi", vs[3]);
-          ref = geo_mkref(o);
-        }
-        else throw Err() << "setref command: 'file' or 'nom' word is expected";
-        continue;
-      }
-
-      // max_text_size command
-      else if (vs[0] == "max_text_size") {
-        st.reset(); // "+" should not work after the command
-        if (vs.size()!=2) throw Err()
-            << "wrong number of arguments: max_text_size <number>";
-        max_text_size = str_to_type<double>(vs[1]);
-        continue;
-      }
-
-      // define command
-      else if (vs[0] == "define") {
-        st.reset(); // "+" should not work after the command
-        if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: define <name> <definition>";
-        defs.put(vs[1],vs[2]);
-        continue;
-      }
-
       else {
         throw Err() << "Unknown command or drawing step: " << vs[0];
       }
 
+      /**********************************************************/
       /// Parse features
 
       // stroke <color> <thickness>
@@ -344,6 +381,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
     }
 
   } // end of configuration file
+  if (ifs.size()>0)
+    throw Err() << cfgfile << ":" << "if command is not closed";
 
 }
 
