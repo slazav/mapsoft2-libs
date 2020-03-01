@@ -15,18 +15,22 @@ main(){
       GeoHashDB db("a.dbh", NULL, 1);
 
       assert_eq(db.get_types().size(), 0);
+      assert_eq(db.bbox(), dRect());
 
       db.put(1, 0, dRect(-0.01,-0.01, 0.02,0.02));
       db.put(2, 0, dRect(1,-0.01,     0.02,0.02));
       db.put(3, 0, dRect(-0.01,1,     0.02,0.02));
       db.put(4, 0, dRect(1,1,         0.01,0.01));
+      assert_eq(type_to_str(db.bbox()), "[-0.0439453125,-0.0439453125,1.09863281,1.09863281]");
       db.put(5, 0, dRect(36,57,       0.01,0.01));
+      assert_eq(type_to_str(db.bbox()), "[-0.0439453125,-0.0439453125,36.0791016,57.0849609]");
       db.put(6, 0, dRect(36,57,       0.11,0.11));
       db.put(7, 0, dRect(35,57,       0.11,0.11));
       db.put(8, 0, dRect(35,57,       0.10,0.10));
       db.put(9, 0, dRect(-100,-50,    220,100));
       db.put(10, 0, dRect()); // empty range - do nothing
       db.put(11, 0, dRect(36,57,0,0));
+      assert_eq(type_to_str(db.bbox()), "[-180,-90,360,180]");
 
       std::set<uint32_t> v1 = db.get(0, dRect());
       assert_eq(v1.size(),0);
