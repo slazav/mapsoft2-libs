@@ -473,6 +473,9 @@ public:
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir, const Opt & o);
 
+  // rescale
+  void on_rescale(double k) {obj_scale*=k;}
+
 };
 
 #endif

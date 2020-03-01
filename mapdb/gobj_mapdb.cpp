@@ -557,9 +557,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
-    auto M = data->patt->get_matrix();
-    M.scale(1.0/osc,1.0/osc);
-    data->patt->set_matrix(M);
+//    auto M = data->patt->get_matrix();
+//    M.scale(1.0/osc,1.0/osc);
+//    data->patt->set_matrix(M);
     data->patt->set_extend(Cairo::EXTEND_REPEAT);
     cr->set_source(data->patt);
   }
@@ -617,9 +617,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
-    auto M = data->patt->get_matrix();
-    M.scale(1.0/osc,1.0/osc);
-    data->patt->set_matrix(M);
+//    auto M = data->patt->get_matrix();
+//    M.scale(1.0/osc,1.0/osc);
+//    data->patt->set_matrix(M);
     cr->set_source(data->patt);
   }
 
@@ -645,13 +645,13 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         dMultiLine lines;
         if (features.count(FEATURE_LINES)){
           auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
-          lines = ftr->lines;
+          lines = osc*ftr->lines;
         }
 
         dLine circles;
         if (features.count(FEATURE_CIRCLES)){
           auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
-          circles = ftr->circles;
+          circles = osc*ftr->circles;
         }
 
         double dist = 0, dist_b = 0, dist_e = 0;
@@ -659,9 +659,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         if (features.count(FEATURE_DRAW_POS)){
           auto ftr = (FeatureDrawPos *)features.find(FEATURE_DRAW_POS)->second.get();
           pos = ftr->pos;
-          dist = ftr->dist;
-          dist_b = ftr->dist_b;
-          dist_e = ftr->dist_e;
+          dist = osc*ftr->dist;
+          dist_b = osc*ftr->dist_b;
+          dist_e = osc*ftr->dist_e;
         }
 
         dLine ref_points;
@@ -765,6 +765,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
             cr->save();
             cr->translate(p.x, p.y);
             cr->rotate(O.angle);
+            cr->scale(osc,osc);
             cr->set_source(data->patt);
             cr->paint();
             cr->restore();
@@ -804,7 +805,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->mkpath_smline(mapdb_gobj->ref.border, true, sm);
     // Pattern feature
     if (features.count(FEATURE_PATT)){
+      cr->save();
+      cr->scale(osc,osc);
       cr->fill_preserve();
+      cr->restore();
     }
 
     // Fill feature
