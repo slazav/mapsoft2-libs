@@ -193,8 +193,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // fill <color>
       if (ftr == "fill"){
-        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP |
-                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
+                       STEP_DRAW_MAP | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_FILL,
           std::shared_ptr<Feature>(new FeatureFill(vs)));
         continue;
