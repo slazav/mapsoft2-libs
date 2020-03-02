@@ -26,6 +26,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   max_text_size = 1024;
   obj_scale = o.get("obj_scale", 1.0);
+  Opt defs = o.get("define", Opt()); // for `define` command
 
   opt = std::shared_ptr<Opt>(new Opt(o));
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
@@ -42,7 +43,6 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   int depth = 0;
   std::shared_ptr<DrawingStep> st(NULL); // current step
   std::string ftr; // current feature
-  Opt defs;        // for `define` command
   std::deque<bool> ifs;  // for if/endif commands
 
   while (1){
