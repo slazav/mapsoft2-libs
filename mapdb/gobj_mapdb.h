@@ -9,11 +9,12 @@
 #include "cairo/cairo_wrapper.h"
 #include "image/image_colors.h"
 #include "viewer/gobj_multi.h"
-
-#include "mapdb.h"
+#include "filename/filename.h"
 #include "image/image.h"
 #include "geo_data/geo_data.h"
 #include "opt/opt.h"
+
+#include "mapdb.h"
 
 /*
 
@@ -200,7 +201,7 @@ public:
 
   // for both FEATURE_PATT and FEATURE_IMG
   struct FeaturePatt : Feature {
-    Image img; // actual data
+    Image img; // actual data for raster images
     Cairo::RefPtr<Cairo::SurfacePattern> patt;
     FeaturePatt(const std::string & imgdir,
                 const std::vector<std::string> & vs){
@@ -209,15 +210,21 @@ public:
       double scy = scx;
       double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
       double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
-      img = image_load(imgdir + vs[0]);
-      if (img.is_empty()) throw Err() << "empty image: " << vs[0];
-      if (img.type() != IMAGE_32ARGB)
-        img = image_to_argb(img);
-      // Images with too small scales are not drawn.
-      // Let's limit scale to have at least 1-pixel image size:
-      if (img.width()*scx  < 1.0) scx = 1.0/img.width();
-      if (img.height()*scy < 1.0) scy = 1.0/img.height();
-      patt = image_to_pattern(img, scx, scy, dx, dy);
+
+      if (file_ext_check(vs[0], ".svg")){
+        patt = svg_to_pattern(imgdir + vs[0], scx, scy, dx, dy);
+      }
+      else {
+        img = image_load(imgdir + vs[0]);
+        if (img.is_empty()) throw Err() << "empty image: " << vs[0];
+        if (img.type() != IMAGE_32ARGB)
+          img = image_to_argb(img);
+        // Images with too small scales are not drawn.
+         // Let's limit scale to have at least 1-pixel image size:
+        if (img.width()*scx  < 1.0) scx = 1.0/img.width();
+        if (img.height()*scy < 1.0) scy = 1.0/img.height();
+        patt = image_to_pattern(img, scx, scy, dx, dy);
+      }
     }
   };
 
