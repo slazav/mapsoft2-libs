@@ -596,10 +596,17 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
-//    auto M = data->patt->get_matrix();
-//    M.scale(1.0/osc,1.0/osc);
-//    data->patt->set_matrix(M);
     data->patt->set_extend(Cairo::EXTEND_REPEAT);
+    cr->set_source(data->patt);
+  }
+
+  // Set up image feature (points and areas)
+  if (features.count(FEATURE_IMG)){
+    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
+    }
     cr->set_source(data->patt);
   }
 
@@ -649,18 +656,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_line_width(osc*data->th);
   }
 
-  // Set up image feature (points and areas)
-  if (features.count(FEATURE_IMG)){
-    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
-//    auto M = data->patt->get_matrix();
-//    M.scale(1.0/osc,1.0/osc);
-//    data->patt->set_matrix(M);
-    cr->set_source(data->patt);
-  }
 
   // Draw each object
   for (auto const i: ids){
@@ -774,11 +769,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Pattern feature
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-      cr->save();
-      cr->scale(osc,osc);
-      cr->set_source(data->patt);
-      cr->fill_preserve();
-      cr->restore();
+      data->draw_patt(cr,osc,true);
     }
 
     // Fill feature
@@ -802,24 +793,11 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
       for (auto const & l:O){
         if (action == STEP_DRAW_POINT) {
-          for (dPoint p:l){
-            cr->save();
-            cr->translate(p.x, p.y);
-            cr->rotate(O.angle);
-            cr->scale(osc,osc);
-            cr->set_source(data->patt);
-            cr->paint();
-            cr->restore();
-          }
+          for (dPoint p:l) data->draw_img(cr,p,O.angle,osc);
         }
         else {
           dPoint p = l.bbox().cnt();
-          cr->save();
-          cr->translate(p.x, p.y);
-          cr->rotate(O.angle);
-          cr->set_source(data->patt);
-          cr->paint();
-          cr->restore();
+          data->draw_img(cr,p,O.angle,osc);
         }
       }
     }
@@ -838,14 +816,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Fill feature
     if (features.count(FEATURE_FILL)) cr->paint();
 
-    // Pattern/Fill feature
+    // Pattern feature
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-      cr->save();
-      cr->scale(osc,osc);
-      cr->set_source(data->patt);
-      cr->paint();
-      cr->restore();
+      data->draw_patt(cr,osc,false);
     }
   }
 
@@ -856,14 +830,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
-      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
       cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
-      cr->save();
-      cr->scale(osc,osc);
-      cr->set_source(data->patt);
-      cr->fill_preserve();
-      cr->restore();
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+      data->draw_patt(cr,osc,true);
     }
 
     // Fill feature

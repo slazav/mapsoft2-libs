@@ -226,6 +226,25 @@ public:
         patt = image_to_pattern(img, scx, scy, dx, dy);
       }
     }
+    void draw_patt(const CairoWrapper & cr, const double sc, bool fill=true){
+      cr->save();
+      cr->scale(sc,sc);
+      cr->set_source(patt);
+      if (fill) cr->fill_preserve();
+      else cr->paint();
+      cr->restore();
+    }
+    void draw_img(const CairoWrapper & cr, const dPoint & p,
+                  const double angle, const double sc){
+      cr->save();
+      cr->translate(p.x, p.y);
+      cr->rotate(angle);
+      cr->scale(sc,sc);
+      cr->set_source(patt);
+      cr->paint();
+      cr->restore();
+    }
+
   };
 
   struct FeatureImgFilter : Feature {
