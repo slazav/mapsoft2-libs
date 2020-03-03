@@ -773,8 +773,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       cr->save();
       cr->scale(osc,osc);
+      cr->set_source(data->patt);
       cr->fill_preserve();
       cr->restore();
     }
@@ -838,8 +840,10 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // Pattern/Fill feature
     if (features.count(FEATURE_PATT)){
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       cr->save();
       cr->scale(osc,osc);
+      cr->set_source(data->patt);
       cr->paint();
       cr->restore();
     }
@@ -852,10 +856,12 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
       cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
       cr->save();
       cr->scale(osc,osc);
+      cr->set_source(data->patt);
       cr->fill_preserve();
       cr->restore();
     }
