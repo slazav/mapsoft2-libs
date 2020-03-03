@@ -38,9 +38,10 @@ image_to_pattern(const Image & img, double scx, double scy, double dx, double dy
 Cairo::RefPtr<Cairo::SurfacePattern>
 svg_to_pattern(const std::string & fname, double scx, double scy, double dx, double dy){
   try{
-    GError *err;
+    GError *err = NULL;
     auto svg = rsvg_handle_new_from_file(fname.c_str(), &err);
-    if (!svg) throw Err() << fname << ": " << err->message;
+    if (!svg && err) throw Err() << fname << ": " << err->message;
+    if (!svg) throw Err() << fname << ": can't load SVG file";
 
     RsvgDimensionData dim;
     rsvg_handle_get_dimensions(svg, &dim);
