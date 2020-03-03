@@ -25,7 +25,7 @@ ms2opt_add_mapdb_render(GetOptSet & opts){
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   max_text_size = 1024;
-  obj_scale = o.get("obj_scale", 1.0);
+  obj_scale = o.get("obj_scale", 1.0) * o.get("map_scale", 1.0);
   Opt defs = o.get("define", Opt()); // for `define` command
 
   opt = std::shared_ptr<Opt>(new Opt(o));
@@ -833,17 +833,27 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // MAP drawing step:
   if (action == STEP_DRAW_MAP) {
+    // Fill feature
+    if (features.count(FEATURE_FILL)) cr->paint();
+
     // Pattern/Fill feature
-    if (features.count(FEATURE_PATT) ||
-        features.count(FEATURE_FILL)) cr->paint();
+    if (features.count(FEATURE_PATT)){
+      cr->save();
+      cr->scale(osc,osc);
+      cr->paint();
+      cr->restore();
+    }
   }
 
   // BRD drawing step:
   if (action == STEP_DRAW_BRD && mapdb_gobj->ref.border.size()>0) {
     cr->begin_new_path();
     cr->mkpath_smline(mapdb_gobj->ref.border, true, sm);
+
     // Pattern feature
     if (features.count(FEATURE_PATT)){
+      cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
+      cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
       cr->save();
       cr->scale(osc,osc);
       cr->fill_preserve();
@@ -856,8 +866,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (features.count(FEATURE_FILL)){
       auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
       cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
-      cr->set_color_a(data->col);
       cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+      cr->set_color_a(data->col);
       cr->fill_preserve();
     }
 
