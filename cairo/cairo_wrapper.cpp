@@ -2,6 +2,9 @@
 #include "geom/line.h"
 #include "err/err.h"
 
+#include <librsvg/rsvg.h>
+
+
 Cairo::RefPtr<Cairo::ImageSurface>
 image_to_surface(const Image & img) {
   // convert image to cairo surface
@@ -23,6 +26,37 @@ image_to_pattern(const Image & img, double scx, double scy, double dx, double dy
       Cairo::SurfacePattern::create(surf);
     Cairo::Matrix M=Cairo::identity_matrix();
     M.translate(surf->get_width()*(0.5+dx), surf->get_height()*(0.5+dy));
+    M.scale(1/scx,1/scy);
+    patt->set_matrix(M);
+    return patt;
+  }
+  catch (Cairo::logic_error err){
+    throw Err() << err.what();
+  }
+}
+
+Cairo::RefPtr<Cairo::SurfacePattern>
+svg_to_pattern(const std::string & fname, double scx, double scy, double dx, double dy){
+  try{
+    GError *err = NULL;
+    auto svg = rsvg_handle_new_from_file(fname.c_str(), &err);
+    if (!svg && err) throw Err() << fname << ": " << err->message;
+    if (!svg) throw Err() << fname << ": can't load SVG file";
+
+    RsvgDimensionData dim;
+    rsvg_handle_get_dimensions(svg, &dim);
+    int w = dim.width;
+    int h = dim.height;
+
+    auto surf = Cairo::ImageSurface::create (Cairo::FORMAT_ARGB32, w, h);
+    auto cr = Cairo::Context::create(surf);
+    if (!rsvg_handle_render_cairo(svg,cr->cobj()))
+      throw Err() << fname << ": can't render SVG image";
+    g_object_unref(svg);
+
+    auto patt = Cairo::SurfacePattern::create(surf);
+    Cairo::Matrix M=Cairo::identity_matrix();
+    M.translate(w*(0.5+dx), h*(0.5+dy));
     M.scale(1/scx,1/scy);
     patt->set_matrix(M);
     return patt;

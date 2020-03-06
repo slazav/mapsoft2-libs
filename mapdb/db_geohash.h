@@ -36,6 +36,9 @@ class GeoHashDB {
    // get all object types in the database
    std::set<uint32_t> get_types();
 
+    // get range of the largest geohash
+    dRect bbox();
+
 };
 
 #endif

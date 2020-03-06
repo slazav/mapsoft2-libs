@@ -24,6 +24,10 @@ Cairo::RefPtr<Cairo::ImageSurface> image_to_surface(const Image & img);
 Cairo::RefPtr<Cairo::SurfacePattern> image_to_pattern(
   const Image & img, double scx, double scy, double dx=0, double dy=0);
 
+// Load svg file to a pattern
+Cairo::RefPtr<Cairo::SurfacePattern> svg_to_pattern(
+  const std::string & fname, double scx, double scy, double dx, double dy);
+
 //////////////////////////////////////////////////////////////////
 /// This class contains functions
 /// we want to add to the Cairo::Context

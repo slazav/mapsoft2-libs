@@ -207,6 +207,8 @@ public:
   std::set<uint32_t> get_types() {
     return geohash.get_types();}
 
+  /// get map bounding box (extracted from geohash data)
+  dRect bbox() { return geohash.bbox();}
 
 
   ///////////////

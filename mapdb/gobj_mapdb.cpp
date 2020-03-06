@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <string>
+#include <deque>
 
 #include "geom/line_walker.h"
 #include "gobj_mapdb.h"
@@ -24,7 +25,8 @@ ms2opt_add_mapdb_render(GetOptSet & opts){
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   max_text_size = 1024;
-  obj_scale = o.get("obj_scale", 1.0);
+  obj_scale = o.get("obj_scale", 1.0) * o.get("map_scale", 1.0);
+  Opt defs = o.get("define", Opt()); // for `define` command
 
   opt = std::shared_ptr<Opt>(new Opt(o));
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
@@ -41,7 +43,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   int depth = 0;
   std::shared_ptr<DrawingStep> st(NULL); // current step
   std::string ftr; // current feature
-  Opt defs;        // for `define` command
+  std::deque<bool> ifs;  // for if/endif commands
 
   while (1){
     vector<string> vs = read_words(ff, line_num, false);
@@ -52,6 +54,84 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
     ftr = "";
     try{
+
+      // endif command
+      if (vs[0] == "endif"){
+        if (ifs.size()<1) throw Err() << "unexpected endif command";
+        ifs.pop_back();
+        continue;
+      }
+      // else command
+      if (vs[0] == "else"){
+        if (ifs.size()<1) throw Err() << "unexpected else command";
+        ifs.back() = !ifs.back();
+        continue;
+      }
+      // if command
+      if (vs[0] == "if"){
+        if (vs.size() == 4 && vs[2] == "=="){
+          ifs.push_back(vs[1] == vs[3]);
+        }
+        else if (vs.size() == 4 && vs[2] == "!="){
+          ifs.push_back(vs[1] != vs[3]);
+        }
+        else
+          throw Err() << "wrong if syntax";
+        continue;
+      }
+
+      // check if conditions
+      bool skip = false;
+      for (auto const & c:ifs)
+        if (c == false) {skip = true; break;}
+      if (skip) continue;
+
+      // setref command
+      if (vs.size() > 1 && vs[0] == "set_ref") {
+        st.reset(); // "+" should not work after the command
+        if (vs[1] == "file") {
+          if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: setref file <filename>";
+          GeoData d;
+          read_geo(vs[2], d);
+          if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
+            << "setref: can't read any reference from file: " << vs[2];
+          ref = (*d.maps.begin())[0];
+        }
+        else if (vs[1] == "nom") {
+          if (vs.size()!=4) throw Err()
+            << "wrong number of arguments: setref nom <name> <dpi>";
+          Opt o;
+          o.put("mkref", "nom");
+          o.put("name", vs[2]);
+          o.put("dpi", vs[3]);
+          ref = geo_mkref(o);
+        }
+        else throw Err() << "setref command: 'file' or 'nom' word is expected";
+        continue;
+      }
+
+      // max_text_size command
+      if (vs[0] == "max_text_size") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: max_text_size <number>";
+        max_text_size = str_to_type<double>(vs[1]);
+        continue;
+      }
+
+      // define command
+      if (vs[0] == "define") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: define <name> <definition>";
+        defs.put(vs[1],vs[2]);
+        continue;
+      }
+
+
+      /**********************************************************/
+      /// Commands with features
 
       // draw an object (point, line, area)
       if (vs.size() > 2 && vs[0].find(':')!=std::string::npos) {
@@ -95,54 +175,11 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
         ftr = vs[1];
         vs.erase(vs.begin(),vs.begin()+2);
       }
-
-      // setref command
-      else if (vs.size() > 1 && vs[0] == "set_ref") {
-        st.reset(); // "+" should not work after the command
-        if (vs[1] == "file") {
-          if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: setref file <filename>";
-          GeoData d;
-          read_geo(vs[2], d);
-          if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
-            << "setref: can't read any reference from file: " << vs[2];
-          ref = (*d.maps.begin())[0];
-        }
-        else if (vs[1] == "nom") {
-          if (vs.size()!=4) throw Err()
-            << "wrong number of arguments: setref nom <name> <dpi>";
-          Opt o;
-          o.put("mkref", "nom");
-          o.put("name", vs[2]);
-          o.put("dpi", vs[3]);
-          ref = geo_mkref(o);
-        }
-        else throw Err() << "setref command: 'file' or 'nom' word is expected";
-        continue;
-      }
-
-      // max_text_size command
-      else if (vs[0] == "max_text_size") {
-        st.reset(); // "+" should not work after the command
-        if (vs.size()!=2) throw Err()
-            << "wrong number of arguments: max_text_size <number>";
-        max_text_size = str_to_type<double>(vs[1]);
-        continue;
-      }
-
-      // define command
-      else if (vs[0] == "define") {
-        st.reset(); // "+" should not work after the command
-        if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: define <name> <definition>";
-        defs.put(vs[1],vs[2]);
-        continue;
-      }
-
       else {
         throw Err() << "Unknown command or drawing step: " << vs[0];
       }
 
+      /**********************************************************/
       /// Parse features
 
       // stroke <color> <thickness>
@@ -156,8 +193,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       // fill <color>
       if (ftr == "fill"){
-        st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP |
-                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
+                       STEP_DRAW_MAP | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->features.emplace(FEATURE_FILL,
           std::shared_ptr<Feature>(new FeatureFill(vs)));
         continue;
@@ -344,6 +381,8 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
     }
 
   } // end of configuration file
+  if (ifs.size()>0)
+    throw Err() << cfgfile << ":" << "if command is not closed";
 
 }
 
@@ -557,10 +596,17 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
-    auto M = data->patt->get_matrix();
-    M.scale(1.0/osc,1.0/osc);
-    data->patt->set_matrix(M);
     data->patt->set_extend(Cairo::EXTEND_REPEAT);
+    cr->set_source(data->patt);
+  }
+
+  // Set up image feature (points and areas)
+  if (features.count(FEATURE_IMG)){
+    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    if (features.count(FEATURE_IMG_FILTER)){
+      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
+      data->patt->set_filter(data_f->flt);
+    }
     cr->set_source(data->patt);
   }
 
@@ -610,18 +656,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_line_width(osc*data->th);
   }
 
-  // Set up image feature (points and areas)
-  if (features.count(FEATURE_IMG)){
-    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
-    auto M = data->patt->get_matrix();
-    M.scale(1.0/osc,1.0/osc);
-    data->patt->set_matrix(M);
-    cr->set_source(data->patt);
-  }
 
   // Draw each object
   for (auto const i: ids){
@@ -645,13 +679,13 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         dMultiLine lines;
         if (features.count(FEATURE_LINES)){
           auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
-          lines = ftr->lines;
+          lines = osc*ftr->lines;
         }
 
         dLine circles;
         if (features.count(FEATURE_CIRCLES)){
           auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
-          circles = ftr->circles;
+          circles = osc*ftr->circles;
         }
 
         double dist = 0, dist_b = 0, dist_e = 0;
@@ -659,9 +693,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         if (features.count(FEATURE_DRAW_POS)){
           auto ftr = (FeatureDrawPos *)features.find(FEATURE_DRAW_POS)->second.get();
           pos = ftr->pos;
-          dist = ftr->dist;
-          dist_b = ftr->dist_b;
-          dist_e = ftr->dist_e;
+          dist = osc*ftr->dist;
+          dist_b = osc*ftr->dist_b;
+          dist_e = osc*ftr->dist_e;
         }
 
         dLine ref_points;
@@ -734,10 +768,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
-      cr->save();
-      cr->scale(osc,osc);
-      cr->fill_preserve();
-      cr->restore();
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+      data->draw_patt(cr,osc,true);
     }
 
     // Fill feature
@@ -761,23 +793,11 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
       for (auto const & l:O){
         if (action == STEP_DRAW_POINT) {
-          for (dPoint p:l){
-            cr->save();
-            cr->translate(p.x, p.y);
-            cr->rotate(O.angle);
-            cr->set_source(data->patt);
-            cr->paint();
-            cr->restore();
-          }
+          for (dPoint p:l) data->draw_img(cr,p,O.angle,osc);
         }
         else {
           dPoint p = l.bbox().cnt();
-          cr->save();
-          cr->translate(p.x, p.y);
-          cr->rotate(O.angle);
-          cr->set_source(data->patt);
-          cr->paint();
-          cr->restore();
+          data->draw_img(cr,p,O.angle,osc);
         }
       }
     }
@@ -793,19 +813,27 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // MAP drawing step:
   if (action == STEP_DRAW_MAP) {
-    // Pattern/Fill feature
-    if (features.count(FEATURE_PATT) ||
-        features.count(FEATURE_FILL)) cr->paint();
+    // Fill feature
+    if (features.count(FEATURE_FILL)) cr->paint();
+
+    // Pattern feature
+    if (features.count(FEATURE_PATT)){
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+      data->draw_patt(cr,osc,false);
+    }
   }
 
   // BRD drawing step:
-  if (action == STEP_DRAW_BRD) {
+  if (action == STEP_DRAW_BRD && mapdb_gobj->ref.border.size()>0) {
     cr->begin_new_path();
     cr->mkpath_smline(mapdb_gobj->ref.border, true, sm);
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
-      cr->fill_preserve();
+      cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
+      cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+      data->draw_patt(cr,osc,true);
     }
 
     // Fill feature
@@ -814,8 +842,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (features.count(FEATURE_FILL)){
       auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
       cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
-      cr->set_color_a(data->col);
       cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+      cr->set_color_a(data->col);
       cr->fill_preserve();
     }
 
