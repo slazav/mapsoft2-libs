@@ -40,6 +40,36 @@ GObjMaps::GObjMaps(GeoMapList & maps):
   }
 }
 
+bool
+GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
+  if (tiles.contains(range_dst)) return true;
+
+  Image image_src = img_cache.get(d.src->image, d.load_sc);
+  Image image_dst = Image(range_dst.w, range_dst.h, IMAGE_32ARGB);
+
+  double avr = d.scale/d.load_sc/2;
+  // render image
+  for (int yd=0; yd<image_dst.height(); ++yd){
+    if (stop_drawing) return false;
+    for (int xd=0; xd<image_dst.width(); ++xd){
+      dPoint p(xd,yd);
+      p += range_dst.tlc();
+      d.cnv.frw(p);
+      int color;
+      if (smooth){
+        if (avr<1) color = image_src.get_argb_int4(p);
+        else       color = image_src.get_argb_avrg(p, avr);
+      }
+      else {
+        color = image_src.get_argb_safe(p);
+      }
+      image_dst.set32(xd, yd, color);
+    }
+  }
+  tiles.add(range_dst, image_dst);
+  return true;
+}
+
 int
 GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
@@ -55,33 +85,10 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
     if (range_dst.is_zsize()) continue;
 
     range_dst.to_ceil();
-    iRect key = range_dst;
 
-    if (!tiles.contains(key)) {
-      Image image_src = img_cache.get(d.src->image, d.load_sc);
-      Image image_dst = Image(range_dst.w, range_dst.h, IMAGE_32ARGB);
-
-      double avr = d.scale/d.load_sc/2;
-      // render image
-      for (int yd=0; yd<image_dst.height(); ++yd){
-        if (stop_drawing) return GObj::FILL_NONE;
-        for (int xd=0; xd<image_dst.width(); ++xd){
-          dPoint p(xd,yd);
-          p += range_dst.tlc();
-          d.cnv.frw(p);
-          int color;
-          if (smooth){
-            if (avr<1) color = image_src.get_argb_int4(p);
-            else       color = image_src.get_argb_avrg(p, avr);
-          }
-          else {
-            color = image_src.get_argb_safe(p);
-          }
-          image_dst.set32(xd, yd, color);
-        }
-      }
-      tiles.add(key, image_dst);
-    }
+    // render image int put it into tiles cache
+    if (!render_tile(d, range_dst))
+      return GObj::FILL_NONE;
 
     // border
     if (clip_brd){
@@ -92,7 +99,7 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
       }
     }
 
-    cr->set_source(image_to_surface(tiles.get(key)),
+    cr->set_source(image_to_surface(tiles.get(range_dst)),
       range_dst.x, range_dst.y);
     cr->paint();
 

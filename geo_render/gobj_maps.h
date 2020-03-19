@@ -53,6 +53,7 @@ public:
   // drawing waypoints on the image
   int draw(const CairoWrapper & cr, const dRect &box) override;
 
+
   /************************************************/
   // These functions update drawing templates.
   // They have proper multi-thread locking.
@@ -65,6 +66,9 @@ public:
 
   // rescale point coordinates, update range
   void on_rescale(double k) override;
+
+private:
+  bool render_tile(const MapData & d, const dRect & range_dst);
 
 };
 
