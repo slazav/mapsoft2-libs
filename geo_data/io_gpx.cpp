@@ -363,8 +363,9 @@ write_gpx (const string &filename, const GeoData & data, const Opt & opts){
 
 /********************************************************************/
 #define TYPE_ELEM      1
-#define TYPE_ELEM_END 15
 #define TYPE_TEXT      3
+#define TYPE_COMM      8
+#define TYPE_ELEM_END 15
 #define TYPE_SWS      14
 
 #define NAMECMP(x) (xmlStrcasecmp(name,(const xmlChar *)x)==0)
@@ -382,7 +383,7 @@ read_ext_node(xmlTextReaderPtr reader, Opt & opts){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (type == TYPE_ELEM_END) {
       if (NAMECMP("extensions")) break;
@@ -415,7 +416,7 @@ read_wpt_node(xmlTextReaderPtr reader, GeoWptList & data){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (NAMECMP("extensions") && (type == TYPE_ELEM)){
       cerr << "Warning: skip <extensions> in <wpt>/<rtept>\n";
@@ -486,7 +487,7 @@ read_trkpt_node(xmlTextReaderPtr reader, GeoTrk & trk, bool start){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (NAMECMP("extensions") && (type == TYPE_ELEM)){
       Opt o;
@@ -533,7 +534,7 @@ read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (NAMECMP("extensions") && (type == TYPE_ELEM)){
       Opt o;
@@ -570,7 +571,7 @@ read_trk_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (NAMECMP("extensions") && (type == TYPE_ELEM)){
       cerr << "Warning: skip <extensions> in <trk>\n";
@@ -634,7 +635,7 @@ read_rte_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (NAMECMP("extensions") && (type == TYPE_ELEM)){
       cerr << "Warning: skip <extensions> in <rte>\n";
@@ -703,7 +704,7 @@ read_gpx_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     // skip metadata
     else if (NAMECMP("metadata")){

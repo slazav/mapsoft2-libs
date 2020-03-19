@@ -180,10 +180,11 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
 }
 
 #define TYPE_ELEM      1
-#define TYPE_ELEM_END 15
 #define TYPE_TEXT      3
 #define TYPE_CDATA     4
+#define TYPE_COMM      8
 #define TYPE_SWS      14
+#define TYPE_ELEM_END 15
 
 #define NAMECMP(x) (xmlStrcasecmp(name,(const xmlChar *)x)==0)
 #define GETATTR(x) (const char *)xmlTextReaderGetAttribute(reader, (const xmlChar *)x)
@@ -200,7 +201,7 @@ read_text_node(xmlTextReaderPtr reader, const char * nn, string & str){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (type == TYPE_TEXT || type == TYPE_CDATA) str += GETVAL;
     else if (NAMECMP(nn) && (type == TYPE_ELEM_END)) break;
     else cerr << "Skipping node\"" << name << "\" in text node (type: " << type << ")\n";
@@ -219,7 +220,7 @@ read_timestamp_node(xmlTextReaderPtr reader, const char * nn, string & str){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (NAMECMP("when") && (type == TYPE_ELEM))
       ret=read_text_node(reader, "when", str);
     else if (NAMECMP(nn) && (type == TYPE_ELEM_END)) break;
@@ -238,7 +239,8 @@ read_point_node(xmlTextReaderPtr reader, GeoWpt & ww){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
+
     else if (NAMECMP("coordinates") && (type == TYPE_ELEM)){
       string str;
       ret=read_text_node(reader, "coordinates", str);
@@ -281,7 +283,8 @@ read_linestring_node(xmlTextReaderPtr reader, GeoTrk & T){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
+
     else if (NAMECMP("tessellate") && (type == TYPE_ELEM)){
       string str;
       ret=read_text_node(reader, "tessellate", str);
@@ -330,7 +333,7 @@ read_polygon_node(xmlTextReaderPtr reader, GeoTrk & T){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (NAMECMP("tessellate") && (type == TYPE_ELEM)){
       string str;
       ret=read_text_node(reader, "tessellate", str);
@@ -378,7 +381,7 @@ read_gx_track_node(xmlTextReaderPtr reader, GeoTrk & T){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (NAMECMP("when") && (type == TYPE_ELEM)){
       string str;
       ret=read_text_node(reader, "when", str);
@@ -416,7 +419,7 @@ read_multigeometry_node(xmlTextReaderPtr reader, GeoTrk & T){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (NAMECMP("LineString") && (type == TYPE_ELEM)){
       ret=read_linestring_node(reader, T);
       if (ret != 1) break;
@@ -454,7 +457,7 @@ read_placemark_node(xmlTextReaderPtr reader,
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (skip_el != ""){
       if (skip_el == (char*)name && type == TYPE_ELEM_END) skip_el="";
       continue;
@@ -535,7 +538,7 @@ read_folder_node(xmlTextReaderPtr reader, GeoData & data, const bool v){ // simi
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (skip_el != ""){
       if (skip_el == (char*)name && type == TYPE_ELEM_END) skip_el="";
       continue;
@@ -600,7 +603,7 @@ read_document_node(xmlTextReaderPtr reader, GeoData & data, const bool v){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
     else if (skip_el != ""){
       if (skip_el == (char*)name && type == TYPE_ELEM_END) skip_el="";
       continue;
@@ -664,7 +667,7 @@ read_kml_node(xmlTextReaderPtr reader, GeoData & data, const bool v){
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
 
-    if (type == TYPE_SWS) continue;
+    if (type == TYPE_SWS || type == TYPE_COMM) continue;
 
     else if (NAMECMP("Document") && (type == TYPE_ELEM)){
       ret=read_document_node(reader, data, v);
