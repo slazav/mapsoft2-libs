@@ -397,8 +397,10 @@ read_ext_node(xmlTextReaderPtr reader, Opt & opts){
 int
 read_wpt_node(xmlTextReaderPtr reader, GeoWptList & data){
   GeoWpt wpt;
-  wpt.y = atof(GETATTR("lat"));
-  wpt.x = atof(GETATTR("lon"));
+  auto a_x = GETATTR("lon");
+  auto a_y = GETATTR("lat");
+  wpt.x = a_x? atof(a_x):0;
+  wpt.y = a_y? atof(a_y):0;
   string state="";
 
   if (xmlTextReaderIsEmptyElement(reader)) {
@@ -466,8 +468,10 @@ read_trkpt_node(xmlTextReaderPtr reader, GeoTrk & trk, bool start){
   GeoTpt pt;
   bool is_ele = false, is_time=false;
 
-  pt.y = atof(GETATTR("lat"));
-  pt.x = atof(GETATTR("lon"));
+  auto a_x = GETATTR("lon");
+  auto a_y = GETATTR("lat");
+  pt.x = a_x? atof(a_x):0;
+  pt.y = a_y? atof(a_y):0;
 
   if (xmlTextReaderIsEmptyElement(reader)) {
     pt.start = start;
