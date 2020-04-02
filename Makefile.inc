@@ -26,7 +26,7 @@ MOD_STATIC  :=
 MOD_OBJECTS :=
 
 ifdef MOD_HEADERS
-  MOD_NAME    := $(shell a=$$(pwd); echo $${a\#\#*/})
+  MOD_NAME    := $(notdir $(shell pwd))
   MOD_STATIC  := $(MOD_NAME).a
 endif
 ifdef MOD_SOURCES
