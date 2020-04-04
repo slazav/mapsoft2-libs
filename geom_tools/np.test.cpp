@@ -22,7 +22,7 @@ main(int argc, char **argv){
   iRect cutter(0,0,w,w);
 
   // push all fig objects into single multiline
-  iMultiLine ml;
+  dMultiLine ml;
   Fig::const_iterator f;
   for (f=F.begin(); f!=F.end(); f++) ml.push_back(*f);
 
@@ -34,16 +34,15 @@ main(int argc, char **argv){
   // use points on greed 10x10 with 1cm step
   for (int i=0; i<10; i++){
     for (int j=0; j<10; j++){
-      iPoint p(i,j); p*=Fig::cm2fig;
-      dPoint dp(p);
+      dPoint p(i,j); p*=Fig::cm2fig;
 
       o.clear();
-      o.push_back(p);
+      o.push_back(rint(p));
 
       dPoint v;
       nearest_pt(ml, v, p, Fig::cm2fig);
 
-      o.push_back(p);
+      o.push_back(rint(p));
       F.push_back(o);
     }
   }
