@@ -1,4 +1,4 @@
-MOD_HEADERS := iofilter.h timer.h
+MOD_HEADERS := iofilter.h
 MOD_SOURCES := iofilter.cpp
 SIMPLE_TESTS := iofilter
 
