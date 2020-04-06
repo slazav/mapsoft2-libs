@@ -49,10 +49,10 @@ $(shell $(MODDIR)/get_deps $(MODDIR) . > Makefile.deps)
 ######################################################
 # Building flags
 
-override CXXFLAGS += $(shell [ "$(PKG_CONFIG)" == "" ] ||\
+override CXXFLAGS += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                         pkg-config --cflags '$(PKG_CONFIG)')
-override LDLIBS   += $(shell [ "$(PKG_CONFIG)" == "" ] ||\
+override LDLIBS   += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                         pkg-config --libs '$(PKG_CONFIG)')
 override CXXFLAGS += -std=gnu++11 -Werror=return-type -O2 -fPIC
