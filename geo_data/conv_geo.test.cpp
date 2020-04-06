@@ -1,10 +1,10 @@
 ///\cond HIDDEN (do not show this in Doxyden)
 
 #include <cassert>
+#include <proj_api.h> // for PJ_VERSION
 #include "err/assert_err.h"
 #include "conv_geo.h"
 #include "geo_utils.h"
-
 int
 main(){
   try{
@@ -12,8 +12,14 @@ main(){
     assert_eq(expand_proj_aliases("WGS"),
       "+datum=WGS84 +proj=lonlat");
 
+#if PJ_VERSION < 500
+std::cerr << ">>> " << PJ_VERSION << "\n";
+    assert_eq(expand_proj_aliases("WEB"),
+      "+proj=merc +a=6378137 +b=6378137 +nadgrids=@null +no_defs");
+#else
     assert_eq(expand_proj_aliases("WEB"),
       "+proj=webmerc +datum=WGS84");
+#endif
 
     assert_eq(expand_proj_aliases("FI"),
       "+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl "

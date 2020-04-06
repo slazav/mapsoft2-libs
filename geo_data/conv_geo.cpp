@@ -11,7 +11,12 @@ std::string expand_proj_aliases(const std::string & pars){
     return "+datum=WGS84 +proj=lonlat";
 
   if (pars == "WEB") // web mercator
+  // in PROJ4 webmerc projection is not supported. 
+#if PJ_VERSION < 500
+    return "+proj=merc +a=6378137 +b=6378137 +nadgrids=@null +no_defs";
+#else
     return "+proj=webmerc +datum=WGS84";
+#endif
 
   if (pars == "FI" || pars == "KKJ") // Finnish maps, KKJ (EPSG:2393?)
     return "+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl"
