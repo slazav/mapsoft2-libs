@@ -1,5 +1,5 @@
 # Run command and check its output and status code.
-function assert_cmd(){
+assert_cmd(){
   cmd="$1"
   exp="$2"
   set +o errexit
@@ -24,7 +24,7 @@ function assert_cmd(){
 
 # Check difference between two files.
 # On sucsess the second one will be deleted.
-function assert_diff(){
+assert_diff(){
   f_exp="$1"
   f_res="$2"
     if ! diff -q -- "$f_exp" "$f_res"; then
@@ -37,7 +37,7 @@ function assert_diff(){
 }
 
 # Remove time and cairo version from pdf file.
-function fix_pdf(){
+fix_pdf(){
   sed -i 's/CreationDate (D:[^)]\+)/CreationDate ()/
           s/Producer (.\+)/Producer ()/' $@
 }

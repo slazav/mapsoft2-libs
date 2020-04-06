@@ -2,7 +2,7 @@
 
 prog=${1:-./getopt.test}
 
-function do_test(){
+do_test(){
   args=$1
   exp=$2
   res="$($prog $args 2>&1)" ||:
