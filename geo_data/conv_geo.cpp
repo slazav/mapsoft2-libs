@@ -25,6 +25,10 @@ std::string expand_proj_aliases(const std::string & pars){
   if (pars == "ETRS-TM35FIN" || pars == "ETRS89") // Finnish maps (EPSG:3067?)
     return "+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs";
 
+  if (pars == "GB") // Breat Britain maps (EPSG:27700)
+    return "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717"
+           " +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs";
+
   if (pars == "CH") // Swiss maps
     return "+proj=somerc +lat_0=46.95240555555556"\
       " +lon_0=7.439583333333333 +x_0=600000 +y_0=200000"\
