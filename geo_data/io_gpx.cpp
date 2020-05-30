@@ -119,6 +119,9 @@ All other elements are stored in the Opt object and handeled as strings.
 * extensions -- You can add extend GPX by adding your own elements from
   another schema here.
 
+Element order is important, see:
+https://github.com/wladich/nakarte/issues/386
+
 -----------------
     support in Mapsoft:
 
