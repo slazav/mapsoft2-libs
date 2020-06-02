@@ -114,11 +114,41 @@ class Image {
 
     /******************************************************/
     // Fast get functions for different image types.
+    // Return raw data.
     // Image type and coordinate range should be checked before.
 
-    // Fast get function for image type IMAGE_32ARGB.
+    // Fast get function for image type IMAGE_32ARGB
     uint32_t get32(const size_t x, const size_t y) const{
       return ((uint32_t*)data_.get())[w*y+x]; }
+
+    // Fast get function for image type IMAGE_16
+    uint16_t get16(const size_t x, const size_t y) const{
+      return ((uint16_t*)data_.get())[w*y+x]; }
+
+    // Fast get function for image types IMAGE_8 and IMAGE_8PAL
+    uint8_t get8(const size_t x, const size_t y) const{
+      return data_.get()[w*y+x]; }
+
+    // Fast get function for image type IMAGE_1.
+    bool get1(const size_t x, const size_t y) const{
+      size_t b = (w*y+x)/8; // byte
+      size_t o = (w*y+x)%8; // offset
+      uint8_t v = data_.get()[b];
+      return (v >> o) & 1;
+    }
+
+    // Fast get function for image type IMAGE_FLOAT
+    float getF(const size_t x, const size_t y) const{
+      return ((float *)data_.get())[w*y+x]; }
+
+    // Fast get function for image type IMAGE_DOUBLE
+    double getD(const size_t x, const size_t y) const{
+      return ((double *)data_.get())[w*y+x]; }
+
+    /******************************************************/
+    // Fast color get functions for different image types.
+    // Return 32-bit colors.
+    // Image type and coordinate range should be checked before.
 
     // Fast get function for image type IMAGE_24RGB
     uint32_t get24(const size_t x, const size_t y) const{
@@ -129,20 +159,12 @@ class Image {
               data_.get()[i0+2];
     }
 
-    // Fast get function for image type IMAGE_16
-    uint16_t get16(const size_t x, const size_t y) const{
-      return ((uint16_t*)data_.get())[w*y+x]; }
-
-    // Fast color get function for image type IMAGE_16.
-    // To convert 16-bit data into color the less sagnificant byte is skipped.
+    // Fast color get function for image type IMAGE_16
+    // To convert 16-bit data into color the less significant byte is skipped.
     uint32_t get16col(const size_t x, const size_t y) const{
       uint16_t c = (((uint16_t*)data_.get())[w*y+x] >> 8) & 0xFF;
       return 0xFF000000 + (c<<16) + (c<<8) + c;
     }
-
-    // Fast get function for image types IMAGE_8 and IMAGE_8PAL
-    uint8_t get8(const size_t x, const size_t y) const{
-      return data_.get()[w*y+x]; }
 
     // Fast color get function for image type IMAGE_8
     // Image type and coordinate range should be checked before.
@@ -156,26 +178,10 @@ class Image {
       return cmap[data_.get()[w*y+x]];
     }
 
-    // Fast get function for image type IMAGE_1.
-    bool get1(const size_t x, const size_t y) const{
-      size_t b = (w*y+x)/8; // byte
-      size_t o = (w*y+x)%8; // offset
-      uint8_t v = data_.get()[b];
-      return (v >> o) & 1;
-    }
-
-    // Fast color get function for image type IMAGE_1.
+    // Fast color get function for image type IMAGE_1
     uint32_t get1col(const size_t x, const size_t y) const{
       return get1(x,y) ? 0xFFFFFFFF:0xFF000000;
     }
-
-    // Fast get function for image type IMAGE_FLOAT
-    float getF(const size_t x, const size_t y) const{
-      return ((float *)data_.get())[w*y+x]; }
-
-    // Fast get function for image type IMAGE_DOUBLE
-    double getD(const size_t x, const size_t y) const{
-      return ((double *)data_.get())[w*y+x]; }
 
     // Color get function for IMAGE_UNKNOWN.
     // To be redefined in non-standard image classes.
