@@ -11,7 +11,9 @@ downloading and cache.
 #include <string>
 #include <map>
 #include <queue>
-#include <glibmm.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 class Downloader {
   private:
@@ -29,10 +31,10 @@ class Downloader {
     std::queue<std::string> urls;
 
     bool worker_needed;
-    Glib::Thread *worker_thread;
-    Glib::Mutex  *worker_mutex;
-    Glib::Cond   *wakeup_cond;  // to wake up worker thread after adding an url
-    Glib::Cond   *ready_cond;   // to tell main thread that data is available 
+    std::thread worker_thread;
+    std::mutex data_mutex;
+    std::unique_lock<std::mutex> lk; // lock for the main thread
+    std::condition_variable data_cond;
 
   public:
 

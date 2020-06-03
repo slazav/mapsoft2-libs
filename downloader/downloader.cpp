@@ -13,25 +13,19 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
   return n*l;
 }
 
-Downloader::Downloader(): max_conn(4), num_conn(0), worker_needed(1) {
-  worker_mutex = new(Glib::Mutex);
-  wakeup_cond = new(Glib::Cond);
-  ready_cond = new(Glib::Cond);
-  worker_thread =
-    Glib::Thread::create(sigc::mem_fun(*this, &Downloader::worker), true);
+Downloader::Downloader():
+       max_conn(4), num_conn(0), worker_needed(1),
+       lk(data_mutex, std::defer_lock),
+       worker_thread(&Downloader::worker, this) {
   std::cerr << "Downloader: create thread\n";
 }
 
 Downloader::~Downloader(){
-  worker_mutex->lock();
+  lk.lock();
   worker_needed = false;
-  wakeup_cond->signal();
-  worker_mutex->unlock();
-
-  worker_thread->join();
-  delete(worker_mutex);
-  delete(wakeup_cond);
-  delete(ready_cond);
+  lk.unlock();
+  data_cond.notify_one();
+  worker_thread.join();
 }
 
 /**********************************/
@@ -41,12 +35,12 @@ Downloader::add(const std::string & url){
   if (data.count(url)) return;
   std::cerr << "Downloader: add url to queue: " << url << "\n";
 
-  worker_mutex->lock();
+  lk.lock();
   urls.push(url);
   status.emplace(url, 0);
   data.emplace(url, std::string());
-  wakeup_cond->signal();
-  worker_mutex->unlock();
+  lk.unlock();
+  data_cond.notify_one();
 }
 
 std::string &
@@ -55,11 +49,9 @@ Downloader::get(const std::string & url){
   if (data.count(url) == 0) add(url);
 
   // wait for downloading
-  worker_mutex->lock();
-  while (status[url] < 2) {
-    wakeup_cond->wait(*worker_mutex);
-  }
-  worker_mutex->unlock();
+  lk.lock();
+  while (status[url] < 2) data_cond.wait(lk);
+  lk.unlock();
 
   // return result
   if (status[url] == 2)
@@ -84,11 +76,14 @@ Downloader::worker(){
   // Limit the amount of simultaneous connections
   curl_multi_setopt(cm, CURLMOPT_MAXCONNECTS, (long)max_conn);
 
+  // lock for this thread
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
+
   do {
 
     // Add urls from queue for downloading
     while (num_conn<max_conn && urls.size()>0) {
-      worker_mutex->lock();
+      lk.lock();
       std::string &u = urls.front();
       status[u] = 1; // IN PROGRESS
 
@@ -104,21 +99,20 @@ Downloader::worker(){
       std::cerr << "Downloader: start downloading: " << u << "\n";
       urls.pop();
       num_conn++;
-      worker_mutex->unlock();
+      lk.unlock();
     }
 
-    worker_mutex->lock();
     curl_multi_perform(cm, &still_alive);
     while((msg = curl_multi_info_read(cm, &msgs_left))) {
       if(msg->msg == CURLMSG_DONE) {
         char *url;
         CURL *e = msg->easy_handle;
         curl_easy_getinfo(msg->easy_handle, CURLINFO_EFFECTIVE_URL, &url);
-        void *str;
-        curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &str);
         std::cerr << "R: "<< msg->data.result << " - "
                   << curl_easy_strerror(msg->data.result)
                   << " <" << url << ">\n";
+
+        lk.lock();
         if (msg->data.result==0) {
           status[url] = 2; // OK
         }
@@ -126,9 +120,10 @@ Downloader::worker(){
           status[url] = 3; // ERROR
           data[url] = curl_easy_strerror(msg->data.result);
         }
+        lk.unlock();
         curl_multi_remove_handle(cm, e);
         curl_easy_cleanup(e);
-        wakeup_cond->signal();
+        data_cond.notify_one();
       }
       else {
         // return some error?
@@ -136,13 +131,12 @@ Downloader::worker(){
       }
       num_conn--;
     }
-    worker_mutex->unlock();
 
     // If queue is empty wait for wakeup_cond
-    worker_mutex->lock();
+    lk.lock();
     if (urls.empty() && !still_alive)
-      wakeup_cond->wait(*worker_mutex);
-    worker_mutex->unlock();
+      data_cond.wait(lk);
+    lk.unlock();
 
     if (still_alive)
       curl_multi_wait(cm, NULL, 0, 1000, NULL);
