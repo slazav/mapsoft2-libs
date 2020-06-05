@@ -1,6 +1,7 @@
 #include <tiffio.h>
 #include <cstring>
 #include "image_tiff.h"
+#include "tiff_string.h"
 #include "image_colors.h"
 
 // custom error handler
@@ -38,24 +39,42 @@ iPoint image_size_tiff(const std::string & file){
   return iPoint(w,h);
 }
 
+// getting file dimensions from string
+iPoint image_size_tiff_string(const std::string & data){
+  TIFF* tif = NULL;
+  uint32_t w, h;
+
+  try {
+    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+
+    TiffStringData tdata(data);
+    tif = TIFFStringOpen(tdata);
+    if (!tif) throw Err() << "image_size_tiff: can't open TIFF";
+
+    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+
+    throw Err();
+  }
+  catch (Err e){
+    if (tif) TIFFClose(tif);
+    if (e.str()!="") throw e;
+  }
+  return iPoint(w,h);
+}
+
 /**********************************************************/
 
 Image
-image_load_tiff(const std::string & file, const double scale){
-  TIFF* tif = NULL;
+image_load_tiff(TIFF* tif, const double scale){
+
+  if (!tif) throw Err() << "image_load_tiff: can't load tiff";
+  if (scale < 1) throw Err() << "image_load_tiff: wrong scale: " << scale;
+
   uint8_t *cbuf = NULL;
   Image img;
 
   try {
-
-    if (scale < 1)
-      throw Err() << "image_load_tiff: wrong scale: " << scale;
-
-    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
-
-    // open file
-    tif = TIFFOpen(file.c_str(), "rb");
-    if (!tif) throw Err() << "image_load_tiff: can't open file: " << file;
 
     // image dimensions
     uint32_t w, h;
@@ -212,6 +231,40 @@ image_load_tiff(const std::string & file, const double scale){
   }
   catch (Err e) {
     if (cbuf) _TIFFfree(cbuf);
+    if (e.str() != "") throw e;
+  }
+  return img;
+}
+
+Image
+image_load_tiff(const std::string & file, const double scale){
+  TIFF* tif = NULL;
+  Image img;
+  try {
+    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+    // open file
+    tif = TIFFOpen(file.c_str(), "rb");
+    if (!tif) throw Err() << "image_load_tiff: can't open file: " << file;
+    img = image_load_tiff(tif, scale);
+  }
+  catch (Err e) {
+    if (tif) TIFFClose(tif);
+    if (e.str() != "") throw e;
+  }
+  return img;
+}
+
+Image
+image_load_tiff_string(const std::string & data, const double scale){
+  TIFF* tif = NULL;
+  Image img;
+  try {
+    TiffStringData tdata(data);
+    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+    tif = TIFFStringOpen(tdata);
+    img = image_load_tiff(tif, scale);
+  }
+  catch (Err e) {
     if (tif) TIFFClose(tif);
     if (e.str() != "") throw e;
   }
