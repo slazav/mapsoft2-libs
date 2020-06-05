@@ -140,7 +140,7 @@ main(){
       o.put("png_format", "pal");
       o.put("cmap_colors", 300); // too many colors
       assert_err( image_save_png(img, "test_png/img_32_xpal.png", o),
-        "image_remap: palette length is out of range");
+        "image_remap: palette length is out of range: test_png/img_32_xpal.png");
 
     }
 
@@ -596,7 +596,7 @@ main(){
         assert_eq(I1.get_rgb(pt1.x, pt1.y), I0.get_rgb(rint(pt1.x*sc), rint(pt1.y*sc)));
       }
       assert_err(image_load_png("test_png/img_32_def.png", 0),
-        "image_load_png: wrong scale: 0");
+        "image_load_png: wrong scale: 0: test_png/img_32_def.png");
     }
 
 /*

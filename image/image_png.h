@@ -8,13 +8,17 @@
 
 
 // getting file dimensions
-iPoint image_size_png(const std::string & file);
+iPoint image_size_png(std::istream & str);
+iPoint image_size_png(const std::string & fname);
 
 // load the whole image
-Image image_load_png(const std::string & file, const double scale=1);
+Image image_load_png(std::istream & str, const double scale);
+Image image_load_png(const std::string & fname, const double scale=1);
 
 // save the whole image
-void image_save_png(const Image & im, const std::string & file,
+void image_save_png(const Image & im, std::ostream & str,
+                    const Opt & opt = Opt());
+void image_save_png(const Image & im, const std::string & fname,
                     const Opt & opt = Opt());
 
 #endif

@@ -1,14 +1,24 @@
 #include <cstring>
+#include <fstream>
 #include <png.h>
 #include "image_png.h"
 #include "image_colors.h"
 
 /**********************************************************/
 
-iPoint
-image_size_png(const std::string & file){
+void
+png_read_data_fn(png_structp png_ptr, png_bytep data, size_t length){
+  auto str = (std::istream *) png_get_io_ptr(png_ptr);
+  str->read((char*)data, length);
+}
 
-  FILE * infile = NULL;
+/**********************************************************/
+
+iPoint
+image_size_png(std::istream & str){
+
+  if (!str)  throw Err() << "image_size_png: can't open file";
+
   png_structp png_ptr = NULL;
   png_infop info_ptr = NULL, end_info = NULL;
 
@@ -16,14 +26,12 @@ image_size_png(const std::string & file){
 
   try {
 
-    if ((infile = fopen(file.c_str(), "rb")) == NULL)
-      throw Err() << "image_size_png: can't open file: " << file;
-
     png_byte sign[8];
     const char sign_size = 8;
-    if ((fread(sign, 1,sign_size,infile)!=sign_size)||
-        (png_sig_cmp(sign, 0, sign_size)!=0))
-      throw Err() << "image_size_png: not a PNG file: " << file;
+    str.read((char*)sign, sign_size);
+    if (str.gcount()!=sign_size ||
+        png_sig_cmp(sign, 0, sign_size)!=0)
+      throw Err() << "image_size_png: not a PNG file";
 
     png_ptr = png_create_read_struct
        (PNG_LIBPNG_VER_STRING, NULL,NULL,NULL);
@@ -38,7 +46,8 @@ image_size_png(const std::string & file){
     if (setjmp(png_jmpbuf(png_ptr)))
       throw Err() << "image_size_png: can't do setjmp";
 
-    png_init_io(png_ptr, infile);
+    png_set_read_fn(png_ptr, &str, png_read_data_fn);
+
     png_set_sig_bytes(png_ptr, sign_size);
     png_read_info(png_ptr, info_ptr);
 
@@ -50,21 +59,28 @@ image_size_png(const std::string & file){
   }
   catch(Err e) {
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    if (infile) fclose(infile);
     if (e.str() != "") throw e;
   }
   return iPoint(w, height);
 }
 
-
-
+iPoint
+image_size_png(const std::string & fname){
+  std::ifstream str(fname);
+  iPoint ret;
+  try { ret = image_size_png(str); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
 
 /**********************************************************/
 
 Image
-image_load_png(const std::string & file, const double scale){
+image_load_png(std::istream & str, const double scale){
 
-  FILE * infile = NULL;
+  if (!str)  throw Err() << "image_load_png: can't open file";
+  if (scale < 1) throw Err() << "image_load_png: wrong scale: " << scale;
+
   png_structp png_ptr = NULL;
   png_infop info_ptr = NULL, end_info = NULL;
 
@@ -73,17 +89,12 @@ image_load_png(const std::string & file, const double scale){
 
   try {
 
-    if (scale < 1)
-      throw Err() << "image_load_png: wrong scale: " << scale;
-
-    if ((infile = fopen(file.c_str(), "rb")) == NULL)
-      throw Err() << "image_load_png: can't open file: " << file;
-
     png_byte sign[8];
     const char sign_size = 8;
-    if ((fread(sign, 1,sign_size,infile)!=sign_size)||
-        (png_sig_cmp(sign, 0, sign_size)!=0))
-      throw Err() << "image_load_png: not a PNG file: " << file;
+    str.read((char*)sign, sign_size);
+    if (str.gcount()!=sign_size ||
+        png_sig_cmp(sign, 0, sign_size)!=0)
+      throw Err() << "image_load_png: not a PNG file";
 
     png_ptr = png_create_read_struct
        (PNG_LIBPNG_VER_STRING, NULL,NULL,NULL);
@@ -98,7 +109,7 @@ image_load_png(const std::string & file, const double scale){
     if (setjmp(png_jmpbuf(png_ptr)))
       throw Err() << "image_load_png: can't do setjmp";
 
-    png_init_io(png_ptr, infile);
+    png_set_read_fn(png_ptr, &str, png_read_data_fn);
     png_set_sig_bytes(png_ptr, sign_size);
     png_read_info(png_ptr, info_ptr);
 
@@ -248,7 +259,6 @@ image_load_png(const std::string & file, const double scale){
   catch(Err e) {
     if (row_buf) png_free(png_ptr, row_buf);
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    if (infile) fclose(infile);
     if (e.str() != "") throw e;
   }
   return img;
@@ -274,14 +284,37 @@ image_load_png(const std::string & file, const double scale){
   }
 */
 
+Image
+image_load_png(const std::string & fname, const double scale){
+  std::ifstream str(fname);
+  Image ret;
+  try { ret = image_load_png(str, scale); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
 
 /**********************************************************/
 
 void
-image_save_png(const Image & im, const std::string & file,
+png_write_data_fn(png_structp png_ptr, png_bytep data, size_t length){
+  auto str = (std::ostream *) png_get_io_ptr(png_ptr);
+  str->write((char*)data, length);
+}
+
+void
+png_flush_data_fn(png_structp png_ptr){
+  auto str = (std::ostream *) png_get_io_ptr(png_ptr);
+  str->flush();
+}
+
+/**********************************************************/
+
+void
+image_save_png(const Image & im, std::ostream & str,
                const Opt & opt){
 
-  FILE *outfile = NULL;
+  if (!str) throw Err() << "image_save_png: can't open file";
+
   png_structp png_ptr = NULL;
   png_infop info_ptr = NULL;
   png_bytep buf = NULL;
@@ -304,27 +337,23 @@ image_save_png(const Image & im, const std::string & file,
     }
 
     // set PNG color type from options
-    std::string str;
-    str = opt.get("png_format", "");
-    if (str != "") {
-      if      (str == "argb")  {color_type = PNG_COLOR_TYPE_RGB_ALPHA;  bits=8;}
-      else if (str == "rgb")   {color_type = PNG_COLOR_TYPE_RGB;        bits=8;}
-      else if (str == "grey")  {color_type = PNG_COLOR_TYPE_GRAY;       bits=8;}
-      else if (str == "agrey") {color_type = PNG_COLOR_TYPE_GRAY_ALPHA; bits=8;}
-      else if (str == "pal")   {color_type = PNG_COLOR_TYPE_PALETTE;    bits=8;}
-      else throw Err() << "image_save_png: unknown png_format setting: " << str << "\n";
+    std::string s;
+    s = opt.get("png_format", "");
+    if (s != "") {
+      if      (s == "argb")  {color_type = PNG_COLOR_TYPE_RGB_ALPHA;  bits=8;}
+      else if (s == "rgb")   {color_type = PNG_COLOR_TYPE_RGB;        bits=8;}
+      else if (s == "grey")  {color_type = PNG_COLOR_TYPE_GRAY;       bits=8;}
+      else if (s == "agrey") {color_type = PNG_COLOR_TYPE_GRAY_ALPHA; bits=8;}
+      else if (s == "pal")   {color_type = PNG_COLOR_TYPE_PALETTE;    bits=8;}
+      else throw Err() << "image_save_png: unknown png_format setting: " << s << "\n";
     }
 
     // png palette
     Image im8 = im;
-    if (str == "pal"){
+    if (s == "pal"){
       std::vector<uint32_t> colors = image_colormap(im, opt);
       im8 = image_remap(im, colors, opt);
     }
-
-    // open file
-    outfile = fopen(file.c_str(), "wb");
-    if (!outfile) throw Err() << "image_save_png: can't open file: " << file;
 
     png_ptr = png_create_write_struct
       (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -338,8 +367,7 @@ image_save_png(const Image & im, const std::string & file,
     if (setjmp(png_jmpbuf(png_ptr)))
       throw Err() << "image_save_png: can't do setjmp";
 
-    png_init_io(png_ptr, outfile);
-
+    png_set_write_fn(png_ptr, &str, png_write_data_fn, png_flush_data_fn);
 
     png_set_IHDR(png_ptr, info_ptr, im.width(), im.height(),
        bits, color_type, PNG_INTERLACE_NONE,
@@ -424,7 +452,14 @@ image_save_png(const Image & im, const std::string & file,
   catch (Err e) {
     if (buf)     png_free(png_ptr, buf);
     if (png_ptr) png_destroy_write_struct(&png_ptr, &info_ptr);
-    if (outfile) fclose(outfile);
     if (e.str() != "") throw e;
   }
+}
+
+void
+image_save_png(const Image & im, const std::string & fname,
+               const Opt & opt){
+  std::ofstream str(fname);
+  try { image_save_png(im, str, opt); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
 }
