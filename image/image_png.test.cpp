@@ -13,13 +13,13 @@ main(){
 
     // size
     assert_err(image_size_png("test_png/missing"),
-      "image_size_png: can't open file: test_png/missing");
+      "Can't open file: test_png/missing");
     assert_err(image_size_png("test_png/Readme.md"),
       "image_size_png: not a PNG file: test_png/Readme.md");
 
     // load
     assert_err(image_load_png("test_png/missing"),
-      "image_load_png: can't open file: test_png/missing");
+      "Can't open file: test_png/missing");
     assert_err(image_load_png("test_png/Readme.md"),
       "image_load_png: not a PNG file: test_png/Readme.md");
 

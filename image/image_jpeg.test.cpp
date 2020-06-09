@@ -13,15 +13,15 @@ main(){
 
     // size
     assert_err(image_size_jpeg("test_jpeg/missing"),
-      "image_size_jpeg: can't open file: test_jpeg/missing");
+      "Can't open file: test_jpeg/missing");
     assert_err(image_size_jpeg("test_jpeg/Readme.md"),
-      "image_size_jpeg: Not a JPEG file: starts with 0x45 0x6d");
+      "image_size_jpeg: Not a JPEG file: starts with 0x45 0x6d: test_jpeg/Readme.md");
 
     // load
     assert_err(image_load_jpeg("test_jpeg/missing"),
-      "image_load_jpeg: can't open file: test_jpeg/missing");
+      "Can't open file: test_jpeg/missing");
     assert_err(image_load_jpeg("test_jpeg/Readme.md"),
-      "image_load_jpeg: Not a JPEG file: starts with 0x45 0x6d");
+      "image_load_jpeg: Not a JPEG file: starts with 0x45 0x6d: test_jpeg/Readme.md");
 
     /*********************************************/
     // Original image
@@ -199,7 +199,7 @@ main(){
                           I0.get_rgb(rint(pt1.x*sc), rint(pt1.y*sc))) < 20);
       }
       assert_err(image_load_jpeg("test_jpeg/img_32_def.jpg", 0),
-        "image_load_jpeg: wrong scale: 0");
+        "image_load_jpeg: wrong scale: 0: test_jpeg/img_32_def.jpg");
     }
 
     { // loading from stream -- IMAGE_32ARGB

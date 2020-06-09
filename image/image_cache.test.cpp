@@ -23,7 +23,7 @@ main(){
     assert_eq(i1.data(), i3.data());
 
     assert_err(icache.get("test_data/missing.jpg"),
-      "image_load_jpeg: can't open file: test_data/missing.jpg");
+      "Can't open file: test_data/missing.jpg");
 
   }
   catch (Err e) {

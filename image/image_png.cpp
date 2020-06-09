@@ -64,15 +64,6 @@ image_size_png(std::istream & str){
   return iPoint(w, height);
 }
 
-iPoint
-image_size_png(const std::string & fname){
-  std::ifstream str(fname);
-  iPoint ret;
-  try { ret = image_size_png(str); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
-  return ret;
-}
-
 /**********************************************************/
 
 Image
@@ -284,14 +275,6 @@ image_load_png(std::istream & str, const double scale){
   }
 */
 
-Image
-image_load_png(const std::string & fname, const double scale){
-  std::ifstream str(fname);
-  Image ret;
-  try { ret = image_load_png(str, scale); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
-  return ret;
-}
 
 /**********************************************************/
 
@@ -456,10 +439,33 @@ image_save_png(const Image & im, std::ostream & str,
   }
 }
 
+/**********************************************************/
+
+iPoint
+image_size_png(const std::string & fname){
+  std::ifstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  iPoint ret;
+  try { ret = image_size_png(str); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
+
+Image
+image_load_png(const std::string & fname, const double scale){
+  std::ifstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  Image ret;
+  try { ret = image_load_png(str, scale); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
+
 void
 image_save_png(const Image & im, const std::string & fname,
                const Opt & opt){
   std::ofstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
   try { image_save_png(im, str, opt); }
   catch(Err e){ throw Err() << e.str() << ": " << fname; }
 }

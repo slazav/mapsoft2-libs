@@ -13,15 +13,15 @@ main(){
 
     // size
     assert_err(image_size_tiff("test_tiff/missing"),
-      "TIFFOpen error: test_tiff/missing: No such file or directory");
+      "Can't open file: test_tiff/missing");
     assert_err(image_size_tiff("test_tiff/Readme.md"),
-      "test_tiff/Readme.md error: Not a TIFF or MDI file, bad magic number 27973 (0x6d45)");
+      "TIFF error: Not a TIFF or MDI file, bad magic number 27973 (0x6d45): test_tiff/Readme.md");
 
     // load
     assert_err(image_load_tiff("test_tiff/missing"),
-      "TIFFOpen error: test_tiff/missing: No such file or directory");
+      "Can't open file: test_tiff/missing");
     assert_err(image_load_tiff("test_tiff/Readme.md"),
-      "test_tiff/Readme.md error: Not a TIFF or MDI file, bad magic number 27973 (0x6d45)");
+      "TIFF error: Not a TIFF or MDI file, bad magic number 27973 (0x6d45): test_tiff/Readme.md");
 
     /*********************************************/
     // Original image
@@ -515,7 +515,7 @@ main(){
         assert_eq(I1.get_rgb(pt1.x, pt1.y), I0.get_rgb(rint(pt1.x*sc), rint(pt1.y*sc)));
       }
       assert_err(image_load_tiff("test_tiff/img_32_def.tif", 0),
-        "image_load_tiff: wrong scale: 0");
+        "image_load_tiff: wrong scale: 0: test_tiff/img_32_def.tif");
     }
 
     { // loading from std::istring

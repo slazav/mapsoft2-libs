@@ -1,8 +1,8 @@
 #include <tiffio.h>
 #include <cstring>
 #include <string>
+#include <fstream>
 #include "image_tiff.h"
-//#include "tiff_string.h"
 #include "image_colors.h"
 
 /**********************************************************/
@@ -61,7 +61,7 @@ TiffStrSizeProc(thandle_t handle){
 } // extern("C")
 
 TIFF* TIFFStreamOpen(std::istream & str){
-  return TIFFClientOpen("TiffString", "rb", (thandle_t) &str,
+  return TIFFClientOpen("TIFF", "rb", (thandle_t) &str,
         TiffStrReadProc, TiffStrWriteProc,
         TiffStrSeekProc, TiffStrCloseProc, TiffStrSizeProc,
         NULL, NULL
@@ -69,30 +69,6 @@ TIFF* TIFFStreamOpen(std::istream & str){
 }
 
 /**********************************************************/
-
-// getting file dimensions
-iPoint image_size_tiff(const std::string & file){
-  TIFF* tif = NULL;
-  uint32_t w, h;
-
-  try {
-    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
-
-    tif = TIFFOpen(file.c_str(), "rb");
-    if (!tif) throw Err() << "image_size_tiff: can't open file: " << file;
-
-    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
-    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
-
-    throw Err();
-  }
-  catch (Err e){
-    if (tif) TIFFClose(tif);
-    if (e.str()!="") throw e;
-  }
-  return iPoint(w,h);
-}
-
 // getting file dimensions from stream
 iPoint image_size_tiff(std::istream & str){
   TIFF* tif = NULL;
@@ -119,15 +95,19 @@ iPoint image_size_tiff(std::istream & str){
 /**********************************************************/
 
 Image
-image_load_tiff(TIFF* tif, const double scale){
+image_load_tiff(std::istream & str, const double scale){
 
-  if (!tif) throw Err() << "image_load_tiff: can't load tiff";
   if (scale < 1) throw Err() << "image_load_tiff: wrong scale: " << scale;
 
   uint8_t *cbuf = NULL;
+  TIFF* tif = NULL;
   Image img;
 
   try {
+
+    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+    tif = TIFFStreamOpen(str);
+    if (!tif) throw Err() << "image_load_tiff: can't load tiff";
 
     // image dimensions
     uint32_t w, h;
@@ -284,44 +264,12 @@ image_load_tiff(TIFF* tif, const double scale){
   }
   catch (Err e) {
     if (cbuf) _TIFFfree(cbuf);
-    if (e.str() != "") throw e;
-  }
-  return img;
-}
-
-Image
-image_load_tiff(const std::string & file, const double scale){
-  TIFF* tif = NULL;
-  Image img;
-  try {
-    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
-    // open file
-    tif = TIFFOpen(file.c_str(), "rb");
-    if (!tif) throw Err() << "image_load_tiff: can't open file: " << file;
-    img = image_load_tiff(tif, scale);
-  }
-  catch (Err e) {
     if (tif) TIFFClose(tif);
     if (e.str() != "") throw e;
   }
   return img;
 }
 
-Image
-image_load_tiff(std::istream & str, const double scale){
-  TIFF* tif = NULL;
-  Image img;
-  try {
-    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
-    tif = TIFFStreamOpen(str);
-    img = image_load_tiff(tif, scale);
-  }
-  catch (Err e) {
-    if (tif) TIFFClose(tif);
-    if (e.str() != "") throw e;
-  }
-  return img;
-}
 
 /**********************************************************/
 
@@ -456,3 +404,35 @@ void image_save_tiff(const Image & im, const std::string & file, const Opt & opt
 }
 
 
+/**********************************************************/
+
+iPoint
+image_size_tiff(const std::string & fname){
+  std::ifstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  iPoint ret;
+  try { ret = image_size_tiff(str); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
+
+Image
+image_load_tiff(const std::string & fname, const double scale){
+  std::ifstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  Image ret;
+  try { ret = image_load_tiff(str, scale); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
+
+/*
+void
+image_save_tiff(const Image & im, const std::string & fname,
+               const Opt & opt){
+  std::ofstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  try { image_save_tiff(im, str, opt); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+}
+*/

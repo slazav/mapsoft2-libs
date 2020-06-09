@@ -1,5 +1,6 @@
 #include "image_jpeg.h"
 #include <iostream>
+#include <fstream>
 #include <jpeglib.h>
 #include <stdio.h>
 #include <cstring>
@@ -100,40 +101,6 @@ jpeg_stream_src (j_decompress_ptr cinfo, std::istream* str){
 
 /**********************************************************/
 iPoint
-image_size_jpeg(const std::string & file){
-
-  struct jpeg_decompress_struct cinfo;
-  struct jpeg_error_mgr jerr;
-  FILE * infile;
-
-  // open file, get image size
-  cinfo.err = jpeg_std_error(&jerr);
-  jerr.error_exit = my_error_exit;
-  error_pref = "image_size_jpeg";
-  // note: it is an error to do jpeg_destroy_decompress
-  // before jpeg_create_decompress.
-  jpeg_create_decompress(&cinfo);
-
-  try {
-
-    if ((infile = fopen(file.c_str(), "rb")) == NULL)
-      throw Err() << "image_size_jpeg: can't open file: " << file;
-
-    jpeg_stdio_src(&cinfo, infile);
-    jpeg_read_header(&cinfo, TRUE);
-
-    throw Err();
-  }
-  catch (Err e){
-    jpeg_destroy_decompress(&cinfo);
-    if (infile) fclose(infile);
-    if (e.str() != "") throw e;
-  }
-  return iPoint(cinfo.image_width, cinfo.image_height);
-}
-
-/**********************************************************/
-iPoint
 image_size_jpeg(std::istream & str){
 
   struct jpeg_decompress_struct cinfo;
@@ -160,16 +127,20 @@ image_size_jpeg(std::istream & str){
 }
 
 /**********************************************************/
-/**********************************************************/
+
 Image
-image_load_jpeg(struct jpeg_decompress_struct & cinfo, const double scale){
+image_load_jpeg(std::istream & str, const double scale){
 
   if (scale < 1)
     throw Err() << "image_load_jpeg: wrong scale: " << scale;
 
   unsigned char *buf = NULL;
   Image img;
+  struct jpeg_decompress_struct cinfo;
+  jpeg_create_decompress(&cinfo);
   try {
+
+    jpeg_stream_src(&cinfo, &str);
 
     struct jpeg_error_mgr jerr;
     cinfo.err = jpeg_std_error(&jerr);
@@ -228,58 +199,12 @@ image_load_jpeg(struct jpeg_decompress_struct & cinfo, const double scale){
   catch (Err e){
     if (buf) delete[] buf;
     jpeg_abort_decompress(&cinfo);
-    if (e.str() != "") throw e;
-  }
-  return img;
-}
-
-/**********************************************************/
-Image
-image_load_jpeg(std::istream & str, const double scale){
-  FILE * infile;
-  Image img;
-  struct jpeg_decompress_struct cinfo;
-  jpeg_create_decompress(&cinfo);
-  try {
-
-    jpeg_stream_src(&cinfo, &str);
-    img = image_load_jpeg(cinfo, scale);
-    throw Err();
-  }
-  catch (Err e){
     jpeg_destroy_decompress(&cinfo);
-    if (infile) fclose(infile);
     if (e.str() != "") throw e;
   }
   return img;
 }
 
-/**********************************************************/
-Image
-image_load_jpeg(const std::string & file, const double scale){
-  FILE * infile;
-  Image img;
-  struct jpeg_decompress_struct cinfo;
-  jpeg_create_decompress(&cinfo);
-  try {
-
-    // open file, get image size
-    if ((infile = fopen(file.c_str(), "rb")) == NULL)
-      throw Err() << "image_load_jpeg: can't open file: " << file;
-
-    jpeg_stdio_src(&cinfo, infile);
-    img = image_load_jpeg(cinfo, scale);
-    throw Err();
-  }
-  catch (Err e){
-    jpeg_destroy_decompress(&cinfo);
-    if (infile) fclose(infile);
-    if (e.str() != "") throw e;
-  }
-  return img;
-}
-
-/**********************************************************/
 /**********************************************************/
 
 void
@@ -336,3 +261,35 @@ image_save_jpeg(const Image & im, const std::string & file, const Opt & opt){
     if (e.str() != "") throw e;
   }
 }
+
+/**********************************************************/
+iPoint
+image_size_jpeg(const std::string & fname){
+  std::ifstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  iPoint ret;
+  try { ret = image_size_jpeg(str); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
+
+Image
+image_load_jpeg(const std::string & fname, const double scale){
+  std::ifstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  Image ret;
+  try { ret = image_load_jpeg(str, scale); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  return ret;
+}
+
+/*
+void
+image_save_jpeg(const Image & im, const std::string & fname,
+               const Opt & opt){
+  std::ofstream str(fname);
+  if (!str) throw Err() << "Can't open file: " << fname;
+  try { image_save_jpeg(im, str, opt); }
+  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+}
+*/
