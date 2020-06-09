@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <fstream>
 #include "image_png.h"
 #include "err/assert_err.h"
 #include "image_colors.h"
@@ -597,6 +598,28 @@ main(){
       }
       assert_err(image_load_png("test_png/img_32_def.png", 0),
         "image_load_png: wrong scale: 0: test_png/img_32_def.png");
+    }
+
+    { //load from std::istream
+      std::ifstream str("test_png/img_32_def.png");
+      assert_err(image_load_png(str, 0),
+        "image_load_png: wrong scale: 0");
+      Image I = image_load_png(str, 1);
+      assert_eq(I.type(), IMAGE_32ARGB);
+      assert_eq(I.width(), 256);
+      assert_eq(I.height(), 128);
+      assert_eq(I.get_argb(0,0), 0xFF000000);
+      assert_eq(I.get_argb(127,127), 0xFFFEFE00);
+      assert_eq(I.get_argb(128,0), 0x00000000);
+      assert_eq(I.get_argb(255,127), 0xFeFd0000);
+      assert_eq(I.get_argb(64,64), 0xFF808000);
+      assert_eq(I.get_argb(192,64), 0x80400000);
+    }
+    { //load from std::istream
+      std::ifstream str("test_png/img_32_def.png");
+      iPoint p = image_size_png(str);
+      assert_eq(p.x, 256);
+      assert_eq(p.y, 128);
     }
 
 /*
