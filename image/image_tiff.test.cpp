@@ -518,26 +518,27 @@ main(){
         "image_load_tiff: wrong scale: 0");
     }
 
-    { // loading from string
+    { // loading from std::istring
       Image I0 = image_load_tiff("test_tiff/img_32_def.tif", 1);
 
       std::ifstream in("test_tiff/img_32_def.tif");
-      std::string s(std::istreambuf_iterator<char>(in), {});
-      Image I1 = image_load_tiff_string(s, 1);
-
-      iPoint p = image_size_tiff_string(s);
-
+      Image I1 = image_load_tiff(in, 1);
       assert_eq(I0.width(),  I1.width());
       assert_eq(I0.height(), I1.height());
-      assert_eq(I0.width(),  p.x);
-      assert_eq(I0.height(), p.y);
 
       for (int y=0;y<I0.height();y++)
         for (int x=0;x<I0.width();x++)
           assert_eq(I0.get_argb(x,y), I1.get_argb(x,y));
-
-
     }
+
+    { // loading from std::istring
+      iPoint p0 = image_size_tiff("test_tiff/img_32_def.tif");
+      std::ifstream in("test_tiff/img_32_def.tif");
+      iPoint p1 = image_size_tiff(in);
+      assert_eq(p0,p1);
+    }
+
+
 
 
 /*

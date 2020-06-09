@@ -1,9 +1,11 @@
 #include <tiffio.h>
 #include <cstring>
+#include <string>
 #include "image_tiff.h"
-#include "tiff_string.h"
+//#include "tiff_string.h"
 #include "image_colors.h"
 
+/**********************************************************/
 // custom error handler
 #include <cstdarg>
 void
@@ -12,7 +14,59 @@ my_error_exit (const char* module, const char* fmt, va_list args) {
   vsnprintf(buf, 1024, fmt, args);
   throw Err() << module << " error: " << buf;
 }
+/**********************************************************/
+// Open libtiff handler for reading from std::istream
 
+extern "C" {
+
+static tsize_t
+TiffStrReadProc(thandle_t handle, tdata_t buf, tsize_t size){
+  auto str = (std::istream*) handle;
+  str->read((char *)buf, size);
+  return str->gcount();
+}
+
+static tsize_t
+TiffStrWriteProc(thandle_t handle, tdata_t buf, tsize_t size){
+  return 0;
+}
+
+static toff_t
+TiffStrSeekProc(thandle_t handle, toff_t off, int whence){
+  auto str = (std::istream*) handle;
+  switch (whence) {
+    case SEEK_SET: str->seekg(off, std::ios_base::beg); break;
+    case SEEK_CUR: str->seekg(off, std::ios_base::cur); break;
+    case SEEK_END: str->seekg(off, std::ios_base::end); break;
+    default: return -1;
+  }
+  return str->tellg();
+}
+
+static int
+TiffStrCloseProc(thandle_t handle){
+  return 0;
+}
+
+static toff_t
+TiffStrSizeProc(thandle_t handle){
+  auto str = (std::istream*) handle;
+  auto pos0 = str->tellg();
+  str->seekg(std::ios_base::end);
+  auto pos1 = str->tellg();
+  str->seekg(pos0, std::ios_base::beg);
+  return pos1;
+}
+
+} // extern("C")
+
+TIFF* TIFFStreamOpen(std::istream & str){
+  return TIFFClientOpen("TiffString", "rb", (thandle_t) &str,
+        TiffStrReadProc, TiffStrWriteProc,
+        TiffStrSeekProc, TiffStrCloseProc, TiffStrSizeProc,
+        NULL, NULL
+    );
+}
 
 /**********************************************************/
 
@@ -39,16 +93,15 @@ iPoint image_size_tiff(const std::string & file){
   return iPoint(w,h);
 }
 
-// getting file dimensions from string
-iPoint image_size_tiff_string(const std::string & data){
+// getting file dimensions from stream
+iPoint image_size_tiff(std::istream & str){
   TIFF* tif = NULL;
   uint32_t w, h;
 
   try {
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
 
-    TiffStringData tdata(data);
-    tif = TIFFStringOpen(tdata);
+    tif = TIFFStreamOpen(str);
     if (!tif) throw Err() << "image_size_tiff: can't open TIFF";
 
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
@@ -255,13 +308,12 @@ image_load_tiff(const std::string & file, const double scale){
 }
 
 Image
-image_load_tiff_string(const std::string & data, const double scale){
+image_load_tiff(std::istream & str, const double scale){
   TIFF* tif = NULL;
   Image img;
   try {
-    TiffStringData tdata(data);
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
-    tif = TIFFStringOpen(tdata);
+    tif = TIFFStreamOpen(str);
     img = image_load_tiff(tif, scale);
   }
   catch (Err e) {
