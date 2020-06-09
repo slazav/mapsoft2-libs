@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <fstream>
 #include "err/assert_err.h"
 #include "image_jpeg.h"
 #include "image_colors.h"
@@ -200,6 +201,26 @@ main(){
       assert_err(image_load_jpeg("test_jpeg/img_32_def.jpg", 0),
         "image_load_jpeg: wrong scale: 0");
     }
+
+    { // loading from stream -- IMAGE_32ARGB
+      std::ifstream str("test_jpeg/img_32_def.jpg");
+      assert_eq(image_size_jpeg(str), iPoint(256,128));
+    }
+    { // loading from stream -- IMAGE_32ARGB
+      std::ifstream str("test_jpeg/img_32_def.jpg");
+      Image I = image_load_jpeg(str, 1);
+      assert_eq(I.type(), IMAGE_24RGB);
+      assert_eq(I.width(), 256);
+      assert_eq(I.height(), 128);
+      // check far from edges (smaller jpeg artifacts)
+      assert(color_dist(I.get_argb(10,10),   0xff141400) < 5);
+      assert(color_dist(I.get_argb(117,117), 0xffeaea00) < 5);
+      assert(color_dist(I.get_argb(138,10),  0xFF090000) < 5);
+      assert(color_dist(I.get_argb(245,117), 0xffE90000) < 5);
+      assert(color_dist(I.get_argb(64,64),   0xFF808000) < 5);
+      assert(color_dist(I.get_argb(192,64),  0xFF800000) < 5);
+    }
+
 
 /*
 std::cerr << std::hex << I.get_argb(10,10) << "\n";

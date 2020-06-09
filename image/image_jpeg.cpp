@@ -1,19 +1,101 @@
 #include "image_jpeg.h"
+#include <iostream>
 #include <jpeglib.h>
 #include <stdio.h>
 #include <cstring>
 
 std::string jpeg_error_message;
 
+/**********************************************************/
 
 // error prefix
 std::string error_pref = "jpeg";
+
 // custom error handler
 void
 my_error_exit (j_common_ptr cinfo) {
   const char buffer[JMSG_LENGTH_MAX] = "";
   (*cinfo->err->format_message) (cinfo, (char *)buffer);
   throw Err() << error_pref << ": " << buffer;
+}
+
+/**********************************************************/
+// reading JPEG from std::istream
+// see example in jdatasrc.c from libjpeg
+
+#define INPUT_BUF_SIZE 4096
+
+typedef struct {
+  struct jpeg_source_mgr pub; /* public fields */
+  std::istream * str;
+  JOCTET * buf;
+} my_source_mgr;
+
+
+void
+init_source(j_decompress_ptr cinfo) {
+  auto data = (my_source_mgr *)(cinfo->src);
+  data->str->seekg(std::ios_base::beg);
+}
+
+boolean
+fill_input_buffer(j_decompress_ptr cinfo) {
+  auto data = (my_source_mgr *)(cinfo->src);
+  data->str->read((char *)data->buf, INPUT_BUF_SIZE*sizeof(JOCTET));
+  size_t n = data->str->gcount();
+  if ( n == 0){
+    /* Insert a fake EOI marker */
+    data->buf[0] = (JOCTET) 0xFF;
+    data->buf[1] = (JOCTET) JPEG_EOI;
+    n = 2;
+  }
+  data->pub.next_input_byte = data->buf;
+  data->pub.bytes_in_buffer = n;
+//  data->start_of_file = false;
+  return true;
+}
+
+void
+skip_input_data(j_decompress_ptr cinfo, long count) {
+  if (count<1) return;
+  auto data = (my_source_mgr *)(cinfo->src);
+  if (count<data->pub.bytes_in_buffer){
+    data->pub.bytes_in_buffer -= count;
+    data->pub.next_input_byte += count;
+    return;
+  }
+  count -= data->pub.bytes_in_buffer;
+  data->str->seekg(count, std::ios_base::cur);
+  data->pub.bytes_in_buffer = 0;
+  data->pub.next_input_byte = data->buf;
+  return;
+}
+
+void
+term_source (j_decompress_ptr cinfo) { }
+
+void
+jpeg_stream_src (j_decompress_ptr cinfo, std::istream* str){
+  my_source_mgr * src;
+
+  if (cinfo->src == NULL) { /* first time for this JPEG object? */
+    cinfo->src = (struct jpeg_source_mgr *)
+      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
+      sizeof(my_source_mgr));
+    src = (my_source_mgr *) cinfo->src;
+    src->buf = (JOCTET *)
+      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
+      INPUT_BUF_SIZE * sizeof(JOCTET));
+  }
+  src = (my_source_mgr *) cinfo->src;
+  src->pub.init_source = init_source;
+  src->pub.fill_input_buffer = fill_input_buffer;
+  src->pub.skip_input_data   = skip_input_data;
+  src->pub.resync_to_restart = jpeg_resync_to_restart; /* default */
+  src->pub.term_source = term_source;
+  src->str = str;
+  src->pub.bytes_in_buffer = 0;
+  src->pub.next_input_byte = NULL;
 }
 
 /**********************************************************/
@@ -33,6 +115,7 @@ image_size_jpeg(const std::string & file){
   jpeg_create_decompress(&cinfo);
 
   try {
+
     if ((infile = fopen(file.c_str(), "rb")) == NULL)
       throw Err() << "image_size_jpeg: can't open file: " << file;
 
@@ -50,33 +133,49 @@ image_size_jpeg(const std::string & file){
 }
 
 /**********************************************************/
-// todo: scale and denominator support!
-Image
-image_load_jpeg(const std::string & file, const double scale){
+iPoint
+image_size_jpeg(std::istream & str){
 
-  unsigned char *buf = NULL;
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
-  FILE * infile;
-  Image img;
 
-  // note: it is an error to do jpeg_destroy_decompress
-  // before jpeg_create_decompress.
+  // open file, get image size
   cinfo.err = jpeg_std_error(&jerr);
   jerr.error_exit = my_error_exit;
-  error_pref = "image_load_jpeg";
+  error_pref = "image_size_jpeg";
+  // note: it is an error to do jpeg_destroy_decompress
+  // before jpeg_create_decompress.
   jpeg_create_decompress(&cinfo);
 
   try {
+    jpeg_stream_src(&cinfo, &str);
+    jpeg_read_header(&cinfo, TRUE);
+    throw Err();
+  }
+  catch (Err e){
+    jpeg_destroy_decompress(&cinfo);
+    if (e.str() != "") throw e;
+  }
+  return iPoint(cinfo.image_width, cinfo.image_height);
+}
 
-    if (scale < 1)
-      throw Err() << "image_load_jpeg: wrong scale: " << scale;
+/**********************************************************/
+/**********************************************************/
+Image
+image_load_jpeg(struct jpeg_decompress_struct & cinfo, const double scale){
 
-    // open file, get image size
-    if ((infile = fopen(file.c_str(), "rb")) == NULL)
-      throw Err() << "image_load_jpeg: can't open file: " << file;
+  if (scale < 1)
+    throw Err() << "image_load_jpeg: wrong scale: " << scale;
 
-    jpeg_stdio_src(&cinfo, infile);
+  unsigned char *buf = NULL;
+  Image img;
+  try {
+
+    struct jpeg_error_mgr jerr;
+    cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = my_error_exit;
+    error_pref = "image_load_jpeg";
+
     jpeg_read_header(&cinfo, TRUE);
 
     int denom;
@@ -98,7 +197,6 @@ image_load_jpeg(const std::string & file, const double scale){
     img = Image(w1,h1, IMAGE_24RGB);
     // adjust scale
     sc = std::min((double)(w-1)/(w1-1), (double)(h-1)/(h1-1));
-
 
     // main loop
 
@@ -125,12 +223,30 @@ image_load_jpeg(const std::string & file, const double scale){
         }
       }
     }
-
     throw Err();
   }
   catch (Err e){
     if (buf) delete[] buf;
     jpeg_abort_decompress(&cinfo);
+    if (e.str() != "") throw e;
+  }
+  return img;
+}
+
+/**********************************************************/
+Image
+image_load_jpeg(std::istream & str, const double scale){
+  FILE * infile;
+  Image img;
+  struct jpeg_decompress_struct cinfo;
+  jpeg_create_decompress(&cinfo);
+  try {
+
+    jpeg_stream_src(&cinfo, &str);
+    img = image_load_jpeg(cinfo, scale);
+    throw Err();
+  }
+  catch (Err e){
     jpeg_destroy_decompress(&cinfo);
     if (infile) fclose(infile);
     if (e.str() != "") throw e;
@@ -138,6 +254,32 @@ image_load_jpeg(const std::string & file, const double scale){
   return img;
 }
 
+/**********************************************************/
+Image
+image_load_jpeg(const std::string & file, const double scale){
+  FILE * infile;
+  Image img;
+  struct jpeg_decompress_struct cinfo;
+  jpeg_create_decompress(&cinfo);
+  try {
+
+    // open file, get image size
+    if ((infile = fopen(file.c_str(), "rb")) == NULL)
+      throw Err() << "image_load_jpeg: can't open file: " << file;
+
+    jpeg_stdio_src(&cinfo, infile);
+    img = image_load_jpeg(cinfo, scale);
+    throw Err();
+  }
+  catch (Err e){
+    jpeg_destroy_decompress(&cinfo);
+    if (infile) fclose(infile);
+    if (e.str() != "") throw e;
+  }
+  return img;
+}
+
+/**********************************************************/
 /**********************************************************/
 
 void
