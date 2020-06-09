@@ -42,7 +42,7 @@ TiffStrSeekProc(thandle_t handle, toff_t off, int whence){
   long int pos;
   switch (whence) {
     case SEEK_SET:
-      str->pos = off;
+      pos = off;
       break;
     case SEEK_CUR:
       pos = str->pos + off;
@@ -55,7 +55,7 @@ TiffStrSeekProc(thandle_t handle, toff_t off, int whence){
   }
   if (pos > str->size() || pos < 0) return -1;
   str->pos = pos;
-  return -1;
+  return 0;
 }
 
 static int
