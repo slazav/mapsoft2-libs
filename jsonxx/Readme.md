@@ -1,29 +1,16 @@
-Simple C++ wrapper for jansson library.
+# Simple C++ wrapper for jansson library.
 
 Jansson is a C library for working with json data:
-   documentation: http://jansson.readthedocs.org/en/latest/
-   code:          https://github.com/akheron/jansson
+*   documentation: http://jansson.readthedocs.org/en/latest/
+*   code:          https://github.com/akheron/jansson
 
-This is a simpla C++ wrapper for it.
+This is a simple C++ wrapper for it.
 Another wrapper can be found here:
-  https://github.com/bvakili-evault/janssonxx
+https://github.com/bvakili-evault/janssonxx
 
 ============================================================
 
-Json::Err -- error class for exceptions:
-
-  // Usage:
-
-    try{
-      throw Json::Err() << "text message";
-      // or work with jsonxx wrapper...
-    } catch(Json::Err e) {
-      std::cerr << e.str();  // string representation
-      std::cout << e.json(); // json object with error_type and error_message fieds
-    }
-
-============================================================
-
+```c++
 class Json { // class for the json data.
 
   // Creating json objects:
@@ -175,6 +162,7 @@ class Json { // class for the json data.
   // append another array (throw exception on error)
   void extend(const Json & j);
 };
+```
 
-//   V.Zavjalov, 29.3.2016
+V.Zavjalov, 29.3.2016
 
