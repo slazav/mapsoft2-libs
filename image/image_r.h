@@ -1,5 +1,5 @@
-#ifndef IMAGE_H
-#define IMAGE_H
+#ifndef IMAGE_R_H
+#define IMAGE_R_H
 
 #include <stdint.h>
 
@@ -8,6 +8,7 @@
 #include "err/err.h"
 #include "geom/rect.h"
 
+#include "image.h"
 #include "colors.h"
 
 /*
@@ -15,7 +16,7 @@ An image: 2d array of arbitrary data.
 */
 
 // ImageDataType shows data type of the image.
-// One shoukd not directly access data if type
+// One should not directly access data if type
 // is IMAGE_UNKNOWN.
 enum ImageDataType {
   IMAGE_32ARGB, // 4 bytes per pixel data: ARGB colors
@@ -31,7 +32,7 @@ enum ImageDataType {
 
 /*********************************************************************/
 // base class
-class ImageR {
+class ImageR : public Image {
   private:
     std::shared_ptr<uint8_t> data_;
     size_t w,h; // width, height
@@ -168,7 +169,7 @@ class ImageR {
     // universal get functions, should work for any image type
 
     // Get ARGB (prescaled) color for any image type.
-    uint32_t get_argb(const size_t x, const size_t y) const{
+    uint32_t get_argb(const size_t x, const size_t y) const override{
       switch (t){
         case IMAGE_32ARGB: return get32(x,y);
         case IMAGE_24RGB:  return get24(x,y);

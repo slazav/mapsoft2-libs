@@ -1,4 +1,4 @@
-#include "image_jpeg.h"
+#include "io_jpeg.h"
 #include <iostream>
 #include <fstream>
 #include <jpeglib.h>

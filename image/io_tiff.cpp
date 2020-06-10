@@ -2,7 +2,7 @@
 #include <cstring>
 #include <string>
 #include <fstream>
-#include "image_tiff.h"
+#include "io_tiff.h"
 #include "image_colors.h"
 
 /**********************************************************/

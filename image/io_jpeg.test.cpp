@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "err/assert_err.h"
-#include "image_jpeg.h"
+#include "io_jpeg.h"
 #include "image_colors.h"
 
 int

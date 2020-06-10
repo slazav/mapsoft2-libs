@@ -2,9 +2,9 @@
 
 #include <cassert>
 #include <iostream>
-#include "image_jpeg.h"
-#include "image_png.h"
-#include "image_gif.h"
+#include "io_jpeg.h"
+#include "io_png.h"
+#include "io_gif.h"
 #include "err/assert_err.h"
 
 int

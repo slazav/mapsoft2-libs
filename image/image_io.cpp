@@ -1,11 +1,11 @@
 #include "filename/filename.h"
 
 // Because of setjmp.h problem, one should include
-// image_png.h before image_jpeg.h
-#include "image_png.h"
-#include "image_jpeg.h"
-#include "image_tiff.h"
-#include "image_gif.h"
+// io_png.h before image_jpeg.h
+#include "io_png.h"
+#include "io_jpeg.h"
+#include "io_tiff.h"
+#include "io_gif.h"
 
 #include "image_io.h"
 #include "image_colors.h"

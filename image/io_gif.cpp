@@ -2,7 +2,7 @@
 #include <gif_lib.h>
 #include "err/err.h"
 #include "image_colors.h"
-#include "image_gif.h"
+#include "io_gif.h"
 
 /**********************************************************/
 // Version-specific GifOpen/GifClose wrappers

@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include "err/assert_err.h"
-#include "image_gif.h"
+#include "io_gif.h"
 #include "image_colors.h"
 
 int

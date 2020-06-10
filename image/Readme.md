@@ -22,7 +22,7 @@ for implementing images with non-standard data storage.
   * IMAGE_UNKNOWN -- unknown data format
 
 ------
-### Color handling functions (image.h)
+### Color handling functions (color.h)
 
 * distance between two colors
 ``` c++
@@ -138,7 +138,7 @@ TIFF with `tiff_format=pal`) colormap options can be used:
 A cache of raster images (came from mapsoft1 without any changes, not used yet).
 
 ------
-### GIF format (image_gif.h)
+### GIF format (io_gif.h)
 
 * `image_size_gif()` -- Supported, gif screen size is returned.
 
@@ -154,7 +154,9 @@ semi-transparent colors supported).
 * Not full support of different libgif versions (now it works with `libgif`
 <4.2, but sume incomplete support is done for 4.2 and 5.0)
 
-### JPEG format (image_jpeg.h)
+* Only reading/writing from/to files is possible.
+
+### JPEG format (io_jpeg.h)
 
 * `image_size_jpeg()` -- Supported.
 
@@ -162,11 +164,14 @@ semi-transparent colors supported).
 
 * `image_save_jpeg()` -- Supported.
 
+* Reading/writing from/to files or std::iostreams.
+
 ### PNG format (image_png.h)
 
 * `image_size_png()` -- Supported.
 
 * `image_load_png()` -- Supported. No ADAM7 interlace support.
+
 
 Supported PNG types for loading:
 
@@ -200,6 +205,8 @@ Supported PNG types for saving:
 |IMAGE_FLOAT    | pal         | RGB
 |IMAGE_DOUBLE   |             | RGB
 |IMAGE_UNKNOWN  |             | RGB
+
+* Reading/writing from/to files or std::iostreams.
 
 ### TIFF format (image_tiff.h)
 
@@ -241,6 +248,7 @@ Supported TIFF types for saving:
 |IMAGE_DOUBLE  |             |   3     |    8      | RGB
 |IMAGE_UNKNOWN |             |   4     |    8      | RGB
 
+* Reading/writing from/to files or std::iostreams.
 
 ### tiled images
 
