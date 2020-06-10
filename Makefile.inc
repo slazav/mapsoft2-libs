@@ -16,7 +16,10 @@
 #                 For each <name> should be a source <name>.test.cpp and
 #                 a script <name>.test.script
 # OTHER_TESTS  -- Any programs or scripts which should be run after building
-# PKG_CONFIG   -- external libraries used in this module
+# PKG_CONFIG   -- external libraries used in this module, controlled by
+#                 pkg-config. Default path includes
+#                 $(PKG_CONFIG_PATH) and $(MODDIR)/pc
+# LDLIBS, LDFLAGS, CXXFLAGS, etc. -- standard Makefile variables
 ######################################################
 
 MODDIR ?= ..
