@@ -129,7 +129,7 @@ main(){
       o.put("tiff_format", "pal");
       o.put("cmap_colors", 300); // too many colors
       assert_err( image_save_tiff(img, "test_tiff/img_32_xpal.tif", o),
-        "image_remap: palette length is out of range");
+        "image_remap: palette length is out of range: test_tiff/img_32_xpal.tif");
 
     }
 

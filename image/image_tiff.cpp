@@ -28,11 +28,14 @@ TiffStrReadProc(thandle_t handle, tdata_t buf, tsize_t size){
 
 static tsize_t
 TiffStrWriteProc(thandle_t handle, tdata_t buf, tsize_t size){
-  return 0;
+  auto str = (std::ostream*) handle;
+  auto pos0 = str->tellp();
+  str->write((char *)buf, size);
+  return str->tellp() - pos0;
 }
 
 static toff_t
-TiffStrSeekProc(thandle_t handle, toff_t off, int whence){
+TiffStrRSeekProc(thandle_t handle, toff_t off, int whence){
   auto str = (std::istream*) handle;
   switch (whence) {
     case SEEK_SET: str->seekg(off, std::ios_base::beg); break;
@@ -43,13 +46,25 @@ TiffStrSeekProc(thandle_t handle, toff_t off, int whence){
   return str->tellg();
 }
 
+static toff_t
+TiffStrWSeekProc(thandle_t handle, toff_t off, int whence){
+  auto str = (std::ostream*) handle;
+  switch (whence) {
+    case SEEK_SET: str->seekp(off, std::ios_base::beg); break;
+    case SEEK_CUR: str->seekp(off, std::ios_base::cur); break;
+    case SEEK_END: str->seekp(off, std::ios_base::end); break;
+    default: return -1;
+  }
+  return str->tellp();
+}
+
 static int
 TiffStrCloseProc(thandle_t handle){
   return 0;
 }
 
 static toff_t
-TiffStrSizeProc(thandle_t handle){
+TiffStrRSizeProc(thandle_t handle){
   auto str = (std::istream*) handle;
   auto pos0 = str->tellg();
   str->seekg(std::ios_base::end);
@@ -58,12 +73,30 @@ TiffStrSizeProc(thandle_t handle){
   return pos1;
 }
 
+static toff_t
+TiffStrWSizeProc(thandle_t handle){
+  auto str = (std::ostream*) handle;
+  auto pos0 = str->tellp();
+  str->seekp(std::ios_base::end);
+  auto pos1 = str->tellp();
+  str->seekp(pos0, std::ios_base::beg);
+  return pos1;
+}
+
 } // extern("C")
 
-TIFF* TIFFStreamOpen(std::istream & str){
+TIFF* TIFFStreamROpen(std::istream & str){
   return TIFFClientOpen("TIFF", "rb", (thandle_t) &str,
         TiffStrReadProc, TiffStrWriteProc,
-        TiffStrSeekProc, TiffStrCloseProc, TiffStrSizeProc,
+        TiffStrRSeekProc, TiffStrCloseProc, TiffStrRSizeProc,
+        NULL, NULL
+    );
+}
+
+TIFF* TIFFStreamWOpen(std::ostream & str){
+  return TIFFClientOpen("TIFF", "wb", (thandle_t) &str,
+        TiffStrReadProc, TiffStrWriteProc,
+        TiffStrWSeekProc, TiffStrCloseProc, TiffStrWSizeProc,
         NULL, NULL
     );
 }
@@ -77,7 +110,7 @@ iPoint image_size_tiff(std::istream & str){
   try {
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
 
-    tif = TIFFStreamOpen(str);
+    tif = TIFFStreamROpen(str);
     if (!tif) throw Err() << "image_size_tiff: can't open TIFF";
 
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
@@ -106,7 +139,7 @@ image_load_tiff(std::istream & str, const double scale){
   try {
 
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
-    tif = TIFFStreamOpen(str);
+    tif = TIFFStreamROpen(str);
     if (!tif) throw Err() << "image_load_tiff: can't load tiff";
 
     // image dimensions
@@ -273,7 +306,7 @@ image_load_tiff(std::istream & str, const double scale){
 
 /**********************************************************/
 
-void image_save_tiff(const Image & im, const std::string & file, const Opt & opt){
+void image_save_tiff(const Image & im, std::ostream & str, const Opt & opt){
 
   TIFF *tif = NULL;
   tdata_t buf = NULL;
@@ -295,19 +328,19 @@ void image_save_tiff(const Image & im, const std::string & file, const Opt & opt
     }
 
     // set TIFF type from options
-    std::string str;
-    str = opt.get("tiff_format", "");
-    if (str != "") {
-      if      (str == "argb")  {bps=8; samples = 4; use_cmap = 0; }
-      else if (str == "rgb")   {bps=8; samples = 3; use_cmap = 0; }
-      else if (str == "grey")  {bps=8; samples = 1; use_cmap = 0; }
-      else if (str == "pal")   {bps=8; samples = 1; use_cmap = 1;}
-      else throw Err() << "image_save_tiff: unknown tiff_format setting: " << str << "\n";
+    std::string s;
+    s = opt.get("tiff_format", "");
+    if (s != "") {
+      if      (s == "argb")  {bps=8; samples = 4; use_cmap = 0; }
+      else if (s == "rgb")   {bps=8; samples = 3; use_cmap = 0; }
+      else if (s == "grey")  {bps=8; samples = 1; use_cmap = 0; }
+      else if (s == "pal")   {bps=8; samples = 1; use_cmap = 1;}
+      else throw Err() << "image_save_tiff: unknown tiff_format setting: " << s << "\n";
     }
 
     // palette
     Image im8 = im;
-    if (str == "pal"){
+    if (s == "pal"){
       Opt opt1(opt);
       opt1.put("cmap_alpha", "none");
       std::vector<uint32_t> colors = image_colormap(im, opt1);
@@ -315,8 +348,7 @@ void image_save_tiff(const Image & im, const std::string & file, const Opt & opt
     }
 
     // open file
-    tif = TIFFOpen(file.c_str(), "wb");
-    if (!tif) throw Err() << "TIFF error: can't open file: " << file;
+    tif = TIFFStreamWOpen(str);
 
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, im.width());
     TIFFSetField(tif, TIFFTAG_IMAGELENGTH, im.height());
@@ -426,7 +458,6 @@ image_load_tiff(const std::string & fname, const double scale){
   return ret;
 }
 
-/*
 void
 image_save_tiff(const Image & im, const std::string & fname,
                const Opt & opt){
@@ -435,4 +466,3 @@ image_save_tiff(const Image & im, const std::string & fname,
   try { image_save_tiff(im, str, opt); }
   catch(Err e){ throw Err() << e.str() << ": " << fname; }
 }
-*/
