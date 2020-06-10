@@ -3,7 +3,7 @@
 
 #include <string>
 #include "geom/point.h"
-#include "image.h"
+#include "image_r.h"
 
 // getting file dimensions
 iPoint image_size_gif(const std::string & file);

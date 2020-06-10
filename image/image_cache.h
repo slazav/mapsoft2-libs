@@ -5,7 +5,7 @@
 #include "cache/cache.h"
 #include "geom/line.h"
 #include "image_io.h"
-#include "image.h"
+#include "image_r.h"
 #include "image_colors.h"
 
 // class for image cache

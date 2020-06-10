@@ -5,7 +5,6 @@
 #include "geom/line.h"
 #include "geom/multiline.h"
 #include "geom/rect.h"
-//#include "image.h"
 
 ///\addtogroup libmapsoft
 ///@{

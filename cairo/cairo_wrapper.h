@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "image/image.h"
+#include "image/image_r.h"
 #include "geom/point.h"
 #include "geom/line.h"
 #include "geom/multiline.h"

@@ -1,7 +1,7 @@
 #include "simple_viewer.h"
 
 #include <cassert>
-#include "image/image.h"
+#include "image/image_r.h"
 #include "geom/rect.h"
 
 SimpleViewer::SimpleViewer(GObj * o) :

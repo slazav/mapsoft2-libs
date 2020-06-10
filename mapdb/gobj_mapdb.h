@@ -10,7 +10,7 @@
 #include "image/image_colors.h"
 #include "viewer/gobj_multi.h"
 #include "filename/filename.h"
-#include "image/image.h"
+#include "image/image_r.h"
 #include "geo_data/geo_data.h"
 #include "opt/opt.h"
 

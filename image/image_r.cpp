@@ -1,4 +1,4 @@
-#include "image.h"
+#include "image_r.h"
 
 // image << operator
 std::ostream & operator<< (std::ostream & s, const ImageR & i) {

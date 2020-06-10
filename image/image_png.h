@@ -4,7 +4,7 @@
 #include <string>
 #include "geom/point.h"
 #include "opt/opt.h"
-#include "image.h"
+#include "image_r.h"
 
 
 // get file dimensions (from std::istream)

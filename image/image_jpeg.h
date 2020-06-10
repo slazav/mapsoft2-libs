@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include "geom/point.h"
-#include "image.h"
+#include "image_r.h"
 
 // get file dimensions (from file)
 iPoint image_size_jpeg(const std::string & file);

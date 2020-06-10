@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
-#include "image.h"
+#include "image_r.h"
 #include "geom/line.h"
 #include "opt/opt.h"
 

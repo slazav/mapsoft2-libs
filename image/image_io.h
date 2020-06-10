@@ -4,7 +4,7 @@
 #include <string>
 #include "opt/opt.h"
 #include "geom/point.h"
-#include "image.h"
+#include "image_r.h"
 
 // add IMAGE group of options
 #include "getopt/getopt.h"
