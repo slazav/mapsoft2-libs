@@ -60,7 +60,7 @@ main(){
       o.put("jpeg_quality", 120);
 
       assert_err(image_save_jpeg(img, "test_jpeg/img_32_x.jpg", o),
-         "image_save_jpeg: quality not in range 0..100: 120");
+         "image_save_jpeg: quality 120 not in range 0..100: test_jpeg/img_32_x.jpg");
 
       o.put("jpeg_quality", 100);
       image_save_jpeg(img, "test_jpeg/img_32_100.jpg", o);

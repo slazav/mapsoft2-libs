@@ -206,16 +206,74 @@ image_load_jpeg(std::istream & str, const double scale){
 }
 
 /**********************************************************/
+// writing JPEG to std::istream
+
+#define OUTPUT_BUF_SIZE 4096
+
+typedef struct {
+  struct jpeg_destination_mgr pub; /* public fields */
+  std::ostream * str;
+  JOCTET * buf;
+} my_dest_mgr;
 
 void
-image_save_jpeg(const Image & im, const std::string & file, const Opt & opt){
+init_dest(j_compress_ptr cinfo) {
+  auto data = (my_dest_mgr *)(cinfo->dest);
+  data->pub.next_output_byte = data->buf;
+  data->pub.free_in_buffer = OUTPUT_BUF_SIZE;
+}
+
+
+boolean
+empty_output_buffer (j_compress_ptr cinfo){
+  auto data = (my_dest_mgr *)(cinfo->dest);
+  data->str->write((char*)data->buf, OUTPUT_BUF_SIZE*sizeof(JOCTET));
+  data->pub.next_output_byte = data->buf;
+  data->pub.free_in_buffer = OUTPUT_BUF_SIZE;
+  return true;
+}
+
+void
+term_dest (j_compress_ptr cinfo) {
+  auto data = (my_dest_mgr *)(cinfo->dest);
+  size_t n = OUTPUT_BUF_SIZE - data->pub.free_in_buffer;
+  data->str->write((char*)data->buf, n*sizeof(JOCTET));
+  data->pub.next_output_byte = data->buf;
+  data->pub.free_in_buffer = OUTPUT_BUF_SIZE;
+}
+
+void
+jpeg_stream_dest (j_compress_ptr cinfo, std::ostream* str){
+  my_dest_mgr * dest;
+
+  if (cinfo->dest == NULL) { /* first time for this JPEG object? */
+    cinfo->dest = (struct jpeg_destination_mgr *)
+      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
+      sizeof(my_dest_mgr));
+    dest = (my_dest_mgr *) cinfo->dest;
+    dest->buf = (JOCTET *)
+      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
+      OUTPUT_BUF_SIZE * sizeof(JOCTET));
+  }
+  dest = (my_dest_mgr *) cinfo->dest;
+  dest->pub.init_destination = init_dest;
+  dest->pub.empty_output_buffer = empty_output_buffer;
+  dest->pub.term_destination = term_dest;
+  dest->str = str;
+  dest->pub.next_output_byte = dest->buf;
+  dest->pub.free_in_buffer = OUTPUT_BUF_SIZE;
+}
+
+/**********************************************************/
+
+void
+image_save_jpeg(const Image & im, std::ostream & str, const Opt & opt){
 
   int quality = opt.get("jpeg_quality", 95);
 
   if ((quality<0)||(quality>100))
-      throw Err() << "image_save_jpeg: quality not in range 0..100: " << quality;
+      throw Err() << "image_save_jpeg: quality "<< quality << " not in range 0..100";
 
-  FILE * outfile = NULL;
   unsigned char *buf = NULL;
   std::string msg;
 
@@ -227,10 +285,7 @@ image_save_jpeg(const Image & im, const std::string & file, const Opt & opt){
 
   try {
 
-    if ((outfile = fopen(file.c_str(), "wb")) == NULL)
-     throw Err() << "image_load_jpeg: can't open file: " << file;
-
-    jpeg_stdio_dest(&cinfo, outfile);
+    jpeg_stream_dest(&cinfo, &str);
     cinfo.image_width = im.width();
     cinfo.image_height = im.height();
     cinfo.input_components = 3;
@@ -257,7 +312,6 @@ image_save_jpeg(const Image & im, const std::string & file, const Opt & opt){
   catch (Err e){
     if (buf) delete [] buf;
     jpeg_destroy_compress(&cinfo);
-    if (outfile) fclose(outfile);
     if (e.str() != "") throw e;
   }
 }
@@ -283,7 +337,6 @@ image_load_jpeg(const std::string & fname, const double scale){
   return ret;
 }
 
-/*
 void
 image_save_jpeg(const Image & im, const std::string & fname,
                const Opt & opt){
@@ -292,4 +345,3 @@ image_save_jpeg(const Image & im, const std::string & fname,
   try { image_save_jpeg(im, str, opt); }
   catch(Err e){ throw Err() << e.str() << ": " << fname; }
 }
-*/

@@ -22,4 +22,8 @@ Image image_load_jpeg(std::istream & str, const double scale=1);
 void image_save_jpeg(const Image & im, const std::string & file,
                      const Opt & opt = Opt());
 
+// save the whole image (to std::ostream)
+void image_save_jpeg(const Image & im, std::ostream & str,
+                     const Opt & opt = Opt());
+
 #endif
