@@ -7,7 +7,7 @@ GObjTestTile::GObjTestTile(const bool slow_): slow(slow_){}
 int
 GObjTestTile::draw(const CairoWrapper & cr, const dRect &box){
 
-  Image img = cr.get_image();
+  ImageR img = cr.get_image();
   if (img.is_empty()) return GObj::FILL_NONE;
 
   for (int j=0; j<img.height(); j++){

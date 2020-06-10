@@ -27,14 +27,14 @@ main(){
 
     /*********************************************/
     // Original image
-    Image img(256,128, IMAGE_32ARGB);
+    ImageR img(256,128, IMAGE_32ARGB);
     for (int y=0; y<128; ++y){
       for (int x=0; x<128; ++x){
         img.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
         img.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
       }
     }
-    Image img1;
+    ImageR img1;
 
     image_save(img, "test_data/img.tmp.png");
     img1 = image_load("test_data/img.tmp.png");

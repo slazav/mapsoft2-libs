@@ -10,7 +10,7 @@ main(){
 
     {
       CairoWrapper cw;
-      Image img(150,100, IMAGE_32ARGB);
+      ImageR img(150,100, IMAGE_32ARGB);
       cw.set_surface_img(img);
 
       assert_eq(cw.width(), 150);

@@ -15,7 +15,7 @@ main(){
     assert_eq(o1.bbox(), GObj::MAX_RANGE);
 
     // Image filled with 0xFFFF00FF color + CairoWrapper
-    Image img(100,100, IMAGE_32ARGB);
+    ImageR img(100,100, IMAGE_32ARGB);
     CairoWrapper cr;
     cr.set_surface_img(img);
     cr->set_color(col1);

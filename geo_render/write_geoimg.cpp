@@ -65,13 +65,13 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
 
   // setup cairo context
   CairoWrapper cr;
-  Image img;
+  ImageR img;
   int w=box.brc().x, h=box.brc().y;
   if      (fmt == "pdf") cr.set_surface_pdf(fname.c_str(), w,h);
   else if (fmt == "ps")  cr.set_surface_ps(fname.c_str(), w,h);
   else if (fmt == "svg") cr.set_surface_svg(fname.c_str(), w,h);
   else if (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif"){
-    img = Image(w,h,IMAGE_32ARGB);
+    img = ImageR(w,h,IMAGE_32ARGB);
     img.fill32(0);
     cr.set_surface_img(img);
   }

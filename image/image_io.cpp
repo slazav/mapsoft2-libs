@@ -59,7 +59,7 @@ image_size(const std::string & fname, const Opt & opts){
 
 
 // load the whole image 
-Image
+ImageR
 image_load(const std::string & fname, const double scale, const Opt & opts){
   std::string fmt = image_ext_to_fmt(fname);
   if (opts.get("img_in_fmt","") != "") fmt = opts.get("img_in_fmt", "");
@@ -70,13 +70,13 @@ image_load(const std::string & fname, const double scale, const Opt & opts){
   if (fmt == "tiff") return image_load_tiff(fname, scale);
 
   throw Err() << "image_load: unknown format: " << fname;
-  return Image();
+  return ImageR();
 }
 
 
 // save the whole image
 void
-image_save(const Image & im, const std::string & fname, const Opt & opts){
+image_save(const ImageR & im, const std::string & fname, const Opt & opts){
   std::string fmt = image_ext_to_fmt(fname);
   if (opts.get("img_out_fmt","") != "") fmt = opts.get("img_out_fmt", "");
 

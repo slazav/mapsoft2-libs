@@ -16,13 +16,13 @@
 // Convert image to a Cairo::ImageSurface.
 // Data is kept in the Image, it should be alive while
 // the ImageSurface is used.
-Cairo::RefPtr<Cairo::ImageSurface> image_to_surface(const Image & img);
+Cairo::RefPtr<Cairo::ImageSurface> image_to_surface(const ImageR & img);
 
 // Convert image to a Cairo::SurfacePattern.
 // Data is kept in the Image, it should be alive while
 // the ImageSurface is used.
 Cairo::RefPtr<Cairo::SurfacePattern> image_to_pattern(
-  const Image & img, double scx, double scy, double dx=0, double dy=0);
+  const ImageR & img, double scx, double scy, double dx=0, double dy=0);
 
 // Load svg file to a pattern
 Cairo::RefPtr<Cairo::SurfacePattern> svg_to_pattern(
@@ -179,7 +179,7 @@ struct CairoExtra : public Cairo::Context {
 struct CairoWrapper: Cairo::RefPtr<CairoExtra> {
 
 private:
-  Image image; // keeps actual data for image surfaces.
+  ImageR image; // keeps actual data for image surfaces.
   Cairo::RefPtr<Cairo::Surface> surface;
   int w,h; // surface size in pixels
 
@@ -199,7 +199,7 @@ public:
   // Create surface and new cairo context
   // using external image.
   // This should be done before any drawing.
-  void set_surface_img(const Image & img);
+  void set_surface_img(const ImageR & img);
 
   // Create surface and new cairo context
   // using Postscript file.
@@ -220,7 +220,7 @@ public:
   Cairo::RefPtr<Cairo::Surface> get_surface() const { return surface; }
 
   // get the image (empty image for non-image surfaces!)
-  Image get_image() const { return image; }
+  ImageR get_image() const { return image; }
 
   // get surface width
   int width() const { return w; }

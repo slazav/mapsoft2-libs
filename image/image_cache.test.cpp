@@ -10,13 +10,13 @@ int
 main(){
   try{
 
-    ImageCache icache(2);
+    ImageRCache icache(2);
 
-    Image i1 = icache.get("test_data/test_fullc1.jpg");
+    ImageR i1 = icache.get("test_data/test_fullc1.jpg");
 
-    Image i2 = icache.get("test_data/test_fullc2.jpg");
+    ImageR i2 = icache.get("test_data/test_fullc2.jpg");
 
-    Image i3 = icache.get("test_data/test_fullc1.jpg");
+    ImageR i3 = icache.get("test_data/test_fullc1.jpg");
 
     assert_eq(i1.size(), iPoint(320,240));
     assert_eq(i2.size(), iPoint(500,500));

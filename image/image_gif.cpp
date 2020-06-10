@@ -64,10 +64,10 @@ image_size_gif(const std::string & file){
 
 
 /**********************************************************/
-Image
+ImageR
 image_load_gif(const std::string & file, const double scale){
 
-  Image img;
+  ImageR img;
   GifFileType *gif = NULL; // gif handler
   GifByteType *GifLine = NULL;
   int w, h, dx, dy;
@@ -145,7 +145,7 @@ image_load_gif(const std::string & file, const double scale){
     // scaled image
     int w1 = floor((w-1)/scale+1);
     int h1 = floor((h-1)/scale+1);
-    img = Image(w1,h1, IMAGE_8PAL);
+    img = ImageR(w1,h1, IMAGE_8PAL);
     img.cmap = colors;
 
     /// Main loop
@@ -193,7 +193,7 @@ image_load_gif(const std::string & file, const double scale){
 
 /**********************************************************/
 void
-image_save_gif(const Image & im, const std::string & file, const Opt & opt){
+image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
 
   GifFileType *gif = NULL;
   ColorMapObject *gif_cmap = NULL;
@@ -209,7 +209,7 @@ image_save_gif(const Image & im, const std::string & file, const Opt & opt){
   if (opt1.get("cmap_alpha", "")!="none")
     opt1.put("cmap_alpha", "gif");
   std::vector<uint32_t> colors = image_colormap(im, opt1);
-  Image im8 = image_remap(im, colors, opt1);
+  ImageR im8 = image_remap(im, colors, opt1);
 
   if (im8.cmap.size()<2 || im8.cmap.size()>256) throw Err() <<
     "image_save_gif: bad size of image colormap" << im8.cmap.size();

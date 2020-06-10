@@ -31,7 +31,7 @@ enum ImageDataType {
 
 /*********************************************************************/
 // base class
-class Image {
+class ImageR {
   private:
     std::shared_ptr<uint8_t> data_;
     size_t w,h; // width, height
@@ -68,10 +68,10 @@ class Image {
     }
 
     // constructor -- create an empty image
-    Image(): w(0), h(0), t(IMAGE_UNKNOWN) {}
+    ImageR(): w(0), h(0), t(IMAGE_UNKNOWN) {}
 
     // constructor -- create WxH non-initialized image
-    Image(const size_t W, const size_t H,
+    ImageR(const size_t W, const size_t H,
           const ImageDataType type): w(W), h(H), t(type){
 
       if (w<=0 || h<=0)
@@ -81,7 +81,7 @@ class Image {
         data_ = std::shared_ptr<unsigned char>(new uint8_t[dsize()]);
       }
       catch (const std::bad_alloc & e) {
-        throw Err() << "Image: can't allocate memory for "
+        throw Err() << "ImageR: can't allocate memory for "
                     << *this << ": " << e.what();
       }
     }
@@ -370,6 +370,6 @@ class Image {
 };
 
 
-std::ostream & operator<< (std::ostream & s, const Image & i);
+std::ostream & operator<< (std::ostream & s, const ImageR & i);
 
 #endif

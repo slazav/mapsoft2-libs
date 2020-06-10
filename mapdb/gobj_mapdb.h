@@ -201,7 +201,7 @@ public:
 
   // for both FEATURE_PATT and FEATURE_IMG
   struct FeaturePatt : Feature {
-    Image img; // actual data for raster images
+    ImageR img; // actual data for raster images
     Cairo::RefPtr<Cairo::SurfacePattern> patt;
     FeaturePatt(const std::string & imgdir,
                 const std::vector<std::string> & vs){

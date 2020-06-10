@@ -36,18 +36,18 @@ main(){
 
     // images
     {
-      Image im1;
+      ImageR im1;
       assert_eq(im1.width(), 0);
       assert_eq(im1.height(), 0);
       assert_eq(im1.type(), IMAGE_UNKNOWN);
       assert(im1.is_empty());
       assert(!im1);
 
-      Image im2(100,100, IMAGE_32ARGB);
+      ImageR im2(100,100, IMAGE_32ARGB);
 
-      assert_eq(type_to_str(im1), "Image(empty)");
+      assert_eq(type_to_str(im1), "ImageR(empty)");
 
-      assert_eq(type_to_str(im2), "Image(100x100, ARGB, 32bpp)");
+      assert_eq(type_to_str(im2), "ImageR(100x100, ARGB, 32bpp)");
 
       assert_eq(im2.width(), 100);
       assert_eq(im2.height(), 100);
@@ -57,17 +57,17 @@ main(){
     }
 
     {
-      assert_err(Image im2(100,0,  IMAGE_32ARGB),    "non-positive image dimension: 100x0");
-      assert_err(Image im2(0,1,    IMAGE_32ARGB),    "non-positive image dimension: 0x1");
+      assert_err(ImageR im2(100,0,  IMAGE_32ARGB),    "non-positive image dimension: 100x0");
+      assert_err(ImageR im2(0,1,    IMAGE_32ARGB),    "non-positive image dimension: 0x1");
       //// arch-specific
-      //assert_err(Image im2(100,-1, IMAGE_32ARGB),
-      //    "Image: can't allocate memory for Image(100x18446744073709551615, ARGB, 32bpp): std::bad_alloc");
+      //assert_err(ImageR im2(100,-1, IMAGE_32ARGB),
+      //    "ImageR: can't allocate memory for ImageR(100x18446744073709551615, ARGB, 32bpp): std::bad_alloc");
     }
 
 
 
     { // 32bpp image
-      Image im(640,480, IMAGE_32ARGB);
+      ImageR im(640,480, IMAGE_32ARGB);
       im.fill32(0xFF000010);
       assert_eq(im.width(), 640);
       assert_eq(im.height(), 480);
@@ -86,7 +86,7 @@ main(){
     }
 
     { // 24bpp image
-      Image im(640,480, IMAGE_24RGB);
+      ImageR im(640,480, IMAGE_24RGB);
       im.fill24(0x10);
       assert_eq(im.width(), 640);
       assert_eq(im.height(), 480);
@@ -105,7 +105,7 @@ main(){
     }
 
     { // 8bpp image
-      Image im(100,100, IMAGE_8);
+      ImageR im(100,100, IMAGE_8);
       im.fill8(11);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
@@ -126,7 +126,7 @@ main(){
     }
 
     { // 1bpp image, w*h % 8 = 0
-      Image im(100,100, IMAGE_1);
+      ImageR im(100,100, IMAGE_1);
       im.fill1(1);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
@@ -151,7 +151,7 @@ main(){
     }
 
     { // 1bpp image, w*h % 8 != 0
-      Image im(99,101, IMAGE_1);
+      ImageR im(99,101, IMAGE_1);
       im.fill1(1);
       assert_eq(im.width(), 99);
       assert_eq(im.height(), 101);
@@ -176,7 +176,7 @@ main(){
     }
 
     { // double image
-      Image im(100,100, IMAGE_DOUBLE);
+      ImageR im(100,100, IMAGE_DOUBLE);
       im.fillD(0.123);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);

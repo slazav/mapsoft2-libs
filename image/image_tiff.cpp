@@ -127,14 +127,14 @@ iPoint image_size_tiff(std::istream & str){
 
 /**********************************************************/
 
-Image
+ImageR
 image_load_tiff(std::istream & str, const double scale){
 
   if (scale < 1) throw Err() << "image_load_tiff: wrong scale: " << scale;
 
   uint8_t *cbuf = NULL;
   TIFF* tif = NULL;
-  Image img;
+  ImageR img;
 
   try {
 
@@ -172,7 +172,7 @@ image_load_tiff(std::istream & str, const double scale){
 
       case PHOTOMETRIC_PALETTE:
         if (samples == 1 && bps == 8) {
-          img = Image(w1,h1, IMAGE_8PAL);
+          img = ImageR(w1,h1, IMAGE_8PAL);
           uint16 *cmap[3];
           TIFFGetField(tif, TIFFTAG_COLORMAP, cmap, cmap+1, cmap+2);
           for (int i=0; i<256; i++){
@@ -189,15 +189,15 @@ image_load_tiff(std::istream & str, const double scale){
 
       case PHOTOMETRIC_RGB:
         if (samples == 3 && bps==8){ // RGB
-          img = Image(w1,h1, IMAGE_24RGB);
+          img = ImageR(w1,h1, IMAGE_24RGB);
           break;
         }
         if (samples == 4 && bps==8){ // RGBA
-          img = Image(w1,h1, IMAGE_32ARGB);
+          img = ImageR(w1,h1, IMAGE_32ARGB);
           break;
         }
         if (samples == 1 && bps==8){ // G
-          img = Image(w1,h1, IMAGE_8);
+          img = ImageR(w1,h1, IMAGE_8);
           break;
         }
         throw Err() << "image_load_tiff: unsupported format: "
@@ -206,11 +206,11 @@ image_load_tiff(std::istream & str, const double scale){
       case PHOTOMETRIC_MINISWHITE:
       case PHOTOMETRIC_MINISBLACK:
         if (samples == 1 && bps==16){ // 16bit
-          img = Image(w1,h1, IMAGE_16);
+          img = ImageR(w1,h1, IMAGE_16);
           break;
         }
         if (samples == 1 && bps == 8){ // 8bit
-          img = Image(w1,h1, IMAGE_8);
+          img = ImageR(w1,h1, IMAGE_8);
           break;
         }
         throw Err() << "image_load_tiff: unsupported format: "
@@ -306,7 +306,7 @@ image_load_tiff(std::istream & str, const double scale){
 
 /**********************************************************/
 
-void image_save_tiff(const Image & im, std::ostream & str, const Opt & opt){
+void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
 
   TIFF *tif = NULL;
   tdata_t buf = NULL;
@@ -339,7 +339,7 @@ void image_save_tiff(const Image & im, std::ostream & str, const Opt & opt){
     }
 
     // palette
-    Image im8 = im;
+    ImageR im8 = im;
     if (s == "pal"){
       Opt opt1(opt);
       opt1.put("cmap_alpha", "none");
@@ -448,18 +448,18 @@ image_size_tiff(const std::string & fname){
   return ret;
 }
 
-Image
+ImageR
 image_load_tiff(const std::string & fname, const double scale){
   std::ifstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;
-  Image ret;
+  ImageR ret;
   try { ret = image_load_tiff(str, scale); }
   catch(Err e){ throw Err() << e.str() << ": " << fname; }
   return ret;
 }
 
 void
-image_save_tiff(const Image & im, const std::string & fname,
+image_save_tiff(const ImageR & im, const std::string & fname,
                const Opt & opt){
   std::ofstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;

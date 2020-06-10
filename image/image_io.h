@@ -14,10 +14,10 @@ void ms2opt_add_image(GetOptSet & opts);
 iPoint image_size(const std::string & file, const Opt & opt = Opt());
 
 // load the whole image at some scale
-Image image_load(const std::string & file, const double scale=1, const Opt & opt = Opt());
+ImageR image_load(const std::string & file, const double scale=1, const Opt & opt = Opt());
 
 // save the whole image
-void image_save(const Image & im, const std::string & file, const Opt & opt = Opt());
+void image_save(const ImageR & im, const std::string & file, const Opt & opt = Opt());
 
 
 #endif

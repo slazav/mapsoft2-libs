@@ -12,7 +12,7 @@ main(){
 
     uint32_t colors[256];
 
-    Image img(300,10,IMAGE_32ARGB);
+    ImageR img(300,10,IMAGE_32ARGB);
     img.fill32(0xFF000000);
     assert_eq(image_classify_color(img, colors),0);
     assert_eq(image_classify_alpha(img),0);
@@ -35,7 +35,7 @@ main(){
 
 
     // apply border
-    img = Image(256,128, IMAGE_32ARGB);
+    img = ImageR(256,128, IMAGE_32ARGB);
     int c = 0xFF203040;
     img.fill32(c);
     dLine brd("[[-10,-10], [64,-10], [128,64], [-10,100]]");

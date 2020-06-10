@@ -43,7 +43,7 @@ void ms2opt_add_image_cmap(GetOptSet & opts){
 // Create a colormap.
 // Based on pnmcolormap.c from netpbm package.
 std::vector<uint32_t>
-image_colormap(const Image & img, const Opt & opt){
+image_colormap(const ImageR & img, const Opt & opt){
 
   // parameters
   int  req_colors = opt.get("cmap_colors", 256);
@@ -279,8 +279,8 @@ image_colormap(const Image & img, const Opt & opt){
 
 
 // Reduce number of colors
-Image
-image_remap(const Image & img, const std::vector<uint32_t> & cmap, const Opt & opt){
+ImageR
+image_remap(const ImageR & img, const std::vector<uint32_t> & cmap, const Opt & opt){
 
   std::string str;
   int transp_mode = 1;
@@ -296,7 +296,7 @@ image_remap(const Image & img, const std::vector<uint32_t> & cmap, const Opt & o
     throw Err() << "image_remap: palette length is out of range";
 
   // Construct the new image
-  Image img1(img.width(), img.height(), IMAGE_8PAL);
+  ImageR img1(img.width(), img.height(), IMAGE_8PAL);
   for (int y=0; y<img.height(); ++y){
     for (int x=0; x<img.width(); ++x){
       // get color
@@ -332,9 +332,9 @@ image_remap(const Image & img, const std::vector<uint32_t> & cmap, const Opt & o
 
 /***********************************************************/
 
-Image image_to_argb(const Image & img){
+ImageR image_to_argb(const ImageR & img){
   if (img.type() == IMAGE_32ARGB) return img;
-  Image ret(img.width(), img.height(), IMAGE_32ARGB);
+  ImageR ret(img.width(), img.height(), IMAGE_32ARGB);
   for (int x=0; x<img.width(); ++x){
     for (int y=0; y<img.height(); ++y){
       ret.set32(x,y, img.get_argb(x,y));
@@ -346,7 +346,7 @@ Image image_to_argb(const Image & img){
 /***********************************************************/
 
 int
-image_classify_alpha(const Image & img){
+image_classify_alpha(const ImageR & img){
   int ret=0;
   if (img.type() != IMAGE_32ARGB) throw Err() <<
     "image_classify: only 32-bpp images are supported";
@@ -364,7 +364,7 @@ image_classify_alpha(const Image & img){
 }
 
 int
-image_classify_color(const Image & img, uint32_t *colors, int clen){
+image_classify_color(const ImageR & img, uint32_t *colors, int clen){
   int ret=0;
   if (img.type() != IMAGE_32ARGB &&
       img.type() != IMAGE_24RGB) throw Err() <<
@@ -402,7 +402,7 @@ image_classify_color(const Image & img, uint32_t *colors, int clen){
 
 // Change image color outside border line.
 // If border line is empty, set color in the whole image
-void image_apply_border(const Image & img, const iLine & brd, uint32_t color ){
+void image_apply_border(const ImageR & img, const iLine & brd, uint32_t color ){
 
   if (img.type() != IMAGE_32ARGB) throw Err() <<
     "image_classify: only 32-bpp images are supported";

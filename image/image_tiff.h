@@ -12,17 +12,17 @@ iPoint image_size_tiff(const std::string & file);
 iPoint image_size_tiff(std::istream & str);
 
 // load TIFF image (from file)
-Image image_load_tiff(const std::string & file, const double scale=1);
+ImageR image_load_tiff(const std::string & file, const double scale=1);
 
 // load TIFF image (from std::istream)
-Image image_load_tiff(std::istream & str, const double scale=1);
+ImageR image_load_tiff(std::istream & str, const double scale=1);
 
 // save the whole image (to file)
-void image_save_tiff(const Image & im, const std::string & file,
+void image_save_tiff(const ImageR & im, const std::string & file,
                      const Opt & opt = Opt());
 
 // save the whole image (to std::ostream)
-void image_save_tiff(const Image & im, std::ostream & str,
+void image_save_tiff(const ImageR & im, std::ostream & str,
                      const Opt & opt = Opt());
 
 #endif

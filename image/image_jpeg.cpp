@@ -128,14 +128,14 @@ image_size_jpeg(std::istream & str){
 
 /**********************************************************/
 
-Image
+ImageR
 image_load_jpeg(std::istream & str, const double scale){
 
   if (scale < 1)
     throw Err() << "image_load_jpeg: wrong scale: " << scale;
 
   unsigned char *buf = NULL;
-  Image img;
+  ImageR img;
   struct jpeg_decompress_struct cinfo;
   jpeg_create_decompress(&cinfo);
   try {
@@ -165,7 +165,7 @@ image_load_jpeg(std::istream & str, const double scale){
     int h = cinfo.output_height;
     int w1 = floor((cinfo.image_width-1)/scale+1);
     int h1 = floor((cinfo.image_height-1)/scale+1);
-    img = Image(w1,h1, IMAGE_24RGB);
+    img = ImageR(w1,h1, IMAGE_24RGB);
     // adjust scale
     sc = std::min((double)(w-1)/(w1-1), (double)(h-1)/(h1-1));
 
@@ -267,7 +267,7 @@ jpeg_stream_dest (j_compress_ptr cinfo, std::ostream* str){
 /**********************************************************/
 
 void
-image_save_jpeg(const Image & im, std::ostream & str, const Opt & opt){
+image_save_jpeg(const ImageR & im, std::ostream & str, const Opt & opt){
 
   int quality = opt.get("jpeg_quality", 95);
 
@@ -327,18 +327,18 @@ image_size_jpeg(const std::string & fname){
   return ret;
 }
 
-Image
+ImageR
 image_load_jpeg(const std::string & fname, const double scale){
   std::ifstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;
-  Image ret;
+  ImageR ret;
   try { ret = image_load_jpeg(str, scale); }
   catch(Err e){ throw Err() << e.str() << ": " << fname; }
   return ret;
 }
 
 void
-image_save_jpeg(const Image & im, const std::string & fname,
+image_save_jpeg(const ImageR & im, const std::string & fname,
                const Opt & opt){
   std::ofstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;

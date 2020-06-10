@@ -44,8 +44,8 @@ bool
 GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
   if (tiles.contains(range_dst)) return true;
 
-  Image image_src = img_cache.get(d.src->image, d.load_sc);
-  Image image_dst = Image(range_dst.w, range_dst.h, IMAGE_32ARGB);
+  ImageR image_src = img_cache.get(d.src->image, d.load_sc);
+  ImageR image_dst = ImageR(range_dst.w, range_dst.h, IMAGE_32ARGB);
 
   double avr = d.scale/d.load_sc/2;
   // render image

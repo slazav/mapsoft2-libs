@@ -6,7 +6,7 @@
 
 
 Cairo::RefPtr<Cairo::ImageSurface>
-image_to_surface(const Image & img) {
+image_to_surface(const ImageR & img) {
   // convert image to cairo surface
   Cairo::Format format = Cairo::FORMAT_ARGB32;
   // check if surface raw data compatable with Image
@@ -19,7 +19,7 @@ image_to_surface(const Image & img) {
 }
 
 Cairo::RefPtr<Cairo::SurfacePattern>
-image_to_pattern(const Image & img, double scx, double scy, double dx, double dy){
+image_to_pattern(const ImageR & img, double scx, double scy, double dx, double dy){
   try{
     auto surf = image_to_surface(img);
     Cairo::RefPtr<Cairo::SurfacePattern> patt =
@@ -250,7 +250,7 @@ CairoExtra::render_border(const iRect & range, const dLine & brd, const int bgco
 void
 CairoWrapper::set_surface_img(int w_, int h_){
   w = w_; h=h_;
-  image=Image(w, h, IMAGE_32ARGB);
+  image=ImageR(w, h, IMAGE_32ARGB);
 
   surface = image_to_surface(image);
   Cairo::RefPtr<CairoExtra>::operator=
@@ -258,7 +258,7 @@ CairoWrapper::set_surface_img(int w_, int h_){
 }
 
 void
-CairoWrapper::set_surface_img(const Image & img){
+CairoWrapper::set_surface_img(const ImageR & img){
   w = img.width(); h=img.height();
   image=img; // increase refcount of image
 
@@ -269,7 +269,7 @@ CairoWrapper::set_surface_img(const Image & img){
 
 void
 CairoWrapper::set_surface_ps(const char *fname, int w_, int h_){
-  w = w_; h=h_; image = Image();
+  w = w_; h=h_; image = ImageR();
   surface = Cairo::PsSurface::create(fname, w, h);
   Cairo::RefPtr<CairoExtra>::operator=
     (cast_static(Cairo::Context::create(surface)));
@@ -277,7 +277,7 @@ CairoWrapper::set_surface_ps(const char *fname, int w_, int h_){
 
 void
 CairoWrapper::set_surface_pdf(const char *fname, int w_, int h_){
-  w = w_; h=h_; image = Image();
+  w = w_; h=h_; image = ImageR();
   surface = Cairo::PdfSurface::create(fname, w, h);
   Cairo::RefPtr<CairoExtra>::operator=
     (cast_static(Cairo::Context::create(surface)));
@@ -285,7 +285,7 @@ CairoWrapper::set_surface_pdf(const char *fname, int w_, int h_){
 
 void
 CairoWrapper::set_surface_svg(const char *fname, int w_, int h_){
-  w = w_; h=h_; image = Image();
+  w = w_; h=h_; image = ImageR();
   surface = Cairo::SvgSurface::create(fname, w, h);
   Cairo::RefPtr<CairoExtra>::operator=
     (cast_static(Cairo::Context::create(surface)));

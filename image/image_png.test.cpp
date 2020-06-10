@@ -25,7 +25,7 @@ main(){
 
     /*********************************************/
     // Original image
-    Image img32(256,128, IMAGE_32ARGB);
+    ImageR img32(256,128, IMAGE_32ARGB);
     for (int y=0; y<128; ++y){
       for (int x=0; x<128; ++x){
         img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
@@ -38,11 +38,11 @@ main(){
     // * Read saved file and check result.
 
     { // IMAGE_32ARGB
-      Image img = img32;
+      ImageR img = img32;
       image_save_png(img, "test_png/img_32_def.png");
       assert_eq(image_size_png("test_png/img_32_def.png"), iPoint(256,128));
 
-      Image I = image_load_png("test_png/img_32_def.png", 1);
+      ImageR I = image_load_png("test_png/img_32_def.png", 1);
       assert_eq(I.type(), IMAGE_32ARGB);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
@@ -147,14 +147,14 @@ main(){
 
     /*********************************************/
     { // IMAGE_24RGB
-      Image img(256,128, IMAGE_24RGB);
+      ImageR img(256,128, IMAGE_24RGB);
       for (int y=0; y<img.height(); ++y){
         for (int x=0; x<img.width(); ++x){
           img.set24(x,y, color_rem_transp(img32.get_argb(x,y), false));
         }
       }
       image_save_png(img, "test_png/img_24_def.png");
-      Image I = image_load_png("test_png/img_24_def.png", 1);
+      ImageR I = image_load_png("test_png/img_24_def.png", 1);
       assert_eq(I.type(), IMAGE_24RGB);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
@@ -222,7 +222,7 @@ main(){
 
     /*********************************************/
     { // IMAGE_16
-      Image img(256,128, IMAGE_16);
+      ImageR img(256,128, IMAGE_16);
       for (int y=0; y<img.height(); ++y){
         for (int x=0; x<img.width(); ++x){
           uint32_t c = color_rem_transp(img32.get_argb(x,y), false);
@@ -231,7 +231,7 @@ main(){
       }
 
       image_save_png(img, "test_png/img_16_def.png");
-      Image I = image_load_png("test_png/img_16_def.png", 1);
+      ImageR I = image_load_png("test_png/img_16_def.png", 1);
       assert_eq(I.type(), IMAGE_16);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
@@ -320,7 +320,7 @@ main(){
     /*********************************************/
 
     { // IMAGE_8
-      Image img(256,128, IMAGE_8);
+      ImageR img(256,128, IMAGE_8);
       for (int y=0; y<img.height(); ++y){
         for (int x=0; x<img.width(); ++x){
           uint32_t c = color_rem_transp(img32.get_argb(x,y), false);
@@ -329,7 +329,7 @@ main(){
       }
 
       image_save_png(img, "test_png/img_8_def.png");
-      Image I = image_load_png("test_png/img_8_def.png", 1);
+      ImageR I = image_load_png("test_png/img_8_def.png", 1);
       assert_eq(I.type(), IMAGE_8);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
@@ -411,9 +411,9 @@ main(){
 
     { // IMAGE_8PAL
       std::vector<uint32_t> colors = image_colormap(img32);
-      Image img = image_remap(img32, colors);
+      ImageR img = image_remap(img32, colors);
       image_save_png(img, "test_png/img_8p_def.png");
-      Image I = image_load_png("test_png/img_8p_def.png", 1);
+      ImageR I = image_load_png("test_png/img_8p_def.png", 1);
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
@@ -502,14 +502,14 @@ main(){
 
 
     { // IMAGE_1
-      Image img(256,128, IMAGE_1);
+      ImageR img(256,128, IMAGE_1);
       for (int y=0; y<img.height(); ++y){
         for (int x=0; x<img.width(); ++x){
           img.set1(x,y, (int)(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
         }
       }
       image_save_png(img, "test_png/img_1_def.png");
-      Image I = image_load_png("test_png/img_1_def.png", 1);
+      ImageR I = image_load_png("test_png/img_1_def.png", 1);
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
@@ -581,10 +581,10 @@ main(){
     }
 
     { //scale tests
-      Image I0 = image_load_png("test_png/img_32_def.png", 1);
+      ImageR I0 = image_load_png("test_png/img_32_def.png", 1);
       iPoint pt(101,32);
       for (double sc=1; sc<10; sc+=0.8){
-        Image I1 = image_load_png("test_png/img_32_def.png", sc);
+        ImageR I1 = image_load_png("test_png/img_32_def.png", sc);
         assert_eq(I1.width(), floor((I0.width()-1)/sc+1));
         assert_eq(I1.height(), floor((I0.height()-1)/sc+1));
         iPoint pt1 = (dPoint)pt/sc;
@@ -604,7 +604,7 @@ main(){
       std::ifstream str("test_png/img_32_def.png");
       assert_err(image_load_png(str, 0),
         "image_load_png: wrong scale: 0");
-      Image I = image_load_png(str, 1);
+      ImageR I = image_load_png(str, 1);
       assert_eq(I.type(), IMAGE_32ARGB);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);

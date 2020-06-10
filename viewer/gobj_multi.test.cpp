@@ -52,7 +52,7 @@ main(){
 
     /************************************************/
     // Image filled with black color + CairoWrapper
-    Image img(100,100, IMAGE_32ARGB);
+    ImageR img(100,100, IMAGE_32ARGB);
     CairoWrapper cr;
     cr.set_surface_img(img);
     cr->set_color(col0);

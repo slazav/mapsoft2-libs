@@ -1,12 +1,12 @@
 #include "image.h"
 
 // image << operator
-std::ostream & operator<< (std::ostream & s, const Image & i) {
+std::ostream & operator<< (std::ostream & s, const ImageR & i) {
   if (i.width()==0 || i.height()==0) {
-    s << "Image(empty)";
+    s << "ImageR(empty)";
   }
   else {
-    s << "Image(" << i.width() << "x" << i.height() << ", ";
+    s << "ImageR(" << i.width() << "x" << i.height() << ", ";
 
     switch (i.type()){
       case IMAGE_32ARGB:  s << "ARGB, 32bpp"; break;

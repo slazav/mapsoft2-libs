@@ -66,7 +66,7 @@ image_size_png(std::istream & str){
 
 /**********************************************************/
 
-Image
+ImageR
 image_load_png(std::istream & str, const double scale){
 
   if (!str)  throw Err() << "image_load_png: can't open file";
@@ -76,7 +76,7 @@ image_load_png(std::istream & str, const double scale){
   png_infop info_ptr = NULL, end_info = NULL;
 
   png_bytep row_buf = NULL;
-  Image img;
+  ImageR img;
 
   try {
 
@@ -121,7 +121,7 @@ image_load_png(std::istream & str, const double scale){
       if (bit_depth == 16)
         png_set_strip_16(png_ptr);
 
-      img = Image(w1,h1, IMAGE_8PAL);
+      img = ImageR(w1,h1, IMAGE_8PAL);
       int cnum = 0;
       png_color *palette;
       png_get_PLTE(png_ptr, info_ptr, &palette, &cnum);
@@ -156,7 +156,7 @@ image_load_png(std::istream & str, const double scale){
       if (bit_depth == 16)
         png_set_strip_16(png_ptr);
 
-      img = Image(w1,h1, IMAGE_24RGB);
+      img = ImageR(w1,h1, IMAGE_24RGB);
     }
 
     else if (color_type == PNG_COLOR_TYPE_GRAY){
@@ -164,13 +164,13 @@ image_load_png(std::istream & str, const double scale){
         png_set_expand_gray_1_2_4_to_8(png_ptr);
 
       if (bit_depth <= 8)
-        img = Image(w1,h1, IMAGE_8);
+        img = ImageR(w1,h1, IMAGE_8);
       else
-        img = Image(w1,h1, IMAGE_16);
+        img = ImageR(w1,h1, IMAGE_16);
     }
 
     else {
-      img = Image(w1,h1, IMAGE_32ARGB);
+      img = ImageR(w1,h1, IMAGE_32ARGB);
 
       if (bit_depth == 16)
         png_set_strip_16(png_ptr);
@@ -293,7 +293,7 @@ png_flush_data_fn(png_structp png_ptr){
 /**********************************************************/
 
 void
-image_save_png(const Image & im, std::ostream & str,
+image_save_png(const ImageR & im, std::ostream & str,
                const Opt & opt){
 
   if (!str) throw Err() << "image_save_png: can't open file";
@@ -332,7 +332,7 @@ image_save_png(const Image & im, std::ostream & str,
     }
 
     // png palette
-    Image im8 = im;
+    ImageR im8 = im;
     if (s == "pal"){
       std::vector<uint32_t> colors = image_colormap(im, opt);
       im8 = image_remap(im, colors, opt);
@@ -451,18 +451,18 @@ image_size_png(const std::string & fname){
   return ret;
 }
 
-Image
+ImageR
 image_load_png(const std::string & fname, const double scale){
   std::ifstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;
-  Image ret;
+  ImageR ret;
   try { ret = image_load_png(str, scale); }
   catch(Err e){ throw Err() << e.str() << ": " << fname; }
   return ret;
 }
 
 void
-image_save_png(const Image & im, const std::string & fname,
+image_save_png(const ImageR & im, const std::string & fname,
                const Opt & opt){
   std::ofstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;

@@ -35,8 +35,8 @@ private:
     dRect src_bbox; // map original bbox (it may take some time to get it)
     const GeoMap * src;   // pointer to the map
   };
-  ImageCache img_cache;
-  Cache<iRect, Image> tiles;
+  ImageRCache img_cache;
+  Cache<iRect, ImageR> tiles;
   std::vector<MapData> data;
 
   bool smooth;   // smooth map drawing

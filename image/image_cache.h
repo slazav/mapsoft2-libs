@@ -9,16 +9,16 @@
 #include "image_colors.h"
 
 // class for image cache
-class ImageCache {
-  Cache<std::string, std::pair<int, Image> > cache;
+class ImageRCache {
+  Cache<std::string, std::pair<int, ImageR> > cache;
 
 public:
   // constructor: make cache with maxnum capacity.
-  ImageCache(const int maxnum) : cache(maxnum){}
+  ImageRCache(const int maxnum) : cache(maxnum){}
 
   // Load image with scale sc or use already loaded image.
   // Border is applied only once, after loading.
-  Image get(const std::string & fn,
+  ImageR get(const std::string & fn,
              const int sc = 1,
              const iLine & border = iLine()){
 
@@ -27,7 +27,7 @@ public:
       if (ip.first == sc) return ip.second;
     }
 
-    Image img = image_load(fn, sc);
+    ImageR img = image_load(fn, sc);
     if (border.size()) image_apply_border(img, border/sc, 0);
     cache.add(fn, std::make_pair(sc, img));
     return img;
