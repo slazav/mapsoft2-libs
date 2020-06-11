@@ -8,6 +8,11 @@ int
 main(){
   try{
 
+    {
+      // create and destroy
+      Downloader D;
+    }
+
 //    char cwd[1024];
 //    getcwd(cwd, sizeof(cwd));
     std::string pref("file://");
@@ -55,6 +60,7 @@ main(){
 //    D.add("http://slazav.mccme.ru/maps/podm/N54bE037.img");
 //    D.add("http://slazav.mccme.ru/maps/podm/N54bE038.img");
 //    D.get("http://slazav.mccme.ru/maps/podm/N54bE036.img");
+
 
   }
   catch (Err e) {

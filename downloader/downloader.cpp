@@ -15,7 +15,7 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 
 /**********************************/
 Downloader::Downloader(const int max_conn):
-       max_conn(max_conn), num_conn(0), worker_needed(1),
+       max_conn(max_conn), num_conn(0), worker_needed(true),
        lk(data_mutex, std::defer_lock),
        worker_thread(&Downloader::worker, this) {
        //std::cerr << "Downloader: create thread\n";
@@ -205,12 +205,12 @@ Downloader::worker(){
 
     // If libcurl has finished and queue is empty wait for wakeup_cond
     lk.lock();
-    if (urls.empty() && !still_alive)
+    if (urls.empty() && !still_alive && worker_needed)
       add_cond.wait(lk);
     lk.unlock();
 
     // Wait for libcurl
-    if (still_alive)
+    if (still_alive && worker_needed)
       curl_multi_wait(cm, NULL, 0, 1000, NULL);
 
   } while(worker_needed);
