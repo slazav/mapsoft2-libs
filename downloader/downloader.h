@@ -2,11 +2,30 @@
 #define DOWNLOADER_H
 
 /*
-Downloader class. Download files using libcurl, use parallel
-downloading and cache.
-*/
+Download manager. Download files using libcurl, use parallel
+downloading. Results are stored in memory.
 
-// https://curl.haxx.se/libcurl/c/10-at-a-time.html
+Usecases:
+
+1. get() an URL, use data, del() the URL (data will be destroyed)
+
+2. add() all needed URLs for parallel downloading,
+   get() them, use data
+   del() all URLs one by one, or clear() all or them
+
+3. Use clean_list mechanism:
+- update_clean_list method removes all URLs mentioned in
+  the clean_list, and adds all known URLs to the clean list.
+- add() method adds an URL to the downloading queue and removes
+  it from the clean list.
+
+Using clean_list mechanism:
+- add() all URLs which will be needed.
+- run update_clean_list()
+- get() and use URLs
+- calculate a new set of URLs (it may have same URLs) and repeat
+
+*/
 
 #include <string>
 #include <map>
@@ -23,6 +42,9 @@ class Downloader {
     // url -> status (0:waiting, 1: in progress, 2:ok, 3:error)
     // Also used to store url string for libcurl
     std::map<std::string, int> status;
+
+    // clean list (accessed only from main thread)
+    std::map<std::string, int> clean_list;
 
     // url -> data
     std::map<std::string, std::string> data;
@@ -63,9 +85,14 @@ class Downloader {
   // Return downloaded data if status is 2, throw relevant error otherwise.
   std::string & get_data(const std::string & url);
 
-  // High-level command: combine add + wait + get_data commands.
+  // High-level command: combine add + wait + get_data methods.
   std::string & get(const std::string & url);
 
+
+  // Update clean_list:
+  // - remove all urls which are in the clean_list
+  // - add all known urls to the clean_list
+  void update_clean_list();
 
   private:
     // the separate thread for downloading

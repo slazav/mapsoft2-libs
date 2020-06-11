@@ -36,6 +36,7 @@ Downloader::add(const std::string & url){
   lk.lock();
   urls.push(url);
   status.emplace(url, 0);
+  clean_list.erase(url);
   data.emplace(url, std::string());
   lk.unlock();
   add_cond.notify_one();
@@ -52,6 +53,7 @@ Downloader::del(const std::string & url){
   // deleted there.
   if (status[url] >= 2) data.erase(url);
   status.erase(url);
+  clean_list.erase(url);
   lk.unlock();
 }
 
@@ -106,6 +108,16 @@ Downloader::get(const std::string & url){
   add(url);
   wait(url);
   return get_data(url);
+}
+
+/**********************************/
+void
+Downloader::update_clean_list(){
+  lk.lock();
+  for (auto const & i:clean_list)
+    status.erase(i.first);
+  clean_list = status;
+  lk.unlock();
 }
 
 /**********************************/
