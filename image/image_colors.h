@@ -37,7 +37,7 @@ int image_classify_color(const ImageR & img, uint32_t *colors, int clen=256);
 
 // Change image color outside border line. (NOT USED?)
 // If border line is empty, set color in the whole image
-void image_apply_border(const ImageR & img, const iLine & brd = iLine(),
+void image_apply_border(ImageR & img, const iLine & brd = iLine(),
                         const uint32_t color = 0);
 
 #endif

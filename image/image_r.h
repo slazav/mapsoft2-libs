@@ -12,7 +12,7 @@
 #include "colors.h"
 
 /*
-An image: 2d array of arbitrary data.
+An raster image: 2d array of arbitrary data.
 */
 
 // ImageDataType shows data type of the image.
@@ -31,7 +31,6 @@ enum ImageDataType {
 };
 
 /*********************************************************************/
-// base class
 class ImageR : public Image {
   private:
     std::shared_ptr<uint8_t> data_;
@@ -52,7 +51,7 @@ class ImageR : public Image {
     bool is_empty() const {return w==0 || h==0;}
     operator bool() const{ return w!=0 && h!=0; }
 
-    // get data size
+    // get data size (0 for IMAGE_UNKNOWN)
     size_t dsize() const {
       switch (t){
         case IMAGE_32ARGB: return w*h*4;
@@ -90,50 +89,22 @@ class ImageR : public Image {
 
     /******************************************************/
     // Fast get functions for different image types.
-    // Return raw data.
+    // Return raw data or uint32_t ARGB color (*col versions)
     // Image type and coordinate range should be checked before.
 
     // Fast get function for image type IMAGE_32ARGB
     uint32_t get32(const size_t x, const size_t y) const{
       return ((uint32_t*)data_.get())[w*y+x]; }
 
+    // Fast get function for image type IMAGE_24RGB
+    uint32_t get24(const size_t x, const size_t y) const{
+      auto d = data_.get() + 3*(w*y+x);
+      return 0xFF000000 + (d[0]<<16) + (d[1]<<8) + d[2];
+    }
+
     // Fast get function for image type IMAGE_16
     uint16_t get16(const size_t x, const size_t y) const{
       return ((uint16_t*)data_.get())[w*y+x]; }
-
-    // Fast get function for image types IMAGE_8 and IMAGE_8PAL
-    uint8_t get8(const size_t x, const size_t y) const{
-      return data_.get()[w*y+x]; }
-
-    // Fast get function for image type IMAGE_1.
-    bool get1(const size_t x, const size_t y) const{
-      size_t b = (w*y+x)/8; // byte
-      size_t o = (w*y+x)%8; // offset
-      uint8_t v = data_.get()[b];
-      return (v >> o) & 1;
-    }
-
-    // Fast get function for image type IMAGE_FLOAT
-    float getF(const size_t x, const size_t y) const{
-      return ((float *)data_.get())[w*y+x]; }
-
-    // Fast get function for image type IMAGE_DOUBLE
-    double getD(const size_t x, const size_t y) const{
-      return ((double *)data_.get())[w*y+x]; }
-
-    /******************************************************/
-    // Fast color get functions for different image types.
-    // Return 32-bit colors.
-    // Image type and coordinate range should be checked before.
-
-    // Fast get function for image type IMAGE_24RGB
-    uint32_t get24(const size_t x, const size_t y) const{
-      int i0 = 3*(w*y+x);
-      return 0xFF000000 +
-             (data_.get()[i0]<<16) +
-             (data_.get()[i0+1]<<8) +
-              data_.get()[i0+2];
-    }
 
     // Fast color get function for image type IMAGE_16
     // To convert 16-bit data into color the less significant byte is skipped.
@@ -141,6 +112,10 @@ class ImageR : public Image {
       uint16_t c = (((uint16_t*)data_.get())[w*y+x] >> 8) & 0xFF;
       return 0xFF000000 + (c<<16) + (c<<8) + c;
     }
+
+    // Fast get function for image types IMAGE_8 and IMAGE_8PAL
+    uint8_t get8(const size_t x, const size_t y) const{
+      return data_.get()[w*y+x]; }
 
     // Fast color get function for image type IMAGE_8
     // Image type and coordinate range should be checked before.
@@ -159,17 +134,33 @@ class ImageR : public Image {
       return get1(x,y) ? 0xFFFFFFFF:0xFF000000;
     }
 
+    // Fast get function for image type IMAGE_1.
+    bool get1(const size_t x, const size_t y) const{
+      size_t b = (w*y+x)/8; // byte
+      size_t o = (w*y+x)%8; // offset
+      uint8_t v = data_.get()[b];
+      return (v >> o) & 1;
+    }
+
+    // Fast get function for image type IMAGE_FLOAT
+    float getF(const size_t x, const size_t y) const{
+      return ((float *)data_.get())[w*y+x]; }
+
+    // Fast get function for image type IMAGE_DOUBLE
+    double getD(const size_t x, const size_t y) const{
+      return ((double *)data_.get())[w*y+x]; }
+
     // Color get function for IMAGE_UNKNOWN.
-    // To be redefined in non-standard image classes.
     virtual uint32_t getUcol(const size_t x, const size_t y) const{
-      return 0;
+      return bgcolor;
     }
 
     /******************************************************/
-    // universal get functions, should work for any image type
+    // Universal get functions, should work for any image type
+    // Coordinate range still should be checked before.
 
     // Get ARGB (prescaled) color for any image type.
-    uint32_t get_argb(const size_t x, const size_t y) const override{
+    uint32_t get_argb(const size_t x, const size_t y) const {
       switch (t){
         case IMAGE_32ARGB: return get32(x,y);
         case IMAGE_24RGB:  return get24(x,y);
@@ -182,64 +173,6 @@ class ImageR : public Image {
         case IMAGE_UNKNOWN: return getUcol(x,y);
       }
       return 0;
-    }
-
-    // Get color value for a dPoint<double> with range checks.
-    uint32_t get_argb_safe(const dPoint & p){
-      int x=rint(p.x), y=rint(p.y);
-      if (x<0 || x>=w || y<0 || y>=h) return 0;
-      return get_argb(x,y);
-    }
-
-    // Get color value using 4-point interpolation.
-    uint32_t get_argb_int4(const dPoint & p){
-      int x1 = floor(p.x), x2 = x1+1;
-      int y1 = floor(p.y), y2 = y1+1;
-      if (x1<0 || x2>=w || y1<0 || y2>=h) return 0;
-      uint32_t v1 = get_argb(x1,y1);
-      uint32_t v2 = get_argb(x1,y2);
-      uint32_t v3 = get_argb(x2,y1);
-      uint32_t v4 = get_argb(x2,y2);
-      uint32_t v0 = 0;
-      for (int sh = 0; sh<32; sh+=8){
-        double c1 = (v1>>sh) & 0xff;
-        double c2 = (v2>>sh) & 0xff;
-        double c3 = (v3>>sh) & 0xff;
-        double c4 = (v4>>sh) & 0xff;
-        double c12 = c1+(c2-c1)*(p.y-y1);
-        double c34 = c3+(c4-c3)*(p.y-y1);
-        double c0 = c12+(c34-c12)*(p.x-x1);
-        v0 += ((int)c0 & 0xff) << sh;
-      }
-      return v0;
-    }
-
-    // Get averaged color value in radius `rad`.
-    uint32_t get_argb_avrg(const dPoint & p, double rad=2.0){
-      int x1 = floor(p.x-rad), x2 = ceil(p.x+rad);
-      int y1 = floor(p.y-rad), y2 = ceil(p.y+rad);
-      if (x1<0) x1=0; if (x1>=w) x1=w-1;
-      if (x2<0) x2=0; if (x2>=w) x2=w-1;
-      if (y1<0) y1=0; if (y1>=h) y1=h-1;
-      if (y2<0) y2=0; if (y2>=h) y2=h-1;
-      double sc[4] = {0,0,0,0};
-      double s0[4] = {0,0,0,0};
-      uint32_t v0 = 0;
-      for (int y=y1; y<=y2; ++y){
-        for (int x=x1; x<=x2; ++x){
-          uint32_t v = get_argb(x,y);
-          for (int i = 0; i<4; ++i){
-            double d = dist2d(p, dPoint(x,y));
-            sc[i] += ((v>>(8*i)) & 0xff) * exp(-d/rad*2);
-            s0[i] += exp(-d/rad*2);
-          }
-        }
-      }
-      for (int i = 0; i<4; ++i){
-        if (s0[i]>0)
-          v0 += ((int)(sc[i]/s0[i]) & 0xff) << (8*i);
-      }
-      return v0;
     }
 
     // Get RGB color for any image type.
@@ -275,30 +208,110 @@ class ImageR : public Image {
     }
 
     /******************************************************/
+    // overrides for Image interface
+
+    bool check_crd(const int x, const int y) const override{
+      return x>=0 && x<w && y>=0 && y<h;
+    }
+
+    bool check_rng(const int x1, const int y1,
+                   const int x2, const int y2) const override{
+      return x1>=0 && x2<w && y1>=0 && y2<h;
+    }
+
+    // redefine Image::get_color:
+    uint32_t get_color(const int x, const int y) override{
+      if (!check_crd(x,y)) return bgcolor;
+      return get_argb(x,y);
+    }
+
+    /******************************************************/
+    // to be moved to Image?
+
+    // Get color value for a dPoint<double> with range checks.
+    uint32_t get_argb_safe(const dPoint & p) const{
+      int x=rint(p.x), y=rint(p.y);
+      if (!check_crd(x,y)) return bgcolor;
+      return get_argb(x,y);
+    }
+
+    // Get color value using 4-point interpolation.
+    uint32_t get_argb_int4(const dPoint & p) const{
+      int x1 = floor(p.x), x2 = x1+1;
+      int y1 = floor(p.y), y2 = y1+1;
+      if (!check_rng(x1,y1,x2,y2)) return bgcolor;
+      uint32_t v1 = get_argb(x1,y1);
+      uint32_t v2 = get_argb(x1,y2);
+      uint32_t v3 = get_argb(x2,y1);
+      uint32_t v4 = get_argb(x2,y2);
+      uint32_t v0 = 0;
+      for (int sh = 0; sh<32; sh+=8){
+        double c1 = (v1>>sh) & 0xff;
+        double c2 = (v2>>sh) & 0xff;
+        double c3 = (v3>>sh) & 0xff;
+        double c4 = (v4>>sh) & 0xff;
+        double c12 = c1+(c2-c1)*(p.y-y1);
+        double c34 = c3+(c4-c3)*(p.y-y1);
+        double c0 = c12+(c34-c12)*(p.x-x1);
+        v0 += ((int)c0 & 0xff) << sh;
+      }
+      return v0;
+    }
+
+    // Get averaged color value in radius `rad`.
+    uint32_t get_argb_avrg(const dPoint & p, double rad=2.0) const{
+      int x1 = floor(p.x-rad), x2 = ceil(p.x+rad);
+      int y1 = floor(p.y-rad), y2 = ceil(p.y+rad);
+      if (x1<0) x1=0; if (x1>=w) x1=w-1;
+      if (x2<0) x2=0; if (x2>=w) x2=w-1;
+      if (y1<0) y1=0; if (y1>=h) y1=h-1;
+      if (y2<0) y2=0; if (y2>=h) y2=h-1;
+      double sc[4] = {0,0,0,0};
+      double s0[4] = {0,0,0,0};
+      uint32_t v0 = 0;
+      for (int y=y1; y<=y2; ++y){
+        for (int x=x1; x<=x2; ++x){
+          uint32_t v = get_argb(x,y);
+          for (int i = 0; i<4; ++i){
+            double d = dist2d(p, dPoint(x,y));
+            sc[i] += ((v>>(8*i)) & 0xff) * exp(-d/rad*2);
+            s0[i] += exp(-d/rad*2);
+          }
+        }
+      }
+      for (int i = 0; i<4; ++i){
+        if (s0[i]>0)
+          v0 += ((int)(sc[i]/s0[i]) & 0xff) << (8*i);
+      }
+      return v0;
+    }
+
+
+    /******************************************************/
     // Fast set functions for different image types.
     // Image type and coordinate range should be checked before.
 
     // Fast set function for image type IMAGE_32ARGB.
-    void set32(const size_t x, const size_t y, const uint32_t v) const{
+    void set32(const size_t x, const size_t y, const uint32_t v){
       ((uint32_t*)data_.get())[w*y+x] = v; }
 
     // Fast set function for image type IMAGE_24RGB
-    void set24(const size_t x, const size_t y, const uint32_t v) const{
+    void set24(const size_t x, const size_t y, const uint32_t v){
       data_.get()[3*(w*y+x)]   = (v>>16) & 0xFF;
       data_.get()[3*(w*y+x)+1] = (v>>8)  & 0xFF;
       data_.get()[3*(w*y+x)+2] = v & 0xFF;
     }
 
     // Fast set function for image type IMAGE_16
-    void set16(const size_t x, const size_t y, const uint16_t v) const{
+    void set16(const size_t x, const size_t y, const uint16_t v){
       ((uint16_t *)data_.get())[w*y+x] = v; }
 
     // Fast set function for image types IMAGE_8 and IMAGE_8PAL
-    void set8(const size_t x, const size_t y, const uint8_t v) const{
+    void set8(const size_t x, const size_t y, const uint8_t v){
       data_.get()[w*y+x] = v; }
 
     // Fast set function for image type IMAGE_1.
-    void set1(const size_t x, const size_t y, const bool v) const{
+    void set1(const size_t x, const size_t y, const bool v){
       size_t b = (w*y+x)/8; // byte
       size_t o = (w*y+x)%8; // offset
       uint8_t old = data_.get()[b];
@@ -306,16 +319,16 @@ class ImageR : public Image {
     }
 
     // Fast set function for image type IMAGE_FLOAT
-    void setF(const size_t x, const size_t y, const float v) const{
+    void setF(const size_t x, const size_t y, const float v){
       ((float*)data_.get())[w*y+x] = v; }
 
     // Fast set function for image type IMAGE_DOUBLE
-    void setD(const size_t x, const size_t y, const double v) const{
+    void setD(const size_t x, const size_t y, const double v){
       ((double*)data_.get())[w*y+x] = v; }
 
     // Color set function for IMAGE_UNKNOWN.
     // To be redefined in non-standard image classes.
-    virtual void setUcol(const size_t x, const size_t y) const{
+    virtual void setUcol(const size_t x, const size_t y){
     }
 
     /******************************************************/

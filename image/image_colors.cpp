@@ -402,7 +402,7 @@ image_classify_color(const ImageR & img, uint32_t *colors, int clen){
 
 // Change image color outside border line.
 // If border line is empty, set color in the whole image
-void image_apply_border(const ImageR & img, const iLine & brd, uint32_t color ){
+void image_apply_border(ImageR & img, const iLine & brd, uint32_t color ){
 
   if (img.type() != IMAGE_32ARGB) throw Err() <<
     "image_classify: only 32-bpp images are supported";
