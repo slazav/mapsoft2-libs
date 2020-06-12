@@ -9,6 +9,10 @@
 
 using namespace std;
 
+#define IMAGE_CACHE_SIZE 10
+
+#define TILE_CACHE_SIZE 128
+
 void
 ms2opt_add_drawmap(GetOptSet & opts){
   const char *g = "DRAWMAP";
@@ -25,10 +29,11 @@ ms2opt_add_drawmap(GetOptSet & opts){
     "Color to fade the map (default is 0, no fading).");
 }
 
+
 /**********************************************************/
 
 GObjMaps::GObjMaps(GeoMapList & maps):
-    maps(maps), img_cache(10), tiles(128),
+    maps(maps), img_cache(IMAGE_CACHE_SIZE), tiles(TILE_CACHE_SIZE),
     smooth(false), clip_brd(true), draw_refs(0), draw_brd(0), fade(0) {
 
   for (auto & m:maps){
@@ -86,7 +91,7 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
     range_dst.to_ceil();
 
-    // render image int put it into tiles cache
+    // render image and put it into tiles cache
     if (!render_tile(d, range_dst))
       return GObj::FILL_NONE;
 
