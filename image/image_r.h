@@ -268,17 +268,18 @@ class ImageR : public Image {
       if (y2<0) y2=0; if (y2>=h) y2=h-1;
       double sc[4] = {0,0,0,0};
       double s0[4] = {0,0,0,0};
-      uint32_t v0 = 0;
       for (int y=y1; y<=y2; ++y){
         for (int x=x1; x<=x2; ++x){
           uint32_t v = get_argb(x,y);
+          double d = dist2d(p, dPoint(x,y));
+          double w = exp(-d/rad*2);
           for (int i = 0; i<4; ++i){
-            double d = dist2d(p, dPoint(x,y));
-            sc[i] += ((v>>(8*i)) & 0xff) * exp(-d/rad*2);
-            s0[i] += exp(-d/rad*2);
+            sc[i] += ((v>>(8*i)) & 0xff) * w;
+            s0[i] += w;
           }
         }
       }
+      uint32_t v0 = 0;
       for (int i = 0; i<4; ++i){
         if (s0[i]>0)
           v0 += ((int)(sc[i]/s0[i]) & 0xff) << (8*i);
