@@ -52,7 +52,7 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
   ImageR image_src = img_cache.get(d.src->image, d.load_sc);
   ImageR image_dst = ImageR(range_dst.w, range_dst.h, IMAGE_32ARGB);
 
-  double avr = d.scale/d.load_sc/2;
+  double avr = d.scale/d.load_sc;
   // render image
   for (int yd=0; yd<image_dst.height(); ++yd){
     if (stop_drawing) return false;
@@ -194,7 +194,8 @@ GObjMaps::on_rescale(double k){
     // scale for image loading
     d.cnv.rescale_dst(d.load_sc);
     d.load_sc = floor(1.0*d.scale);
-    if (d.load_sc <=0) d.load_sc = 1;
+    if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
+    if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
     d.cnv.rescale_dst(1.0/d.load_sc);
   }
   range*=k;
