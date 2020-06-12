@@ -73,6 +73,35 @@ image_load(const std::string & fname, const double scale, const Opt & opts){
   return ImageR();
 }
 
+ImageR
+image_load(std::istream & str, const double scale, const Opt & opt){
+  // Read first 3 bytes and detect format:
+  // see https://en.wikipedia.org/wiki/List_of_file_signatures
+  /// tiff 49 49 2A 00
+  /// tiff 4D 4D 00 2A
+  /// jpeg FF D8 FF
+  /// png  89 50 4E 47
+  /// gif 47 49 46
+  unsigned char buf[3];
+  str.read((char *)buf,3);
+  str.seekg(std::ios_base::beg);
+
+  if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF)
+    return image_load_jpeg(str, scale);
+
+  if (buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E)
+    return image_load_png(str, scale);
+
+  if ((buf[0] == 0x49 && buf[1] == 0x49 && buf[2] == 0x2A) ||
+      (buf[0] == 0x4D && buf[1] == 0x4D && buf[2] == 0x00))
+    return image_load_tiff(str, scale);
+
+  if (buf[0] == 0x47 && buf[1] == 0x49 && buf[2] == 0x46)
+    throw Err() << "image_load: loading GIF files from stream is not supported";
+
+  throw Err() << "image_load: unknown image format";
+}
+
 
 // save the whole image
 void
