@@ -11,17 +11,17 @@ main(){
 
     // size
     assert_err(image_size("test_gif/missing"),
-      "image_size: unknown format: test_gif/missing");
+      "Can't open file: test_gif/missing");
     assert_err(image_size("test_gif/missing.gif"),
-      "image_size_gif: can't open file: test_gif/missing.gif");
+      "Can't open file: test_gif/missing.gif");
     assert_err(image_size("test_gif/Readme.md"),
       "image_size: unknown format: test_gif/Readme.md");
 
     // load
     assert_err(image_load("test_gif/missing"),
-      "image_load: unknown format: test_gif/missing");
+      "Can't open file: test_gif/missing");
     assert_err(image_load("test_gif/missing.gif"),
-      "image_load_gif: can't open file: test_gif/missing.gif");
+      "Can't open file: test_gif/missing.gif");
     assert_err(image_load("test_gif/Readme.md"),
       "image_load: unknown format: test_gif/Readme.md");
 
