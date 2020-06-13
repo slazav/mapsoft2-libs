@@ -26,7 +26,6 @@ private:
 
   struct MapData{
     ConvMulti cnv;  // conversion from viewer coordinates to the map coordinates
-    bool   simp;    // true if conversion was simplified (then manual rescaling is needed)
     double scale;   // map scale (map pixels / viewer pixels)
     double load_sc; // scale for image loading
     dMultiLine brd; // map border (in viewer coordinates)

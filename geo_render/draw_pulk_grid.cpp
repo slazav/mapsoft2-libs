@@ -47,9 +47,7 @@ draw_pulk_grid(CairoWrapper & cr, const iPoint & origin,
       draw_pulk_grid_convs.add(lon0, ConvGeo(GEO_PROJ_SU(lon0)));
 
     ConvGeo cnv1(draw_pulk_grid_convs.get(lon0));
-    ConvMulti cnv2( cnv,
-      std::shared_ptr<ConvBase>(new ConvGeo(draw_pulk_grid_convs.get(lon0))),
-      1,0); // map -> pulk
+    ConvMulti cnv2(*cnv, cnv1, 1,0); // map -> pulk
 
     dRect rng_pulk = cnv1.bck_acc(rng_wgs); // wgs -> pulkovo
 

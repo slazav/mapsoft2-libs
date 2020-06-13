@@ -151,10 +151,8 @@ GObjMaps::on_set_cnv(){
 
     // conversion viewer->map
     d.cnv.reset();
-    if (cnv) d.cnv.push_back(cnv, true); // viewer -> WGS
-    d.cnv.push_back(
-      std::shared_ptr<ConvMap>(new ConvMap(*d.src)),
-      false);
+    if (cnv) d.cnv.push_back(*cnv, true); // viewer -> WGS
+    d.cnv.push_back(ConvMap(*d.src), false); // WGS -> map
 
     // border in viewer coordinates
     d.brd = d.cnv.bck_acc(close(d.src->border));
@@ -170,7 +168,7 @@ GObjMaps::on_set_cnv(){
     range.expand(d.bbox);
 
     // simplify the conversion if possible
-    d.simp = d.cnv.simplify(d.bbox, 5, 0.5);
+    d.cnv.simplify(d.bbox, 5, 0.5);
 
     // calculate map scale (map pixels per viewer pixel)
     dPoint sc = d.cnv.scales(d.bbox);
@@ -190,7 +188,7 @@ GObjMaps::on_rescale(double k){
     d.refs*=k;
     d.bbox*=k;
     d.scale/=k;
-    if (d.simp) d.cnv.rescale_src(1.0/k);
+    d.cnv.rescale_src(1.0/k);
     // scale for image loading
     d.cnv.rescale_dst(d.load_sc);
     d.load_sc = floor(1.0*d.scale);
