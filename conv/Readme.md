@@ -16,9 +16,13 @@ Note that in some cases forward and backward conversions are non-symmetric
    forward and backwart in-place point conversion. By default is is
    just a rescaling with `rescale_src*rescale_dst` factor.
 
+- `clone()` -- make a std::shared_ptr copy of the object. Should
+  be redefined in all derived classes. Allows to make a copy of
+  a transformation without knowing it's type.
+
 - `frw(dPoint &), bck(dPoint &), frw(dLine &), bck(dLine &),
    frw(dMultiLine &), bck(MultidLine &)` -- Convert points
-    (save as frw_pt, bck_pt), lines and multilines (without changing number of points).
+    (same as frw_pt, bck_pt), lines and multilines (without changing number of points).
 
 - `dLine frw_acc(const dLine & l, double acc) const`
 - `dLine bck_acc(const dLine & l, double acc) const` --

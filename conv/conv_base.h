@@ -1,6 +1,7 @@
 #ifndef CONV_BASE_H
 #define CONV_BASE_H
 
+#include <memory> // shared_ptr
 #include "geom/point.h"
 #include "geom/line.h"
 #include "geom/multiline.h"
@@ -24,6 +25,11 @@ struct ConvBase{
   // backward point conversion (can be redefined)
   virtual void bck_pt(dPoint & p) const {p.x/=sc_src*sc_dst; p.y/=sc_src*sc_dst;}
 
+  // Get copy of the object. Should be redefined in derived classes.
+  // Allows to copy Conv* class without knowing its actual type.
+  virtual std::shared_ptr<ConvBase> clone() const {
+    return std::shared_ptr<ConvBase>(new ConvBase(*this));
+  }
 
   /// Forward point transformation.
   virtual void frw(dPoint & p) const {frw_pt(p);}

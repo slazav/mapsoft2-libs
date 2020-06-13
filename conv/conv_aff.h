@@ -30,17 +30,22 @@ public:
   void reset(const std::map<dPoint, dPoint> & ref);
 
   /// point transformation
-  void frw_pt(dPoint & p) const{
+  void frw_pt(dPoint & p) const override{
     double x = k_frw[0]*p.x + k_frw[1]*p.y + k_frw[2];
     double y = k_frw[3]*p.x + k_frw[4]*p.y + k_frw[5];
     p.x=x; p.y=y;
   }
 
   /// point transformation
-  void bck_pt(dPoint & p) const{
+  void bck_pt(dPoint & p) const override{
     double x = k_bck[0]*p.x + k_bck[1]*p.y + k_bck[2];
     double y = k_bck[3]*p.x + k_bck[4]*p.y + k_bck[5];
     p.x=x; p.y=y;
+  }
+
+  // redefine clone() method
+  virtual std::shared_ptr<ConvBase> clone() const override{
+    return std::shared_ptr<ConvBase>(new ConvAff2D(*this));
   }
 
   /// forward conversion determinant

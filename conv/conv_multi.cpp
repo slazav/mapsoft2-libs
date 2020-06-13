@@ -27,15 +27,13 @@ ConvMulti::simplify(const dRect & src_box, int N, double E) {
   for (int i=0; i<NP; ++i)
     ptmap.emplace(pts_src[i], pts_dst[i]);
 
-  std::shared_ptr<ConvAff2D> new_cnv(new ConvAff2D(ptmap));
-  new_cnv->bck(pts_dst); // to src coordinates
+  ConvAff2D new_cnv(ptmap);
+  new_cnv.bck(pts_dst); // to src coordinates
 
   // if error in the conversion is small, use this conversion
-  if (new_cnv->get_src_err() < E){
+  if (new_cnv.get_src_err() < E){
     cnvs.clear();
-    dirs.clear();
-    cnvs.push_back(new_cnv);
-    dirs.push_back(true);
+    push_back(new_cnv);
     return true;
   }
   return false;

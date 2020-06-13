@@ -9,19 +9,21 @@ int
 main(){
   try{
 
-    std::shared_ptr<ConvBase> cnv1(new ConvBase());
-    std::shared_ptr<ConvBase> cnv2(new ConvBase());
-    std::shared_ptr<ConvBase> cnv3(new ConvBase());
+    ConvBase cnv1;
+    ConvBase cnv2;
+    ConvBase cnv3;
 
+    cnv3.rescale_src(2);
+    cnv1.rescale_src(10);
+    cnv2.rescale_src(10);
+
+    // cnv3(frw) -> cnv1(frw) -> cnv2(bck)
     ConvMulti cnv(cnv1, cnv2, true, false);
     cnv.push_front(cnv3, true);
 
-    // cnv3(frw) -> cnv1(frw) -> cnv2(bck)
-    cnv3->rescale_src(2);
-    cnv1->rescale_src(10);
-    cnv2->rescale_src(10);
     cnv.rescale_src(2);
     cnv.rescale_dst(0.5);
+
     // 2*(2*10/10)*0.5
 
     dPoint p(10,10);

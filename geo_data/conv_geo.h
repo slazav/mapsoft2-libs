@@ -41,10 +41,15 @@ public:
   ConvGeo(const std::string & src, const std::string & dst = "WGS", const bool use2d = true);
 
   /// Forward point conversion.
-  void frw_pt(dPoint & p) const;
+  void frw_pt(dPoint & p) const override;
 
   /// Backward point conversion.
-  void bck_pt(dPoint & p) const;
+  void bck_pt(dPoint & p) const override;
+
+  // redefine clone() method
+  virtual std::shared_ptr<ConvBase> clone() const override{
+    return std::shared_ptr<ConvBase>(new ConvGeo(*this));
+  }
 
   // are source/destination coordinates in degrees (not meters)
   bool is_src_deg() const;
@@ -64,9 +69,14 @@ private:
 class ConvMap: public ConvMulti {
 public:
 
-  /// Create a transformation. `src` is a GeoMap and `dst` is
+  /// Create a transformation. `m` is a GeoMap and `dst` is
   /// libproj parameter string.
   ConvMap(const GeoMap & m, const std::string & dst = "WGS");
+
+  // redefine clone() method
+  virtual std::shared_ptr<ConvBase> clone() const override{
+    return std::shared_ptr<ConvBase>(new ConvMap(*this));
+  }
 
 };
 
