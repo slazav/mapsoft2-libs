@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <iostream>
-#include "image_io.h"
+#include "io.h"
 #include "err/assert_err.h"
 
 int

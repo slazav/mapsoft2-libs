@@ -8,7 +8,7 @@
 #include "geom/multiline.h"
 #include "geom/rect.h"
 #include "opt/opt.h"
-#include "image/image_io.h"
+#include "image/io.h"
 
 ///\addtogroup libmapsoft
 ///@{

@@ -8,7 +8,7 @@
 #include "io_tiff.h"
 #include "io_gif.h"
 
-#include "image_io.h"
+#include "io.h"
 #include "image_colors.h"
 
 /**********************************************************/

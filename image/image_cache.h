@@ -4,7 +4,7 @@
 #include <string>
 #include "cache/cache.h"
 #include "geom/line.h"
-#include "image_io.h"
+#include "io.h"
 #include "image_r.h"
 #include "image_colors.h"
 
