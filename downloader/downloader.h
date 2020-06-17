@@ -11,7 +11,7 @@ Usecases:
 
 2. add() all needed URLs for parallel downloading,
    get() them, use data
-   del() all URLs one by one, or clear() all or them
+   del() all URLs one by one, or clear() all of them
 
 3. Use clean_list mechanism:
 - update_clean_list method removes all URLs mentioned in
@@ -21,10 +21,9 @@ Usecases:
 
 Using clean_list mechanism:
 - add() all URLs which will be needed.
-- run update_clean_list()
+- run update_clean_list(). All data except added since last call to
+  update_clean_list is removed
 - get() and use URLs
-- calculate a new set of URLs (it may have same URLs) and repeat
-
 */
 
 #include <string>
