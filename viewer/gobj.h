@@ -6,7 +6,7 @@
 #include "cairo/cairo_wrapper.h"
 #include "conv/conv_base.h"
 #include <sigc++/sigc++.h>
-#include <glibmm.h> // Mutex, Lock
+#include <mutex> // Mutex, Lock
 #include <memory> // shared_ptr
 
 ///\addtogroup gred
@@ -95,7 +95,7 @@ private:
   sigc::signal<void, iRect> signal_redraw_me_;
 
   // Mutex for locking multi-thread operations.
-  Glib::Mutex draw_mutex;
+  std::mutex draw_mutex;
 
 public:
 
@@ -167,8 +167,8 @@ public:
   // - everything else sould be locked inside the object implementation.
   //
   // Method get_lock() returns the lock object.
-  Glib::Mutex::Lock get_lock() {
-    return Glib::Mutex::Lock(draw_mutex);
+  std::unique_lock<std::mutex> get_lock() {
+    return std::unique_lock<std::mutex>(draw_mutex);
   }
 
   // stop_drawing flag shows that drawing should be stopped as soon as
