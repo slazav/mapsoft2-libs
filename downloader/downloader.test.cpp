@@ -45,7 +45,7 @@ main(){
     assert_eq(s.substr(0,20), "#ifndef DOWNLOADER_H")
 
     assert_err(D.get(pref+"/missing_file"),
-      "Couldn't read a file:// file: file:///home/sla/mapsoft2/modules/downloader/missing_file");
+      "Couldn't read a file:// file: " + pref + "/missing_file");
 
     D.clear();
     assert_eq(D.get_status(pref + "/downloader.h"), -1);
