@@ -117,12 +117,12 @@ image_size_jpeg(std::istream & str){
   try {
     jpeg_stream_src(&cinfo, &str);
     jpeg_read_header(&cinfo, TRUE);
-    throw Err();
   }
   catch (Err e){
     jpeg_destroy_decompress(&cinfo);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  jpeg_destroy_decompress(&cinfo);
   return iPoint(cinfo.image_width, cinfo.image_height);
 }
 
@@ -194,14 +194,16 @@ image_load_jpeg(std::istream & str, const double scale){
         }
       }
     }
-    throw Err();
   }
   catch (Err e){
     if (buf) delete[] buf;
     jpeg_abort_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  if (buf) delete[] buf;
+  jpeg_abort_decompress(&cinfo);
+  jpeg_destroy_decompress(&cinfo);
   return img;
 }
 
@@ -306,14 +308,14 @@ image_save_jpeg(const ImageR & im, std::ostream & str, const Opt & opt){
       jpeg_write_scanlines(&cinfo, (JSAMPLE**)&buf, 1);
     }
     jpeg_finish_compress(&cinfo);
-
-    throw Err();
   }
   catch (Err e){
     if (buf) delete [] buf;
     jpeg_destroy_compress(&cinfo);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  if (buf) delete [] buf;
+  jpeg_destroy_compress(&cinfo);
 }
 
 /**********************************************************/

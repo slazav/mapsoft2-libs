@@ -174,8 +174,6 @@ image_load_gif(const std::string & file, const double scale){
         }
       }
     }
-
-    throw Err();
   }
   catch (Err e){
 #if GIFV == 500
@@ -185,7 +183,16 @@ image_load_gif(const std::string & file, const double scale){
     if (gif) DGifCloseFile(gif);
 #endif
     if (GifLine) delete[] GifLine;
-    if (e.str() != "") throw e;
+    throw e;
+  }
+  {
+#if GIFV == 500
+    int code;
+    if (gif) DGifCloseFile(gif, &code);
+#else
+    if (gif) DGifCloseFile(gif);
+#endif
+    if (GifLine) delete[] GifLine;
   }
   return img;
 }
@@ -260,7 +267,6 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
     if (EGifPutLine(gif, im8.data(), im8.width()*im8.height()) ==GIF_ERROR)
       GifErr();
 
-    throw Err();
   }
   catch(Err e){
 #if GIFV == 500
@@ -271,6 +277,16 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
     if (gif) EGifCloseFile(gif);
     if (gif_cmap) FreeMapObject(gif_cmap);
 #endif
-    if (e.str()!="") throw e;
+    throw e;
+  }
+  {
+#if GIFV == 500
+    int code;
+    if (gif) EGifCloseFile(gif, &code);
+    if (gif_cmap) GifFreeMapObject(gif_cmap);
+#else
+    if (gif) EGifCloseFile(gif);
+    if (gif_cmap) FreeMapObject(gif_cmap);
+#endif
   }
 }

@@ -55,12 +55,12 @@ image_size_png(std::istream & str){
     png_get_IHDR(png_ptr, info_ptr, &w, &height,
        &bit_depth, &color_type, &interlace_type ,NULL,NULL);
 
-    throw Err();
   }
   catch(Err e) {
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
   return iPoint(w, height);
 }
 
@@ -244,14 +244,14 @@ image_load_png(std::istream & str, const double scale){
         }
       }
     }
-
-    throw Err();
   }
   catch(Err e) {
     if (row_buf) png_free(png_ptr, row_buf);
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  if (row_buf) png_free(png_ptr, row_buf);
+  if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
   return img;
 }
 
@@ -430,13 +430,14 @@ image_save_png(const ImageR & im, std::ostream & str,
     }
 
     png_write_end(png_ptr, info_ptr);
-    throw Err();
   }
   catch (Err e) {
     if (buf)     png_free(png_ptr, buf);
     if (png_ptr) png_destroy_write_struct(&png_ptr, &info_ptr);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  if (buf)     png_free(png_ptr, buf);
+  if (png_ptr) png_destroy_write_struct(&png_ptr, &info_ptr);
 }
 
 /**********************************************************/

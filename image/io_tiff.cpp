@@ -115,13 +115,12 @@ iPoint image_size_tiff(std::istream & str){
 
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
-
-    throw Err();
   }
   catch (Err e){
     if (tif) TIFFClose(tif);
-    if (e.str()!="") throw e;
+    throw e;
   }
+  if (tif) TIFFClose(tif);
   return iPoint(w,h);
 }
 
@@ -293,13 +292,14 @@ image_load_tiff(std::istream & str, const double scale){
         }
       }
     }
-    throw Err();
   }
   catch (Err e) {
     if (cbuf) _TIFFfree(cbuf);
     if (tif) TIFFClose(tif);
-    if (e.str() != "") throw e;
+    throw e;
   }
+  if (cbuf) _TIFFfree(cbuf);
+  if (tif) TIFFClose(tif);
   return img;
 }
 
@@ -426,13 +426,14 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
       }
       TIFFWriteScanline(tif, buf, y);
     }
-    throw Err();
   }
   catch (Err e) {
     if (buf) _TIFFfree(buf);
     if (tif) TIFFClose(tif);
-    if (e.str() != "") throw e;
+    throw e;
   }
+   if (buf) _TIFFfree(buf);
+  if (tif) TIFFClose(tif);
 }
 
 
