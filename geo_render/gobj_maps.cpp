@@ -176,7 +176,8 @@ GObjMaps::on_set_cnv(){
 
     // scale for image loading
     d.load_sc = floor(1.0*d.scale);
-    if (d.load_sc <=0) d.load_sc = 1;
+    if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
+    if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
   }
   tiles.clear();
 }
@@ -190,7 +191,7 @@ GObjMaps::on_rescale(double k){
     d.scale/=k;
     d.cnv.rescale_src(1.0/k);
     // scale for image loading
-    d.cnv.rescale_dst(d.load_sc);
+    d.cnv.rescale_dst(d.load_sc); // remove old scaling
     d.load_sc = floor(1.0*d.scale);
     if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
     if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
