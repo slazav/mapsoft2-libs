@@ -166,7 +166,7 @@ try{
 //  assert_eq(O1.get("h2", 0.0), 254);
 
 }
-catch (Err e) {
+catch (Err & e) {
   std::cerr << "Error: " << e.str() << "\n";
   return 1;
 }

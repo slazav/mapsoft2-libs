@@ -98,7 +98,7 @@ main(){
       ref.erase(ps1);
       ConvAff2D cnv2(ref);
     }
-    catch(Err e) {
+    catch(Err & e) {
       assert_eq(e.str(), "ConvAff2D: can't calculate conversion matrix.");
     }
 
@@ -159,7 +159,7 @@ main(){
 
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

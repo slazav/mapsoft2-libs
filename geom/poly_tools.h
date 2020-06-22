@@ -239,21 +239,21 @@ MultiLine<T> figure_line(const::std::string &str) {
     ret.push_back(l);
     return ret;
   }
-  catch (Err e){}
+  catch (Err & e){}
 
   // try Rect
   try {
     ret.push_back(rect_to_line(Rect<T>(str), true));
     return ret;
   }
-  catch (Err e){}
+  catch (Err & e){}
 
   // try Line/Multiline
   try {
     MultiLine<T> ml(str);
     return ml;
   }
-  catch (Err e){}
+  catch (Err & e){}
   throw Err() << "can't read figure: " << str;
 }
 

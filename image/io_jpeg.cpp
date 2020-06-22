@@ -118,9 +118,9 @@ image_size_jpeg(std::istream & str){
     jpeg_stream_src(&cinfo, &str);
     jpeg_read_header(&cinfo, TRUE);
   }
-  catch (Err e){
+  catch (Err & e){
     jpeg_destroy_decompress(&cinfo);
-    throw e;
+    throw;
   }
   jpeg_destroy_decompress(&cinfo);
   return iPoint(cinfo.image_width, cinfo.image_height);
@@ -195,11 +195,11 @@ image_load_jpeg(std::istream & str, const double scale){
       }
     }
   }
-  catch (Err e){
+  catch (Err & e){
     if (buf) delete[] buf;
     jpeg_abort_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
-    throw e;
+    throw;
   }
   if (buf) delete[] buf;
   jpeg_abort_decompress(&cinfo);
@@ -309,10 +309,10 @@ image_save_jpeg(const ImageR & im, std::ostream & str, const Opt & opt){
     }
     jpeg_finish_compress(&cinfo);
   }
-  catch (Err e){
+  catch (Err & e){
     if (buf) delete [] buf;
     jpeg_destroy_compress(&cinfo);
-    throw e;
+    throw;
   }
   if (buf) delete [] buf;
   jpeg_destroy_compress(&cinfo);
@@ -325,7 +325,7 @@ image_size_jpeg(const std::string & fname){
   if (!str) throw Err() << "Can't open file: " << fname;
   iPoint ret;
   try { ret = image_size_jpeg(str); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
   return ret;
 }
 
@@ -335,7 +335,7 @@ image_load_jpeg(const std::string & fname, const double scale){
   if (!str) throw Err() << "Can't open file: " << fname;
   ImageR ret;
   try { ret = image_load_jpeg(str, scale); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
   return ret;
 }
 
@@ -345,5 +345,5 @@ image_save_jpeg(const ImageR & im, const std::string & fname,
   std::ofstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;
   try { image_save_jpeg(im, str, opt); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
 }

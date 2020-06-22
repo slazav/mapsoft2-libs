@@ -109,7 +109,7 @@ main(){
     assert_eq(lw.is_end(), true);
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

@@ -74,7 +74,7 @@ main(){
       assert_eq(v1.count(9),1);
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

@@ -251,7 +251,7 @@ int main() {
     const char * exp1 = "{\"foo\": true, \"bar\": \"test2\", \"barx\": \"testx\"}";
     assert_eq(eA.save_string(JSON_PRESERVE_ORDER), exp1);
 
-  } catch(Err e){
+  } catch(Err & e){
     std::cerr << "error: " << e.str() << "\n";
   }
   return 0;

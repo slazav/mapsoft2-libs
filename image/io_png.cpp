@@ -56,9 +56,9 @@ image_size_png(std::istream & str){
        &bit_depth, &color_type, &interlace_type ,NULL,NULL);
 
   }
-  catch(Err e) {
+  catch(Err & e) {
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    throw e;
+    throw;
   }
   if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
   return iPoint(w, height);
@@ -245,10 +245,10 @@ image_load_png(std::istream & str, const double scale){
       }
     }
   }
-  catch(Err e) {
+  catch(Err & e) {
     if (row_buf) png_free(png_ptr, row_buf);
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    throw e;
+    throw;
   }
   if (row_buf) png_free(png_ptr, row_buf);
   if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
@@ -431,10 +431,10 @@ image_save_png(const ImageR & im, std::ostream & str,
 
     png_write_end(png_ptr, info_ptr);
   }
-  catch (Err e) {
+  catch (Err & e) {
     if (buf)     png_free(png_ptr, buf);
     if (png_ptr) png_destroy_write_struct(&png_ptr, &info_ptr);
-    throw e;
+    throw;
   }
   if (buf)     png_free(png_ptr, buf);
   if (png_ptr) png_destroy_write_struct(&png_ptr, &info_ptr);
@@ -448,7 +448,7 @@ image_size_png(const std::string & fname){
   if (!str) throw Err() << "Can't open file: " << fname;
   iPoint ret;
   try { ret = image_size_png(str); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
   return ret;
 }
 
@@ -458,7 +458,7 @@ image_load_png(const std::string & fname, const double scale){
   if (!str) throw Err() << "Can't open file: " << fname;
   ImageR ret;
   try { ret = image_load_png(str, scale); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
   return ret;
 }
 
@@ -468,5 +468,5 @@ image_save_png(const ImageR & im, const std::string & fname,
   std::ofstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;
   try { image_save_png(im, str, opt); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
 }

@@ -120,7 +120,7 @@ void nom_parse(std::istream & f, nom_struct_t & M1, nom_struct_t & M2){
   // read first group of numbers (2 digits each, separated by ',')
   int n1,n2,dig = 2;
   try { read_nums(f, n1, n2, dig); }
-  catch (Err e) {
+  catch (Err & e) {
     throw Err() << "first group of numbers: " << e.str();
   }
 
@@ -140,7 +140,7 @@ void nom_parse(std::istream & f, nom_struct_t & M1, nom_struct_t & M2){
   dig = 3;
 
   try { read_nums(f, n1, n2, dig); }
-  catch (Err e) {
+  catch (Err & e) {
     throw Err() << "second group of numbers: " << e.str();
   }
   if (dig == 1) {
@@ -168,7 +168,7 @@ void nom_parse(std::istream & f, nom_struct_t & M1, nom_struct_t & M2){
     dig=1;
 
     try { read_nums(f, n1, n2, dig); }
-    catch (Err e) {
+    catch (Err & e) {
       throw Err() << "third group of numbers: " << e.str();
     }
 
@@ -187,7 +187,7 @@ void nom_parse(std::istream & f, nom_struct_t & M1, nom_struct_t & M2){
 
     nom_struct_t M3, M4;
     try { nom_parse(f, M3, M4); }
-    catch (Err e) {
+    catch (Err & e) {
       throw Err() << "second part of doubled 1:50000 map is wrong: " << e.str();
     }
 
@@ -219,7 +219,7 @@ void nom_parse(std::istream & f, nom_struct_t & M1, nom_struct_t & M2){
 
     nom_struct_t M3, M4;
     try { nom_parse(f, M3, M4); }
-    catch (Err e) {
+    catch (Err & e) {
       throw Err() << "second part of doubled 1:500000 map is wrong: " << e.str();
     }
 
@@ -298,7 +298,7 @@ nom_to_range(const string & key, nom_scale_t & scale, bool ex){
 
   nom_struct_t M1, M2;
   try { nom_parse(f, M1, M2); }
-  catch (Err e){
+  catch (Err & e){
     throw Err() << "nom_to_range: can't parse name: \"" << key
                 << "\": " << e.str();
   }

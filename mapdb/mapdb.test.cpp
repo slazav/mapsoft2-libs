@@ -240,7 +240,7 @@ main(){
     if (system("rm -rf tmp.db")!=0) throw Err() << "Can't delete tmp.db";
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

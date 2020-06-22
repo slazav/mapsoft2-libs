@@ -26,7 +26,7 @@ void assert_nom1(const std::string & name, const bool single = false, std::strin
   dRect r;
   try {
     r = nom_to_range(name, sc, single);
-  } catch (Err e) {
+  } catch (Err & e) {
     if (e.str() != error){
       std::cerr << "Error: " <<  name << ":\n";
       std::cerr << " error expected: " <<  error << "\n";

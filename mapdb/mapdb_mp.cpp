@@ -124,7 +124,7 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
 
         throw Err() << "unknown command: " << vs[0];
       }
-    } catch (Err e){
+    } catch (Err & e){
         throw Err() << "MapDB::import_mp: bad configuration file at line "
                     << line_num[0] << ": " << e.str();
     }
@@ -268,7 +268,7 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
 
         throw Err() << "unknown command: " << vs[0];
       }
-    } catch (Err e){
+    } catch (Err & e){
         throw Err() << "MapDB::export_mp: bad configuration file at line "
                     << line_num[0] << ": " << e.str();
     }

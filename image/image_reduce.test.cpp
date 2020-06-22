@@ -22,7 +22,7 @@ main(){
     image_save_gif(i3, "test_data/image_rgba.tmp.gif");
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

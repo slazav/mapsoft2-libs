@@ -48,7 +48,7 @@ int main() {
     for (int i =  0; i < 15; ++i) assert_eq(cache.contains(i), false);
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

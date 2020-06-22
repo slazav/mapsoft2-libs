@@ -160,7 +160,7 @@ int read_figobj_header(FigObj & o, const std::string & header){
         o.text.resize(0);
         ret = read_text(ss, o.text);
       }
-      catch (Err e){
+      catch (Err & e){
         throw Err() << "FigObj: can't read text: " << e.str()
                     << ": [" << header << "]";
       }

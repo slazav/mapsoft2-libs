@@ -97,7 +97,7 @@ main(){
      assert_eq(parse_utc_time("2019/01/01 00:00:00"), parse_utc_time("2019"));
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

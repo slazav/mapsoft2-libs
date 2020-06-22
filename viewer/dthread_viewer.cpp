@@ -66,7 +66,7 @@ DThreadViewer::updater(){
         crw->save();
         crw->translate(-r.tlc());
         try { o->draw(crw, r); }
-        catch (Err e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
+        catch (Err & e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
         crw->restore();
       }
       crw.get_surface()->flush();

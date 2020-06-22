@@ -175,7 +175,7 @@ image_load_gif(const std::string & file, const double scale){
       }
     }
   }
-  catch (Err e){
+  catch (Err & e){
 #if GIFV == 500
     int code;
     if (gif) DGifCloseFile(gif, &code);
@@ -183,7 +183,7 @@ image_load_gif(const std::string & file, const double scale){
     if (gif) DGifCloseFile(gif);
 #endif
     if (GifLine) delete[] GifLine;
-    throw e;
+    throw;
   }
   {
 #if GIFV == 500
@@ -268,7 +268,7 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
       GifErr();
 
   }
-  catch(Err e){
+  catch(Err & e){
 #if GIFV == 500
     int code;
     if (gif) EGifCloseFile(gif, &code);
@@ -277,7 +277,7 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
     if (gif) EGifCloseFile(gif);
     if (gif_cmap) FreeMapObject(gif_cmap);
 #endif
-    throw e;
+    throw;
   }
   {
 #if GIFV == 500

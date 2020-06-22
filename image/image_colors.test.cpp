@@ -58,7 +58,7 @@ main(){
     assert_eq(img.get32(0,64), 0);
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

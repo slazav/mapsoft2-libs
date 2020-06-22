@@ -17,8 +17,8 @@
       << "assert_err: " << __FILE__ << ":" << __LINE__ << ": error is not thrown:\n"\
       << "command: " << #cmd << "\n"\
       << "expected error: " << (ret)<< "\n";\
-  } catch (Err e) {\
-    if (e.code()==-9999) throw e;\
+  } catch (Err & e) {\
+    if (e.code()==-9999) throw;\
     if (e.str()!=(ret)){\
       throw Err()\
         << "assert_err: " << __FILE__ << ":" << __LINE__ << ": wrong error message:\n"\

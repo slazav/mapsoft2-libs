@@ -144,7 +144,7 @@ Mapview::add_data(const GeoData & data, bool scroll) {
       set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
       scroll=true;
     }
-    catch (Err e) {}
+    catch (Err & e) {}
   }
 
   if (scroll){
@@ -189,7 +189,7 @@ Mapview::add_files(const std::vector<std::string> & files) {
   for (auto const & f:files){
     spanel.message("Load file: " + f);
     try { read_geo(f, data, *opts.get()); }
-    catch(Err e) { dlg_err.call(e); }
+    catch(Err & e) { dlg_err.call(e); }
   }
   add_data(data, true);
 //  viewer.stop_waiting();
@@ -205,7 +205,7 @@ Mapview::load_project(const std::string & file, bool force) {
   }
   GeoData data;
   try { read_geo(file, data, *opts.get()); }
-  catch(Err e) { dlg_err.call(e); }
+  catch(Err & e) { dlg_err.call(e); }
   spanel.message("Open new project: " + file);
 
 //  viewer.start_waiting();

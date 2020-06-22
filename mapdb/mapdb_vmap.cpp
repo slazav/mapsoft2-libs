@@ -125,7 +125,7 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
 
         throw Err() << "unknown command: " << vs[0];
       }
-    } catch (Err e){
+    } catch (Err & e){
         throw Err() << cfg_file << ":"
                     << line_num[0] << ": " << e.str();
     }
@@ -318,7 +318,7 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
         throw Err() << "unknown command: " << vs[0];
       }
-    } catch (Err e){
+    } catch (Err & e){
         throw Err() << cfg_file << ":"
                     << line_num[0] << ": " << e.str();
     }

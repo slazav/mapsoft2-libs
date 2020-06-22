@@ -128,9 +128,9 @@ std::istream & operator>> (std::istream & s, Opt & o){
       o[k] = json_string_value(v);
     }
   }
-  catch (Err e){
+  catch (Err & e){
     json_decref(J);
-    throw e;
+    throw;
   }
   json_decref(J);
   return s;

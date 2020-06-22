@@ -22,7 +22,7 @@ main(int argc, char* argv[]){
 
     write_fig(std::cout, W);
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
   }
   return 0;

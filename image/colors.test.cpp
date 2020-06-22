@@ -34,7 +34,7 @@ main(){
     assert_eq(color_rgb_to_grey8(0xFF000010), 0x2);
     assert_eq(color_rgb_to_grey16(0xFF000010), 0x1d5);
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

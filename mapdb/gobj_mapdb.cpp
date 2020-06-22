@@ -374,7 +374,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
       throw Err() << "unknown feature";
     }
-    catch (Err e) {
+    catch (Err & e) {
       throw Err() << cfgfile << ":" << line_num[0] << ": "
                   << (ftr==""? "": "feature : \"" + ftr + "\": ")
                   << e.str();

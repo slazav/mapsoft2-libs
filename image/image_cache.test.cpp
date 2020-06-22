@@ -26,7 +26,7 @@ main(){
       "Can't open file: test_data/missing.jpg");
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

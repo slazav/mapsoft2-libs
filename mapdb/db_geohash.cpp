@@ -162,9 +162,9 @@ GeoHashDB::Impl::del(const uint32_t id, const uint32_t type, const dRect & range
       // std::cerr << "DEL [" << h << "] " << id << "\n";
     }
   }
-  catch (Err e){
+  catch (Err & e){
     if (curs) curs->close(curs);
-    throw e;
+    throw;
   }
   if (curs) curs->close(curs);
 }
@@ -200,9 +200,9 @@ GeoHashDB::Impl::get_types(){
       fl=DB_NEXT; // switch to DB_NEXT
     }
   }
-  catch (Err e){
+  catch (Err & e){
     if (curs) curs->close(curs);
-    throw e;
+    throw;
   }
   if (curs) curs->close(curs);
   return ret;
@@ -243,9 +243,9 @@ GeoHashDB::Impl::get_hash(const std::string & hash0, bool exact){
       break;
     }
   }
-  catch (Err e){
+  catch (Err & e){
     if (curs) curs->close(curs);
-    throw e;
+    throw;
   }
   if (curs) curs->close(curs);
   return ret;
@@ -283,9 +283,9 @@ GeoHashDB::Impl::bbox(){
       fl=DB_NEXT; // switch to DB_NEXT
     }
   }
-  catch (Err e){
+  catch (Err & e){
     if (curs) curs->close(curs);
-    throw e;
+    throw;
   }
   if (curs) curs->close(curs);
   return ret;

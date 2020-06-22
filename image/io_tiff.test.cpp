@@ -551,7 +551,7 @@ std::cerr << std::hex << I.get_argb(192,64) << "\n";
 */
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

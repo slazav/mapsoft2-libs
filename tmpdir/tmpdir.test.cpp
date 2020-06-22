@@ -27,7 +27,7 @@ main(int argc, char **argv){
     }
     tmpdir.zip(argv[argc-1]);
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }
@@ -45,7 +45,7 @@ main(int argc, char **argv){
 
     tmpdir.zip(argv[argc-1]); //zip back
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

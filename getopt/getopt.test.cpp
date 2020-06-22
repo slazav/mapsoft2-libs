@@ -94,7 +94,7 @@ main(int argc, char *argv[]){
     }
   }
 
-  catch(Err e){
+  catch(Err & e){
     if (e.str()!="") cerr << "Error: " << e.str() << "\n";
     return 1;
   }

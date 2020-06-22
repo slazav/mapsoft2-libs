@@ -116,9 +116,9 @@ parse_options(int *argc, char ***argv,
 
   Opt O;
   try { O = parse_options(argc, argv, long_options, last_opt); }
-  catch (Err e) {
+  catch (Err & e) {
     delete[] long_options;
-    throw e;
+    throw;
   }
   delete[] long_options;
   return O;

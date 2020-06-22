@@ -100,7 +100,7 @@ main() {
       "io_ozi: unsupported datum: +proj=tmerc");
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     cerr << "Error: " << e.str() << "\n";
     return 1;
   }

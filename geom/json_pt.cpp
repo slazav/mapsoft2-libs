@@ -64,7 +64,7 @@ json_to_mline(json_t *J) {
     dLine l =json_to_line(J);
     if (l.size()>0) ret.push_back(l);
   }
-  catch (Err e){
+  catch (Err & e){
     // try multiline
     json_array_foreach(J, index, L){ ret.push_back(json_to_line(L)); }
   }
@@ -102,7 +102,7 @@ dPoint str_to_point(const std::string & str){
     if (!J) throw Err() << e.text;
     ret=json_to_point(J);
   }
-  catch (Err e){
+  catch (Err & e){
     json_decref(J);
     throw Err() << "can't parse point: \"" << str << "\": " << e.str();
   }
@@ -119,7 +119,7 @@ dLine str_to_line(const std::string & str){
     if (!J) throw Err() << e.text;
     ret=json_to_line(J);
   }
-  catch (Err e){
+  catch (Err & e){
     json_decref(J);
     throw Err() << "can't parse line: \"" << str << "\": " << e.str();
   }
@@ -136,7 +136,7 @@ dMultiLine str_to_mline(const std::string & str){
     if (!J) throw Err() << e.text;
     ret=json_to_mline(J);
   }
-  catch (Err e){
+  catch (Err & e){
     json_decref(J);
     throw Err() << "can't parse multisegment line: \"" << str << "\": " << e.str();
   }
@@ -153,7 +153,7 @@ dRect str_to_rect(const std::string & str){
     if (!J) throw Err() << e.text;
     ret=json_to_rect(J);
   }
-  catch (Err e){
+  catch (Err & e){
     json_decref(J);
     throw Err() << "can't parse rectangle: \"" << str << "\": " << e.str();
   }

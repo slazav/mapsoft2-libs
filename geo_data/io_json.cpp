@@ -340,9 +340,9 @@ read_json(const string &fname, GeoData & data, const Opt & opts) {
 
   GeoWptList tmp;
   try { read_geojson_feature(J, data, tmp, v); }
-  catch(Err e){
+  catch(Err & e){
     json_decref(J);
-    throw e;
+    throw;
   }
   json_decref(J);
 }

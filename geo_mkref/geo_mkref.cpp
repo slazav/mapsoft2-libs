@@ -166,7 +166,7 @@ geo_mkref(const Opt & o){
         if (p.z>0) z = p.z;
         tile_range = iRect(p, p+iPoint(1,1));
       }
-      catch (Err e){
+      catch (Err & e){
         tile_range = o.get("tiles", iRect());
       }
 

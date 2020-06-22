@@ -116,9 +116,9 @@ iPoint image_size_tiff(std::istream & str){
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
   }
-  catch (Err e){
+  catch (Err & e){
     if (tif) TIFFClose(tif);
-    throw e;
+    throw;
   }
   if (tif) TIFFClose(tif);
   return iPoint(w,h);
@@ -293,7 +293,7 @@ image_load_tiff(std::istream & str, const double scale){
       }
     }
   }
-  catch (Err e) {
+  catch (Err & e) {
     if (cbuf) _TIFFfree(cbuf);
     if (tif) TIFFClose(tif);
     throw e;
@@ -427,12 +427,12 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
       TIFFWriteScanline(tif, buf, y);
     }
   }
-  catch (Err e) {
+  catch (Err & e) {
     if (buf) _TIFFfree(buf);
     if (tif) TIFFClose(tif);
-    throw e;
+    throw;
   }
-   if (buf) _TIFFfree(buf);
+  if (buf) _TIFFfree(buf);
   if (tif) TIFFClose(tif);
 }
 
@@ -445,7 +445,7 @@ image_size_tiff(const std::string & fname){
   if (!str) throw Err() << "Can't open file: " << fname;
   iPoint ret;
   try { ret = image_size_tiff(str); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
   return ret;
 }
 
@@ -455,7 +455,7 @@ image_load_tiff(const std::string & fname, const double scale){
   if (!str) throw Err() << "Can't open file: " << fname;
   ImageR ret;
   try { ret = image_load_tiff(str, scale); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
   return ret;
 }
 
@@ -465,5 +465,5 @@ image_save_tiff(const ImageR & im, const std::string & fname,
   std::ofstream str(fname);
   if (!str) throw Err() << "Can't open file: " << fname;
   try { image_save_tiff(im, str, opt); }
-  catch(Err e){ throw Err() << e.str() << ": " << fname; }
+  catch(Err & e){ e << ": " << fname; throw;}
 }

@@ -550,7 +550,7 @@ void write_ozi_map (const string &fname, const GeoMap & m, const Opt & opts){
   //if wgs84=false try to use map datum if it is known.
   if (!opts.get("ozi_map_wgs", false)){
     try { ozi_datum = convert_datum2ozi(m.proj); }
-    catch (Err e) {};
+    catch (Err & e) {};
   }
 
   // header

@@ -54,7 +54,7 @@ main(){
     assert_eq(type_to_str(calc.gtile_to_range(iPoint(9410,4633), 14)),
       "[26.7626953,61.3335397,0.0219726562,0.0105387287]");
   }
-  catch (Err e){
+  catch (Err & e){
     std::cerr << "Error:" << e.str() << "\n";
   }
   return 0;

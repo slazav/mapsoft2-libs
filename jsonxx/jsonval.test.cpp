@@ -65,7 +65,7 @@ int main() {
       "unexpected array");
 
   }
-  catch(Err e){
+  catch(Err & e){
     std::cerr << "error: " << e.str() << "\n";
   }
   return 0;

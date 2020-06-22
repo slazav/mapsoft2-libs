@@ -243,7 +243,7 @@ main(){
     "can't parse multisegment line: \"[0,0],[2,0],[2,2]\": end of file expected near ','");
 
   }
-  catch (Err e) {
+  catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;
   }

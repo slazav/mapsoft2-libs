@@ -140,10 +140,10 @@ TmpDir::unzip(const std::string & zipname) {
     std::string fpath;
     try {
       fpath = add(fname);
-    } catch (Err e) {
+    } catch (Err & e) {
       zip_fclose(file_in_zip);
       zip_close(zip_file);
-      throw e;
+      throw;
     }
 
     // write file content

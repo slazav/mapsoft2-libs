@@ -245,7 +245,7 @@ public:
         }
         if (!w.empty()){
           try {write_geo(f, w);}
-          catch (Err e) {mapview->dlg_err.call(e);}
+          catch (Err & e) {mapview->dlg_err.call(e);}
         }
       }
       hide();

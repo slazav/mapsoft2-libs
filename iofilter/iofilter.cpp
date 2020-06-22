@@ -94,7 +94,7 @@ class IFilter::Impl{
         if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
            throw Err() << "iofilter: exec error";
       }
-      catch (Err e) {
+      catch (Err & e) {
         std::cerr << e.str() << "\n";
       }
       ::close(fd1[0]);
@@ -132,7 +132,7 @@ class IFilter::Impl{
         if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
            throw Err() << "iofilter: exec error";
       }
-      catch (Err e) {
+      catch (Err & e) {
         std::cerr << e.str() << "\n";
       }
       ::close(fd2[1]);
@@ -238,7 +238,7 @@ class OFilter::Impl{
         if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
            throw Err() << "iofilter: exec error";
       }
-      catch (Err e) {
+      catch (Err & e) {
         std::cerr << e.str() << "\n";
       }
       ::close(fd1[1]);
@@ -276,7 +276,7 @@ class OFilter::Impl{
         if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
            throw Err() << "iofilter: exec error";
       }
-      catch (Err e) {
+      catch (Err & e) {
         std::cerr << e.str() << "\n";
       }
       ::close(fd2[0]);
@@ -356,7 +356,7 @@ class IOFilter::Impl{
         if (execl("/bin/sh", "sh", "-c", prog.c_str(), (char *)0) < 0 )
            throw Err() << "iofilter: exec error: " << prog;
       }
-      catch (Err e) {
+      catch (Err & e) {
         std::cerr << e.str() << "\n";
       }
       ::close(fd1[0]);
