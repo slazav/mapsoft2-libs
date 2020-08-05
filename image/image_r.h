@@ -268,6 +268,7 @@ class ImageR : public Image {
       if (y2<0) y2=0; if (y2>=h) y2=h-1;
       double sc[4] = {0,0,0,0};
       double s0[4] = {0,0,0,0};
+      if (x1==x2 || y1==y2) return bgcolor;
       for (int y=y1; y<=y2; ++y){
         for (int x=x1; x<=x2; ++x){
           uint32_t v = get_argb(x,y);
