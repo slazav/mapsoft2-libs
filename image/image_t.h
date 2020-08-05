@@ -17,10 +17,13 @@ We want to draw map on the screen. We know coordinate range, but do not
 know which points in which order we will use (coordinate conversion can
 be involved).
 
-For each coordinate (x,y) we can calculate tile (x,y)/tsize and
-coordinate on the tile (x,y)%tsize. Url template with `{x}` and `{y}`
-fields is used to download a tile. `{{}` and `{}}` combinations can be
-used in the template to insert `{` and `}` literals.
+For each coordinate (x,y) and zoom level z we can calculate
+tile key (x/tsize,y/tsize,z) and coordinate on the tile (x,y)%tsize.
+Url template format:
+ `{x}` and `{y}` - replaced by x and y values,
+ `{z}` - replaced by z value,
+ `{[abc]}` - replaced by one letter from [...] set,
+ `{{}` and `{}}` - replaced by `{` and `}` literals.
 
 We request background downloading of the coordinate range
 (`prepare_range` method). Packed data is stored in the Downloader
@@ -45,13 +48,14 @@ class ImageT: public Image {
   Cache<iPoint, ImageR> tiles;
   Downloader dmanager;
   std::string tmpl;
+  unsigned int counter; // tile counter; overfull should not be a problem.
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
        tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_CACHE_SIZE),
-       dmanager(DOWNLOAD_NCONN) {};
+       dmanager(DOWNLOAD_NCONN), counter(0) {};
 
-    // Make url from a template - replace {x} by key.x, {y} by key.y
+    // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
     std::string make_url(const iPoint & key){
       std::string ret;
       size_t n0 = 0;
@@ -67,12 +71,18 @@ class ImageT: public Image {
         auto s = tmpl.substr(n1+1,n2-n1-1);
         if      (s=="x") ret += type_to_str(key.x);
         else if (s=="y") ret += type_to_str(key.y);
+        else if (s=="z") ret += type_to_str(key.z);
         else if (s=="{") ret += '{';
         else if (s=="}") ret += '}';
+        else if (s.size()>2 && s[0]=='[' && s[s.size()-1]==']'){
+          int len=s.size()-2;
+          ret+=s[1+counter%len];
+        }
         else throw Err() << "ImageT: unknown field " << s 
                          << " in URL template: " << tmpl;
         n0 = n2+1;
       }
+      counter++;
       return ret;
     }
 

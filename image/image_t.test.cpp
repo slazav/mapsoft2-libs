@@ -9,15 +9,24 @@ main(){
   try{
 
     // test URL template substitutions
-    iPoint p(10,20);
+    iPoint p(10,20,5);
     {
       ImageT imgt("abc{x}/{y}");
       assert_eq(imgt.make_url(p), "abc10/20");
     }
+
     {
       ImageT imgt("abc{x}/{y}-{y}/{x} {{} {}}");
       assert_eq(imgt.make_url(p), "abc10/20-20/10 { }");
     }
+    {
+      ImageT imgt("abc{x}/{y}/{z}-{[abc]}");
+      assert_eq(imgt.make_url(p), "abc10/20/5-a");
+      assert_eq(imgt.make_url(p), "abc10/20/5-b");
+      assert_eq(imgt.make_url(p), "abc10/20/5-c");
+      assert_eq(imgt.make_url(p), "abc10/20/5-a");
+    }
+
     {
       ImageT imgt("abc{x/{y}");
       assert_err(imgt.make_url(p), "ImageT: unknown field x/{y in URL template: abc{x/{y}");
