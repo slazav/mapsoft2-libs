@@ -92,8 +92,7 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
     range_dst.to_ceil();
 
     // render image and put it into tiles cache
-    if (!render_tile(d, range_dst))
-      return GObj::FILL_NONE;
+    if (!render_tile(d, range_dst)) continue;
 
     // border
     if (clip_brd){

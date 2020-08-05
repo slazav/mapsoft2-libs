@@ -97,7 +97,7 @@ main(){
 
       assert_eq(m1.image_dpi, 300);
       assert_eq(m1.tile_size, 256);
-      assert_eq(m1.tile_yswap, false);
+      assert_eq(m1.tile_swapy, false);
 
       assert_eq(m1.ref.size(),0);
       m1.add_ref(1,2,30,40);

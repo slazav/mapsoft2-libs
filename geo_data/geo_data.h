@@ -117,16 +117,16 @@ struct GeoMap{
   dMultiLine border;           ///< map border (in image coordinates)
   std::string proj;            ///< map projection (option string for libproj)
 
-  std::string image;           ///< image file for the map (folder for tile maps)
+  std::string image;           ///< image file for the map (mask for tile maps)
   iPoint image_size;           ///< image dimensions (in image coordinates)
   double image_dpi;            ///< image dpi value (default: 300)
 
   int tile_size;               ///< image tile dimensions (for tiled maps, default: 256)
-  std::string tile_fmt;        ///< image tile format (for tiled maps)
-  bool tile_yswap;             ///< are image tiles swapped in y (for tiled maps)
+  bool tile_swapy;             ///< are image tiles swapped in y (for tiled maps)
+  bool is_tiled;               ///< is it a tiled map?
 
   /// Constructor: create empty map
-  GeoMap(): image_dpi(300), tile_size(256), tile_yswap(false) {}
+  GeoMap(): image_dpi(300), tile_size(256), tile_swapy(false), is_tiled(false) {}
 
   /******************************************************************/
   // operators +,-,/,*
@@ -181,8 +181,8 @@ struct GeoMap{
     if (image_size != other.image_size) return (image_size < other.image_size);
     if (image_dpi != other.image_dpi) return (image_dpi < other.image_dpi);
     if (tile_size != other.tile_size) return (tile_size < other.tile_size);
-    if (tile_fmt != other.tile_fmt) return (tile_fmt < other.tile_fmt);
-    if (tile_yswap != other.tile_yswap) return (tile_yswap < other.tile_yswap);
+    if (is_tiled != other.is_tiled) return (is_tiled < other.is_tiled);
+    if (tile_swapy != other.tile_swapy) return (tile_swapy < other.tile_swapy);
     return false;
   }
 
@@ -191,8 +191,8 @@ struct GeoMap{
     return (name==other.name)&&(comm==other.comm)&&(ref==other.ref)&&
            (border==other.border)&&(proj==other.proj)&&(image==other.image)&&
            (image_size==other.image_size)&&(image_dpi==other.image_dpi)&&
-           (tile_size==other.tile_size)&&(tile_fmt==other.tile_fmt)&&
-           (tile_yswap==other.tile_yswap);
+           (tile_size==other.tile_size)&&(is_tiled==other.is_tiled)&&
+           (tile_swapy==other.tile_swapy);
   }
 
   // derived operators:
