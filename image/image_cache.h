@@ -17,10 +17,8 @@ public:
   ImageRCache(const int maxnum) : cache(maxnum){}
 
   // Load image with scale sc or use already loaded image.
-  // Border is applied only once, after loading.
   ImageR get(const std::string & fn,
-             const int sc = 1,
-             const iLine & border = iLine()){
+             const int sc = 1){
 
     if (cache.contains(fn)){
       auto ip = cache.get(fn);
@@ -28,7 +26,6 @@ public:
     }
 
     ImageR img = image_load(fn, sc);
-    if (border.size()) image_apply_border(img, border/sc, 0);
     cache.add(fn, std::make_pair(sc, img));
     return img;
   }
