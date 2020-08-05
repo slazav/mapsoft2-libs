@@ -90,7 +90,7 @@ class ImageT: public Image {
     }
 
     // get point color
-    uint32_t get_color(const int x, const int y) override {
+    uint32_t get_color_fast(const int x, const int y) override {
       iPoint key(x/tsize, y/tsize);
       iPoint crd(x%tsize, y%tsize);
       if (swapy) crd.y = tsize - crd.y - 1;

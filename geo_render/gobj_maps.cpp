@@ -62,11 +62,11 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
       d.cnv.frw(p);
       int color;
       if (smooth){
-        if (avr<1) color = image_src.get_argb_int4(p);
-        else       color = image_src.get_argb_avrg(p, avr);
+        if (avr<1) color = image_src.get_color_int4(p);
+        else       color = image_src.get_color_avrg(p, avr);
       }
       else {
-        color = image_src.get_argb_safe(p);
+        color = image_src.get_color(p);
       }
       image_dst.set32(xd, yd, color);
     }

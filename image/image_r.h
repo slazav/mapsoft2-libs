@@ -220,74 +220,7 @@ class ImageR : public Image {
     }
 
     // redefine Image::get_color:
-    uint32_t get_color(const int x, const int y) override{
-      if (!check_crd(x,y)) return bgcolor;
-      return get_argb(x,y);
-    }
-
-    /******************************************************/
-    // to be moved to Image?
-
-    // Get color value for a dPoint<double> with range checks.
-    uint32_t get_argb_safe(const dPoint & p) const{
-      int x=rint(p.x), y=rint(p.y);
-      if (!check_crd(x,y)) return bgcolor;
-      return get_argb(x,y);
-    }
-
-    // Get color value using 4-point interpolation.
-    uint32_t get_argb_int4(const dPoint & p) const{
-      int x1 = floor(p.x), x2 = x1+1;
-      int y1 = floor(p.y), y2 = y1+1;
-      if (!check_rng(x1,y1,x2,y2)) return bgcolor;
-      uint32_t v1 = get_argb(x1,y1);
-      uint32_t v2 = get_argb(x1,y2);
-      uint32_t v3 = get_argb(x2,y1);
-      uint32_t v4 = get_argb(x2,y2);
-      uint32_t v0 = 0;
-      for (int sh = 0; sh<32; sh+=8){
-        double c1 = (v1>>sh) & 0xff;
-        double c2 = (v2>>sh) & 0xff;
-        double c3 = (v3>>sh) & 0xff;
-        double c4 = (v4>>sh) & 0xff;
-        double c12 = c1+(c2-c1)*(p.y-y1);
-        double c34 = c3+(c4-c3)*(p.y-y1);
-        double c0 = c12+(c34-c12)*(p.x-x1);
-        v0 += ((int)c0 & 0xff) << sh;
-      }
-      return v0;
-    }
-
-    // Get averaged color value in radius `rad`.
-    uint32_t get_argb_avrg(const dPoint & p, double rad=2.0) const{
-      int x1 = floor(p.x-rad), x2 = ceil(p.x+rad);
-      int y1 = floor(p.y-rad), y2 = ceil(p.y+rad);
-      if (x1<0) x1=0; if (x1>=w) x1=w-1;
-      if (x2<0) x2=0; if (x2>=w) x2=w-1;
-      if (y1<0) y1=0; if (y1>=h) y1=h-1;
-      if (y2<0) y2=0; if (y2>=h) y2=h-1;
-      double sc[4] = {0,0,0,0};
-      double s0[4] = {0,0,0,0};
-      if (x1==x2 || y1==y2) return bgcolor;
-      for (int y=y1; y<=y2; ++y){
-        for (int x=x1; x<=x2; ++x){
-          uint32_t v = get_argb(x,y);
-          double d = dist2d(p, dPoint(x,y));
-          double w = exp(-d/rad*2);
-          for (int i = 0; i<4; ++i){
-            sc[i] += ((v>>(8*i)) & 0xff) * w;
-            s0[i] += w;
-          }
-        }
-      }
-      uint32_t v0 = 0;
-      for (int i = 0; i<4; ++i){
-        if (s0[i]>0)
-          v0 += ((int)(sc[i]/s0[i]) & 0xff) << (8*i);
-      }
-      return v0;
-    }
-
+    uint32_t get_color_fast(const int x, const int y) override { return get_argb(x,y); }
 
     /******************************************************/
     // Fast set functions for different image types.
