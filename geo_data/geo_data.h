@@ -251,6 +251,7 @@ struct GeoMap{
   /******************************************************************/
   // update image_size (and check that file is readable)
   void update_size() {
+    if (is_tiled) return;
     image_size = ::image_size(image);
   }
 
