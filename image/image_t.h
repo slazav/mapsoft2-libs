@@ -34,7 +34,7 @@ capacity, 16 tiles).
 */
 
 // size if tile cache (unpacked images)
-#define TILE_CACHE_SIZE 16
+#define IMAGE_T_CACHE_SIZE 16
 
 // maximum number of parallel connections for downloading
 #define DOWNLOAD_NCONN   4
@@ -48,7 +48,7 @@ class ImageT: public Image {
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
-       tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(TILE_CACHE_SIZE),
+       tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_CACHE_SIZE),
        dmanager(DOWNLOAD_NCONN) {};
 
     // Make url from a template - replace {x} by key.x, {y} by key.y
