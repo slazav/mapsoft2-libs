@@ -22,7 +22,7 @@ tile key (x/tsize,y/tsize,z) and coordinate on the tile (x,y)%tsize.
 Url template format:
  `{x}` and `{y}` - replaced by x and y values,
  `{z}` - replaced by z value,
- `{[abc]}` - replaced by one letter from [...] set,
+ `{[abc]}` - replaced by one letter from [...] set (depenting on x+y value),
  `{{}` and `{}}` - replaced by `{` and `}` literals.
 
 We request background downloading of the coordinate range
@@ -40,7 +40,7 @@ capacity, 16 tiles).
 #define IMAGE_T_CACHE_SIZE 16
 
 // maximum number of parallel connections for downloading
-#define DOWNLOAD_NCONN   4
+#define IMAGE_T_NCONN   4
 
 class ImageT: public Image {
   size_t tsize;
@@ -48,12 +48,11 @@ class ImageT: public Image {
   Cache<iPoint, ImageR> tiles;
   Downloader dmanager;
   std::string tmpl;
-  unsigned int counter; // tile counter; overfull should not be a problem.
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
        tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_CACHE_SIZE),
-       dmanager(DOWNLOAD_NCONN), counter(0) {};
+       dmanager(IMAGE_T_NCONN) {};
 
     // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
     std::string make_url(const iPoint & key){
@@ -76,26 +75,25 @@ class ImageT: public Image {
         else if (s=="}") ret += '}';
         else if (s.size()>2 && s[0]=='[' && s[s.size()-1]==']'){
           int len=s.size()-2;
-          ret+=s[1+counter%len];
+          ret+=s[1+(key.x+key.y)%len];
         }
         else throw Err() << "ImageT: unknown field " << s 
                          << " in URL template: " << tmpl;
         n0 = n2+1;
       }
-      counter++;
       return ret;
     }
 
     // Start downloading all tiles in the range,
     // remove tiles outside this range
-    void prepare_range(const iRect &r){
+    void prepare_range(const iRect &r, int z=0){
       int x1 = r.x/tsize;
       int y1 = r.y/tsize;
-      int x2 = (r.x+r.w)/tsize+1;
-      int y2 = (r.y+r.h)/tsize+1;
+      int x2 = (r.x+r.w-1)/tsize+1;
+      int y2 = (r.y+r.h-1)/tsize+1;
       for (int y=y1; y<y2; y++)
         for (int x=x1; x<x2; x++)
-          dmanager.add(make_url(iPoint(x,y)));
+          dmanager.add(make_url(iPoint(x,y,z)));
       dmanager.update_clean_list();
     }
 
@@ -114,7 +112,6 @@ class ImageT: public Image {
                       << img.width() << "x" << img.height()
                       << ": " << url << "\n";
         tiles.add(key, img);
-        dmanager.del(url);
       }
       return tiles.get(key).get_argb(crd.x, crd.y);
     }
