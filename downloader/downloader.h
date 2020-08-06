@@ -28,6 +28,7 @@ Using clean_list mechanism:
 
 #include <string>
 #include <map>
+#include <set>
 #include <queue>
 #include <thread>
 #include <mutex>
@@ -39,17 +40,27 @@ class Downloader {
     int num_conn; // current number of connections
 
     // url -> status (0:waiting, 1: in progress, 2:ok, 3:error)
-    // Also used to store url string for libcurl
+    // Added in add() when putting URL to the url queue.
+    // Deleted from the main thread at any time if downloading is not needed.
+    // Set to 1,2,3 by the worker thread.
     std::map<std::string, int> status;
 
-    // clean list (accessed only from main thread)
+    // clean list (used only in the main thread)
     std::map<std::string, int> clean_list;
 
-    // url -> data
+    // url -> data. Filled with the worker thread then downloading is complete.
+    // In case of error contains error message.
     std::map<std::string, std::string> data;
 
-    // queue for downloading
+    // Queue for downloading. Added by add() function, popped by 
+    // the worker thread
     std::queue<std::string> urls;
+
+    // Used in the worker thread to store URL for libcurl
+    std::set<std::string> url_store;
+
+    // Used in the worker thread to store data for libcurl
+    std::map<std::string, std::string> dat_store;
 
     bool worker_needed; // flag used to stop the second thread
     std::thread worker_thread;
