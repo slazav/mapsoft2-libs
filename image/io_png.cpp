@@ -12,6 +12,12 @@ png_read_data_fn(png_structp png_ptr, png_bytep data, size_t length){
   str->read((char*)data, length);
 }
 
+static const char* libpng_err_msg;
+void user_error_fn(png_structp png_ptr, png_const_charp error_msg){
+  libpng_err_msg = error_msg;
+  longjmp(png_jmpbuf(png_ptr), 0);
+}
+
 /**********************************************************/
 
 iPoint
@@ -43,10 +49,13 @@ image_size_png(std::istream & str){
     end_info = png_create_info_struct(png_ptr);
     if (!end_info) throw Err() << "image_size_png: can't make png_info_struct";
 
+    png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), user_error_fn, NULL);
+
     if (setjmp(png_jmpbuf(png_ptr)))
-      throw Err() << "image_size_png: can't do setjmp";
+      throw Err() << "image_size_png: " << libpng_err_msg;
 
     png_set_read_fn(png_ptr, &str, png_read_data_fn);
+
 
     png_set_sig_bytes(png_ptr, sign_size);
     png_read_info(png_ptr, info_ptr);
@@ -97,8 +106,10 @@ image_load_png(std::istream & str, const double scale){
     end_info = png_create_info_struct(png_ptr);
     if (!end_info) throw Err() << "image_load_png: can't make png_info_struct";
 
+    png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), user_error_fn, NULL);
+
     if (setjmp(png_jmpbuf(png_ptr)))
-      throw Err() << "image_load_png: can't do setjmp";
+      throw Err() << "image_load_png: " << libpng_err_msg;
 
     png_set_read_fn(png_ptr, &str, png_read_data_fn);
     png_set_sig_bytes(png_ptr, sign_size);
@@ -347,8 +358,10 @@ image_save_png(const ImageR & im, std::ostream & str,
     if (!info_ptr)
       throw Err() << "image_save_png: can't make png_info_struct";
 
+    png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), user_error_fn, NULL);
+
     if (setjmp(png_jmpbuf(png_ptr)))
-      throw Err() << "image_save_png: can't do setjmp";
+      throw Err() << "image_save_png: " << libpng_err_msg;
 
     png_set_write_fn(png_ptr, &str, png_write_data_fn, png_flush_data_fn);
 
