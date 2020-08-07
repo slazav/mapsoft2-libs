@@ -185,11 +185,15 @@ Downloader::worker(){
           if (msg->data.result==0) {
             d.first  = 2; // OK
             d.second = dat_store[url];
+            //std::cerr << "Downloader: downloading OK: " << url
+            //          << " (" << dat_store[url].size() << " bytes)\n";
           }
           else {
             d.first = 3; // ERROR
             d.second = curl_easy_strerror(msg->data.result);
             d.second += ": " + std::string(url);
+            //std::cerr << "Downloader: downloading failed: " << url
+            //          << " (" << d.second << ")\n";
           }
           lk.unlock();
         }
