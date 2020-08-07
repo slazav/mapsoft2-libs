@@ -36,8 +36,12 @@ capacity, 16 tiles).
 
 */
 
-// size if tile cache (unpacked images)
-#define IMAGE_T_CACHE_SIZE 16
+// size of data cache (packed images)
+#define IMAGE_T_DCACHE_SIZE 64
+
+// size of tile cache (unpacked images)
+#define IMAGE_T_TCACHE_SIZE 16
+
 
 // maximum number of parallel connections for downloading
 #define IMAGE_T_NCONN   4
@@ -51,8 +55,8 @@ class ImageT: public Image {
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
-       tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_CACHE_SIZE),
-       dmanager(IMAGE_T_NCONN) {};
+       tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_TCACHE_SIZE),
+       dmanager(IMAGE_T_DCACHE_SIZE, IMAGE_T_NCONN) {};
 
     // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
     std::string make_url(const iPoint & key){
@@ -94,7 +98,6 @@ class ImageT: public Image {
       for (int y=y1; y<y2; y++)
         for (int x=x1; x<x2; x++)
           dmanager.add(make_url(iPoint(x,y,z)));
-      dmanager.update_clean_list();
     }
 
     // get point color
