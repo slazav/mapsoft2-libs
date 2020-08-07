@@ -15,12 +15,12 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 /**********************************/
 Downloader::Downloader(const int max_conn):
        max_conn(max_conn), num_conn(0), worker_needed(true),
-       lk(data_mutex, std::defer_lock),
        worker_thread(&Downloader::worker, this) {
        //std::cerr << "Downloader: create thread\n";
 }
 
 Downloader::~Downloader(){
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   worker_needed = false;
   lk.unlock();
@@ -32,6 +32,7 @@ Downloader::~Downloader(){
 void
 Downloader::add(const std::string & url){
   if (status.count(url)) return;
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   urls.push(url);
   status.emplace(url, 0);
@@ -47,6 +48,7 @@ Downloader::add(const std::string & url){
 void
 Downloader::del(const std::string & url){
   if (status.count(url) == 0) return;
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   data.erase(url);
   status.erase(url);
@@ -57,6 +59,7 @@ Downloader::del(const std::string & url){
 /**********************************/
 void
 Downloader::clear(){
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   data.clear();
   status.clear();
@@ -74,6 +77,7 @@ Downloader::get_status(const std::string & url){
 int
 Downloader::wait(const std::string & url){
   if (status.count(url)==0) return -1;
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   while (status[url] < 2) ready_cond.wait(lk);
   lk.unlock();
@@ -106,6 +110,7 @@ Downloader::get(const std::string & url){
 /**********************************/
 void
 Downloader::update_clean_list(){
+  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   for (auto const & i:clean_list){
     status.erase(i.first);

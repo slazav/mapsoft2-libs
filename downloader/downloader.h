@@ -65,7 +65,6 @@ class Downloader {
     bool worker_needed; // flag used to stop the second thread
     std::thread worker_thread;
     std::mutex data_mutex;
-    std::unique_lock<std::mutex> lk; // lock for the main thread
     std::condition_variable add_cond; // notify worker_thread about adding new URL
     std::condition_variable ready_cond; // notify the main thread when data is ready
 
