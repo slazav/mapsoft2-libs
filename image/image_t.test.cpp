@@ -22,9 +22,12 @@ main(){
     {
       ImageT imgt("abc{x}/{y}/{z}-{[abc]}");
       assert_eq(imgt.make_url(p), "abc10/20/5-a");
-      assert_eq(imgt.make_url(p), "abc10/20/5-b");
-      assert_eq(imgt.make_url(p), "abc10/20/5-c");
-      assert_eq(imgt.make_url(p), "abc10/20/5-a");
+      p.x++;
+      assert_eq(imgt.make_url(p), "abc11/20/5-b");
+      p.y++;
+      assert_eq(imgt.make_url(p), "abc11/21/5-c");
+      p.y++;
+      assert_eq(imgt.make_url(p), "abc11/22/5-a");
     }
 
     {
