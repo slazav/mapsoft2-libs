@@ -622,6 +622,11 @@ main(){
       assert_eq(p.y, 128);
     }
 
+    { // blue.png
+      ImageR I = image_load_png("test_png/blue.png");
+      assert_eq(I.get_color(100,100), 0xFF9ABFDD);
+    }
+
 /*
 std::cerr << std::hex << I.get_argb(0,0) << "\n";
 std::cerr << std::hex << I.get_argb(127,127) << "\n";

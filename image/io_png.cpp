@@ -127,13 +127,13 @@ image_load_png(std::istream & str, const double scale){
 
 
     // Make image of the correct type
+    int cnum = 0;
     if (color_type & PNG_COLOR_MASK_PALETTE){
 
       if (bit_depth == 16)
         png_set_strip_16(png_ptr);
 
       img = ImageR(w1,h1, IMAGE_8PAL);
-      int cnum = 0;
       png_color *palette;
       png_get_PLTE(png_ptr, info_ptr, &palette, &cnum);
 
@@ -221,7 +221,11 @@ image_load_png(std::istream & str, const double scale){
       if (img.type() == IMAGE_8PAL){
         for (int x=0; x<w1; ++x){
           int xs = scale==1.0? x:rint(x*scale);
-          img.data()[w1*y+x] = row_buf[xs];
+          uint8_t v;
+          if (cnum==1)
+            img.data()[w1*y+x] = 0;
+          else
+            img.data()[w1*y+x] = row_buf[xs];
         }
       }
 
