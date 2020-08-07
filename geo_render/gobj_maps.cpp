@@ -37,11 +37,8 @@ GObjMaps::GObjMaps(GeoMapList & maps):
     smooth(false), clip_brd(true), draw_refs(0), draw_brd(0), fade(0) {
 
   for (auto & m:maps){
-    MapData d;
     m.update_size();
-    d.src_bbox = m.bbox();
-    d.src = &m;
-    data.push_back(d);
+    data.emplace_back(m);
   }
 }
 
@@ -49,8 +46,16 @@ bool
 GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
   if (tiles.contains(range_dst)) return true;
 
-  ImageR image_src = img_cache.get(d.src->image, d.load_sc);
   ImageR image_dst = ImageR(range_dst.w, range_dst.h, IMAGE_32ARGB);
+
+
+  // prepare Image source.
+  // For normal maps it's a ImageR, from ImageCache
+  // For tiled maps it is ImageT object from MapData.
+  ImageR imageR_src; // keep ImageR data (to be moved to ImageCache?)
+  if (!d.src->is_tiled)
+    imageR_src = img_cache.get(d.src->image, d.load_sc);
+  Image & image_src = d.src->is_tiled ? (Image&) *d.timg : (Image&) imageR_src;
 
   double avr = d.scale/d.load_sc;
   // render image
@@ -74,6 +79,17 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
   tiles.add(range_dst, image_dst);
   return true;
 }
+
+void
+GObjMaps::prepare_range(const dRect & range) {
+  // For tiled maps start parallel downloading of all maps in the range.
+  for (auto const & d:data){
+    if (!d.src->is_tiled) continue;
+    dRect r = d.cnv.frw_acc(range);
+    d.timg->prepare_range(r);
+  }
+}
+
 
 int
 GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
@@ -174,7 +190,7 @@ GObjMaps::on_set_cnv(){
     d.scale = std::max(sc.x, sc.y);
 
     // scale for image loading
-    d.load_sc = floor(1.0*d.scale);
+    d.load_sc = d.src->is_tiled? 1 : floor(1.0*d.scale);
     if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
     if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
   }
@@ -191,7 +207,7 @@ GObjMaps::on_rescale(double k){
     d.cnv.rescale_src(1.0/k);
     // scale for image loading
     d.cnv.rescale_dst(d.load_sc); // remove old scaling
-    d.load_sc = floor(1.0*d.scale);
+    d.load_sc = d.src->is_tiled? 1 : floor(1.0*d.scale);
     if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
     if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
     d.cnv.rescale_dst(1.0/d.load_sc);

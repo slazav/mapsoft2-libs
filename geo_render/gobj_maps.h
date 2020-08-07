@@ -7,6 +7,7 @@
 #include "geo_data/geo_data.h"
 #include "cache/cache.h"
 #include "image/image_cache.h"
+#include "image/image_t.h"
 #include "opt/opt.h"
 #include "viewer/gobj.h"
 
@@ -32,7 +33,15 @@ private:
     dLine refs;     // map refpoints (in viewer coordinates)
     dRect bbox;     // map bbox (in viewer coordinates)
     dRect src_bbox; // map original bbox (it may take some time to get it)
-    const GeoMap * src;   // pointer to the map
+    const GeoMap * src;           // pointer to the map
+    std::unique_ptr<ImageT> timg; // normal maps use a single img_cache for data storage;
+                    // tiled maps have one ImageT object per map.
+
+    MapData(const GeoMap & m): src_bbox(m.bbox()), src(&m){
+      if (m.is_tiled) timg =
+        std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
+    }
+
   };
   ImageRCache img_cache;
   Cache<iRect, ImageR> tiles;
@@ -49,9 +58,10 @@ public:
   GObjMaps(GeoMapList & maps);
 
   /************************************************/
-  // drawing waypoints on the image
+  // drawing maps
   int draw(const CairoWrapper & cr, const dRect &box) override;
 
+  void prepare_range(const dRect & range) override;
 
   /************************************************/
   // These functions update drawing templates.
