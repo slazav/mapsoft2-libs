@@ -3,27 +3,28 @@
 
 /*
 Download manager. Download files using libcurl, use parallel
-downloading. Results are stored in memory.
+downloading. Results are stored in a cache with fixed size.
 
-Usecases:
+Interface:
 
-1. get() an URL, use data, del() the URL (data will be destroyed)
+  Downloader(cache_size=64, max_conn=4) -- Constructor.
 
-2. add() all needed URLs for parallel downloading,
-   get() them, use data
-   del() all URLs one by one, or clear() all of them
+  add(url) -- Add an URL to the downloading queue.
 
-3. Use clean_list mechanism:
-- update_clean_list method removes all URLs mentioned in
-  the clean_list, and adds all known URLs to the clean list.
-- add() method adds an URL to the downloading queue and removes
-  it from the clean list.
+  del(url) -- Remove an URL from downloader.
 
-Using clean_list mechanism:
-- add() all URLs which will be needed.
-- run update_clean_list(). All data except added since last call to
-  update_clean_list is removed
-- get() and use URLs
+  clear()  -- Clear all data.
+
+  get_status(url) -- Get current status of the url:
+    -1: unknown, 0: in the queue, 1: in progress, 2: done, 3: error.
+
+  wait(url) -- For unknown urls return -1; For others wait until
+     status will be 2 (ok) or 3 (error) and return the status.
+
+  get_data(url) -- Return downloaded data if status is 2, throw error otherwise.
+
+  get(url) -- High-level command: combine add + wait + get_data methods.
+
 */
 
 #include <string>
@@ -34,32 +35,25 @@ Using clean_list mechanism:
 #include <mutex>
 #include <condition_variable>
 
+#include "cache/cache.h"
+
 class Downloader {
   private:
     int max_conn; // number of parallel connections
     int num_conn; // current number of connections
 
-    // url -> status (0:waiting, 1: in progress, 2:ok, 3:error)
-    // Added in add() when putting URL to the url queue.
-    // Deleted from the main thread at any time if downloading is not needed.
-    // Set to 1,2,3 by the worker thread.
-    std::map<std::string, int> status;
+    // Data cache: url ->(status,data)
+    // status values: 0: waiting, 1: in progress, 2: ok, 3: error
+    Cache<std::string, std::pair<int, std::string> > data;
 
-    // clean list (used only in the main thread)
-    std::map<std::string, int> clean_list;
-
-    // url -> data. Filled with the worker thread then downloading is complete.
-    // In case of error contains error message.
-    std::map<std::string, std::string> data;
-
-    // Queue for downloading. Added by add() function, popped by 
+    // Queue for downloading. Added by add() function, processed by
     // the worker thread
     std::queue<std::string> urls;
 
     // Used in the worker thread to store URL for libcurl
     std::set<std::string> url_store;
 
-    // Used in the worker thread to store data for libcurl
+    // Used in the worker thread to store data obtained from libcurl
     std::map<std::string, std::string> dat_store;
 
     bool worker_needed; // flag used to stop the second thread
@@ -70,7 +64,7 @@ class Downloader {
 
   public:
 
-  Downloader(const int max_conn=4);
+  Downloader(const int cache_size=64, const int max_conn=4);
   ~Downloader();
 
   // Add an URL to the downloading queue.
@@ -96,12 +90,6 @@ class Downloader {
 
   // High-level command: combine add + wait + get_data methods.
   std::string & get(const std::string & url);
-
-
-  // Update clean_list:
-  // - remove all urls which are in the clean_list
-  // - add all known urls to the clean_list
-  void update_clean_list();
 
   private:
     // the separate thread for downloading

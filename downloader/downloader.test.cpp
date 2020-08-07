@@ -36,7 +36,6 @@ main(){
     assert_eq(D.wait(pref + "/missing_file"), 3); // wait, check that there is error
     assert_eq(D.wait(pref + "/downloader.cpp"), 2); // wait, check that there is ok
 
-
     D.del(pref + "/downloader.h");
     assert_eq(D.get_status(pref + "/downloader.h"), -1); // not known
 

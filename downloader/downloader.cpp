@@ -13,9 +13,9 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 }
 
 /**********************************/
-Downloader::Downloader(const int max_conn):
+Downloader::Downloader(const int cache_size, const int max_conn):
        max_conn(max_conn), num_conn(0), worker_needed(true),
-       worker_thread(&Downloader::worker, this) {
+       worker_thread(&Downloader::worker, this), data(cache_size) {
        //std::cerr << "Downloader: create thread\n";
 }
 
@@ -31,14 +31,11 @@ Downloader::~Downloader(){
 /**********************************/
 void
 Downloader::add(const std::string & url){
-  if (status.count(url)) return;
+  if (data.contains(url)) return; // already in the cache
   std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
+  data.add(url, std::make_pair(0, std::string()));
   urls.push(url);
-  status.emplace(url, 0);
-
-  clean_list.erase(url);
-  data.emplace(url, std::string());
   lk.unlock();
   add_cond.notify_one();
   //std::cerr << "Downloader: add url to queue: " << url << "\n";
@@ -47,12 +44,10 @@ Downloader::add(const std::string & url){
 /**********************************/
 void
 Downloader::del(const std::string & url){
-  if (status.count(url) == 0) return;
+  if (!data.contains(url)) return;
   std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   data.erase(url);
-  status.erase(url);
-  clean_list.erase(url);
   lk.unlock();
 }
 
@@ -62,40 +57,40 @@ Downloader::clear(){
   std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   data.clear();
-  status.clear();
   lk.unlock();
 }
 
 /**********************************/
 int
 Downloader::get_status(const std::string & url){
-  if (status.count(url)==0) return -1;
-  return status[url];
+  if (!data.contains(url)) return -1;
+  return data.get(url).first;
 }
 
 /**********************************/
 int
 Downloader::wait(const std::string & url){
-  if (status.count(url)==0) return -1;
+  if (!data.contains(url)) return -1;
   std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
-  while (status[url] < 2) ready_cond.wait(lk);
+  while (data.contains(url) && data.get(url).first < 2) ready_cond.wait(lk);
   lk.unlock();
-  return status[url];
+  return data.get(url).first;
 }
 
 
 /**********************************/
 std::string &
 Downloader::get_data(const std::string & url){
-  if (status.count(url)==0)
+  if (!data.contains(url))
     throw Err() << "Downloader: unknown URL";
-  switch (status[url]){
+  auto & d = data.get(url);
+  switch (d.first){
     case 0: throw Err() << "Downloader: URL in the downloading queue";
     case 1: throw Err() << "Downloader: downloading is in progress";
-    case 2: return data[url];
-    case 3: throw Err() << data[url];
-    default: throw Err() << "Downloader: unknown status: " << status[url];
+    case 2: return d.second;
+    case 3: throw Err() << d.second;
+    default: throw Err() << "Downloader: unknown status: " << d.first;
   }
 }
 
@@ -105,19 +100,6 @@ Downloader::get(const std::string & url){
   add(url);
   wait(url);
   return get_data(url);
-}
-
-/**********************************/
-void
-Downloader::update_clean_list(){
-  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
-  lk.lock();
-  for (auto const & i:clean_list){
-    status.erase(i.first);
-    data.erase(i.first);
-  }
-  clean_list = status;
-  lk.unlock();
 }
 
 /**********************************/
@@ -146,22 +128,16 @@ Downloader::worker(){
       lk.lock();
       std::string &u = urls.front();
 
-      // url have been deleted with del()
-      if (status.count(u) == 0){
-        data.erase(u);
+      // do nothing if
+      // - url have been deleted with del()
+      // - url is already in progress or ready
+      if (get_status(u) != 0){
         urls.pop();
         lk.unlock();
         continue;
       }
 
-      // already in progress or done
-      if (status[u]>0){
-        urls.pop();
-        lk.unlock();
-        continue;
-      }
-
-      status[u] = 1; // IN PROGRESS
+      data.get(u).first = 1; // IN PROGRESS
 
       // url doubling (delete+add)
       if (url_store.count(u)>0){
@@ -203,20 +179,19 @@ Downloader::worker(){
         //          << " <" << url << ">\n";
 
         // data have not been deleted with del()
-        if (status.count(url) != 0){
+        if (data.contains(url)){
+          auto & d = data.get(url);
+          lk.lock();
           if (msg->data.result==0) {
-            lk.lock();
-            status[url] = 2; // OK
-            data[url] = dat_store[url];
-            lk.unlock();
+            d.first  = 2; // OK
+            d.second = dat_store[url];
           }
           else {
-            lk.lock();
-            status[url] = 3; // ERROR
-            data[url] = curl_easy_strerror(msg->data.result);
-            data[url] += ": " + std::string(url);
-            lk.unlock();
+            d.first = 3; // ERROR
+            d.second = curl_easy_strerror(msg->data.result);
+            d.second += ": " + std::string(url);
           }
+          lk.unlock();
         }
 
         ready_cond.notify_one();
