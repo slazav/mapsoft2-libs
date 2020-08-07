@@ -66,6 +66,11 @@ public:
     opt(std::shared_ptr<Opt>(new Opt)),
     range(MAX_RANGE), stop_drawing(false) { }
 
+
+  // Called by viewer before drawing the screen.
+  // draw_range is whe whole area, not tiles.
+  virtual void prepare_range(const dRect & draw_range) {}
+
   /** Draw with CairoWrapper.
    \return one of:
    - GObj::FILL_NONE  -- nothing has been drawn

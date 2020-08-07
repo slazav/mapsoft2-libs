@@ -62,6 +62,9 @@ public:
   // Draw all objects
   int draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
+  // prepare range
+  void prepare_range(const dRect & range) override;
+
   // Rescale
   void on_rescale(double k) override;
 

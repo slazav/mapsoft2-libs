@@ -143,9 +143,13 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
   iRect tiles = ceil(dRect(r + get_origin())/(double)TILE_SIZE);
   iPoint key;
 
+
   updater_mutex->lock();
   if (tiles_todo.empty()) signal_busy().emit();
   updater_mutex->unlock();
+
+  auto * o = get_obj();
+  if (o) o->prepare_range(r+get_origin());
 
   for (key.y = tiles.y; key.y<tiles.y+tiles.h; key.y++){
     for (key.x = tiles.x; key.x<tiles.x+tiles.w; key.x++){

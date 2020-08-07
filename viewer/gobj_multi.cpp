@@ -147,6 +147,14 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
 }
 
 void
+GObjMulti::prepare_range(const dRect & range){
+  for (auto const & p:data){
+    if (!p.second.on) continue;
+    p.second.obj->prepare_range(range);
+  }
+}
+
+void
 GObjMulti::on_rescale(double k){
   // Note that `on_rescale` is called instead on `rescale`.
   // Thus cnv is not modified, locking is not done, signal_redraw_me
