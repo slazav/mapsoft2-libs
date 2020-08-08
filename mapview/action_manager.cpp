@@ -12,6 +12,7 @@
 
 #include "am_file.h"
 #include "am_view.h"
+#include "am_maps.h"
 #include "am_panel.h"
 
 /*********/
@@ -63,6 +64,8 @@ ActionManager::ActionManager (Mapview * mapview_):
 
     ADD_ACT(FullScreen,      "View")
     ADD_ACT(HidePanels,      "View")
+
+    ADD_ACT(AddMapyCZ,       "Maps")
 
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")
@@ -122,6 +125,8 @@ ActionManager::ActionManager (Mapview * mapview_):
     AddSep("PopupMAPs");
     ADD_ACT(PanelDelSel,      "PopupMAPs")
     ADD_ACT(PanelDelAll,      "PopupMAPs")
+
+
 /*
 
     // SRTM panel menu
@@ -132,6 +137,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     /* Cleate menus */
     actions->add(Gtk::Action::create("MenuFile",  "_File"));
     actions->add(Gtk::Action::create("MenuView",  "_View"));
+    actions->add(Gtk::Action::create("MenuMaps",  "_Maps"));
 
     mapview->panel_wpts->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupWPTs");
     mapview->panel_trks->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupTRKs");
