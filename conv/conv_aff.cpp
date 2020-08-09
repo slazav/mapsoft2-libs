@@ -137,19 +137,26 @@ ConvAff2D::shift_dst(const dPoint & p){
 }
 
 void
-ConvAff2D::rescale_src(const double kx, const double ky){
+ConvAff2D::set_scale_src(const dPoint & s){
+  double kx = s.x/sc_src.x;
+  double ky = s.y/sc_src.y;
   src_err_x/=kx;
   src_err_y/=ky;
   k_frw[0]*=kx; k_frw[3]*=kx;
   k_frw[1]*=ky; k_frw[4]*=ky;
   bck_recalc();
+  sc_src=s;
 }
 
 void
-ConvAff2D::rescale_dst(const double kx, const double ky){
+ConvAff2D::set_scale_dst(const dPoint & s){
+  double kx = s.x/sc_dst.x;
+  double ky = s.y/sc_dst.y;
   dst_err_x*=kx;
   dst_err_y*=ky;
   for (int i=0; i<3; i++) k_frw[i]*=kx;
   for (int i=3; i<6; i++) k_frw[i]*=ky;
   bck_recalc();
+  sc_dst=s;
 }
+

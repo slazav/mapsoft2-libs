@@ -56,7 +56,6 @@ std::string expand_proj_aliases(const std::string & pars){
 ConvGeo::ConvGeo(const std::string & src,
        const std::string & dst, const bool use2d){
   cnv2d = use2d;
-  sc_src = sc_dst = 1;
 
   if (src==dst) {
     pj_src = pj_dst = NULL;
@@ -76,14 +75,17 @@ ConvGeo::ConvGeo(const std::string & src,
     throw Err() << "Can't create projection \""
                 << dst << "\": " << pj_strerrno(pj_errno);
 
-  if (pj_is_latlong(pj_src.get())) sc_src=M_PI/180.0;
-  if (pj_is_latlong(pj_dst.get())) sc_dst=180.0/M_PI;
+  if (pj_is_latlong(pj_src.get())) sc_src.x = sc_src.y = M_PI/180.0;
+  if (pj_is_latlong(pj_dst.get())) sc_dst.x = sc_dst.y = 180.0/M_PI;
 }
 
 
 void
 ConvGeo::frw_pt(dPoint & p) const{
-  if (sc_src!=1.0) {p.x*=sc_src; p.y*=sc_src;}  // this if increases speed...
+  if (sc_src.x!=1.0) {p.x*=sc_src.x;}  // this if increases speed...
+  if (sc_src.y!=1.0) {p.y*=sc_src.y;}
+  if (sc_src.z!=1.0) {p.z*=sc_src.z;}
+
   if (pj_src!=pj_dst) {
     double *z = (cnv2d || isnan(p.z))? NULL:&p.z;
     if (pj_transform(pj_src.get(), pj_dst.get(), 1, 1, &p.x, &p.y, z)!=0)
@@ -91,12 +93,17 @@ ConvGeo::frw_pt(dPoint & p) const{
     if (!isfinite(p.x) || !isfinite(p.y))
       throw Err() << "Can't convert coordinates: non-numeric result";
   }
-  if (sc_dst!=1.0) {p.x*=sc_dst; p.y*=sc_dst;};
+  if (sc_dst.x!=1.0) {p.x*=sc_dst.x;}
+  if (sc_dst.y!=1.0) {p.y*=sc_dst.y;}
+  if (sc_dst.z!=1.0) {p.z*=sc_dst.z;}
 }
 
 void
 ConvGeo::bck_pt(dPoint & p) const{
-  if (sc_dst!=1.0) {p.x/=sc_dst; p.y/=sc_dst;};
+  if (sc_dst.x!=1.0) {p.x/=sc_dst.x;}
+  if (sc_dst.y!=1.0) {p.y/=sc_dst.y;}
+  if (sc_dst.z!=1.0) {p.z/=sc_dst.z;}
+
   if (pj_src!=pj_dst){
     double *z = (cnv2d || isnan(p.z))? NULL:&p.z;
     if (pj_transform(pj_dst.get(), pj_src.get(), 1, 1, &p.x, &p.y, z)!=0)
@@ -104,7 +111,9 @@ ConvGeo::bck_pt(dPoint & p) const{
     if (!isfinite(p.x) || !isfinite(p.y))
       throw Err() << "Can't convert coordinates: non-numeric result";
   }
-  if (sc_src!=1.0) {p.x/=sc_src; p.y/=sc_src;}
+  if (sc_src.x!=1.0) {p.x/=sc_src.x;}
+  if (sc_src.y!=1.0) {p.y/=sc_src.y;}
+  if (sc_src.z!=1.0) {p.z/=sc_src.z;}
 }
 
 bool

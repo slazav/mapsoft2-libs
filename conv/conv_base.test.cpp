@@ -7,16 +7,24 @@
 class MyConv : public ConvBase {
   public:
   void frw_pt(dPoint & p) const {
-    if (sc_src!=1.0) p*=sc_src;
+    if (sc_src.x!=1.0) p.x*=sc_src.x;
+    if (sc_src.y!=1.0) p.y*=sc_src.y;
+    if (sc_src.z!=1.0) p.y*=sc_src.z;
     p.x*=p.x;
     p.y*=2;
-    if (sc_dst!=1.0) p*=sc_dst;
+    if (sc_dst.x!=1.0) p.x*=sc_dst.x;
+    if (sc_dst.y!=1.0) p.y*=sc_dst.y;
+    if (sc_dst.z!=1.0) p.y*=sc_dst.z;
   }
   void bck_pt(dPoint & p) const {
-    if (sc_dst!=1.0) p/=sc_dst;
+    if (sc_dst.x!=1.0) p.x/=sc_dst.x;
+    if (sc_dst.y!=1.0) p.y/=sc_dst.y;
+    if (sc_dst.z!=1.0) p.y/=sc_dst.z;
     p.x=sqrt(p.x);
     p.y/=2;
-    if (sc_src!=1.0) p/=sc_src;
+    if (sc_src.x!=1.0) p.x/=sc_src.x;
+    if (sc_src.y!=1.0) p.y/=sc_src.y;
+    if (sc_src.z!=1.0) p.y/=sc_src.z;
   }
 };
 
@@ -99,13 +107,13 @@ main(){
        dLine l1("[[0,0],[0,0],[10,10],[10,10,1]]");
        cnv.rescale_dst(10);
        assert_eq(iLine(cnv.frw_acc(l1, 2)),
-              iLine("[[0,0],[250,100],[1000,200],[1000,200,10]]"));
+              iLine("[[0,0],[250,100],[1000,200],[1000,200,1]]"));
        assert_eq(iLine(cnv.frw_acc(l1, 1)),
-              iLine("[[0,0],[62,50],[390,125],[1000,200],[1000,200,10]]"));
+              iLine("[[0,0],[62,50],[390,125],[1000,200],[1000,200,1]]"));
        assert_eq(iLine(cnv.frw_acc(l1, 0.08)),
-              iLine("[[0,0],[3,12],[14,24],[30,35],[77,55],[136,73],[277,105],[416,129],[676,164],[1000,200],[1000,200,10]]"));
+              iLine("[[0,0],[3,12],[14,24],[30,35],[77,55],[136,73],[277,105],[416,129],[676,164],[1000,200],[1000,200,1]]"));
        assert_eq(iLine(cnv.frw_acc(l1, 0)),
-              iLine("[[0,0],[0,0],[1000,200],[1000,200,10]]"));
+              iLine("[[0,0],[0,0],[1000,200],[1000,200,1]]"));
 
        l1=dLine("[[0,0],[100,20]]");
        assert_eq(iLine(10.0*cnv.bck_acc(l1, 1)),

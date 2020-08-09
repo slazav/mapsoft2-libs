@@ -17,13 +17,15 @@
 struct ConvBase{
 
   /// constructor - trivial transformation
-  ConvBase(double sc=1.0): sc_dst(1.0), sc_src(1.0){}
+  ConvBase(double sc=1.0): sc_dst(1.0, 1.0, 1.0), sc_src(1.0, 1.0, 1.0){}
 
   // forward point conversion (can be redefined)
-  virtual void frw_pt(dPoint & p) const {p.x*=sc_src*sc_dst; p.y*=sc_src*sc_dst;}
+  virtual void frw_pt(dPoint & p) const {
+    p.x*=sc_src.x*sc_dst.x; p.y*=sc_src.y*sc_dst.y; p.z*=sc_src.z*sc_dst.z;}
 
   // backward point conversion (can be redefined)
-  virtual void bck_pt(dPoint & p) const {p.x/=sc_src*sc_dst; p.y/=sc_src*sc_dst;}
+  virtual void bck_pt(dPoint & p) const {
+    p.x/=sc_src.x*sc_dst.x; p.y/=sc_src.y*sc_dst.y; p.z/=sc_src.z*sc_dst.z;}
 
   // Get copy of the object. Should be redefined in derived classes.
   // Allows to copy Conv* class without knowing its actual type.
@@ -122,16 +124,50 @@ struct ConvBase{
                         const double scale = 1.0) const;
 */
 
-  /// change sc_src parameter
-  /// Childs can use this parameter in frw/bck or redefine rescale_src()
-  virtual void rescale_src(const double s) { sc_src*=s; }
+  // Scaling functions. Children should use sc_src/sc_dst
+  // parameters or redefine this functions.
 
-  /// change sc_dst parameter
-  /// Childs can use this parameter in frw/bck or redefine rescale_dst()
-  virtual void rescale_dst(const double s) { sc_dst*=s; }
+  /// set sc_src (scaling before conversion) parameter
+  virtual void set_scale_src(const dPoint & s) { sc_src=s; }
+
+  /// get sc_src (scaling before conversion) parameter
+  virtual dPoint get_scale_src() const { return sc_src; }
+
+  /// set sc_dst (scaling after conversion) parameter
+  virtual void set_scale_dst(const dPoint & s) { sc_dst=s; }
+
+  /// get sc_dst (scaling after conversion) parameter
+  virtual dPoint get_scale_dst() const { return sc_dst; }
+
+
+  // derived scale functions
+
+  /// set sc_src (scaling before conversion), same in x and y, 1 in z
+  void set_scale_src(const double s) { set_scale_src(dPoint(s,s,1));}
+
+  /// set sc_src (scaling after conversion), same in x and y
+  void set_scale_dst(const double s) { set_scale_dst(dPoint(s,s,1));}
+
+  /// relative change of sc_src parameter
+  void rescale_src(const dPoint & s) {
+    dPoint s0 = get_scale_src();
+    set_scale_src(dPoint(s0.x*s.x, s0.y*s.y, s0.z*s.z));
+  }
+
+  /// relative change of sc_dst parameter
+  void rescale_dst(const dPoint & s) {
+    dPoint s0 = get_scale_dst();
+    set_scale_dst(dPoint(s0.x*s.x, s0.y*s.y, s0.z*s.z));
+  }
+
+  /// relative change of sc_src parameter, same in x and y, 1 in z
+  void rescale_src(const double s) { rescale_src(dPoint(s,s,1));}
+
+  /// relative change of sc_dst parameter, same in x and y
+  void rescale_dst(const double & s) { rescale_dst(dPoint(s,s,1));}
 
 protected:
-  double sc_src, sc_dst;
+  dPoint sc_src, sc_dst;
 };
 
 ///@}

@@ -42,18 +42,18 @@ public:
 
   /// redefine a forward point conversion
   void frw_pt(dPoint & p) const override {
-    p.x*=sc_src; p.y*=sc_src;
+    p.x*=sc_src.x; p.y*=sc_src.y;
     for (auto i = cnvs.begin(); i!=cnvs.end(); ++i)
       if (i->first) i->second->frw(p); else i->second->bck(p);
-    p.x*=sc_dst; p.y*=sc_dst;
+    p.x*=sc_dst.x; p.y*=sc_dst.y;
   }
 
   /// redefine a backward point conversion
   void bck_pt(dPoint & p) const override {
-    p.x/=sc_dst; p.y/=sc_dst;
+    p.x/=sc_dst.x; p.y/=sc_dst.y;
     for (auto i = cnvs.rbegin(); i!=cnvs.rend(); ++i)
       if (i->first) i->second->bck(p); else i->second->frw(p);
-    p.x/=sc_src; p.y/=sc_src;
+    p.x/=sc_src.x; p.y/=sc_src.y;
   }
 
   // redefine clone() method

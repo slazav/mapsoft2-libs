@@ -1,10 +1,10 @@
 -----------------
 ## ConvBase class
 
-Trivial point transformation with two factors for scaling before
+Trivial 3D point transformation with factors for scaling before
 and after the transformation. Children can redefine frw_pt() and bck_pt()
 methods to build more complicated transformations. Scaling factors
-are applied only to x and y coordinates in a following way:
+are applied in a following way:
 `dst = f(src*k_src)*k_dst`, `src = f^(-1)(dst/k_dst)/k_src`
 
 Note that in some cases forward and backward conversions are non-symmetric
@@ -13,7 +13,7 @@ Note that in some cases forward and backward conversions are non-symmetric
 - `ConvBase()` -- Constructor.
 
 - `frw_pt(dPoint &), bck_pt(dPoint &)` -- Functions to be redefined in children,
-   forward and backwart in-place point conversion. By default is is
+   forward and backward in-place point conversion. By default is is
    just a rescaling with `rescale_src*rescale_dst` factor.
 
 - `clone()` -- make a std::shared_ptr copy of the object. Should
@@ -42,11 +42,6 @@ Note that in some cases forward and backward conversions are non-symmetric
   Accuracy `<acc>` is measured in source units (both for frw_acc and bck_acc).
   If acc<=0 then point-to-point conversion is used.
 
-- `void rescale_src(const double s)`
-- `void rescale_dst(const double s)` -- change scale factors applied before
-  and after conversions. If childs do not do the scaling they should redefine
-  this.
-
 - `virtual double frw_ang(dPoint p, double a, double dx) const`
 - `virtual double bck_ang(dPoint p, double a, double dx) const` --
   Forward/backward conversion of angle a at point p.
@@ -61,6 +56,26 @@ Note that in some cases forward and backward conversions are non-symmetric
 - `dPoint scales(const dRect & box) const;` --
   Linear scales, destination units per source units in x and y direction.
   box is given in source coordinates.
+
+Scaling factors:
+
+- `void set_scale_src(const dPoint & s)`
+- `dPoint get_scale_src() const` -- set/get source scaling factors (x,y,z).
+
+- `void set_scale_dst(const dPoint & s)`
+- `dPoint get_scale_dst() const` -- set/get destination scaling factors (x,y,z).
+
+Scaling factors (derived functions)
+
+- `void set_scale_src(const double s)`
+- `void set_scale_dst(const double s)` - set scaling factors (x=y=s, z=1).
+
+- `void rescale_src(const dPoint & s)`
+- `void rescale_dst(const dPoint & s)` - relative change of scaling factors (x,y,z).
+
+- `void rescale_src(const double s)`
+- `void rescale_dst(const double s)` -  relative change of scaling factors (x=y=s, z=1).
+
 
 
 -----------------

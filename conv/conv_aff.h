@@ -33,14 +33,14 @@ public:
   void frw_pt(dPoint & p) const override{
     double x = k_frw[0]*p.x + k_frw[1]*p.y + k_frw[2];
     double y = k_frw[3]*p.x + k_frw[4]*p.y + k_frw[5];
-    p.x=x; p.y=y;
+    p.x=x; p.y=y; p.z*=sc_src.z*sc_dst.z;
   }
 
   /// point transformation
   void bck_pt(dPoint & p) const override{
     double x = k_bck[0]*p.x + k_bck[1]*p.y + k_bck[2];
     double y = k_bck[3]*p.x + k_bck[4]*p.y + k_bck[5];
-    p.x=x; p.y=y;
+    p.x=x; p.y=y; p.z/=sc_src.z*sc_dst.z;
   }
 
   // redefine clone() method
@@ -57,18 +57,17 @@ public:
   /// shift after the transformation
   void shift_dst(const dPoint & p);
 
-  /// scale x and y before the transformation
-  void rescale_src(const double kx, const double ky);
+
+  ////// rescaling
 
   /// scale x and y before the transformation
-  void rescale_dst(const double kx, const double ky);
+  void set_scale_src(const dPoint & s) override;
 
-  /// scale before the transformation
-  void rescale_src(const double s){ rescale_src(s,s); }
+  /// scale x and y after the transformation
+  void set_scale_dst(const dPoint & s) override;
 
-  /// scale before the transformation
-  void rescale_dst(const double s){ rescale_dst(s,s);}
 
+  // errors
   double get_src_err() const {
     return sqrt(pow(src_err_x,2)+pow(src_err_y,2));}
 

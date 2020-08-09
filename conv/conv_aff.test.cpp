@@ -63,13 +63,13 @@ main(){
 
       // rescale(kx,ky)
       cnv1.reset(ref);  // reset
-      cnv1.rescale_src(1.234,2.345);
+      cnv1.rescale_src(dPoint(1.234,2.345,1));
       p = dPoint(2,8); cnv1.frw(p); pr = rotate2d(dPoint(2*1.234,8*2.345), pc,  a); assert_deq(p,pr, 1e-8);
       p = dPoint(2,8); cnv1.bck(p); pr = rotate2d(dPoint(2,8), pc, -a); pr=dPoint(pr.x/1.234,pr.y/2.345);
         assert_deq(p,pr, 1e-8);
 
       cnv1.reset(ref);
-      cnv1.rescale_dst(1.234,2.345);
+      cnv1.rescale_dst(dPoint(1.234,2.345,1));
       p = dPoint(2,8); cnv1.frw(p); pr = rotate2d(dPoint(2,8), pc, a); pr=dPoint(pr.x*1.234,pr.y*2.345);
         assert_deq(p, pr, 1e-8);
       p = dPoint(2,8); cnv1.bck(p); pr = rotate2d(dPoint(2/1.234,8/2.345), pc, -a); assert_deq(p, pr, 1e-8);
