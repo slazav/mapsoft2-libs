@@ -119,6 +119,9 @@ public:
 
     /**********************************/
 
+    // Get coordinate range of the viewer window
+    dRect get_range(bool wgs=true) const;
+
     // Set new coordinate transformation (viewer -> WGS84).
     void set_cnv(const std::shared_ptr<ConvBase> & c);
 

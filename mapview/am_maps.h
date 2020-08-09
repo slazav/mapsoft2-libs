@@ -3,6 +3,7 @@
 
 /* Action modes for Maps menu */
 #include "action_mode.h"
+#include "geo_data/conv_geo.h"
 
 /**********************************************************/
 // mapy.cz map
@@ -37,6 +38,8 @@ class AddMapyCZ : public ActionMode{
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
+      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
+
     }
 };
 

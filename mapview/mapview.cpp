@@ -248,10 +248,19 @@ Mapview::exit(bool force) {
 
 /**********************************************************/
 
+dRect
+Mapview::get_range(bool wgs) const{
+  dRect r = viewer.get_view_range();
+  if (haveref && wgs) r = gobj.get_cnv()->frw_acc(r, 1);
+  return r;
+}
+
 void
 Mapview::set_cnv(const std::shared_ptr<ConvBase> & c){
   if (!c) return;
+  dRect r = get_range();
   gobj.set_cnv(c);
+  goto_range(r);
   haveref=true;
 }
 
