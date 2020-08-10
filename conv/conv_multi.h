@@ -28,6 +28,8 @@ public:
   // reset to trivial conversion
   void reset(){
     cnvs.clear();
+    set_scale_src(1.0);
+    set_scale_dst(1.0);
   }
 
   /// add a conversion in front of the list
