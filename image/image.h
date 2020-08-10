@@ -25,14 +25,10 @@ class Image {
     Image(uint32_t bgcolor = 0xFF000000): bgcolor(bgcolor) {}
 
     // set background color
-    void set_bgcolor(const uint32_t c) {
-      bgcolor = c;
-    }
+    void set_bgcolor(const uint32_t c) { bgcolor = c; }
 
     // get background color
-    uint32_t get_bgcolor() {
-      return bgcolor;
-    }
+    uint32_t get_bgcolor() const { return bgcolor; }
 
     // Check if coordinates are valid
     virtual bool check_crd(const int x, const int y) const {return true;}
@@ -116,7 +112,13 @@ class Image {
       return v0;
     }
 
+    virtual std::ostream & print (std::ostream & s) const{
+      s << "Image(0x" << std::hex << bgcolor << ")";
+      return s;
+    }
 
 };
+
+std::ostream & operator<< (std::ostream & s, const Image & i);
 
 #endif

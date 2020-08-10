@@ -128,6 +128,10 @@ class ImageT: public Image {
       return ret;
     }
 
+    std::ostream & print (std::ostream & s) const override{
+      s << "ImageT(" << tmpl << ")";
+      return s;
+    }
 };
 
 

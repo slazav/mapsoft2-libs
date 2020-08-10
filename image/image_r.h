@@ -316,9 +316,27 @@ class ImageR : public Image {
         ((double*)data_.get())[i] = v;
     }
 
+    std::ostream & print (std::ostream & s) const override{
+      if (width()==0 || height()==0) {
+        s << "ImageR(empty)";
+      }
+      else {
+        s << "ImageR(" << width() << "x" << height() << ", ";
+
+        switch (type()){
+          case IMAGE_32ARGB:  s << "ARGB, 32bpp"; break;
+          case IMAGE_24RGB:   s << "RGB, 24bpp"; break;
+          case IMAGE_16:      s << "Grey, 16bpp"; break;
+          case IMAGE_8:       s << "Grey, 8bpp"; break;
+          case IMAGE_8PAL:    s << "Palette, 8bpp"; break;
+          case IMAGE_1:       s << "B/W, 1bpp"; break;
+          case IMAGE_UNKNOWN: s << "Unknown data format"; break;
+        }
+        s << ")";
+      }
+      return s;
+    }
+
 };
-
-
-std::ostream & operator<< (std::ostream & s, const ImageR & i);
 
 #endif
