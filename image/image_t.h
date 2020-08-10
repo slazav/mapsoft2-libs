@@ -52,10 +52,11 @@ class ImageT: public Image {
   Cache<iPoint, ImageR> tiles;
   Downloader dmanager;
   std::string tmpl;
+  int zoom;
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
-       tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_TCACHE_SIZE),
+       tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_TCACHE_SIZE), zoom(0),
        dmanager(IMAGE_T_DCACHE_SIZE, IMAGE_T_NCONN) {};
 
     // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
@@ -79,7 +80,7 @@ class ImageT: public Image {
         else if (s=="}") ret += '}';
         else if (s.size()>2 && s[0]=='[' && s[s.size()-1]==']'){
           int len=s.size()-2;
-          ret+=s[1+(key.x+key.y)%len];
+          ret+=s[1+abs(key.x+key.y)%len];
         }
         else throw Err() << "ImageT: unknown field " << s 
                          << " in URL template: " << tmpl;
@@ -88,21 +89,28 @@ class ImageT: public Image {
       return ret;
     }
 
+    // set zoom level
+    void set_zoom(int z) {zoom = z;}
+
+    // get zoom level
+    int get_zoom() const {return zoom;}
+
+
     // Start downloading all tiles in the range,
     // remove tiles outside this range
-    void prepare_range(const iRect &r, int z=0){
+    void prepare_range(const iRect &r){
       int x1 = r.x/tsize;
       int y1 = r.y/tsize;
       int x2 = (r.x+r.w-1)/tsize+1;
       int y2 = (r.y+r.h-1)/tsize+1;
       for (int y=y1; y<y2; y++)
         for (int x=x1; x<x2; x++)
-          dmanager.add(make_url(iPoint(x,y,z)));
+          dmanager.add(make_url(iPoint(x,y,zoom)));
     }
 
     // get point color
     uint32_t get_color_fast(const int x, const int y) override {
-      iPoint key(x/tsize, y/tsize);
+      iPoint key(x/tsize, y/tsize, zoom);
       iPoint crd(x%tsize, y%tsize);
       if (swapy) crd.y = tsize - crd.y - 1;
       if (!tiles.contains(key)){
@@ -124,7 +132,7 @@ class ImageT: public Image {
       ImageR ret(r.w,r.h, IMAGE_32ARGB);
       for (int y = 0; y<r.h; ++y)
         for (int x = 0; x<r.w; ++x)
-          ret.set32(x, swapy?r.h-1-y:y, get_color(x+r.x,y+r.y));
+          ret.set32(x, swapy?r.h-1-y:y, get_color_fast(x+r.x,y+r.y));
       return ret;
     }
 
@@ -133,6 +141,5 @@ class ImageT: public Image {
       return s;
     }
 };
-
 
 #endif
