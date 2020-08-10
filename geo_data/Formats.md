@@ -40,14 +40,23 @@ optional fields inside `opts` variable.
  * `Opt opts`         -- optional parameters
 
 #### `GeoMap` -- a map
+ * `std::string name` -- name
+ * `std::string comm` -- comment
  * `std::map<dPoint,dPoint> ref` -- reference points, mapping from geo to image coordinates
  * `dLine border`      -- map border (in image coordinates), should be always set
  * `std::string proj`  -- map projection (option string for libproj)
  * `std::string image` -- image file for the map (folder for tile maps)
- * `dRect image_bbox`  -- image boundary box (in image coordinates)
- * `dRect image_tsize` -- image tile size (for tiled maps)
- * `std::string image_tfmt` -- image tile format (for tiled maps)
- * `bool image_tswap`  -- are image tiles swapped in y (for tiled maps)
+ * `dRect image_size`  -- image dimensions (in image coordinates)
+ * `dRect image_dpi`   -- image dpi (default 300)
+
+ * `bool is_tiled`     -- is it a tiled map?
+ * `bool tile_swapy`   -- are image tiles swapped in y (for tiled maps)?
+ * `int tile_size`     -- image tile dimensions (for tiled maps, default: 256)
+ * `int tile_minz, tile_maxz` -- min/max zoom value (for tiled maps)
+ * `int tile_defz`     -- default zoom value (for tiled maps)
+ * `double min_scale, max_scale` -- show the map only in this scale range
+ * `uint32_t def_color` -- outside the min_scale/max_scale range map is shown by this color.
+
 
 ----------
 ## GPX format
