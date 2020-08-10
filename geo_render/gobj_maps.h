@@ -29,6 +29,7 @@ private:
     ConvMulti cnv;  // conversion from viewer coordinates to the map coordinates
     double scale;   // map scale (map pixels / viewer pixels)
     double load_sc; // scale for image loading
+    int zoom;       // zoom level for tiled maps
     dMultiLine brd; // map border (in viewer coordinates)
     dLine refs;     // map refpoints (in viewer coordinates)
     dRect bbox;     // map bbox (in viewer coordinates)
@@ -37,9 +38,35 @@ private:
     std::unique_ptr<ImageT> timg; // normal maps use a single img_cache for data storage;
                     // tiled maps have one ImageT object per map.
 
-    MapData(const GeoMap & m): src_bbox(m.bbox()), src(&m){
+    MapData(const GeoMap & m): src_bbox(m.bbox()), src(&m), zoom(0), load_sc(1.0){
       if (m.is_tiled) timg =
         std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
+    }
+
+    // Update map scale:
+    // Scale is in (image pix)/(viewer pix)
+    // There are a few adjustments:
+    // - for tiled map we can load different zoom depending on the scale
+    // - for normal maps we can load smaller image (and save memory/time)
+    void set_scale(const double k, bool sm){
+      scale = k;
+
+      // calculate zoom level for tiled images
+      if (timg){
+        zoom = floor(log(1.0/k)/log(2.0));
+        if (zoom < 0) zoom = 0;
+        if (zoom < src->tile_minz) zoom = src->tile_minz;
+        if (zoom > src->tile_maxz) zoom = src->tile_maxz;
+        timg->set_zoom(zoom);
+      }
+
+      // scale for normal image loading
+      else {
+        load_sc = floor(k/load_sc);
+        if (sm) load_sc = floor(load_sc/2); // load larger images for smoothing
+        if (load_sc <=1) load_sc = 1;           // never load images larger then 1:1
+      }
+      cnv.set_scale_dst(pow(2,zoom)/load_sc);
     }
 
   };

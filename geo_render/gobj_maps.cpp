@@ -48,14 +48,24 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
 
   ImageR image_dst = ImageR(range_dst.w, range_dst.h, IMAGE_32ARGB);
 
-
   // prepare Image source.
   // For normal maps it's a ImageR, from ImageCache
   // For tiled maps it is ImageT object from MapData.
+
   ImageR imageR_src; // keep ImageR data (to be moved to ImageCache?)
-  if (!d.src->is_tiled)
+  Image * image_src = &imageR_src;
+  imageR_src.set_bgcolor(d.src->def_color); // default color
+
+  bool draw_map = d.scale*pow(2,d.zoom) >= d.src->min_scale &&
+                  d.scale*pow(2,d.zoom) <= d.src->max_scale;
+
+  // tiled map
+  if (d.src->is_tiled && draw_map)
+    image_src = d.timg.get();
+
+  // non-tiled maps
+  if (!d.src->is_tiled && draw_map)
     imageR_src = img_cache.get(d.src->image, d.load_sc);
-  Image & image_src = d.src->is_tiled ? (Image&) *d.timg : (Image&) imageR_src;
 
   double avr = d.scale/d.load_sc;
   // render image
@@ -67,11 +77,11 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
       d.cnv.frw(p);
       int color;
       if (smooth){
-        if (avr<1) color = image_src.get_color_int4(p);
-        else       color = image_src.get_color_avrg(p, avr);
+        if (avr<1) color = image_src->get_color_int4(p);
+        else       color = image_src->get_color_avrg(p, avr);
       }
       else {
-        color = image_src.get_color(p);
+        color = image_src->get_color(p);
       }
       image_dst.set32(xd, yd, color);
     }
@@ -187,12 +197,10 @@ GObjMaps::on_set_cnv(){
 
     // calculate map scale (map pixels per viewer pixel)
     dPoint sc = d.cnv.scales(d.bbox);
-    d.scale = std::max(sc.x, sc.y);
 
-    // scale for image loading
-    d.load_sc = d.src->is_tiled? 1 : floor(1.0*d.scale);
-    if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
-    if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
+    // update map scale
+    d.set_scale(std::max(sc.x, sc.y), smooth);
+
   }
   tiles.clear();
 }
@@ -203,14 +211,8 @@ GObjMaps::on_rescale(double k){
     d.brd*=k;
     d.refs*=k;
     d.bbox*=k;
-    d.scale/=k;
     d.cnv.rescale_src(1.0/k);
-    // scale for image loading
-    d.cnv.rescale_dst(d.load_sc); // remove old scaling
-    d.load_sc = d.src->is_tiled? 1 : floor(1.0*d.scale);
-    if (smooth) d.load_sc = floor(d.load_sc/2); // load larger images for smoothing
-    if (d.load_sc <=1) d.load_sc = 1;           // never load images larger then 1:1
-    d.cnv.rescale_dst(1.0/d.load_sc);
+    d.set_scale(d.scale/k, smooth);
   }
   range*=k;
   tiles.clear();
