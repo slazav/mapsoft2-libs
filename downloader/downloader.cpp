@@ -3,6 +3,7 @@
 #include <curl/curl.h>
 #include "downloader.h"
 #include "err/err.h"
+#include "opt/opt.h"
 
 // Write callback for libcurl.
 // Userdata is a pointer to std::string, where data should be appended
@@ -182,8 +183,10 @@ Downloader::worker(){
 
       if(msg->msg == CURLMSG_DONE) {
         char *url;
+        long code; // HTTP response code
         CURL *e = msg->easy_handle;
         curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &url);
+        curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &code);
         //std::cerr << "R: "<< msg->data.result << " - "
         //          << curl_easy_strerror(msg->data.result)
         //          << " <" << url << ">\n";
@@ -192,12 +195,19 @@ Downloader::worker(){
         if (data.contains(url)){
           auto & d = data.get(url);
           lk.lock();
-          if (msg->data.result==0) {
+          if (msg->data.result==0 && (code==200 || code==0)) {
             d.first  = 2; // OK
             d.second = dat_store[url];
             if (log_level>0)
               std::cerr << "Downloader: " << url
                         << " (OK, " << dat_store[url].size() << " bytes)\n";
+          }
+          else if (msg->data.result==0) {
+            d.first  = 3; // ERROR
+            d.second = "Get HTTP code " + type_to_str(code);
+            if (log_level>0)
+              std::cerr << "Downloader: " << url
+                        << " (HTTP response code: " << code << ")\n";
           }
           else {
             d.first = 3; // ERROR
