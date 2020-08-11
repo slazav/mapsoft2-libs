@@ -167,6 +167,7 @@ Downloader::worker(){
       curl_easy_setopt(eh, CURLOPT_WRITEDATA, dat_ref);
       curl_easy_setopt(eh, CURLOPT_USERAGENT, user_ag.c_str());
       curl_easy_setopt(eh, CURLOPT_REFERER, http_ref.c_str());
+      curl_easy_setopt(eh, CURLOPT_VERBOSE, log_level>2);
 
       curl_multi_add_handle(cm, eh);
       if (log_level>1)
