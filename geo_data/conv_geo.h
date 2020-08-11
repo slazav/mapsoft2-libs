@@ -20,8 +20,12 @@ which are libproj option string (such as "+datum=WGS84 +proj=lonlat").
 A few aliases are supported:
  WGS -- default projection: lon-lat in WGS84 datum
  WEB -- web mercator
- FI  -- transverse mercator projection for Finnish maps
+ EWEB -- elliptical web mercator (used by Yandex)
+ FI, KKJ  -- transverse mercator projection for Finnish maps KKJ (EPSG:2393?)
+ ETRS-TM35FIN, ETRS89 -- Finnish maps (EPSG:3067?)
+ GB  -- Breat Britain maps (EPSG:27700)
  CH  -- transverse mercator projection for Swiss maps
+ SU_LL -- longlat in Soviet map datum
  SU<N> -- transverse mercator projection for Soviet maps
           (N is central meridian: 3, 9, 15, etc.)
 
