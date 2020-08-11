@@ -18,6 +18,9 @@ std::string expand_proj_aliases(const std::string & pars){
     return "+proj=webmerc +datum=WGS84";
 #endif
 
+  if (pars == "EWEB") // elliptical web mercator (used by Yandex)
+    return "+proj=merc +datum=WGS84 +no_defs";
+
   if (pars == "FI" || pars == "KKJ") // Finnish maps, KKJ (EPSG:2393?)
     return "+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl"
       " +towgs84=-90.7,-106.1,-119.2,4.09,0.218,-1.05,1.37";
