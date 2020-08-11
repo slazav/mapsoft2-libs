@@ -62,8 +62,9 @@ class Downloader {
     std::condition_variable add_cond; // notify worker_thread about adding new URL
     std::condition_variable ready_cond; // notify the main thread when data is ready
 
-    int log_level;       // log level
-    std::string user_ag; // user agent
+    int log_level;        // log level
+    std::string user_ag;  // user agent
+    std::string http_ref; // http referer
 
   public:
 

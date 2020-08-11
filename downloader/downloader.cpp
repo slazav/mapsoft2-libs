@@ -16,7 +16,8 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 Downloader::Downloader(const int cache_size, const int max_conn, const int log_level):
        max_conn(max_conn), num_conn(0), log_level(log_level), worker_needed(true),
        worker_thread(&Downloader::worker, this), data(cache_size),
-       user_ag("mapsoft2 downloader (slazav@altlinux.org)") {
+       user_ag("mapsoft2 downloader (slazav@altlinux.org)"),
+       http_ref("https://github.com/slazav/mapsoft2") {
 }
 
 Downloader::~Downloader(){
@@ -164,6 +165,7 @@ Downloader::worker(){
       curl_easy_setopt(eh, CURLOPT_PRIVATE, url_ref);
       curl_easy_setopt(eh, CURLOPT_WRITEDATA, dat_ref);
       curl_easy_setopt(eh, CURLOPT_USERAGENT, user_ag);
+      curl_easy_setopt(eh, CURLOPT_REFERER, http_ref);
       curl_multi_add_handle(cm, eh);
       if (log_level>1)
         std::cerr << "Downloader: " << u << " (start downloading)\n";
