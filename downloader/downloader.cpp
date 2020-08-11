@@ -13,10 +13,9 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 }
 
 /**********************************/
-Downloader::Downloader(const int cache_size, const int max_conn):
-       max_conn(max_conn), num_conn(0), worker_needed(true),
+Downloader::Downloader(const int cache_size, const int max_conn, const int log_level):
+       max_conn(max_conn), num_conn(0), log_level(log_level), worker_needed(true),
        worker_thread(&Downloader::worker, this), data(cache_size) {
-       //std::cerr << "Downloader: create thread\n";
 }
 
 Downloader::~Downloader(){
@@ -36,9 +35,10 @@ Downloader::add(const std::string & url){
   lk.lock();
   data.add(url, std::make_pair(0, std::string()));
   urls.push(url);
+  if (log_level>1)
+    std::cerr << "Downloader: " << url << " (add to queue)\n";
   lk.unlock();
   add_cond.notify_one();
-  //std::cerr << "Downloader: add url to queue: " << url << "\n";
 }
 
 /**********************************/
@@ -48,6 +48,8 @@ Downloader::del(const std::string & url){
   std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   data.erase(url);
+  if (log_level>1)
+    std::cerr << "Downloader: " << url << " (remove)\n";
   lk.unlock();
 }
 
@@ -57,6 +59,8 @@ Downloader::clear(){
   std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
   lk.lock();
   data.clear();
+  if (log_level>1)
+    std::cerr << "Downloader: clear all data\n";
   lk.unlock();
 }
 
@@ -112,7 +116,8 @@ Downloader::worker(){
   // Create libcurl handler
   curl_global_init(CURL_GLOBAL_ALL);
   CURLM *cm = curl_multi_init();
-  //std::cerr << "Downloader: start worker thread\n";
+  if (log_level>1)
+    std::cerr << "Downloader: start worker thread\n";
 
   // Limit the amount of simultaneous connections
   curl_multi_setopt(cm, CURLMOPT_MAXCONNECTS, (long)max_conn);
@@ -158,7 +163,8 @@ Downloader::worker(){
       curl_easy_setopt(eh, CURLOPT_PRIVATE, url_ref);
       curl_easy_setopt(eh, CURLOPT_WRITEDATA, dat_ref);
       curl_multi_add_handle(cm, eh);
-      //std::cerr << "Downloader: start downloading: " << u << "\n";
+      if (log_level>1)
+        std::cerr << "Downloader: " << u << " (start downloading)\n";
       urls.pop();
       num_conn++;
       lk.unlock();
@@ -185,15 +191,17 @@ Downloader::worker(){
           if (msg->data.result==0) {
             d.first  = 2; // OK
             d.second = dat_store[url];
-            //std::cerr << "Downloader: downloading OK: " << url
-            //          << " (" << dat_store[url].size() << " bytes)\n";
+            if (log_level>0)
+              std::cerr << "Downloader: " << url
+                        << " (OK, " << dat_store[url].size() << " bytes)\n";
           }
           else {
             d.first = 3; // ERROR
             d.second = curl_easy_strerror(msg->data.result);
             d.second += ": " + std::string(url);
-            //std::cerr << "Downloader: downloading failed: " << url
-            //          << " (" << d.second << ")\n";
+            if (log_level>0)
+              std::cerr << "Downloader: " << url
+                        << " (failed: " << d.second << ")\n";
           }
           lk.unlock();
         }
@@ -225,7 +233,9 @@ Downloader::worker(){
 
   } while(worker_needed);
 
-  //std::cerr << "Downloader: stop worker thread\n";
+  if (log_level>1)
+    std::cerr << "Downloader: stop worker thread\n";
+
   curl_multi_cleanup(cm);
   curl_global_cleanup();
 }

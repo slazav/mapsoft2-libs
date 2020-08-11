@@ -62,9 +62,11 @@ class Downloader {
     std::condition_variable add_cond; // notify worker_thread about adding new URL
     std::condition_variable ready_cond; // notify the main thread when data is ready
 
+    int log_level;
+
   public:
 
-  Downloader(const int cache_size=64, const int max_conn=4);
+  Downloader(const int cache_size=64, const int max_conn=4, const int log_level=1);
   ~Downloader();
 
   // Add an URL to the downloading queue.
