@@ -4,6 +4,7 @@
 #include <sstream>
 #include "downloader/downloader.h"
 #include "cache/cache.h"
+#include "geo_tiles/quadkey.h"
 #include "image.h"
 #include "image_r.h"
 #include "io.h"
@@ -22,6 +23,7 @@ tile key (x/tsize,y/tsize,z) and coordinate on the tile (x,y)%tsize.
 Url template format:
  `{x}` and `{y}` - replaced by x and y values,
  `{z}` - replaced by z value,
+ `{q}` - replaced by quadkey(x,y,z),
  `{[abc]}` - replaced by one letter from [...] set (depenting on x+y value),
  `{{}` and `{}}` - replaced by `{` and `}` literals.
 
@@ -41,7 +43,6 @@ capacity, 16 tiles).
 
 // size of tile cache (unpacked images)
 #define IMAGE_T_TCACHE_SIZE 16
-
 
 // maximum number of parallel connections for downloading
 #define IMAGE_T_NCONN   4
@@ -76,6 +77,7 @@ class ImageT: public Image {
         if      (s=="x") ret += type_to_str(key.x);
         else if (s=="y") ret += type_to_str(key.y);
         else if (s=="z") ret += type_to_str(key.z);
+        else if (s=="q") ret += tile_to_quadkey(key.x, key.y, key.z);
         else if (s=="{") ret += '{';
         else if (s=="}") ret += '}';
         else if (s.size()>2 && s[0]=='[' && s[s.size()-1]==']'){
