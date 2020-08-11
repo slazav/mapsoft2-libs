@@ -132,14 +132,15 @@ class AddYandexSat : public ActionMode{
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
+      // max latitude is set to have square map. cnv(mlon,mlat) = (1,1)*20037508.342789244
+      double mlat = 85.0840591, mlon=180.0;
       double wr = 256;
       map.image = "https://sat0{[1234]}.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
       map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
+      map.proj = "EWEB";
       map.name = "Yandex sat";
       map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
       map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
