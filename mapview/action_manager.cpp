@@ -71,6 +71,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(AddYandexSat,    "Maps")
     ADD_ACT(AddGoogleSat,    "Maps")
     ADD_ACT(AddBingSat,      "Maps")
+    ADD_ACT(AddPodmMap,      "Maps")
 
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")
