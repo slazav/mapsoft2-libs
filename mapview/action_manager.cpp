@@ -66,6 +66,11 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(HidePanels,      "View")
 
     ADD_ACT(AddMapyCZ,       "Maps")
+    ADD_ACT(AddOSM,          "Maps")
+    ADD_ACT(AddESRI,         "Maps")
+    ADD_ACT(AddYandexSat,    "Maps")
+    ADD_ACT(AddGoogleSat,    "Maps")
+    ADD_ACT(AddBingSat,      "Maps")
 
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")
