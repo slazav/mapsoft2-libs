@@ -260,30 +260,32 @@ Mapview::set_cnv(const std::shared_ptr<ConvBase> & c){
   if (!c) return;
   dRect r = get_range();
   gobj.set_cnv(c);
-  goto_range(r);
+  goto_range(r); // do nothing if there was no reference
   haveref=true;
 }
 
 void
 Mapview::goto_point(dPoint p, bool wgs){
   if (!haveref) return;
-  if (!wgs) gobj.get_cnv()->bck(p);
+  if (wgs) gobj.get_cnv()->bck(p);
   viewer.set_center(p);
 }
 
 void
 Mapview::goto_range(const dRect & r, bool wgs){
   if (!haveref) return;
+  // source and destination range in viewer coords
+  dRect src_rng = viewer.get_view_range();
+  dRect dst_rng = wgs? gobj.get_cnv()->bck_acc(r) : r;
 
-  dRect orng = wgs? gobj.get_cnv()->bck_acc(r, 1) : r;
-  dRect vrng = viewer.get_view_range();
-
+  // calculate scaling factor (power of 2)
   double k = 1;
-  while (vrng.w > 2*k*orng.w || vrng.h > 2*k*orng.h) k*=2;
-  while (vrng.w < k*orng.w || vrng.h < k*orng.h) k/=2;
+  while (src_rng.w > 2*k*dst_rng.w || src_rng.h > 2*k*dst_rng.h) k*=2;
+  while (src_rng.w < k*dst_rng.w || src_rng.h < k*dst_rng.h) k/=2;
 
-  viewer.set_center(r.cnt());
+  // avoid rounding errors: first scaling, then moving
   viewer.rescale(k);
+  viewer.set_center(dst_rng.cnt()*k);
 }
 
 
