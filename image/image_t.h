@@ -114,7 +114,7 @@ class ImageT: public Image {
     uint32_t get_color_fast(const int x, const int y) override {
       iPoint key(x/tsize, y/tsize, zoom);
       iPoint crd(x%tsize, y%tsize);
-      if (swapy) crd.y = tsize - crd.y - 1;
+      if (swapy) key.y = (1<<zoom) - key.y - 1;
       if (!tiles.contains(key)){
         auto url = make_url(key);
         auto s = dmanager.get(url);
