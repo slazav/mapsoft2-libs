@@ -174,6 +174,7 @@ GObjMaps::on_set_cnv(){
   range = dRect();
   for (auto & d:data){
 
+
     // conversion viewer->map
     d.cnv.reset();
     if (cnv) d.cnv.push_back(*cnv, true); // viewer -> WGS
@@ -192,14 +193,20 @@ GObjMaps::on_set_cnv(){
     d.bbox = d.cnv.bck_acc(d.src_bbox);
     range.expand(d.bbox);
 
-    // simplify the conversion if possible
-    d.cnv.simplify(d.bbox, 5, 0.5);
-
     // calculate map scale (map pixels per viewer pixel)
     dPoint sc = d.cnv.scales(d.bbox);
+    double k = std::max(sc.x, sc.y);
+
+    // Simplify the conversion if possible.
+    // Accuracy is measured in source coordinates (viewer).
+    // Use 0.5 pixel accuracy in map coords, divide by k to get
+    // viewer coordinates and divided by largest map zoom (to get actual points).
+    double acc = 0.5/k;
+    if (d.src->is_tiled) acc/=(1<<d.src->tile_maxz);
+    d.cnv.simplify(d.bbox, 5, acc);
 
     // update map scale
-    d.set_scale(std::max(sc.x, sc.y), smooth);
+    d.set_scale(k, smooth);
 
   }
   tiles.clear();
