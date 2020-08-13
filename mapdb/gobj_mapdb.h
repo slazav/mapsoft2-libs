@@ -211,11 +211,15 @@ public:
       double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
       double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
 
+      auto fn = vs[0];
+      if (fn.size()==0) throw Err() << "empty image filename";
+      if (fn[0]!='/') fn = imgdir + fn;
+
       if (file_ext_check(vs[0], ".svg")){
-        patt = svg_to_pattern(imgdir + vs[0], scx, scy, dx, dy);
+        patt = svg_to_pattern(fn, scx, scy, dx, dy);
       }
       else {
-        img = image_load(imgdir + vs[0]);
+        img = image_load(fn);
         if (img.is_empty()) throw Err() << "empty image: " << vs[0];
         if (img.type() != IMAGE_32ARGB)
           img = image_to_argb(img);
