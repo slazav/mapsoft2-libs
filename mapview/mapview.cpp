@@ -234,15 +234,11 @@ Mapview::new_project(bool force) {
 
 void
 Mapview::open_mapdb(const std::string & dir){
-  panel_mapdb->open(opts->get("mapdb",""));
+  panel_mapdb->open(dir);
   gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
   GeoMap r = panel_mapdb->get_gobj()->get_ref();
   if (!r.empty())
     set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
-
-  std::cerr << "ref: " << r.ref.size() << "\n";
-  for (auto & x : r.ref)
-    std::cerr << x.first <<" -> " << x.second << "\n";
 }
 
 void
