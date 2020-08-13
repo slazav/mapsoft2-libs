@@ -36,6 +36,7 @@ catch (Err E){
 
 class Err: public std::exception {
   std::ostringstream s;    // stream for error messages
+  std::string buf;
   int c;
 
   public:
@@ -43,20 +44,20 @@ class Err: public std::exception {
     Err(int c_ = -1): c(c_) {}
 
     /// Copy constructor.
-    Err(const Err & o) { c=o.c; s << o.s.str(); }
+    Err(const Err & o) { c=o.c; s << o.s.str(); buf = s.str();}
 
     /// Operator << for error messages.
     template <typename T>
-      Err & operator<<(const T & o){ s << o; return *this; }
+      Err & operator<<(const T & o){ s << o; buf = s.str(); return *this; }
 
     /// Get error code.
     int code() const {return c;}
 
     /// Get error message.
     std::string str() const { return s.str(); }
+
     const char* what() const noexcept override {
-      std::cerr << ">>> " << s.str() << "\n";
-      return s.str().c_str(); }
+      return buf.c_str(); }
 
 };
 
