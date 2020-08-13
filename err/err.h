@@ -7,6 +7,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <exception>
+
 
 /***********************************************************/
 /** A simple class for exceptions.
@@ -32,7 +34,7 @@ catch (Err E){
 ```
 */
 
-class Err {
+class Err: public std::exception {
   std::ostringstream s;    // stream for error messages
   int c;
 
@@ -52,6 +54,9 @@ class Err {
 
     /// Get error message.
     std::string str() const { return s.str(); }
+    const char* what() const noexcept override {
+      std::cerr << ">>> " << s.str() << "\n";
+      return s.str().c_str(); }
 
 };
 

@@ -21,6 +21,17 @@ main(){
     assert (E.code() == 3);
   }
   return 0;
+
+
+  try {
+    throw Err(3) << "text " << 123;
+  }
+  catch (std::exception & e){
+    assert (std::string(e.what())  == "text 123");
+  }
+  return 0;
+
+
 }
 
 ///\endcond
