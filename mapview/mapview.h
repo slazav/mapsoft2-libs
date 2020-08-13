@@ -113,6 +113,13 @@ public:
     // if previous project has been changed and force==false).
     void new_project(bool force=false);
 
+    // Open MapDB database. Rendering configuration is taken from options
+    // (by default it is <dir>/raster.txt)
+    void open_mapdb(const std::string & dir);
+
+    // Close MapDB project
+    void close_mapdb();
+
     // Exit Mapview application (confirmation dialog will appear
     // if previous project has been changed and force==false).
     void exit(bool force=false);

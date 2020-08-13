@@ -12,6 +12,7 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     panel_wpts(new PanelWpts),
     panel_trks(new PanelTrks),
     panel_maps(new PanelMaps),
+    panel_mapdb(new PanelMapDB),
     amanager(this)
 {
 
@@ -58,16 +59,8 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     panels->append_page(*panel_wpts.get(), "WPT", "WPT");
     panels->append_page(*panel_trks.get(), "TRK", "TRK");
     panels->append_page(*panel_maps.get(), "MAP", "MAP");
+    panels->append_page(*panel_mapdb.get(), "MAPDB", "MAPDB");
 
-    // vmaps
-    if (opts->exists("mapdb")){
-      panel_mapdb.reset(new PanelMapDB(opts->get("mapdb","")));
-      gobj.add(PAGE_VMAP, panel_mapdb);
-      panels->append_page(*panel_mapdb.get(), "VMAP", "VMAP");
-      GeoMap r = panel_mapdb->get_ref();
-      if (!r.empty())
-        set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
-    }
 
     /// Build main paned: Viewer + Panels
     Gtk::HPaned * paned = manage(new Gtk::HPaned);
@@ -99,6 +92,13 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     load_acc(); // Load accelerator map
 
     show_all(); // show window
+
+    // vmaps
+    if (opts->exists("mapdb"))
+      open_mapdb(opts->get("mapdb",""));
+    else
+      panel_mapdb->hide();
+
 }
 
 /**********************************************************/
@@ -167,6 +167,7 @@ Mapview::clear_data() {
   panel_wpts->remove_all();
   panel_trks->remove_all();
   panel_maps->remove_all();
+  panel_mapdb->close();
 //  panel_misc.hide_all();
   haveref = false;
 }
@@ -230,6 +231,26 @@ Mapview::new_project(bool force) {
 //  viewer.stop_waiting();
   set_changed(false);
 }
+
+void
+Mapview::open_mapdb(const std::string & dir){
+  panel_mapdb->open(opts->get("mapdb",""));
+  gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
+  GeoMap r = panel_mapdb->get_gobj()->get_ref();
+  if (!r.empty())
+    set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
+
+  std::cerr << "ref: " << r.ref.size() << "\n";
+  for (auto & x : r.ref)
+    std::cerr << x.first <<" -> " << x.second << "\n";
+}
+
+void
+Mapview::close_mapdb(){
+  gobj.del(panel_mapdb->get_gobj());
+  panel_mapdb->close();
+}
+
 
 void
 Mapview::exit(bool force) {

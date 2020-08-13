@@ -13,6 +13,7 @@
 #include "am_file.h"
 #include "am_view.h"
 #include "am_maps.h"
+#include "am_mapdb.h"
 #include "am_panel.h"
 
 /*********/
@@ -72,6 +73,9 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(AddGoogleSat,    "Maps")
     ADD_ACT(AddBingSat,      "Maps")
     ADD_ACT(AddPodmMap,      "Maps")
+
+    ADD_ACT(OpenMapDB,       "MapDB")
+    ADD_ACT(CloseMapDB,      "MapDB")
 
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")
@@ -144,6 +148,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     actions->add(Gtk::Action::create("MenuFile",  "_File"));
     actions->add(Gtk::Action::create("MenuView",  "_View"));
     actions->add(Gtk::Action::create("MenuMaps",  "_Maps"));
+    actions->add(Gtk::Action::create("MenuMapDB", "Map_DB"));
 
     mapview->panel_wpts->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupWPTs");
     mapview->panel_trks->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupTRKs");

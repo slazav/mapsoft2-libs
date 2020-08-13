@@ -2,6 +2,7 @@
 #define MAPVIEW_PANEL_MAPDB_H
 
 #include "mapdb/gobj_mapdb.h"
+#include <memory>
 
 /**********************************************************/
 /* Control panel for MapDB.
@@ -30,15 +31,16 @@ public:
 
 /**********************************************************/
 
-class PanelMapDB : public Gtk::Notebook, public GObjMapDB {
+class PanelMapDB : public Gtk::Notebook {
   Gtk::TreeView *tv_gr, *tv_st; // list of groups and steps
   Glib::RefPtr<Gtk::ListStore> store_gr, store_st;
   MapDBGrRecord cols_gr;
   MapDBStRecord cols_st;
 
+  std::shared_ptr<GObjMapDB> gobj;
+
 public:
-  PanelMapDB(const std::string & mapdir):
-      GObjMapDB(mapdir, Opt()) {
+  PanelMapDB() {
 
     /*******************************/
     // Setup group view
@@ -86,36 +88,50 @@ public:
     append_page(*scr_gr, "Groups", "Groups");
     append_page(*scr_st, "Steps", "Steps");
 
-    /*******************************/
-    // add data
-
-    for (auto const & st:GObjMapDB::get_data()){
-      auto it = store_st->append();
-      Gtk::TreeModel::Row row = *it;
-      row[cols_st.checked] = get_visibility(st);
-      row[cols_st.name]    = ((DrawingStep*)st.get())->get_name();
-      row[cols_st.obj]     = st;
-    }
-
-    for (auto const & gr:get_groups()){
-      auto it = store_gr->append();
-      Gtk::TreeModel::Row row = *it;
-      row[cols_gr.checked] = true;
-      row[cols_gr.name]    = gr;
-    }
-
     // connect signals
     store_gr->signal_row_changed().connect (
       sigc::mem_fun (this, &PanelMapDB::on_gr_edited));
     store_st->signal_row_changed().connect (
       sigc::mem_fun (this, &PanelMapDB::on_st_edited));
-
   }
+
+  // open MapDB project, show the panel
+  void open(const std::string & mapdir){
+    gobj.reset(new GObjMapDB(mapdir, Opt()));
+    store_st->clear();
+    store_gr->clear();
+    for (auto const & st: gobj->get_data()){
+      auto it = store_st->append();
+      Gtk::TreeModel::Row row = *it;
+      row[cols_st.checked] = gobj->get_visibility(st);
+      row[cols_st.name]    = ((GObjMapDB::DrawingStep*)st.get())->get_name();
+      row[cols_st.obj]     = st;
+    }
+
+    for (auto const & gr: gobj->get_groups()){
+      auto it = store_gr->append();
+      Gtk::TreeModel::Row row = *it;
+      row[cols_gr.checked] = true;
+      row[cols_gr.name]    = gr;
+    }
+    show();
+  }
+
+  // close MapDB project, hide the panel
+  void close(){
+    store_st->clear();
+    store_gr->clear();
+    gobj.reset();
+    hide();
+  }
+
+  std::shared_ptr<GObjMapDB> get_gobj() const {return gobj;}
 
   // callback for updating data from the panel
   void on_gr_edited (const Gtk::TreeModel::Path& path,
                      const Gtk::TreeModel::iterator& iter) {
-    set_group_visibility(
+    if (!gobj) return;
+    gobj->set_group_visibility(
       (*iter)[cols_gr.name],
       (*iter)[cols_gr.checked]
     );
@@ -123,7 +139,8 @@ public:
 
   void on_st_edited (const Gtk::TreeModel::Path& path,
                      const Gtk::TreeModel::iterator& iter) {
-    set_visibility(
+    if (!gobj) return;
+    gobj->set_visibility(
       (*iter)[cols_st.obj],
       (*iter)[cols_st.checked]
     );
