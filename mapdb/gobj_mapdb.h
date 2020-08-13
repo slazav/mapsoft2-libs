@@ -502,7 +502,7 @@ public:
   GObjMapDB(const std::string & mapdir, const Opt & o);
 
   // load configuration file
-  void load_conf(const std::string & cfgfile, Opt & defs);
+  void load_conf(const std::string & cfgfile, Opt & defs, int & depth);
 
   // rescale
   void on_rescale(double k) {obj_scale*=k;}

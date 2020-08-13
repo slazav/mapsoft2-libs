@@ -32,11 +32,12 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   // Read configuration file.
   Opt defs = o.get("define", Opt());
-  load_conf(opt->get<string>("config", mapdir + "/render.cfg"), defs);
+  int depth = 0;
+  load_conf(opt->get<string>("config", mapdir + "/render.cfg"), defs, depth);
 }
 
 void
-GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs){
+GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
 
   std::string cfgdir = file_get_prefix(cfgfile); // for including images and other files
 
@@ -45,7 +46,6 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs){
     << "GObjMapDB: can't open configuration file: " << cfgfile;
 
   int line_num[2] = {0,0};
-  int depth = 0;
   std::shared_ptr<DrawingStep> st(NULL); // current step
   std::string ftr; // current feature
   std::deque<bool> ifs;  // for if/endif commands
@@ -68,7 +68,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs){
         if (fn.size() == 0) throw Err() << "include: empty filename";
 
         if (fn[0] != '/') fn = cfgdir + fn;
-        load_conf(fn, defs);
+        load_conf(fn, defs, depth);
         continue;
       }
 
