@@ -23,19 +23,13 @@ contains drawing of a single object type, of a grid, or setting
 some global parameter (like map reference).
 The configuration file contains description of each step.
 
-Drawing of a point/line/area object can be described
-in following way:
-
     (point|line|area) <type> <feature> <options> ...
     + <feature> <options> ...
     + <feature> <options> ...
     ...
-    map <feature> <options> ...
-    + <feature> <options> ...
-    brd <feature> <options> ...
+    (map|brd) <feature> <options> ...
     + <feature> <options> ...
     ...
-
 
 where possible features are:
 
@@ -78,6 +72,11 @@ other commands in the configuration file
     set_ref nom <name> <dpi> -- set map reference as a Soviet nomenclature name
     max_text_size <value> -- set max_text_size value for selecting text objects in the database
     define <name> <definition> -- redefine a word (substitution works on full words and done once)
+    if <word1> (==|!=) <word2>, else, endif --  if statement. If condition is true/false
+       text between if and endif is is processed/ignored. One can use nested if-endif commands.
+       Command else just inverts condition of the last if command.
+    include <file> -- Read another configuration file.
+       Image paths are calculated with respect to the current file.
 
 */
 
@@ -93,7 +92,6 @@ void ms2opt_add_mapdb_render(GetOptSet & opts);
 class GObjMapDB : public GObjMulti{
 private:
 
-  std::string cfgdir;
   std::shared_ptr<MapDB> map;
   std::vector<std::string> groups; // ordered list of all groups
   GeoMap ref;            // default map reference
@@ -502,6 +500,9 @@ public:
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir, const Opt & o);
+
+  // load configuration file
+  void load_conf(const std::string & cfgfile, Opt & defs);
 
   // rescale
   void on_rescale(double k) {obj_scale*=k;}

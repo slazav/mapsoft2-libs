@@ -26,14 +26,19 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   max_text_size = 1024;
   obj_scale = o.get("obj_scale", 1.0) * o.get("map_scale", 1.0);
-  Opt defs = o.get("define", Opt()); // for `define` command
 
   opt = std::shared_ptr<Opt>(new Opt(o));
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
 
   // Read configuration file.
-  std::string cfgfile = opt->get<string>("config", mapdir + "/render.cfg");
-  cfgdir = file_get_prefix(cfgfile);
+  Opt defs = o.get("define", Opt());
+  load_conf(opt->get<string>("config", mapdir + "/render.cfg"), defs);
+}
+
+void
+GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs){
+
+  std::string cfgdir = file_get_prefix(cfgfile); // for including images and other files
 
   ifstream ff(cfgfile);
   if (!ff) throw Err()
@@ -54,6 +59,18 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
     ftr = "";
     try{
+
+      // include command
+      if (vs[0] == "include"){
+        if (vs.size()!=2) throw Err() << "include: filename expected";
+        auto fn = vs[1];
+        // should not happend, but lets check before accessing fn[0]:
+        if (fn.size() == 0) throw Err() << "include: empty filename";
+
+        if (fn[0] != '/') fn = cfgdir + fn;
+        load_conf(fn, defs);
+        continue;
+      }
 
       // endif command
       if (vs[0] == "endif"){
