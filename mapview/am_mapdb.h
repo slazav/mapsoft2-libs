@@ -28,8 +28,10 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
 
     void activate() {
       set_current_folder(folder);
-      if (run() == GTK_RESPONSE_ACCEPT)
-        mapview->open_mapdb(get_filename());
+      if (run() == GTK_RESPONSE_ACCEPT){
+        folder = get_current_folder();
+        mapview->open_mapdb(folder);
+      }
       hide();
     }
 };
