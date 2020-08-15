@@ -62,7 +62,6 @@ public:
 
   // Called by viewer before drawing the screen.
   // draw_range is the whole area, not tiles.
-  // Locking is not needed (done by caller)
   virtual void prepare_range(const dRect & draw_range) {}
 
   /** Draw with CairoWrapper.
@@ -115,8 +114,7 @@ public:
   // If GObj is used from a DThreadViewer then the draw() method
   // is called from a sepereate thread. In this case all modifications
   // of data used in draw() should be locked.
-  // - Caller (DThreadViewer, GobjMulti) locks draw(),
-  //   prepare_range(), set_cnv(), set_opt()
+  // - Caller (DThreadViewer, GobjMulti) locks draw(), set_cnv(), set_opt()
   // - Gobj locks rescale() and set_cnv() operations.
   // - everything else sould be locked inside the object implementation.
   //

@@ -175,10 +175,8 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
   if (tiles_todo.empty()) signal_busy().emit();
   updater_mutex->unlock();
 
-  if (obj) {
-    auto lk = obj->get_lock();
+  if (obj)
     obj->prepare_range(r+get_origin());
-  }
 
   // note: updater extracts tiles from todo set sorted by x,y
   for (key.x = tiles.x; key.x<tiles.x+tiles.w; key.x++){
