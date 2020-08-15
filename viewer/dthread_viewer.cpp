@@ -180,8 +180,9 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
     obj->prepare_range(r+get_origin());
   }
 
-  for (key.y = tiles.y; key.y<tiles.y+tiles.h; key.y++){
-    for (key.x = tiles.x; key.x<tiles.x+tiles.w; key.x++){
+  // note: updater extracts tiles from todo set sorted by x,y
+  for (key.x = tiles.x; key.x<tiles.x+tiles.w; key.x++){
+    for (key.y = tiles.y; key.y<tiles.y+tiles.h; key.y++){
 
       // region to paint in widget coordinates
       iRect rect = tile_to_rect(key) - get_origin();
