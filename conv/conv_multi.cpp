@@ -32,7 +32,7 @@ ConvMulti::simplify(const dRect & src_box, int N, double E) {
 
   // if error in the conversion is small, use this conversion
   if (new_cnv.get_src_err() < E){
-    cnvs.clear();
+    reset();
     push_back(new_cnv);
     return true;
   }
