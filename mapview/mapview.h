@@ -38,7 +38,7 @@ public:
     GObjMulti     gobj;            // Main object
     DThreadViewer viewer;          // Viewer, gtk widget which shows main_gobj
     Rubber        rubber;          // Rubber lines
-    std::shared_ptr<Opt> opts;     // Command-line options
+    Opt           opts;            // Command-line options
 
     // Right panel, a Gtk::Notebook with separate
     // panels for waypoints, tracks, maps ...
@@ -68,7 +68,7 @@ private:
 public:
 
     // Constructor.
-    Mapview(const std::shared_ptr<Opt> & opts);
+    Mapview(const Opt & opts);
 
     /**********************************/
 
@@ -127,19 +127,20 @@ public:
     /**********************************/
 
     // Get coordinate range of the viewer window
-    dRect get_range(bool wgs=true) const;
+    dRect get_range(bool wgs=true) const {return viewer.get_range(wgs);}
 
     // Set new coordinate transformation (viewer -> WGS84).
-    void set_cnv(const std::shared_ptr<ConvBase> & c);
-
-    // get shared link to the coordinate transformation (viewer -> WGS84).
-    std::shared_ptr<ConvBase> get_cnv() {return gobj.get_cnv();}
+    void set_cnv(const std::shared_ptr<ConvBase> & c) {
+      if (!c) return;
+      viewer.set_cnv(c, true);
+      haveref=true;
+    }
 
     // Scroll the viewer window to get given coordinates in the center.
-    void goto_point(dPoint p, bool wgs = true);
+    void set_center(const dPoint & p, bool wgs = true) {viewer.set_center(p, wgs);}
 
     // scroll and zoom window to show given coordinate range.
-    void goto_range(const dRect & r, bool wgs = true);
+    void set_range(const dRect & r, bool wgs = true) {viewer.set_range(r, wgs);};
 
     /**********************************/
 

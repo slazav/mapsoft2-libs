@@ -29,12 +29,43 @@ DThreadViewer::~DThreadViewer(){
 
 void
 DThreadViewer::redraw(const iRect & range){
+  obj->stop_drawing(true);
   updater_mutex->lock();
-  stop_drawing=true;
   tiles_cache.clear();
   updater_mutex->unlock();
+  obj->stop_drawing(false);
   SimpleViewer::redraw(range);
 }
+
+void
+DThreadViewer::set_cnv(std::shared_ptr<ConvBase> c, bool fix_range){
+  obj->stop_drawing(true);
+  dRect r = get_range(true);
+  {
+    auto lk = obj->get_lock();
+    SimpleViewer::set_cnv(c, false);
+  }
+  // note: set_range -> rescale -> set_cnv with its own locking
+  if (fix_range) set_range(r, true);
+  obj->stop_drawing(false);
+}
+
+void
+DThreadViewer::rescale(const double k, const iPoint & cnt){
+  obj->stop_drawing(true);
+  auto lk = obj->get_lock();
+  SimpleViewer::rescale(k,cnt);
+  obj->stop_drawing(false);
+}
+
+void
+DThreadViewer::set_opt(const Opt & o){
+  obj->stop_drawing(true);
+  auto lk = obj->get_lock();
+  SimpleViewer::set_opt(o);
+  obj->stop_drawing(false);
+}
+
 
 iRect
 DThreadViewer::tile_to_rect(const iPoint & key) const{
@@ -51,7 +82,7 @@ DThreadViewer::updater(){
 
       iPoint key = *tiles_todo.begin();
 
-      stop_drawing=false;
+      obj->stop_drawing(false);
       updater_mutex->unlock();
 
       CairoWrapper crw;
@@ -59,20 +90,19 @@ DThreadViewer::updater(){
       crw->set_color(get_bgcolor());
       crw->paint();
 
-      auto * o = get_obj();
-      if (o){
+      if (obj){
         dRect r = tile_to_rect(key);
-        o->get_lock();
+        auto lk = obj->get_lock();
         crw->save();
         crw->translate(-r.tlc());
-        try { o->draw(crw, r); }
+        try { obj->draw(crw, r); }
         catch (Err & e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
         crw->restore();
       }
       crw.get_surface()->flush();
 
       updater_mutex->lock();
-      if (!stop_drawing){
+      if (!obj->is_stopped()){
         if (tiles_cache.count(key)>0) tiles_cache.erase(key);
         tiles_cache.insert(std::make_pair(key, crw));
         tiles_done.push(key);
@@ -100,15 +130,12 @@ DThreadViewer::updater(){
 
     // cleanup caches
     tiles_to_keep = expand(tiles_to_keep, TILE_MARG);
-
     updater_mutex->lock();
-
     auto it=tiles_cache.begin();
     while (it!=tiles_cache.end()) {
       if (tiles_to_keep.contains(it->first)) it++;
       else it = tiles_cache.erase(it);
     }
-
     updater_mutex->unlock();
 
     updater_mutex->lock();
@@ -148,8 +175,10 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
   if (tiles_todo.empty()) signal_busy().emit();
   updater_mutex->unlock();
 
-  auto * o = get_obj();
-  if (o) o->prepare_range(r+get_origin());
+  if (obj) {
+    auto lk = obj->get_lock();
+    obj->prepare_range(r+get_origin());
+  }
 
   for (key.y = tiles.y; key.y<tiles.y+tiles.h; key.y++){
     for (key.x = tiles.x; key.x<tiles.x+tiles.w; key.x++){

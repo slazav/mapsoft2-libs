@@ -55,7 +55,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   if (opts.exists("skip_image")){ return; }
 
   std::shared_ptr<ConvMap> cnv(new ConvMap(ref));
-  obj.set_opt(std::shared_ptr<Opt>(new Opt(opts)));
+  obj.set_opt(opts);
   obj.set_cnv(cnv);
 
   // find image dimensions

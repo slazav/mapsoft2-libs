@@ -504,8 +504,17 @@ public:
   // load configuration file
   void load_conf(const std::string & cfgfile, Opt & defs, int & depth);
 
-  // rescale
-  void on_rescale(double k) {obj_scale*=k;}
+  /*******************************************/
+
+  std::shared_ptr<ConvBase> cnv;
+  Opt opt;
+
+  // set coordinate transformation
+  void set_cnv(const std::shared_ptr<ConvBase> c) override {cnv = c;};
+
+  // set drawing options
+  void set_opt(const Opt & o) override {opt = o;}
+
 
 };
 

@@ -22,7 +22,16 @@ class DThreadViewer : public SimpleViewer {
     void on_done_signal();
     void draw(const CairoWrapper & crw, const iRect & r);
 
+    // override redraw with locking
     void redraw (const iRect & range = iRect()) override;
+
+    // override set_cnv with locking
+    virtual void set_cnv(std::shared_ptr<ConvBase> c, bool fix_range) override;
+
+    virtual void rescale(const double k, const iPoint & cnt) override;
+
+    // override set_cnv with locking
+    virtual void set_opt(const Opt & o) override;
 
   private:
     // Rectangle of cached tiles if larger then that of visible tiles by
@@ -41,8 +50,7 @@ class DThreadViewer : public SimpleViewer {
     Glib::Cond             *updater_cond;
     Glib::Dispatcher        done_signal;
 
-    bool updater_needed; // to stop updater on exit
-    bool stop_drawing; // to avoid caching of old tiles
+    bool updater_needed;    // to stop updater on exit
 };
 
 #endif

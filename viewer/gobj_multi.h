@@ -28,6 +28,10 @@ private:
   std::multimap<int, GObjData>::const_iterator
     find(const std::shared_ptr<GObj> & o) const;
 
+  // Copy of cnv and opt. Used to set up added objects
+  std::shared_ptr<ConvBase> cnv;
+  Opt opt;
+
 public:
 
   // Add new object at some depth (larger depth - earlier the object is drawn)
@@ -65,14 +69,11 @@ public:
   // prepare range
   void prepare_range(const dRect & range) override;
 
-  // Rescale
-  void on_rescale(double k) override;
-
   // Set cnv
-  void on_set_cnv() override;
+  void set_cnv(std::shared_ptr<ConvBase> cnv) override;
 
   // Set options
-  void on_set_opt() override;
+  void set_opt(const Opt & opt) override;
 
 };
 

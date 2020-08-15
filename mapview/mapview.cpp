@@ -3,7 +3,7 @@
 #include "geo_data/conv_geo.h"
 #include "geo_mkref/geo_mkref.h"
 
-Mapview::Mapview(const std::shared_ptr<Opt> & o) :
+Mapview::Mapview(const Opt & o) :
     haveref(false),
     changed(false),
     viewer(&gobj),
@@ -41,7 +41,7 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
       sigc::mem_fun (&spanel, &PanelStatus::set_idle));
 
     // in the viewer we don't want to fit waypoints inside tiles
-    opts->put("wpt_adj_brd", 0);
+    opts.put("wpt_adj_brd", 0);
 
     gobj.set_opt(opts);
     // Add gobjs from panels.
@@ -94,8 +94,8 @@ Mapview::Mapview(const std::shared_ptr<Opt> & o) :
     show_all(); // show window
 
     // vmaps
-    if (opts->exists("mapdb"))
-      open_mapdb(opts->get("mapdb",""));
+    if (opts.exists("mapdb"))
+      open_mapdb(opts.get("mapdb",""));
     else
       panel_mapdb->hide();
 
@@ -140,7 +140,7 @@ Mapview::add_data(const GeoData & data, bool scroll) {
   // If reference can not be created do nothing.
   if (!haveref){
     try {
-      GeoMap map = geo_mkref(data, *opts.get());
+      GeoMap map = geo_mkref(data, opts);
       set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
       scroll=true;
     }
@@ -149,14 +149,14 @@ Mapview::add_data(const GeoData & data, bool scroll) {
 
   if (scroll){
     if (data.trks.size()>0 && data.trks.begin()->size()>0){
-       goto_point( (*data.trks.begin())[0] );
+       set_center( (*data.trks.begin())[0], true );
     }
     else if (data.wpts.size()>0 && data.wpts.begin()->size()>0){
-       goto_point( (*data.wpts.begin())[0] );
+       set_center( (*data.wpts.begin())[0], true );
     }
     else if (data.maps.size()>0 && data.maps.begin()->size()>0
          && data.maps.begin()->begin()->ref.size()>0){
-       goto_point( data.maps.begin()->begin()->ref.begin()->second );
+       set_center( data.maps.begin()->begin()->ref.begin()->second, true );
     }
   }
 
@@ -189,7 +189,7 @@ Mapview::add_files(const std::vector<std::string> & files) {
 //  viewer.start_waiting();
   for (auto const & f:files){
     spanel.message("Load file: " + f);
-    try { read_geo(f, data, *opts.get()); }
+    try { read_geo(f, data, opts); }
     catch(Err & e) { dlg_err.call(e); }
   }
   add_data(data, true);
@@ -205,7 +205,7 @@ Mapview::load_project(const std::string & file, bool force) {
     return;
   }
   GeoData data;
-  try { read_geo(file, data, *opts.get()); }
+  try { read_geo(file, data, opts); }
   catch(Err & e) { dlg_err.call(e); }
   spanel.message("Open new project: " + file);
 
@@ -262,49 +262,6 @@ Mapview::exit(bool force) {
   g_print ("Exiting...\n");
   hide();
 }
-
-/**********************************************************/
-
-dRect
-Mapview::get_range(bool wgs) const{
-  dRect r = viewer.get_view_range();
-  if (haveref && wgs) r = gobj.get_cnv()->frw_acc(r, 1);
-  return r;
-}
-
-void
-Mapview::set_cnv(const std::shared_ptr<ConvBase> & c){
-  if (!c) return;
-  dRect r = get_range();
-  gobj.set_cnv(c);
-  goto_range(r); // do nothing if there was no reference
-  haveref=true;
-}
-
-void
-Mapview::goto_point(dPoint p, bool wgs){
-  if (!haveref) return;
-  if (wgs) gobj.get_cnv()->bck(p);
-  viewer.set_center(p);
-}
-
-void
-Mapview::goto_range(const dRect & r, bool wgs){
-  if (!haveref) return;
-  // source and destination range in viewer coords
-  dRect src_rng = viewer.get_view_range();
-  dRect dst_rng = wgs? gobj.get_cnv()->bck_acc(r) : r;
-
-  // calculate scaling factor (power of 2)
-  double k = 1;
-  while (src_rng.w > 2*k*dst_rng.w || src_rng.h > 2*k*dst_rng.h) k*=2;
-  while (src_rng.w < k*dst_rng.w || src_rng.h < k*dst_rng.h) k/=2;
-
-  // avoid rounding errors: first scaling, then moving
-  viewer.rescale(k);
-  viewer.set_center(dst_rng.cnt()*k);
-}
-
 
 /**********************************************************/
 #include <sys/stat.h>

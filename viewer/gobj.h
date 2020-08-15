@@ -17,9 +17,9 @@
 /**
 An object which know how to draw itself using Cairo::Context.
 
-- Object has its own coordinate system. It should use `cnv` to convert it
-  to viewer coordinates (cnv.frw transforms viewer coordinates to object
-  coordinates). For the `draw` method the caller should provide
+- Object has its own coordinate system. Conversion from viewer to object
+  coordinates is set by set_cnv() method.
+- For the `draw` method the caller should provide
   `draw_range` in viewer coordinates and translate Cairo::Context to
   viewer coordinate origin.
 - There is no need to save/restore Cairo::Context in GObj,
@@ -28,8 +28,8 @@ An object which know how to draw itself using Cairo::Context.
   by coller if needed.
 - `draw` method can be run in a separate thread. To prevent collisions
   use get_lock() method. Method `draw` should be locked by multy-thread
-  caller, methods `on_rescale` and `on_set_cnv` are locked in GObj class,
-  other functions which modify data should be locked in GObj implementations.
+  caller, get_cnv, get_opt and other functions which modify data
+  should be locked in GObj implementations.
 - Usually, `draw` method does not modify data, and read-only access
   from other functions can be done without locking.
   If `draw` method modifies data, read-only functions should be locked as well.
@@ -37,20 +37,15 @@ An object which know how to draw itself using Cairo::Context.
   Method `draw` can check this flag and stop drawing as soon as possible.
   If one wants to modify data and update everything, following steps are
   needed:
-  - set stop_drawing flag
+  - run stop_drawing(true)
   - get lock object with `get_lock`
   - modify data
-  - unset stop_drawing flag
+  - run stop_drawing(false)
   - emit signal_redraw_me()
+  for set_cnv/set_opt methods this should be done by caller.
 */
 class GObj{
 protected:
-  // reference to drawing options
-  std::shared_ptr<Opt> opt;
-
-  // refernce to coordinate transformation:
-  // viewer coordinates -> object coordinates.
-  std::shared_ptr<ConvBase> cnv;
 
   // Object coordinate range
   dRect range;
@@ -62,13 +57,12 @@ public:
   const static iRect MAX_RANGE;
 
   GObj():
-    cnv(std::shared_ptr<ConvBase>(new ConvBase)),
-    opt(std::shared_ptr<Opt>(new Opt)),
-    range(MAX_RANGE), stop_drawing(false) { }
+    range(MAX_RANGE), stop_drawing_flag(false) { }
 
 
   // Called by viewer before drawing the screen.
-  // draw_range is whe whole area, not tiles.
+  // draw_range is the whole area, not tiles.
+  // Locking is not needed (done by caller)
   virtual void prepare_range(const dRect & draw_range) {}
 
   /** Draw with CairoWrapper.
@@ -105,69 +99,24 @@ private:
 public:
 
   /********************************************************/
-  // Coordinate transformations
+
+  // Functions for setting coordinate conversion and options.
+  // Should be redefined in the GObj implementation.
+  // locking and emitting signal_redraw_me is not needed (done by caller)
 
   // change coordinate transformation
-  virtual void set_cnv(std::shared_ptr<ConvBase> c) {
-    stop_drawing = true;
-    auto lock = get_lock();
-    cnv = c;
-    on_set_cnv();
-    stop_drawing = false;
-    signal_redraw_me_.emit(dRect());
-  }
-
-  // change scale
-  virtual void rescale(double k) {
-    stop_drawing = true;
-    auto lock = get_lock();
-    cnv->rescale_src(1.0/k);
-    on_rescale(k);
-    stop_drawing = false;
-    signal_redraw_me_.emit(dRect());
-  }
-
-  // get coordinate transformation
-  std::shared_ptr<ConvBase> get_cnv() const {return cnv;}
-
-  // Can be redefined in GObj implementation to
-  // modify internal data which depend on cnv.
-  // If cnv is used directly in the draw() method then
-  // there is no need to do it.
-  virtual void on_set_cnv() {}
-
-  // Can be redefined in GObj implementation to
-  // modify internal data which depend on cnv.
-  // If cnv is used directly in the draw() method then
-  // there is no need to do it.
-  virtual void on_rescale(double k) {}
-
-  /********************************************************/
-  // Options
+  virtual void set_cnv(const std::shared_ptr<ConvBase> c) {};
 
   // change options
-  virtual void set_opt(std::shared_ptr<Opt> o) {
-    stop_drawing = true;
-    auto lock = get_lock();
-    opt = o;
-    on_set_opt();
-    stop_drawing = false;
-    signal_redraw_me_.emit(dRect());
-  }
+  virtual void set_opt(const Opt & o) {};
 
-  // get options
-  std::shared_ptr<Opt> get_opt() const {return opt;}
-
-  // Can be redefined in GObj implementation to
-  // modify internal data which depend on cnv.
-  // If opt is used directly in the draw() method then
-  // there is no need to do it.
-  virtual void on_set_opt() {}
+  /********************************************************/
 
   // If GObj is used from a DThreadViewer then the draw() method
   // is called from a sepereate thread. In this case all modifications
   // of data used in draw() should be locked.
-  // - DThreadViewer locks draw() operation,
+  // - Caller (DThreadViewer, GobjMulti) locks draw(),
+  //   prepare_range(), set_cnv(), set_opt()
   // - Gobj locks rescale() and set_cnv() operations.
   // - everything else sould be locked inside the object implementation.
   //
@@ -179,8 +128,10 @@ public:
   // stop_drawing flag shows that drawing should be stopped as soon as
   // possible. We set it before doing get_lock() when we want to do
   // any change in sub-objects.
-  bool stop_drawing;
+  bool stop_drawing_flag;
 
+  void stop_drawing(bool state=true){ stop_drawing_flag = state; }
+  bool is_stopped() const {return stop_drawing_flag;}
 };
 
 #endif

@@ -70,7 +70,7 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
   double avr = d.scale/d.load_sc;
   // render image
   for (int yd=0; yd<image_dst.height(); ++yd){
-    if (stop_drawing) return false;
+    if (is_stopped()) return false;
     for (int xd=0; xd<image_dst.width(); ++xd){
       dPoint p(xd,yd);
       p += range_dst.tlc();
@@ -104,13 +104,13 @@ GObjMaps::prepare_range(const dRect & range) {
 int
 GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
-  if (stop_drawing) return GObj::FILL_NONE;
+  if (is_stopped()) return GObj::FILL_NONE;
 
   if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
 
   for (auto const & d:data){
 
-    if (stop_drawing) return GObj::FILL_NONE;
+    if (is_stopped()) return GObj::FILL_NONE;
 
     dRect range_dst = intersect(draw_range, d.bbox);
     if (range_dst.is_zsize()) continue;
@@ -160,20 +160,9 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 /**********************************************************/
 
 void
-GObjMaps::on_set_opt(){
-  smooth    = opt->get("map_smooth",   false);
-  clip_brd  = opt->get("map_clip_brd", true);
-  draw_refs = opt->get<int>("map_draw_refs", 0);
-  draw_brd  = opt->get<int>("map_draw_brd",  0);
-  fade      = opt->get("map_fade",     0);
-}
-
-void
-GObjMaps::on_set_cnv(){
-
+GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   range = dRect();
   for (auto & d:data){
-
 
     // conversion viewer->map
     d.cnv.reset();
@@ -213,14 +202,10 @@ GObjMaps::on_set_cnv(){
 }
 
 void
-GObjMaps::on_rescale(double k){
-  for (auto & d:data){
-    d.brd*=k;
-    d.refs*=k;
-    d.bbox*=k;
-    d.cnv.rescale_src(1.0/k);
-    d.set_scale(d.scale/k, smooth);
-  }
-  range*=k;
-  tiles.clear();
+GObjMaps::set_opt(const Opt & opt) {
+  smooth    = opt.get("map_smooth",   false);
+  clip_brd  = opt.get("map_clip_brd", true);
+  draw_refs = opt.get<int>("map_draw_refs", 0);
+  draw_brd  = opt.get<int>("map_draw_brd",  0);
+  fade      = opt.get("map_fade",     0);
 }

@@ -29,7 +29,7 @@ GObjMulti::add(int depth, std::shared_ptr<GObj> o){
   o->set_opt(opt);
   o->set_cnv(cnv);
 
-  stop_drawing = true;
+  stop_drawing(true);
   auto lock = get_lock();
 
   GObjData D;
@@ -40,7 +40,7 @@ GObjMulti::add(int depth, std::shared_ptr<GObj> o){
     sigc::mem_fun (&sig, &sigc::signal<void, iRect>::emit));
   data.emplace(-depth, D); // we use negative depth for correct sorting
 
-  stop_drawing = false;
+  stop_drawing(false);
   signal_redraw_me().emit(iRect());
 }
 
@@ -72,7 +72,7 @@ void
 GObjMulti::set_depth(std::shared_ptr<GObj> o, int depth){
   if (!o) return;
 
-  stop_drawing = true;
+  stop_drawing(true);
   auto lock = get_lock();
 
   auto it = find(o);
@@ -81,7 +81,7 @@ GObjMulti::set_depth(std::shared_ptr<GObj> o, int depth){
   data.emplace(-depth, it->second);
   data.erase(it);
 
-  stop_drawing = false;
+  stop_drawing(false);
   signal_redraw_me().emit(iRect());
 }
 
@@ -89,14 +89,14 @@ void
 GObjMulti::set_visibility(std::shared_ptr<GObj> o, bool on){
   if (!o) return;
 
-  stop_drawing = true;
+  stop_drawing(true);
   auto lock = get_lock();
 
   auto it = find(o);
   if (it==data.end()) return;
   it->second.on = on;
 
-  stop_drawing = false;
+  stop_drawing(false);
   signal_redraw_me().emit(iRect());
 }
 
@@ -104,7 +104,7 @@ void
 GObjMulti::del(std::shared_ptr<GObj> o){
   if (!o) return;
 
-  stop_drawing = true;
+  stop_drawing(true);
   auto lock = get_lock();
 
   auto it = find(o);
@@ -112,19 +112,19 @@ GObjMulti::del(std::shared_ptr<GObj> o){
   it->second.redraw_conn.disconnect();
   data.erase(it);
 
-  stop_drawing = false;
+  stop_drawing(false);
   signal_redraw_me().emit(iRect());
 }
 
 void
 GObjMulti::clear(){
-  stop_drawing = true;
+  stop_drawing(true);
   auto lock = get_lock();
 
   for (auto & o:data) o.second.redraw_conn.disconnect();
   data.clear();
 
-  stop_drawing = false;
+  stop_drawing(false);
   signal_redraw_me().emit(iRect());
 }
 
@@ -136,9 +136,11 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
   int res = GObj::FILL_NONE;
   for (auto const & p:data){
     if (!p.second.on) continue;
-    if (stop_drawing) return GObj::FILL_NONE;
+    if (is_stopped()) return GObj::FILL_NONE;
     cr->save();
-    int res1 = p.second.obj->draw(cr, draw_range);
+    auto o = p.second.obj;
+    auto lk = o->get_lock();
+    int res1 = o->draw(cr, draw_range);
     cr->restore();
     if (res1 != GObj::FILL_NONE &&
         res!=GObj::FILL_ALL) res=res1;
@@ -150,24 +152,35 @@ void
 GObjMulti::prepare_range(const dRect & range){
   for (auto const & p:data){
     if (!p.second.on) continue;
-    p.second.obj->prepare_range(range);
+    auto o = p.second.obj;
+    auto lk = o->get_lock();
+    o->prepare_range(range);
   }
 }
 
 void
-GObjMulti::on_rescale(double k){
-  // Note that `on_rescale` is called instead on `rescale`.
-  // Thus cnv is not modified, locking is not done, signal_redraw_me
-  // is not emitted in sub-objects, it is done in GobjMulti::rescale!
-  for (auto const & p:data) p.second.obj->on_rescale(k);
+GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
+  cnv = c;
+  for (auto const & p:data){
+    auto o = p.second.obj;
+    o->stop_drawing(true);
+    auto lk = o->get_lock();
+    o->set_cnv(cnv);
+    o->stop_drawing(false);
+  }
+  signal_redraw_me().emit(iRect());
 }
 
 void
-GObjMulti::on_set_cnv(){
-  for (auto const & p:data) p.second.obj->set_cnv(cnv);
+GObjMulti::set_opt(const Opt & o) {
+  opt = o;
+  for (auto const & p:data){
+    auto o = p.second.obj;
+    o->stop_drawing(true);
+    auto lk = o->get_lock();
+    o->set_opt(opt);
+    o->stop_drawing(false);
+  }
+  signal_redraw_me().emit(iRect());
 }
 
-void
-GObjMulti::on_set_opt(){
-  for (auto const & p:data) p.second.obj->set_opt(opt);
-}

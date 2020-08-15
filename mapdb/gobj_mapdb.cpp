@@ -27,13 +27,13 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   max_text_size = 1024;
   obj_scale = o.get("obj_scale", 1.0) * o.get("map_scale", 1.0);
 
-  opt = std::shared_ptr<Opt>(new Opt(o));
+  opt = o;
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
 
   // Read configuration file.
   Opt defs = o.get("define", Opt());
   int depth = 0;
-  load_conf(opt->get<string>("config", mapdir + "/render.cfg"), defs, depth);
+  load_conf(opt.get<string>("config", mapdir + "/render.cfg"), defs, depth);
 }
 
 void

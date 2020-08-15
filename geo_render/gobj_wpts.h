@@ -54,16 +54,12 @@ public:
   GObjWpts(GeoWptList & wpts);
 
   /************************************************/
-  // drawing waypoints on the image
-  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
-
-  /************************************************/
   // These functions modify drawing templates, but
   // do not have any locking. They should be called
   // only from locked functions (on_set_opt, on_set_cnv, on_rescale)
 
   // Update template coordinates for a waypoint template (including bbox!).
-  void update_pt_crd(WptDrawTmpl & t);
+  void update_pt_crd(WptDrawTmpl & t, const std::shared_ptr<ConvBase> cnv);
 
   // Update bbox for a waypoint template (after changing coordinates)
   void update_pt_bbox(WptDrawTmpl & t);
@@ -83,17 +79,12 @@ public:
   void adjust_text_brd(const dRect & rng);
 
   /************************************************/
-  // These functions update drawing templates.
-  // They have proper multi-thread locking.
 
-  // update parameters form options.
-  void on_set_opt() override;
+  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
-  // update point coordinates
-  void on_set_cnv() override;
+  void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  // rescale point coordinates, update range
-  void on_rescale(double k) override;
+  void set_opt(const Opt & o) override;
 
 };
 

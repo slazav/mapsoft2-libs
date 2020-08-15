@@ -39,7 +39,7 @@ GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_){
 int
 GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
-  if (stop_drawing) return GObj::FILL_NONE;
+  if (is_stopped()) return GObj::FILL_NONE;
   if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
 
   int arr_w = linewidth * 2.0;
@@ -51,7 +51,7 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
   cr->set_line_width(linewidth);
   for (int i = 0; i<segments.size(); ++i){
 
-    if (stop_drawing) return GObj::FILL_NONE;
+    if (is_stopped()) return GObj::FILL_NONE;
 
     dPoint p1 = segments[i].p1;
     dPoint p2 = segments[i].p2;
@@ -98,9 +98,9 @@ GObjTrk::update_range(){
 /***************/
 
 void
-GObjTrk::on_set_opt(){
+GObjTrk::set_opt(const Opt & opt){
   linewidth = trk.opts.get<double>("thickness", 1);
-  linewidth = opt->get<double>("trk_draw_th", linewidth);
+  linewidth = opt.get<double>("trk_draw_th", linewidth);
 
   bool closed = trk.opts.get<double>("closed", false);
 
@@ -110,29 +110,29 @@ GObjTrk::on_set_opt(){
   // option can set a transparent color.
   int  color  = trk.opts.get<int>("color", 0xFFFF000);
   color |= 0xFF000000;
-  color       = opt->get("trk_draw_color", color);
+  color       = opt.get("trk_draw_color", color);
 
   // track drawing mode (normal, speed, height)
-  string trk_mode = opt->get<string>("trk_draw_mode", "normal");
+  string trk_mode = opt.get<string>("trk_draw_mode", "normal");
 
   Rainbow RB(0,1);
   if (trk_mode == "normal"){
-    draw_dots   = opt->get("trk_draw_dots", 1);
-    draw_arrows = opt->get("trk_draw_arrows", 1);
+    draw_dots   = opt.get("trk_draw_dots", 1);
+    draw_arrows = opt.get("trk_draw_arrows", 1);
   }
   else if (trk_mode == "speed"){
-    draw_dots   = opt->get("trk_draw_dots", 0);
-    draw_arrows = opt->get("trk_draw_arrows", 0);
-    RB = Rainbow(opt->get<double>("trk_draw_min", 0),
-                 opt->get<double>("trk_draw_max", 10),
-                 opt->get<string>("trk_draw_grad", "BCGYRM").c_str());
+    draw_dots   = opt.get("trk_draw_dots", 0);
+    draw_arrows = opt.get("trk_draw_arrows", 0);
+    RB = Rainbow(opt.get<double>("trk_draw_min", 0),
+                 opt.get<double>("trk_draw_max", 10),
+                 opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
   else if (trk_mode == "height"){
-    draw_dots   = opt->get("trk_draw_dots", 0);
-    draw_arrows = opt->get("trk_draw_arrows", 0);
-    RB = Rainbow(opt->get<double>("trk_draw_min", -200),
-                 opt->get<double>("trk_draw_max", 8000),
-                 opt->get<string>("trk_draw_grad", "BCGYRM").c_str());
+    draw_dots   = opt.get("trk_draw_dots", 0);
+    draw_arrows = opt.get("trk_draw_arrows", 0);
+    RB = Rainbow(opt.get<double>("trk_draw_min", -200),
+                 opt.get<double>("trk_draw_max", 8000),
+                 opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
 
 
@@ -170,8 +170,9 @@ GObjTrk::on_set_opt(){
   if (!closed) segments[trk.size()-1].hide = true;
 }
 
+
 void
-GObjTrk::on_set_cnv(){
+GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   if (trk.size() != segments.size())
     throw Err() << "GObjTrk: segments are not syncronized with track";
 
@@ -180,15 +181,6 @@ GObjTrk::on_set_cnv(){
     if (cnv) cnv->bck(pt);
     segments[i].p1 = pt;
     segments[i>0? i-1: trk.size()-1].p2 = pt;
-  }
-  update_range();
-}
-
-void
-GObjTrk::on_rescale(double k){
-  for (auto & s:segments){
-    s.p1*=k;
-    s.p2*=k;
   }
   update_range();
 }

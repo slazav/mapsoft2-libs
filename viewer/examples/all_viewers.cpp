@@ -49,8 +49,8 @@ class TestWin : public Gtk::Window{
        case 'q': case 'Q': hide();  return true;
        case 's': case 'S': change_viewer(&v1); return true;
        case 'd': case 'D': change_viewer(&v2); return true;
-       case 'c': case 'C': v->set_obj(&o2);   return true;
-       case 'g': case 'G': v->set_obj(&o3);   return true;
+       case 'c': case 'C': v->set_gobj(&o2);   return true;
+       case 'g': case 'G': v->set_gobj(&o3);   return true;
        case '0':
          rubber.clear();
          return true;

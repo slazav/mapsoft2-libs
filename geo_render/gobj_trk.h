@@ -44,19 +44,16 @@ public:
   // constructor
   GObjTrk(GeoTrk & trk);
 
-  // drawing waypoints on the image
-  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
-
   // recalculate range (after changing coordinates)
   void update_range();
 
-  // update point coordinates
-  void on_set_cnv() override;
+  /************************************************/
 
-  // rescale point coordinates, update range
-  void on_rescale(double k) override;
+  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
-  void on_set_opt() override;
+  void set_cnv(const std::shared_ptr<ConvBase> c) override;
+
+  void set_opt(const Opt & o) override;
 
 };
 

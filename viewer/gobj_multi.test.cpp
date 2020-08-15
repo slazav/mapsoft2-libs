@@ -123,7 +123,8 @@ main(){
     o.add(20, o1); // fill
     o.add(10, o2); // dots
     assert_eq(redraw_counter, 9);
-    o.rescale(10);
+    cnv->rescale_src(0.1);
+    o.set_cnv(cnv);
     assert_eq(redraw_counter, 10);
 
     // check that cnv was rescaled properly

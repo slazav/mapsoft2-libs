@@ -12,6 +12,10 @@ main(){
     int col2 = 0xFF000000;
 
     GObjDots o1;
+
+//    std::shared_ptr<ConvBase> cnv(new ConvBase);
+//    o1.set_cnv(cnv); // now dots should be drawn in 20x20 pt grid
+
     assert_eq(o1.bbox(), GObj::MAX_RANGE);
 
     // Image filled with 0xFFFF00FF color + CairoWrapper
@@ -38,7 +42,9 @@ main(){
     assert_eq(img.get32(17,17), col1);
     cr->restore();
 
-    o1.rescale(2.0); // now dots should be drawn in 20x20 pt grid
+    std::shared_ptr<ConvBase> cnv(new ConvBase);
+    cnv->rescale_src(0.5);
+    o1.set_cnv(cnv); // now dots should be drawn in 20x20 pt grid
     r1 = dRect(16,16,48,48); // same range of object coords
     cr->set_color(col1);
     cr->paint();

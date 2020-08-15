@@ -85,23 +85,14 @@ public:
   GObjMaps(GeoMapList & maps);
 
   /************************************************/
-  // drawing maps
+
   int draw(const CairoWrapper & cr, const dRect &box) override;
 
   void prepare_range(const dRect & range) override;
 
-  /************************************************/
-  // These functions update drawing templates.
-  // They have proper multi-thread locking.
+  void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  // update information from options
-  void on_set_opt() override;
-
-  // update point coordinates
-  void on_set_cnv() override;
-
-  // rescale point coordinates, update range
-  void on_rescale(double k) override;
+  void set_opt(const Opt & o) override;
 
 private:
   bool render_tile(const MapData & d, const dRect & range_dst);

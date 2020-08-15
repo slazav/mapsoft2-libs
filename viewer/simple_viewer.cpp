@@ -9,7 +9,8 @@ SimpleViewer::SimpleViewer(GObj * o) :
     origin(iPoint(0,0)),
     bgcolor(0xFF000000),
     sc(1.0),
-    on_drag(false) {
+    on_drag(false),
+    cnv(std::shared_ptr<ConvBase>(new ConvBase)) {
 
   // which events we want to recieve
   set_events (
@@ -63,6 +64,48 @@ SimpleViewer::set_origin (iPoint p) {
   signal_ch_origin_.emit(p);
 }
 
+dPoint
+SimpleViewer::get_center (bool obj_crd) const {
+  dPoint p = origin + iPoint(get_width(), get_height())/2;
+  if (obj_crd && cnv) cnv->frw(p);
+  return p;
+}
+
+void
+SimpleViewer::set_center(dPoint new_center, bool obj_crd){
+  if (obj_crd && cnv) cnv->bck(new_center);
+  set_origin(iPoint(rint(new_center)) - iPoint(get_width(), get_height())/2);
+}
+
+dRect
+SimpleViewer::get_range (bool obj_crd) const {
+  dRect r = iRect(origin.x, origin.y, get_width(), get_height());
+  if (obj_crd && cnv) return cnv->frw_acc(r);
+  return r;
+}
+
+void
+SimpleViewer::set_range(dRect dst, bool obj_crd){
+
+  dRect src = get_range(false);
+
+  // It is possible that coordinates can not be converted,
+  // then just skip conversion
+  if (obj_crd && cnv) try {
+    dst = cnv->bck_acc(dst);
+  } catch(Err e) {}
+
+  // calculate scaling factor (power of 2)
+  double k = 1;
+  while (src.w > 2*k*dst.w || src.h > 2*k*dst.h) k*=2;
+  while (src.w <   k*dst.w || src.h <   k*dst.h) k/=2;
+
+  // avoid rounding errors: first scaling, then moving
+  rescale(k);
+  set_center(dst.cnt()*k, false);
+}
+
+
 /***********************************************************/
 
 void
@@ -72,14 +115,30 @@ SimpleViewer::redraw (const iRect & range){
 }
 
 void
+SimpleViewer::set_cnv(std::shared_ptr<ConvBase> c, bool fix_range){
+  dRect r = get_range(true);
+  cnv = c;
+  obj->set_cnv(cnv);
+  if (fix_range) set_range(r, true);
+}
+
+void
+SimpleViewer::set_opt(const Opt & o){
+  opt = o;
+  obj->set_opt(o);
+}
+
+void
 SimpleViewer::rescale(const double k, const iPoint & cnt){
-  if (!obj) return;
   signal_on_rescale_.emit(k);
   iPoint wsize(get_width(), get_height());
   iPoint wcenter = get_origin() + cnt;
   wcenter=iPoint(wcenter.x * k, wcenter.y * k);
   set_origin(wcenter - cnt);
-  obj->rescale(k); // redraw_me signal should be emitted by object;
+  if (cnv){
+    cnv->rescale_src(1.0/k);
+    obj->set_cnv(cnv);
+  }
 }
 
 /***********************************************************/
