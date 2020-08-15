@@ -44,49 +44,50 @@ class TestWin : public Gtk::Window{
 
   bool on_key_press(GdkEventKey * event) {
      std::cerr << "key_press: " << event->keyval << "\n";
+     auto c = v->get_center(false);
      switch (event->keyval) {
        case 'r': case 'R': v->redraw(); return true;
        case 'q': case 'Q': hide();  return true;
        case 's': case 'S': change_viewer(&v1); return true;
        case 'd': case 'D': change_viewer(&v2); return true;
-       case 'c': case 'C': v->set_gobj(&o2);   return true;
-       case 'g': case 'G': v->set_gobj(&o3);   return true;
+       case 'c': case 'C': v->set_obj(&o2);   return true;
+       case 'g': case 'G': v->set_obj(&o3);   return true;
        case '0':
          rubber.clear();
          return true;
        case '1':
          rubber.clear();
-         rubber.add_line(v->get_center());
+         rubber.add_line(c);
          return true;
        case '2':
          rubber.clear();
-         rubber.add_rect(v->get_center());
+         rubber.add_rect(c);
          return true;
        case '3':
          rubber.clear();
-         rubber.add_ell(v->get_center());
+         rubber.add_ell(c);
          return true;
        case '4':
          rubber.clear();
-         rubber.add_ellc(v->get_center());
+         rubber.add_ellc(c);
          return true;
        case '5':
          rubber.clear();
-         rubber.add_circ(v->get_center());
+         rubber.add_circ(c);
          return true;
        case '6':
          rubber.clear();
-         rubber.add_circc(v->get_center());
+         rubber.add_circc(c);
          return true;
        case '7':
          rubber.clear();
          rubber.add_sq_mark(iPoint(0,0), true);
-         rubber.add_sq_mark(v->get_center(), false);
+         rubber.add_sq_mark(c, false);
          return true;
        case '8':
          rubber.clear();
          rubber.add_cr_mark(iPoint(0,0), true);
-         rubber.add_cr_mark(v->get_center(), false);
+         rubber.add_cr_mark(c, false);
          return true;
      }
      return false;
