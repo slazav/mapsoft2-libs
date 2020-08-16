@@ -232,12 +232,15 @@ Mapview::new_project(bool force) {
 
 void
 Mapview::open_mapdb(const std::string & dir){
+  close_mapdb();
   try {
     panel_mapdb->open(dir);
     gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
     GeoMap r = panel_mapdb->get_gobj()->get_ref();
-    if (!r.empty())
+    if (!r.empty()){
       viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)), false);
+      tmpref = false;
+    }
   }
   catch (Err & e) { dlg_err.call(e); }
 }
