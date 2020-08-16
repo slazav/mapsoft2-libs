@@ -10,6 +10,10 @@ color_shade(int c, double k){
 }
 
 /********************************************************************/
+Rainbow::Rainbow(){
+  update_data();
+}
+
 Rainbow::Rainbow(const std::vector<rainbow_data> & RD_): RD(RD_){
   update_data();
 }

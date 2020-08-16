@@ -175,6 +175,15 @@ main(){
     assert_eq(R.get(14), 0x404040);
   }
 
+  {
+    //empty constructor
+    Rainbow R;
+    assert_eq(R.get(-10), 0);
+    assert_eq(R.get(0),   0);
+    assert_eq(R.get(10),  0);
+  }
+
+
   // color shade
   {
     assert_eq(color_shade(0xFFFFFF, 0), 0x000000);

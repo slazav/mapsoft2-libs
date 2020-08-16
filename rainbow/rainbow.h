@@ -37,6 +37,7 @@ class Rainbow{
   void set_range(double min, double max); ///<reset value range for same colors
 
 public:
+  Rainbow();
   Rainbow(const std::vector<rainbow_data> & RD_);
   Rainbow(double min, double max, const char *colors = RAINBOW_NORMAL);
   Rainbow(double min, double max, int cmin, int cmax);
