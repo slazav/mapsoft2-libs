@@ -32,7 +32,19 @@ private:
   std::shared_ptr<ConvBase> cnv;
   Opt opt;
 
+  // What to do with errors in shildren objects.
+  enum error_policy_t {
+    GOBJ_MULTI_ERR_IGN,   // ignore
+    GOBJ_MULTI_ERR_WARN,  // print warning (default)
+    GOBJ_MULTI_ERR_EXC    // throw exception
+  } error_policy;
+
+  void process_error(std::exception & e);
+
 public:
+
+  // constructor
+  GObjMulti(): error_policy(GOBJ_MULTI_ERR_WARN) {}
 
   // Add new object at some depth (larger depth - earlier the object is drawn)
   void add(int depth, std::shared_ptr<GObj> o);

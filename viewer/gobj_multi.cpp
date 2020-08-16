@@ -20,6 +20,16 @@ GObjMulti::find(const std::shared_ptr<GObj> & o) const {
   return data.end();
 }
 
+void
+GObjMulti::process_error(std::exception & e){
+  switch (error_policy){
+    case GOBJ_MULTI_ERR_IGN:  return;
+    case GOBJ_MULTI_ERR_WARN: std::cerr << e.what() << "\n"; break;
+    case GOBJ_MULTI_ERR_EXC:  throw;
+  }
+}
+
+
 /************************************************/
 // Public methods
 
@@ -140,10 +150,13 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
     cr->save();
     auto o = p.second.obj;
     auto lk = o->get_lock();
-    int res1 = o->draw(cr, draw_range);
+    try {
+      int res1 = o->draw(cr, draw_range);
+      if (res1 != GObj::FILL_NONE &&
+          res!=GObj::FILL_ALL) res=res1;
+    }
+    catch (std::exception & e) { process_error(e); }
     cr->restore();
-    if (res1 != GObj::FILL_NONE &&
-        res!=GObj::FILL_ALL) res=res1;
   }
   return res;
 }
@@ -154,7 +167,8 @@ GObjMulti::prepare_range(const dRect & range){
     if (!p.second.on) continue;
     auto o = p.second.obj;
     auto lk = o->get_lock();
-    o->prepare_range(range);
+    try { o->prepare_range(range); }
+    catch (std::exception & e) { process_error(e); }
   }
 }
 
@@ -165,7 +179,8 @@ GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
     auto o = p.second.obj;
     o->stop_drawing(true);
     auto lk = o->get_lock();
-    o->set_cnv(cnv);
+    try { o->set_cnv(cnv); }
+    catch (std::exception & e) { process_error(e); }
     o->stop_drawing(false);
   }
   signal_redraw_me().emit(iRect());
@@ -174,11 +189,22 @@ GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
 void
 GObjMulti::set_opt(const Opt & o) {
   opt = o;
+
+  // option "error_policy"
+  if (o.get("error_policy") == "ignore")
+    error_policy = GOBJ_MULTI_ERR_IGN;
+  else if (o.get("error_policy") == "warning")
+    error_policy = GOBJ_MULTI_ERR_WARN;
+  else if (o.get("error_policy") == "exception")
+    error_policy = GOBJ_MULTI_ERR_EXC;
+
+  // send options to children
   for (auto const & p:data){
     auto o = p.second.obj;
     o->stop_drawing(true);
     auto lk = o->get_lock();
-    o->set_opt(opt);
+    try { o->set_opt(opt); }
+    catch (std::exception & e) { process_error(e); }
     o->stop_drawing(false);
   }
   signal_redraw_me().emit(iRect());
