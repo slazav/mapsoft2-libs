@@ -190,7 +190,7 @@ public:
         case PAGE_TRKS: r=mapview->panel_trks->get_range(); break;
         case PAGE_MAPS: r=mapview->panel_maps->get_range(); break;
       }
-      if (r) mapview->set_range(r, false);
+      if (r) mapview->viewer.set_range(r, false);
     }
 };
 

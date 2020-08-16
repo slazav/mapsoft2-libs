@@ -10,6 +10,7 @@
 #include "viewer/rubber.h"
 #include "viewer/gobj_multi.h"
 #include "geo_data/geo_io.h"
+#include "geo_data/conv_geo.h"
 #include "geom/rect.h"
 #include "action_manager.h"
 #include "dlg_chconf.h"
@@ -62,8 +63,8 @@ private:
     // has the project been changed since last saving/loading?
     bool changed;
 
-    // Have reference flag
-    bool haveref;
+    // Do we have a "temporary" projection?
+    bool tmpref;
 
 public:
 
@@ -71,9 +72,6 @@ public:
     Mapview(const Opt & opts);
 
     /**********************************/
-
-    // Get "has reference" flag.
-    bool get_haveref() const {return haveref;}
 
     // Get project changed status.
     bool get_changed() const {return changed;}
@@ -126,21 +124,11 @@ public:
 
     /**********************************/
 
-    // Get coordinate range of the viewer window
-    dRect get_range(bool wgs=true) const {return viewer.get_range(wgs);}
-
-    // Set new coordinate transformation (viewer -> WGS84).
-    void set_cnv(const std::shared_ptr<ConvBase> & c) {
-      if (!c) return;
-      viewer.set_cnv(c, true);
-      haveref=true;
+    // to be done after loading a new map
+    void set_cnv_map(const GeoMap & m){
+      if (tmpref) viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)), true);
+      tmpref=false;
     }
-
-    // Scroll the viewer window to get given coordinates in the center.
-    void set_center(const dPoint & p, bool wgs = true) {viewer.set_center(p, wgs);}
-
-    // scroll and zoom window to show given coordinate range.
-    void set_range(const dRect & r, bool wgs = true) {viewer.set_range(r, wgs);};
 
     /**********************************/
 

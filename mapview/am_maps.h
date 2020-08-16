@@ -4,6 +4,7 @@
 /* Action modes for Maps menu */
 #include "action_mode.h"
 #include "geo_data/conv_geo.h"
+#include "geo_mkref/geo_mkref.h"
 
 /**********************************************************/
 // mapy.cz map
@@ -19,25 +20,15 @@ class AddMapyCZ : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://m{[1234]}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}.png";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "Mapy.cz";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon,-mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon,-mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -57,25 +48,15 @@ class AddOSM : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://{[abc]}.tile.openstreetmap.org/{z}/{x}/{y}.png";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "OSM";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon,-mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon,-mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -94,25 +75,15 @@ class AddESRI : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "ESRI sat";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon,-mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon,-mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -149,8 +120,6 @@ class AddYandexSat : public ActionMode{
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -169,25 +138,15 @@ class AddGoogleSat : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://mt{[0123]}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "Google sat";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon,-mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon,-mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -206,25 +165,15 @@ class AddBingSat : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://ecn.t{[0123]}.tiles.virtualearth.net/tiles/a{q}.jpeg?g=8954";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "Bing sat";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon,-mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon,-mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -243,25 +192,15 @@ class AddGBmap : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://ecn.t{[0123]}.tiles.virtualearth.net/tiles/r{q}?g=8954&lbl=l1&productSet=mmOS";
       map.is_tiled = true;
       map.tile_size = 256;
       map.tile_swapy = false;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "GB topo";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon,-mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon,-mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
@@ -279,30 +218,22 @@ class AddPodmMap : public ActionMode{
     void activate() {
       GeoData data_pre;
       GeoMapList maps;
-      GeoMap map;
-      double mlat = 85.0511288, mlon=180.0;
-      double wr = 256;
+      GeoMap map = geo_mkref_web();
       map.image = "https://{[abc]}.tiles.nakarte.me/map_podm/{z}/{x}/{y}";
       map.is_tiled = true;
       map.tile_size = 256;
+      map.tile_maxz = 14;
       map.tile_swapy = true;
-      map.image_size = iPoint(wr,wr);
-      map.proj = "WEB";
       map.name = "slazav";
-      map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
-      map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
-      map.ref.emplace(dPoint(wr,wr),dPoint( mlon, -mlat));
-      map.ref.emplace(dPoint( 0,wr),dPoint(-mlon, -mlat));
       maps.push_back(map);
       data_pre.maps.push_back(maps);
       mapview->add_data(data_pre, false);
-      mapview->set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-
     }
 };
 
 
 
 
+GeoMap geo_mkref_web();
 #endif
 

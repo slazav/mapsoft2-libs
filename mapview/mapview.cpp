@@ -4,7 +4,7 @@
 #include "geo_mkref/geo_mkref.h"
 
 Mapview::Mapview(const Opt & o) :
-    haveref(false),
+    tmpref(true),
     changed(false),
     viewer(&gobj),
     rubber(&viewer),
@@ -93,6 +93,10 @@ Mapview::Mapview(const Opt & o) :
     load_css(); // Load CSS styles
     load_acc(); // Load accelerator map
 
+    // set default map projection -- web mercator
+    viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(geo_mkref_web())), false);
+    tmpref = true;
+
     show_all(); // show window
 
     // vmaps
@@ -137,30 +141,21 @@ Mapview::add_data(const GeoData & data, bool scroll) {
 
   set_changed();
 
-  // If there is no reference yet, try to make one.
-  // Use data and options.
-  // If reference can not be created do nothing.
-  if (!haveref){
-    try {
-      GeoMap map = geo_mkref(data, opts);
-      set_cnv(std::shared_ptr<ConvMap>(new ConvMap(map)));
-      scroll=true;
-    }
-    catch (Err & e) {}
-  }
+  // Set projection + zoom.
+  // Ignore all errors
 
-  if (scroll){
-    if (data.trks.size()>0 && data.trks.begin()->size()>0){
-       set_center( (*data.trks.begin())[0], true );
-    }
-    else if (data.wpts.size()>0 && data.wpts.begin()->size()>0){
-       set_center( (*data.wpts.begin())[0], true );
-    }
-    else if (data.maps.size()>0 && data.maps.begin()->size()>0
-         && data.maps.begin()->begin()->ref.size()>0){
-       set_center( data.maps.begin()->begin()->ref.begin()->second, true );
+  try {
+    // set projection of the first map
+    if (data.maps.size()>0 && data.maps.front().size()>0)
+      set_cnv_map(data.maps.front().front());
+
+    // scroll and zoom to wpts+trks data
+    if (scroll){
+      dRect box = expand(data.bbox_trks(), data.bbox_wpts());
+      if (!box.is_zsize()) viewer.set_range(box, true);
     }
   }
+  catch (Err & e) {}
 
 }
 
@@ -170,8 +165,7 @@ Mapview::clear_data() {
   panel_trks->remove_all();
   panel_maps->remove_all();
   panel_mapdb->close();
-//  panel_misc.hide_all();
-  haveref = false;
+  tmpref = true;
 }
 
 void
@@ -243,7 +237,7 @@ Mapview::open_mapdb(const std::string & dir){
     gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
     GeoMap r = panel_mapdb->get_gobj()->get_ref();
     if (!r.empty())
-      set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
+      viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)), false);
   }
   catch (Err & e) { dlg_err.call(e); }
 }
