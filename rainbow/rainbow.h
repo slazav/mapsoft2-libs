@@ -7,7 +7,7 @@
 /// rainbow data type
 struct rainbow_data{
   double v; ///< value
-  int c;    ///< color
+  unsigned int c; ///< color
 };
 
 int color_shade(int c, double k);
@@ -27,7 +27,7 @@ class Rainbow{
   // Additional data for speed-up get() method.
   // Use update_data() to update it after changing RD.
   std::vector<double> vv;
-  std::vector<int> cc,rr,gg,bb;
+  std::vector<int> cc,aa,rr,gg,bb;
   int N, dir; // data size, data order(+/-1)
   double lv, hv; // min/max data value
   int lc, hc; // color for data below lv and above hv

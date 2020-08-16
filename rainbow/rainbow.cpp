@@ -4,9 +4,9 @@
 
 int
 color_shade(int c, double k){
-  unsigned char r=(c>>16)&0xff, g=(c>>8)&0xff,  b=c&0xff;
+  unsigned char a=(c>>24)&0xff, r=(c>>16)&0xff, g=(c>>8)&0xff,  b=c&0xff;
   r=rint(r*k); g=rint(g*k); b=rint(b*k);
-  return (r << 16) + (g << 8) + b;
+  return (a << 24) + (r << 16) + (g << 8) + b;
 }
 
 /********************************************************************/
@@ -37,6 +37,7 @@ Rainbow::update_data(){
   N = RD.size();
   vv.resize(N);
   cc.resize(N);
+  aa.resize(N);
   rr.resize(N);
   gg.resize(N);
   bb.resize(N);
@@ -45,6 +46,7 @@ Rainbow::update_data(){
   for (int i=0; i<N; i++){
     vv[i] = RD[i].v;
     cc[i] = RD[i].c;
+    aa[i]  = (cc[i] >> 24) & 0xFF;
     rr[i]  = (cc[i] >> 16) & 0xFF;
     gg[i]  = (cc[i] >> 8) & 0xFF;
     bb[i]  = cc[i] & 0xFF;
@@ -63,21 +65,21 @@ Rainbow::set_color_string(double min, double max, const char *colors){
   RD.resize(0);
   for (int i=0; i<strlen(colors); i++) {
     switch (colors[i]){
-      case 'R': RD.push_back({0, 0xff0000}); break;
-      case 'G': RD.push_back({0, 0x00ff00}); break;
-      case 'B': RD.push_back({0, 0x0000ff}); break;
-      case 'C': RD.push_back({0, 0x00ffff}); break;
-      case 'M': RD.push_back({0, 0xff00ff}); break;
-      case 'Y': RD.push_back({0, 0xffff00}); break;
-      case 'W': RD.push_back({0, 0xffffff}); break;
-      case 'K': RD.push_back({0, 0x000000}); break;
-      case 'r': RD.push_back({0, 0x400000}); break;
-      case 'g': RD.push_back({0, 0x004000}); break;
-      case 'b': RD.push_back({0, 0x000040}); break;
-      case 'c': RD.push_back({0, 0x004040}); break;
-      case 'm': RD.push_back({0, 0x400040}); break;
-      case 'y': RD.push_back({0, 0x404000}); break;
-      case 'w': RD.push_back({0, 0x404040}); break;
+      case 'R': RD.push_back({0, 0xffff0000}); break;
+      case 'G': RD.push_back({0, 0xff00ff00}); break;
+      case 'B': RD.push_back({0, 0xff0000ff}); break;
+      case 'C': RD.push_back({0, 0xff00ffff}); break;
+      case 'M': RD.push_back({0, 0xffff00ff}); break;
+      case 'Y': RD.push_back({0, 0xffffff00}); break;
+      case 'W': RD.push_back({0, 0xffffffff}); break;
+      case 'K': RD.push_back({0, 0xff000000}); break;
+      case 'r': RD.push_back({0, 0xff400000}); break;
+      case 'g': RD.push_back({0, 0xff004000}); break;
+      case 'b': RD.push_back({0, 0xff000040}); break;
+      case 'c': RD.push_back({0, 0xff004040}); break;
+      case 'm': RD.push_back({0, 0xff400040}); break;
+      case 'y': RD.push_back({0, 0xff404000}); break;
+      case 'w': RD.push_back({0, 0xff404040}); break;
     }
   }
   set_range(min, max);
@@ -108,9 +110,10 @@ Rainbow::get(double val) const{
   while (i<N-1 && (dir*(val - vv[i]) > 0)) i++;
 
   double k = (val - vv[i-1]) / (vv[i]-vv[i-1]);
+  int a =  aa[i-1] + rint((aa[i] - aa[i-1])*k);
   int r =  rr[i-1] + rint((rr[i] - rr[i-1])*k);
   int g =  gg[i-1] + rint((gg[i] - gg[i-1])*k);
   int b =  bb[i-1] + rint((bb[i] - bb[i-1])*k);
-  return (r << 16) + (g << 8) + b;
+  return (a << 24) + (r << 16) + (g << 8) + b;
 }
 

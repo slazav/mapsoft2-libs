@@ -52,6 +52,9 @@ In addition there is `color_shade` function for shading colors:
 --------------
 ## Changelog:
 
+2020.08.16 V.Zavjalov 3.0:
+- switch to ARGB colors
+
 2020.08.16 V.Zavjalov 2.1:
 - Add empty constructor, rewrite Readme
 
