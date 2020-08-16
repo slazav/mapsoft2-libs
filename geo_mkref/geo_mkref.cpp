@@ -351,3 +351,18 @@ GeoMap geo_mkref(const GeoData & data, const Opt & o){
   return geo_mkref(opts);
 }
 
+GeoMap
+geo_mkref_web(){
+  GeoMap map;
+  // max latitude is set to have square map. cnv(mlon,mlat) = (1,1)*20037508.342789244
+  double mlat = 85.0511288, mlon=180.0;
+  double wr = 256;
+  map.image_size = iPoint(wr,wr);
+  map.proj = "WEB";
+  map.name = "default";
+  map.ref.emplace(dPoint( 0, 0),dPoint(-mlon, mlat));
+  map.ref.emplace(dPoint(wr, 0),dPoint( mlon, mlat));
+  map.ref.emplace(dPoint(wr,wr),dPoint( mlon, -mlat));
+  map.ref.emplace(dPoint( 0,wr),dPoint(-mlon, -mlat));
+  return map;
+}

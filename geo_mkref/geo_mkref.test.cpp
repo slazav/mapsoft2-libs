@@ -330,6 +330,22 @@ main(){
 
     }
 
+
+    {  // geo_mkref_web
+      GeoMap m = geo_mkref_web();
+      ConvMap c(m);
+      assert_eq(m.name, "default");
+      assert_eq(m.proj, "WEB");
+      assert_eq(m.ref.size(), 4);
+      assert_eq(m.image_size, iPoint(256,256));
+
+      dPoint p(180,0);
+      c.bck(p);
+      assert_feq(p.x, 256, 1e-10);
+      assert_feq(p.y, 128, 1e-10);
+
+    }
+
   }
   catch (Err E){
     std::cerr << "Error: " << E.str() << "\n";

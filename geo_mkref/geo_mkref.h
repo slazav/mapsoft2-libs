@@ -30,4 +30,8 @@ GeoMap geo_mkref(const Opt & o);
 // no mkref option
 GeoMap geo_mkref(const GeoData & data, const Opt & o);
 
+// create default web-mercator projection (256x256 image)
+GeoMap geo_mkref_web();
+
+
 #endif
