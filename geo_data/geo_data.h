@@ -316,6 +316,9 @@ struct GeoData{
 //  /// get range of all data in lon-lat coords
 //  dRect range() const;
 
+  dRect bbox_wpts() const;
+  dRect bbox_trks() const;
+
   // add data from another geo_data object
 //  void add(const geo_data & w);
 

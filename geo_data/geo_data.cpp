@@ -43,3 +43,17 @@ GeoMap operator* (const double k, const GeoMap & l) { return l*k; }
 
 GeoMap operator+ (const dPoint & p, const GeoMap & l) { return l+p; }
 
+
+dRect
+GeoData::bbox_trks() const {
+  dRect ret;
+  for (auto i:trks) ret.expand(i.bbox());
+  return ret;
+}
+
+dRect
+GeoData::bbox_wpts() const {
+  dRect ret;
+  for (auto i:wpts) ret.expand(i.bbox());
+  return ret;
+}
