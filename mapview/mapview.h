@@ -29,8 +29,8 @@
 // to the Gtk::Notebook:
 #define PAGE_WPTS 0
 #define PAGE_TRKS 1
-#define PAGE_MAPS 2
-#define PAGE_VMAP 3
+#define PAGE_VMAP 2
+#define PAGE_MAPS 3
 
 class Mapview : public Gtk::ApplicationWindow {
 public:
