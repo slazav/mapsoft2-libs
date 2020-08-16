@@ -185,15 +185,17 @@ void
 Mapview::add_files(const std::vector<std::string> & files) {
   if (files.size()==0) return;
 
-  GeoData data;
+  try {
+    GeoData data;
 //  viewer.start_waiting();
-  for (auto const & f:files){
-    spanel.message("Load file: " + f);
-    try { read_geo(f, data, opts); }
-    catch(Err & e) { dlg_err.call(e); }
-  }
-  add_data(data, true);
+    for (auto const & f:files){
+      spanel.message("Load file: " + f);
+      read_geo(f, data, opts);
+    }
+    add_data(data, true);
 //  viewer.stop_waiting();
+  }
+  catch(Err & e) { dlg_err.call(e); }
 }
 
 
@@ -234,17 +236,23 @@ Mapview::new_project(bool force) {
 
 void
 Mapview::open_mapdb(const std::string & dir){
-  panel_mapdb->open(dir);
-  gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
-  GeoMap r = panel_mapdb->get_gobj()->get_ref();
-  if (!r.empty())
-    set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
+  try {
+    panel_mapdb->open(dir);
+    gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
+    GeoMap r = panel_mapdb->get_gobj()->get_ref();
+    if (!r.empty())
+      set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)));
+  }
+  catch (Err & e) { dlg_err.call(e); }
 }
 
 void
 Mapview::close_mapdb(){
-  gobj.del(panel_mapdb->get_gobj());
-  panel_mapdb->close();
+  try {
+    gobj.del(panel_mapdb->get_gobj());
+    panel_mapdb->close();
+  }
+  catch (Err & e) { dlg_err.call(e); }
 }
 
 
