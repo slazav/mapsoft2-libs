@@ -56,10 +56,12 @@ Mapview::Mapview(const Opt & o) :
     panels->set_scrollable(false);
     panels->set_size_request(100,-1);
 
+    // order is important: page number should be same as layer depth
+    // (PAGE_* constants)
     panels->append_page(*panel_wpts.get(), "WPT", "WPT");
     panels->append_page(*panel_trks.get(), "TRK", "TRK");
-    panels->append_page(*panel_maps.get(), "MAP", "MAP");
     panels->append_page(*panel_mapdb.get(), "MAPDB", "MAPDB");
+    panels->append_page(*panel_maps.get(), "MAP", "MAP");
 
 
     /// Build main paned: Viewer + Panels
