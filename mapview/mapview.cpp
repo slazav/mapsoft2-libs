@@ -94,8 +94,13 @@ Mapview::Mapview(const Opt & o) :
     load_acc(); // Load accelerator map
 
     // set default map projection -- web mercator
-    viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(geo_mkref_web())), false);
-    tmpref = true;
+    {
+      viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(geo_mkref_web())), false);
+      // viewer does not know window size. We requested 640x480, just scale 2 times
+      viewer.set_origin(dPoint(128,64));
+      viewer.rescale(4.0, iPoint());
+      tmpref = true;
+    }
 
     show_all(); // show window
 
