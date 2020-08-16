@@ -1,11 +1,12 @@
-MOD_HEADERS := colors.h image.h image_r.h image_t.h image_colors.h\
+MOD_HEADERS := colors.h image.h image_r.h image_t.h image_srtm.h\
+               image_colors.h image_cache.h\
                io.h io_gif.h io_jpeg.h io_png.h io_tiff.h\
-               image_cache.h
 
-MOD_SOURCES := colors.cpp image.cpp image_t.cpp image_colors.cpp\
+MOD_SOURCES := colors.cpp image.cpp image_t.cpp image_srtm.cpp\
+               image_colors.cpp\
                io.cpp io_gif.cpp io_jpeg.cpp io_png.cpp io_tiff.cpp\
 
-SIMPLE_TESTS := colors image_r image_t image_colors\
+SIMPLE_TESTS := colors image_r image_t image_colors image_srtm\
                 io io_gif io_jpeg io_png io_tiff\
                 image_reduce image_cache
 
