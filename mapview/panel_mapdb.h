@@ -98,6 +98,10 @@ public:
   // open MapDB project, show the panel
   void open(const std::string & mapdir){
     gobj.reset(new GObjMapDB(mapdir, Opt()));
+
+    if (gobj->get_ref().empty())
+      throw Err() << "MapDB panel: reference is not set";
+
     store_st->clear();
     store_gr->clear();
     for (auto const & st: gobj->get_data()){
@@ -107,7 +111,6 @@ public:
       row[cols_st.name]    = ((GObjMapDB::DrawingStep*)st.get())->get_name();
       row[cols_st.obj]     = st;
     }
-
     for (auto const & gr: gobj->get_groups()){
       auto it = store_gr->append();
       Gtk::TreeModel::Row row = *it;
