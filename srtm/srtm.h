@@ -61,19 +61,7 @@ class SRTM {
   /// load data into cache
   bool load(const iPoint & key);
 
-  /// how to draw the surface
-  enum draw_mode_t {
-    SRTM_DRAW_NONE,
-    SRTM_DRAW_DEFAULT, // heights shaded with slope value
-    SRTM_DRAW_HEIGHTS,
-    SRTM_DRAW_SLOPES,
-  } draw_mode;
-
-
   public:
-
-  Rainbow R; // color converter
-
 
     /// Constructor.
     SRTM(const Opt & o = Opt());
@@ -117,30 +105,6 @@ class SRTM {
 
     /// get slope, 4-point interpolation, long-lat coordinates
     double get_slope_int4(const dPoint & p, const bool interp=false);
-
-
-/*
-    /// get point color
-    uint32_t get_color_fast(const int x, const int y) override {
-      switch (draw_mode){
-
-        case SRTM_DRAW_NONE: return 0;
-
-        case SRTM_DRAW_SLOPES:
-          return R.get(get_slope(x,y, false));
-
-        case SRTM_DRAW_HEIGHTS:
-          return R.get(get_val(x,y,false));
-
-        case SRTM_DRAW_DEFAULT: {
-          uint32_t c = R.get(get_val(x,y,false));
-          double s = get_slope(x,y, false);
-          return color_shade(c, 1-s/90.0);
-        }
-      }
-      return 0;
-    }
-*/
 
 };
 

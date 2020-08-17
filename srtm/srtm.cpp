@@ -110,28 +110,6 @@ SRTM::set_opt(const Opt & opt){
     srtm_cache.clear();
   }
 
-  // srtm drawing mode:
-  auto m = opt.get("srtm_draw_mode", "default");
-  if      (m == "none"){
-    draw_mode = SRTM_DRAW_NONE;
-  }
-  else if (m == "heights" || m == "default") {
-    draw_mode = (m == "heights")? SRTM_DRAW_HEIGHTS : SRTM_DRAW_DEFAULT;
-    R = Rainbow(
-      opt.get("srtm_hmin", 0.0),
-      opt.get("srtm_hmax", 5000.0),
-      RAINBOW_NORMAL);
-  }
-  else if (m == "slopes"){
-    draw_mode = SRTM_DRAW_SLOPES;
-    R = Rainbow(
-      opt.get("srtm_smin", 30.0),
-      opt.get("srtm_smax", 55.0),
-      RAINBOW_BURNING);
-  }
-  else throw Err() << "unknown value of srtm_draw_mode parameter "
-    << "(none, heights, or slopes expected): " << m;
-
 }
 
 /************************************************/
