@@ -1,6 +1,7 @@
 #ifndef IMAGE_SRTM_H
 #define IMAGE_SRTM_H
 
+#include <set>
 #include <string>
 #include <mutex>
 
@@ -19,6 +20,10 @@ or .hgt.gz files. Each one contains 1x1 degree area.
 
 Default data directory is DIR=$HOME/.srtm_data
 
+
+PS. It looks like the Image interface is not used. Probably it would be better
+to move this into a separate folder or merge with gobj_srtm...
+
 */
 
 // default size of SRTM cache
@@ -26,6 +31,9 @@ Default data directory is DIR=$HOME/.srtm_data
 
 // default data width
 #define SRTM_DEF_WIDTH 1201
+
+// max size of a hole for interpolation
+#define SRTM_MAX_INT_PTS 100000
 
 //
 #define SRTM_VAL_NOFILE -32767 // file not found
@@ -65,9 +73,10 @@ class ImageSRTM: public Image {
     SRTM_DRAW_SLOPES,
   } draw_mode;
 
-  Rainbow R; // color converter
 
   public:
+
+  Rainbow R; // color converter
 
 
     /// Constructor.
@@ -77,13 +86,45 @@ class ImageSRTM: public Image {
     // color options.
     void set_opt(const Opt & opt);
 
+
+    // Find set of points with same value (used
+    // for hole interpolation in get_val) and its border.
+    // `max` is max.set size (default is 0 for no limits).
+    void plane_and_border(const iPoint& p,
+       std::set<iPoint>& set, std::set<iPoint>& brd, int max=0);
+
+
     /// get altitude value at a given point (integer coordinates)
     short get_val(const int x, const int y, const bool interp=false);
 
-    /// get slope (in degrees) at a given point (integer coordinates)
-    double get_slope(const int x, const int y, const bool interp);
+    /// get altitude value at a given point (long-lat coordinates)
+    short get_val(const dPoint & p, const bool interp=false) {
+      return get_val(rint(p.x*(srtm_width-1)), rint(p.y*(srtm_width-1)), interp); }
 
-    // get point color
+    /// get value, 4-point linear interpolation, long-lat coordinates
+    short get_val_int4(const dPoint & p, const bool interp=false);
+
+    /// get value, 16-point cubic interpolation, long-lat coordinates
+    short get_val_int16(const dPoint & p, const bool interp=false);
+
+
+    /// set new hight in cached data (used for interpolation)
+    short set_val(const int x, const int y, const short h);
+
+
+    /// get slope (in degrees) at a given point (integer coordinates)
+    double get_slope(const int x, const int y, const bool interp=false);
+
+    /// get slope (in degrees) at a given point (long-lat coordinates)
+    short get_slope(const dPoint & p, const bool interp=false) {
+      return get_slope(rint(p.x*(srtm_width-1)), rint(p.y*(srtm_width-1)), interp); }
+
+    /// get slope, 4-point interpolation, long-lat coordinates
+    double get_slope_int4(const dPoint & p, const bool interp=false);
+
+
+
+    /// get point color
     uint32_t get_color_fast(const int x, const int y) override {
       switch (draw_mode){
 
@@ -96,7 +137,7 @@ class ImageSRTM: public Image {
           return R.get(get_val(x,y,false));
 
         case SRTM_DRAW_DEFAULT: {
-          double c = R.get(get_val(x,y,false));
+          uint32_t c = R.get(get_val(x,y,false));
           double s = get_slope(x,y, false);
           return color_shade(c, 1-s/90.0);
         }
