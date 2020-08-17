@@ -1,5 +1,5 @@
-#ifndef IMAGE_SRTM_H
-#define IMAGE_SRTM_H
+#ifndef SRTM_H
+#define SRTM_H
 
 #include <set>
 #include <string>
@@ -7,7 +7,7 @@
 
 #include "rainbow/rainbow.h"
 #include "cache/cache.h"
-#include "image_r.h"
+#include "image/image_r.h"
 
 /*
 Read-only access to a SRTM data.
@@ -19,10 +19,6 @@ SRTM data is stored in [SN][0-9][0-9][EF][0-1][0-9][0-9].hgt
 or .hgt.gz files. Each one contains 1x1 degree area.
 
 Default data directory is DIR=$HOME/.srtm_data
-
-
-PS. It looks like the Image interface is not used. Probably it would be better
-to move this into a separate folder or merge with gobj_srtm...
 
 */
 
@@ -42,7 +38,7 @@ to move this into a separate folder or merge with gobj_srtm...
 #define SRTM_INT_ZERO    20000 // zero on interpolated data
 #define SRTM_INT_MIN     10000 // min of interpolated data (for testing)
 
-class ImageSRTM: public Image {
+class SRTM {
 
   /// SRTM data folder.
   std::string srtm_dir;
@@ -80,7 +76,7 @@ class ImageSRTM: public Image {
 
 
     /// Constructor.
-    ImageSRTM(const Opt & o = Opt());
+    SRTM(const Opt & o = Opt());
 
     // Options can be used to change data dir and
     // color options.
@@ -123,7 +119,7 @@ class ImageSRTM: public Image {
     double get_slope_int4(const dPoint & p, const bool interp=false);
 
 
-
+/*
     /// get point color
     uint32_t get_color_fast(const int x, const int y) override {
       switch (draw_mode){
@@ -144,11 +140,8 @@ class ImageSRTM: public Image {
       }
       return 0;
     }
+*/
 
-    std::ostream & print (std::ostream & s) const override{
-      s << "ImageSRTM(" << srtm_dir << ")";
-      return s;
-    }
 };
 
 #endif

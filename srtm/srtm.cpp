@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <queue>
-#include "image_srtm.h"
+#include "srtm.h"
 #include "geom/point_int.h"
 #include <zlib.h>
 
@@ -16,7 +16,7 @@ read_file(const std::string & file, const size_t srtm_width){
   int length = srtm_width*srtm_width*sizeof(short);
 
   if (length != fread(im.data(), 1, length, F)){
-    throw Err() << "ImageSRTM: bad .hgt file: " << file;
+    throw Err() << "SRTM: bad .hgt file: " << file;
     return ImageR();
   }
   for (int i=0; i<length/2; i++){ // swap bytes
@@ -37,7 +37,7 @@ read_zfile(const std::string & file, const size_t srtm_width){
   int length = srtm_width*srtm_width*sizeof(short);
 
   if (length != gzread(F, im.data(), length)){
-    throw Err() << "ImageSRTM: bad .hgt.gz file: " << file;
+    throw Err() << "SRTM: bad .hgt.gz file: " << file;
     return ImageR();
   }
   for (int i=0; i<length/2; i++){ // swap bytes
@@ -49,7 +49,7 @@ read_zfile(const std::string & file, const size_t srtm_width){
 }
 
 bool
-ImageSRTM::load(const iPoint & key){
+SRTM::load(const iPoint & key){
 
   if ((key.x < -180) || (key.x >= 180) ||
       (key.y <  -90) || (key.y >=  90)) return false;
@@ -70,7 +70,7 @@ ImageSRTM::load(const iPoint & key){
     im = read_file(srtm_dir + "/" + file.str(), srtm_width);
 
   if (im.is_empty())
-    std::cerr << "ImageSRTM: can't find file: " << file.str() << "\n";
+    std::cerr << "SRTM: can't find file: " << file.str() << "\n";
 
   srtm_cache.add(key, im);
   return !im.is_empty();
@@ -79,12 +79,12 @@ ImageSRTM::load(const iPoint & key){
 
 /************************************************/
 
-ImageSRTM::ImageSRTM(const Opt & o): srtm_cache(SRTM_CACHE_SIZE), srtm_width(0) {
+SRTM::SRTM(const Opt & o): srtm_cache(SRTM_CACHE_SIZE), srtm_width(0) {
   set_opt(o);
 }
 
 void
-ImageSRTM::set_opt(const Opt & opt){
+SRTM::set_opt(const Opt & opt){
 
   // Data directory. Default: $HOME/.srtm_data
   std::string dir = opt.get("srtm_dir",
@@ -140,7 +140,7 @@ ImageSRTM::set_opt(const Opt & opt){
 // Find set of points with same value (used
 // for hole interpolation in get_val) and its border.
 void
-ImageSRTM::plane_and_border(const iPoint& p,
+SRTM::plane_and_border(const iPoint& p,
      std::set<iPoint>& set, std::set<iPoint>& brd, int max){
 
   std::queue<iPoint> q;
@@ -171,7 +171,7 @@ get_crd(int x, int w, int &k, int &c){
 }
 
 short
-ImageSRTM::get_val(const int x, const int y, const bool interp){
+SRTM::get_val(const int x, const int y, const bool interp){
   // find tile number and coordinate on the tile
   iPoint key, crd;
   get_crd(x, srtm_width, key.x, crd.x);
@@ -226,7 +226,7 @@ ImageSRTM::get_val(const int x, const int y, const bool interp){
 
 
 short
-ImageSRTM::get_val_int4(const dPoint & p, const bool interp){
+SRTM::get_val_int4(const dPoint & p, const bool interp){
   double x = p.x*(srtm_width-1);
   double y = p.y*(srtm_width-1);
   int x1 = floor(x), x2 = x1+1;
@@ -275,7 +275,7 @@ int_holes(double h[4]){
 
 
 short
-ImageSRTM::get_val_int16(const dPoint & p, const bool interp){
+SRTM::get_val_int16(const dPoint & p, const bool interp){
   double x = p.x*(srtm_width-1);
   double y = p.y*(srtm_width-1);
   int x0 = floor(x);
@@ -295,7 +295,7 @@ ImageSRTM::get_val_int16(const dPoint & p, const bool interp){
 /************************************************/
 
 short
-ImageSRTM::set_val(const int x, const int y, const short h){
+SRTM::set_val(const int x, const int y, const short h){
   // find tile number and coordinate on the tile
   iPoint key, crd;
   get_crd(x, srtm_width, key.x, crd.x);
@@ -313,7 +313,7 @@ ImageSRTM::set_val(const int x, const int y, const short h){
 /************************************************/
 
 double
-ImageSRTM::get_slope(const int x, const int y, const bool interp){
+SRTM::get_slope(const int x, const int y, const bool interp){
   int h  = get_val(x,   y, interp);
   int h1 = get_val(x-1, y, interp);
   int h2 = get_val(x+1, y, interp);
@@ -335,7 +335,7 @@ ImageSRTM::get_slope(const int x, const int y, const bool interp){
 
 
 double
-ImageSRTM::get_slope_int4(const dPoint & p, const bool interp){
+SRTM::get_slope_int4(const dPoint & p, const bool interp){
   double x = p.x*(srtm_width-1);
   double y = p.y*(srtm_width-1);
   int x1 = floor(x), x2 = x1+1;
