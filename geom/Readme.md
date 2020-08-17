@@ -286,4 +286,32 @@ Class for walking alone a line (2D).
 * `figure_bbox(string)` -- Read a figure from the string and get its bounding box.
   The figure can be Point, Line/Multiline, Rect.
 
+-----------------
+## line_int.h -- extra functions for handling iPoint sets
 
+* `iPoint adjacent(const iPoint &p, int dir)` --  Find one of 8 adjecent points.
+  Direction dir=0..7 corresponds to NW,N,NE,E,SE,S,SW,W. For dir>7 and
+  dir<0 positive modulus is used: `adjacent(p, d+8*n) = adjacent(p, d)`
+
+* `int is_adjacent(const iPoint & p1, const iPoint & p2)` --
+  Check if points are adjecent. If yes, return direction from p1 to p2, -1
+  overwise.
+
+* `std::set<iPoint> border_set(const std::set<iPoint>& pset)` -- Make border
+  of a set of points.
+
+* `bool add_set_and_border(const iPoint & p,
+    std::set<iPoint>& pset, std::set<iPoint>& bord)` --  Consistently add a
+  point into a set and its border. Return true is the point was added (was
+  not member of the set before). This is much faster then making a set and
+  then using `border()`.
+
+* `iMultiLine border_line(const std::set<iPoint>& pset)` --
+  Convert set of points into its border line. ote: for point [0,0] border
+  is [[0,0],[0,1],[1,1],[1,0]] (for dPoints one may want to shift it by -[0.5,0.5]).
+
+* `std::set<iPoint> bres_line(iPoint p1, iPoint p2,
+                      const int w=0, const int sh=0)` -- Bresenham
+algorythm: draw a line from `p1` to `p2`, return set of points. Line
+thickness is `2w+1` points, `sh` is shift to the right (or left if it is
+negative). See details in https://github.com/slazav/bresenham/blob/master/br.c
