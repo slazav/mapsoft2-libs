@@ -13,6 +13,14 @@ spinbutton *{
   min-width: 0px;
 }
 
+button {
+  padding: 0px 2px;
+  min-height: 0px;
+  min-width:  0px;
+}
+
+
 .rainbow_widget {
   margin:5px;
 }
+
