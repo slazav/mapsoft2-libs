@@ -21,6 +21,9 @@ RainbowWidget::RainbowWidget( int width, int height,
   img.fill32(0);
   for (int i = 0; i<width; i++){
     uint32_t c = R.get(i/(double)(width-1));
+    // Gdk::Pixbuf has opposite color order, BGR?
+    // Let's swap bytes:
+    c = (c&0xFF00FF00) | ((c&0xFF) << 16) | ((c&0xFF0000) >> 16);
     for (int j = 3; j < height; j++) img.set32(i,j,c);
   }
 
