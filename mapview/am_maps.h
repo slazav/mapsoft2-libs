@@ -231,9 +231,5 @@ class AddPodmMap : public ActionMode{
     }
 };
 
-
-
-
-GeoMap geo_mkref_web();
 #endif
 
