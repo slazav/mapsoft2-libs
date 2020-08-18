@@ -1,0 +1,18 @@
+
+/* smaller spinbuttons in rainbow widget: */
+
+spinbutton{
+  min-height: 0px;
+  min-width:  0px;
+}
+
+spinbutton *{
+  padding: 2px 2px;
+  margin: 0px;
+  min-height: 0px;
+  min-width: 0px;
+}
+
+.rainbow_widget {
+  margin:5px;
+}
