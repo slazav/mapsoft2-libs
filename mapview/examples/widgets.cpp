@@ -3,6 +3,7 @@
 #include <gtkmm.h>
 #include "err/err.h"
 
+#include "mapview/css.h"
 #include "mapview/w_rainbow.h"
 #include "mapview/w_comboboxes.h"
 #include "mapview/w_coord_box.h"
@@ -30,30 +31,6 @@ class MyWindow : public Gtk::ApplicationWindow {
   void on_crds_jump(const dPoint & p){
     std::cerr << "Jump to: " << p << "\n";
   }
-
-  // load css
-  void load_css(){
-    std::string fname = "./widgets.css";
-    auto css_provider = Gtk::CssProvider::create();
-    if (!css_provider) throw Err() << "can't get Gtk::CssProvider";
-    auto style_context = Gtk::StyleContext::create();
-    if (!style_context) throw Err() << "can't get Gtk::StyleContext";
-    struct stat st_buf;
-    try{
-      if (stat(fname.c_str(), &st_buf) == 0 &&
-        css_provider->load_from_path(fname)){
-        auto screen = get_screen();
-        if (!screen) throw Err() << "can't get screen";
-        style_context->add_provider_for_screen(
-           screen, css_provider,
-           GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-      }
-    }
-    catch (Glib::Error e){
-      std::cerr << "Mapview: Reading CSS files: " << e.what() << "\n";
-    }
-  }
-
 
   /***********************/
   MyWindow(){
@@ -112,7 +89,7 @@ class MyWindow : public Gtk::ApplicationWindow {
 
 
     add (*vbox);
-    load_css();
+    load_css("./widgets.css", *this);
     show_all();
   }
 

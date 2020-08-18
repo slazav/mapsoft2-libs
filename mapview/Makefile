@@ -1,4 +1,4 @@
-MOD_HEADERS := mapview.h\
+MOD_HEADERS := mapview.h css.h\
                dlg_err.h dlg_chconf.h\
                panel_status.h panel.h\
                panel_wpts.h panel_trks.h panel_maps.h\
@@ -8,7 +8,7 @@ MOD_HEADERS := mapview.h\
                w_rainbow.h w_simple_combo.h w_comboboxes.h w_coord_box.h\
                w_nom_box.h w_page_box.h
 
-MOD_SOURCES := mapview.cpp\
+MOD_SOURCES := mapview.cpp css.cpp\
                dlg_err.cpp dlg_chconf.cpp\
                panel_wpts.cpp panel_trks.cpp panel_maps.cpp\
                action_manager.cpp\
