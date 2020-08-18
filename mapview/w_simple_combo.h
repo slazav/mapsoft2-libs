@@ -53,7 +53,7 @@ public:
 
   void set_active_id(ID id){
     for (auto i=list->children().begin(); i!=list->children().end(); ++i){
-      if ((*i)[columns.id] != id) continue;
+      if ((ID)(*i)[columns.id] != id) continue;
       set_active(i);
       return;
     }
