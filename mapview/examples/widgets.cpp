@@ -7,12 +7,14 @@
 #include "mapview/w_comboboxes.h"
 #include "mapview/w_coord_box.h"
 #include "mapview/w_nom_box.h"
+#include "mapview/w_page_box.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
   RainbowWidget * rainbow;
   CBCorner * cb_corner;
   CoordBox * crds;
   NomBox   * nom;
+  PageBox  * page;
 
   public:
 
@@ -94,12 +96,20 @@ class MyWindow : public Gtk::ApplicationWindow {
       sigc::mem_fun(this, &MyWindow::on_crds_jump));
 
     /***********************************/
+    // Page box
+    page = manage(new PageBox());
+
+
+    /***********************************/
+    /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
     vbox->pack_start(*rainbow, false, true, 5);
-    vbox->pack_start(*cb_box, false, true, 5);
-    vbox->pack_start(*crds, false, true, 5);
-    vbox->pack_start(*nom, false, true, 5);
+    vbox->pack_start(*cb_box,  false, true, 5);
+    vbox->pack_start(*crds,    false, true, 5);
+    vbox->pack_start(*nom,     false, true, 5);
+    vbox->pack_start(*page,    false, true, 5);
+
 
     add (*vbox);
     load_css();
