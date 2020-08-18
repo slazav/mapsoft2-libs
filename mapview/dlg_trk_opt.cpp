@@ -5,15 +5,20 @@ using namespace std;
 Opt
 DlgTrkOpt::get_opt() const{
   Opt o;
-  if (m_normal->get_active()) o.put<string>("trk_draw_mode", "normal");
-  if (m_speed->get_active())  o.put<string>("trk_draw_mode", "speed");
-  if (m_height->get_active()) o.put<string>("trk_draw_mode", "height");
-  if (dots->get_active())   o.put<bool>("trk_draw_dots", "");
-  if (arrows->get_active()) o.put<bool>("trk_draw_arrows", "");
-  o.put<int>("trk_draw_v1", rv->get_v1());
-  o.put<int>("trk_draw_v2", rv->get_v2());
-  o.put<int>("trk_draw_h1", rh->get_v1());
-  o.put<int>("trk_draw_h2", rh->get_v2());
+  if (m_normal->get_active())
+    o.put<string>("trk_draw_mode", "normal");
+  o.put<bool>("trk_draw_dots", dots->get_active());
+  o.put<bool>("trk_draw_arrows", arrows->get_active());
+  if (m_speed->get_active()) {
+    o.put<string>("trk_draw_mode", "speed");
+    o.put<int>("trk_draw_min", rv->get_v1());
+    o.put<int>("trk_draw_max", rv->get_v2());
+  }
+  if (m_height->get_active()) {
+    o.put<string>("trk_draw_mode", "height");
+    o.put<int>("trk_draw_min", rh->get_v1());
+    o.put<int>("trk_draw_max", rh->get_v2());
+  }
   return o;
 }
 
@@ -24,15 +29,15 @@ DlgTrkOpt::set_opt(const Opt & o){
   else if (mode == "m_height") m_height->set_active();
   else m_normal->set_active();
 
-  if (o.exists("trk_draw_dots")) dots->set_active();
-  if (o.exists("trk_draw_arrows")) arrows->set_active();
+  if (o.get("trk_draw_dots", true)) dots->set_active();
+  if (o.get("trk_draw_arrows", true)) arrows->set_active();
   rv->set(
-    o.get<int>("trk_draw_v1", 0),
-    o.get<int>("trk_draw_v2", 0)
+    o.get<int>("trk_draw_min", 0),
+    o.get<int>("trk_draw_max", 10)
   );
   rh->set(
-    o.get<int>("trk_draw_h1", 0),
-    o.get<int>("trk_draw_h2", 0)
+    o.get<int>("trk_draw_min", 0),
+    o.get<int>("trk_draw_max", 1000)
   );
 }
 
@@ -70,9 +75,9 @@ DlgTrkOpt::DlgTrkOpt(){
   arrows = manage(new Gtk::CheckButton("draw arrows"));
 
   rv =  manage(
-    new RainbowWidget(256,8, 0, 999, 1, 1));
+    new RainbowWidget(256,8, 0, 999, 1, 1, "BCGYRM"));
   rh =  manage(
-    new RainbowWidget(256,8, -999, 9999, 10, 0));
+    new RainbowWidget(256,8, -999, 9999, 10, 0, "BCGYRM"));
   rv->set(0,10);
   rh->set(0,2000);
 
