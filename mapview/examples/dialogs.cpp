@@ -35,11 +35,13 @@ class MyWindow : public Gtk::ApplicationWindow {
     // Error dialog
     auto b_err = manage(new Gtk::Button("DlgErr"));
     b_err->signal_clicked().connect( sigc::mem_fun(this, &MyWindow::on_err));
+    err.set_transient_for(*this);
 
     // Confirmation dialog
     auto b_conf = manage(new Gtk::Button("DlgConfirm"));
     b_conf->signal_clicked().connect(
       sigc::bind(sigc::mem_fun(this, &MyWindow::on_conf), false));
+    conf.set_transient_for(*this);
 
     /***********************************/
     // Main vbox

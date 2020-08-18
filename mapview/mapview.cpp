@@ -22,6 +22,10 @@ Mapview::Mapview(const Opt & o) :
       sigc::bind(sigc::hide(sigc::mem_fun (this, &Mapview::exit)),false));
     set_default_size(640,480);
 
+    /// dialogs
+    dlg_err.set_transient_for(*this);
+    dlg_confirm.set_transient_for(*this);
+
     /// global keypress event -- send all keys to the viewer first:
     signal_key_press_event().connect (
       sigc::mem_fun (&viewer, &DThreadViewer::on_key_press));
