@@ -12,6 +12,7 @@
 
 #include "am_file.h"
 #include "am_view.h"
+#include "am_trks.h"
 #include "am_maps.h"
 #include "am_mapdb.h"
 #include "am_panel.h"
@@ -65,6 +66,8 @@ ActionManager::ActionManager (Mapview * mapview_):
 
     ADD_ACT(FullScreen,      "View")
     ADD_ACT(HidePanels,      "View")
+
+    ADD_ACT(AMTrkOpt,        "Trks")
 
     ADD_ACT(AddMapyCZ,       "Maps")
     ADD_ACT(AddOSM,          "Maps")
@@ -147,6 +150,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     /* Cleate menus */
     actions->add(Gtk::Action::create("MenuFile",  "_File"));
     actions->add(Gtk::Action::create("MenuView",  "_View"));
+    actions->add(Gtk::Action::create("MenuTrks",  "_Tracks"));
     actions->add(Gtk::Action::create("MenuMaps",  "_Maps"));
     actions->add(Gtk::Action::create("MenuMapDB", "Map_DB"));
 
