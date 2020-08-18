@@ -1,12 +1,19 @@
 #include "w_comboboxes.h"
 
-CBProj::CBProj(){
+CBProj::CBProj(): SimpleCombo(){
   const pair_t data_list[] = {
-    pair_t("WGS", "WGS"),
-    pair_t("WEB", "WEB"),
+    pair_t("WGS",    "WGS"),
+    pair_t("EWEB",   "mercator"),
+    pair_t("WEB",    "spherical web mercator"),
+    pair_t("FI",     "KKJ (Finland)"),
+    pair_t("ETRS89", "ETRS89 (Finland)"),
+    pair_t("GB",     "EPSG:27700 (Great Britain)"),
+    pair_t("CH",     "CH (Switzerland)"),
+    pair_t("SU_LL",  "Pulkovo-1942 (USSR), lon-lat"),
   };
   set_values(data_list,
     data_list+sizeof(data_list)/sizeof(pair_t));
+//  set_entry_text_column(0);
 }
 
 

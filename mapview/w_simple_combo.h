@@ -21,7 +21,7 @@ template <typename ID>
 class SimpleCombo : public Gtk::ComboBox {
 public:
   typedef std::pair<ID, std::string> pair_t;
-  SimpleCombo(){ }
+  SimpleCombo(bool has_entry = false): Gtk::ComboBox(has_entry){ }
   SimpleCombo(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder) :
     Gtk::ComboBox(cobject){
     // set widget style (for use in css)

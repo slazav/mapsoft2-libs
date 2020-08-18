@@ -5,10 +5,12 @@
 
 #include "mapview/w_rainbow.h"
 #include "mapview/w_comboboxes.h"
+#include "mapview/w_coord_box.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
   RainbowWidget * rainbow;
   CBCorner * cb_corner;
+  CoordBox * crds;
 
   public:
 
@@ -19,6 +21,10 @@ class MyWindow : public Gtk::ApplicationWindow {
 
   void on_cb_corner_ch(){
     std::cerr << "CBCorner: " << cb_corner->get_active_id() << "\n";
+  }
+
+  void on_crds_jump(const dPoint & p){
+    std::cerr << "Jump to: " << p << "\n";
   }
 
   // load css
@@ -58,24 +64,32 @@ class MyWindow : public Gtk::ApplicationWindow {
       sigc::mem_fun(this, &MyWindow::on_rainbow_ch));
 
     /***********************************/
-    // Comboboxes
-
-    Gtk::HBox * cb_box = manage(new Gtk::HBox);
+    // Combobox
 
     cb_corner = manage( new CBCorner());
     cb_corner->signal_changed().connect(
       sigc::mem_fun(this, &MyWindow::on_cb_corner_ch));
     cb_corner->set_first_id();
 
+    // pack in hbox together with a label
+    Gtk::HBox * cb_box = manage(new Gtk::HBox);
     Gtk::Label * label = manage( new Gtk::Label("Select corner:"));
     cb_box->pack_start(*label, false, false, 2);
     cb_box->pack_start(*cb_corner, false, false, 2);
 
     /***********************************/
+    // Coordinate box
+    crds = manage(new CoordBox());
+    crds->set_ll(dPoint(70.56072,39.43434));
+    crds->signal_jump().connect(
+      sigc::mem_fun(this, &MyWindow::on_crds_jump));
+
+    /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
-    vbox->pack_start(*rainbow, false, true, 0);
-    vbox->pack_start(*cb_box, false, true, 0);
+    vbox->pack_start(*rainbow, false, true, 5);
+    vbox->pack_start(*cb_box, false, true, 5);
+    vbox->pack_start(*crds, false, true, 5);
 
     add (*vbox);
     load_css();
