@@ -1,4 +1,4 @@
-PROGRAMS := widgets
+PROGRAMS := widgets dialogs
 
 MODDIR      := ../../../modules
 include $(MODDIR)/Makefile.inc
