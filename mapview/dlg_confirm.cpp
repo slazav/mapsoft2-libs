@@ -1,16 +1,14 @@
-#include "dlg_chconf.h"
+#include "dlg_confirm.h"
 
-const char * ch_conf_text = "Data was changed. Continue?";
-
-DlgChConf::DlgChConf():
-     Gtk::MessageDialog(ch_conf_text, false,
+DlgConfirm::DlgConfirm(const std::string & msg):
+     Gtk::MessageDialog(msg, false,
                         Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_OK_CANCEL){
   signal_response().connect(
-      sigc::mem_fun(this, &DlgChConf::on_result));
+      sigc::mem_fun(this, &DlgConfirm::on_result));
 }
 
 void
-DlgChConf::call(const sigc::slot<void> & slot){
+DlgConfirm::call(const sigc::slot<void> & slot){
   sigc::connection conn(current_slot);
   conn.disconnect();
   current_slot=slot;
@@ -20,7 +18,7 @@ DlgChConf::call(const sigc::slot<void> & slot){
 }
 
 void
-DlgChConf::on_result(int r){
+DlgConfirm::on_result(int r){
   if (r == Gtk::RESPONSE_OK) signal_ok_.emit();
   hide();
 }

@@ -13,7 +13,7 @@
 #include "geo_data/conv_geo.h"
 #include "geom/rect.h"
 #include "action_manager.h"
-#include "dlg_chconf.h"
+#include "dlg_confirm.h"
 #include "dlg_err.h"
 
 #include "panel_wpts.h"
@@ -52,8 +52,8 @@ public:
     PanelStatus spanel; // status bar
     ActionManager amanager; // menus and action handling
 
-    DlgChConf dlg_chconf; // exit confirmation
-    DlgErr dlg_err;     // error dialog
+    DlgConfirm dlg_confirm; // confirmation
+    DlgErr     dlg_err;     // error dialog
 
 private:
     // Project filename.

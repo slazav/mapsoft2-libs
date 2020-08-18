@@ -5,7 +5,7 @@
 #include "mapview/css.h"
 
 #include "mapview/dlg_err.h"
-#include "mapview/dlg_chconf.h"
+#include "mapview/dlg_confirm.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
 
@@ -15,7 +15,7 @@ class MyWindow : public Gtk::ApplicationWindow {
        "There is no formatting here, just a line of text.");
   }
 
-  DlgChConf conf;
+  DlgConfirm conf;
   void on_conf(bool ok) {
     if (!ok)
       conf.call(
@@ -37,7 +37,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     b_err->signal_clicked().connect( sigc::mem_fun(this, &MyWindow::on_err));
 
     // Confirmation dialog
-    auto b_conf = manage(new Gtk::Button("DlgChConf"));
+    auto b_conf = manage(new Gtk::Button("DlgConfirm"));
     b_conf->signal_clicked().connect(
       sigc::bind(sigc::mem_fun(this, &MyWindow::on_conf), false));
 

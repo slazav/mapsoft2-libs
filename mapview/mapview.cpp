@@ -9,6 +9,7 @@ Mapview::Mapview(const Opt & o) :
     viewer(&gobj),
     rubber(&viewer),
     opts(o),
+    dlg_confirm("Data have been changed. Continue?"),
     panel_wpts(new PanelWpts),
     panel_trks(new PanelTrks),
     panel_maps(new PanelMaps),
@@ -203,7 +204,7 @@ Mapview::add_files(const std::vector<std::string> & files) {
 void
 Mapview::load_project(const std::string & file, bool force) {
   if (!force && get_changed()){
-    dlg_chconf.call(
+    dlg_confirm.call(
       sigc::bind(sigc::mem_fun(this, &Mapview::load_project), file, true));
     return;
   }
@@ -223,7 +224,7 @@ Mapview::load_project(const std::string & file, bool force) {
 void
 Mapview::new_project(bool force) {
   if (!force && get_changed()){
-    dlg_chconf.call(
+    dlg_confirm.call(
       sigc::bind(sigc::mem_fun (this, &Mapview::new_project), true));
     return;
   }
@@ -265,7 +266,7 @@ Mapview::exit(bool force) {
 
   // ask "do you want to exit?"
   if (!force && get_changed()){
-    dlg_chconf.call(
+    dlg_confirm.call(
       sigc::bind(sigc::mem_fun (this, &Mapview::exit), true));
     return;
   }
