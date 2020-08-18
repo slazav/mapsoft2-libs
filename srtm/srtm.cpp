@@ -329,3 +329,196 @@ SRTM::get_slope_int4(const dPoint & p, const bool interp){
   return h12 + (h34-h12)*(x-x1);
 }
 
+/************************************************/
+
+// Coordinates of 4 data cell corners
+iPoint crn (int k){ k%=4; return iPoint(k/2, (k%3>0)?1:0); }
+
+// Directions of 4 data cell sides
+iPoint dir (int k){ return crn(k+1)-crn(k); }
+
+std::map<short, dMultiLine>
+SRTM::find_contours(const dRect & range, int step){
+  int w = get_srtm_width();
+  int x1  = int(floor((w-1)*range.tlc().x));
+  int x2  = int( ceil((w-1)*range.brc().x));
+  int y1  = int(floor((w-1)*range.tlc().y));
+  int y2  = int( ceil((w-1)*range.brc().y));
+
+  std::map<short, dMultiLine> ret;
+  int count = 0;
+  for (int y=y2; y>y1; y--){
+    for (int x=x1; x<x2; x++){
+
+      iPoint p(x,y);
+      // Crossing of all 4 data cell sides with contours
+      // (coordinate v along the 4-segment line).
+      // Add -0.1m to avoid crossings at corners.
+      std::multimap<short, double> pts;
+
+      for (int k=0; k<4; k++){
+        iPoint p1 = p+crn(k);
+        iPoint p2 = p+crn(k+1);
+        short h1 = get_val(p1.x, p1.y);
+        short h2 = get_val(p2.x, p2.y);
+        if ((h1<SRTM_VAL_MIN) || (h2<SRTM_VAL_MIN)) continue;
+        int min = (h1<h2)? h1:h2;
+        int max = (h1<h2)? h2:h1;
+        min = int( floor(double(min)/step)) * step;
+        max = int( ceil(double(max)/step))  * step;
+        if (h2==h1) continue;
+        for (int hh = min; hh<=max; hh+=step){
+          double v = double(hh-h1+0.1)/double(h2-h1);
+          if ((v<0)||(v>1)) continue;
+          pts.insert(std::pair<short, double>(hh,v+k));
+        }
+      }
+      // Put contours which are crossing the data cell twice to `ret`.
+      short h=SRTM_VAL_UNDEF;
+      double v1,v2;
+
+      for (auto const & i:pts){
+        if (h!=i.first){
+          h  = i.first;
+          v1 = i.second;
+        } else{
+          v2 = i.second;
+          // convert v coordinates to points:
+          dPoint p1=(dPoint(p + crn(int(v1))) + dPoint(dir(int(v1)))*double(v1-int(v1)))/(double)(w-1);
+          dPoint p2=(dPoint(p + crn(int(v2))) + dPoint(dir(int(v2)))*double(v2-int(v2)))/(double)(w-1);
+
+          // We found segment p1-p2 with height h
+          // first try to append it to existing line in ret[h]
+          bool done=false;
+          for (auto & l:ret[h]){
+            int e=l.size()-1;
+            if (e<=0) continue; // we have no 1pt lines!
+            if (dist(l[0], p1) < 1e-4){ l.insert(l.begin(), p2); done=true; break;}
+            if (dist(l[0], p2) < 1e-4){ l.insert(l.begin(), p1); done=true; break;}
+            if (dist(l[e], p1) < 1e-4){ l.push_back(p2); done=true; break;}
+            if (dist(l[e], p2) < 1e-4){ l.push_back(p1); done=true; break;}
+          }
+          if (!done){ // insert new line into ret[h]
+            dLine hor;
+            hor.push_back(p1);
+            hor.push_back(p2);
+            ret[h].push_back(hor);
+          }
+          h=SRTM_VAL_UNDEF;
+          count++;
+        }
+      }
+    }
+  }
+
+  // merge contours (similar code is in point_int.cpp/border_line)
+  double e = 1e-4;
+  for(auto & d:ret){
+    for (auto i1 = d.second.begin(); i1!=d.second.end(); i1++){
+      for (auto i2 = i1+1; i2!=d.second.end(); i2++){
+        dLine tmp;
+        if      (dist(*(i1->begin()),*(i2->begin()))<e){
+          tmp.insert(tmp.end(), i1->rbegin(), i1->rend());
+          tmp.insert(tmp.end(), i2->begin()+1, i2->end());
+        }
+        else if (dist(*(i1->begin()),*(i2->rbegin()))<e){
+          tmp.insert(tmp.end(), i1->rbegin(), i1->rend());
+          tmp.insert(tmp.end(), i2->rbegin()+1, i2->rend());
+        }
+        else if (dist(*(i1->rbegin()),*(i2->begin()))<e){
+          tmp.insert(tmp.end(), i1->begin(), i1->end());
+          tmp.insert(tmp.end(), i2->begin()+1, i2->end());
+        }
+        else if (dist(*(i1->rbegin()),*(i2->rbegin()))<e){
+          tmp.insert(tmp.end(), i1->begin(), i1->end());
+          tmp.insert(tmp.end(), i2->rbegin()+1, i2->rend());
+        }
+        else continue;
+        i1->swap(tmp);
+        d.second.erase(i2);
+        i2=i1;
+      }
+    }
+  }
+
+  return ret;
+}
+
+std::map<dPoint, short>
+SRTM::find_peaks(const dRect & range, int DH, int PS){
+  int w = get_srtm_width();
+  int x1  = int(floor((w-1)*range.tlc().x));
+  int x2  = int( ceil((w-1)*range.brc().x));
+  int y1  = int(floor((w-1)*range.tlc().y));
+  int y2  = int( ceil((w-1)*range.brc().y));
+
+  // Summit finder:
+  // 1. Find all local maxima with altitude h0 (they can contain multiple points).
+  // 2. From each of them build a set of points by adding the highest point
+  //    of the set boundary.
+  // 3. If altitude of the last added point is less then h0-DH, or if
+  //    set size is larger then PS, then stop the calculation and
+  //    say that the original point is a summit.
+  // 4. If altitude of the last added point is more then h0, then
+  //    the original point is not a summit.
+
+  std::set<iPoint> done;
+  std::map<dPoint, short> ret;
+  for (int y=y2; y>y1; y--){
+    for (int x=x1; x<x2-1; x++){
+
+      iPoint p(x,y);
+      if (done.count(p)>0) continue;
+      short h0 = get_val(x,y, false);
+      if (h0 < SRTM_VAL_MIN) continue;
+
+      std::set<iPoint> pts, brd;
+      add_set_and_border(p, pts, brd);
+      do{
+        // find maximum of the border
+        short max = SRTM_VAL_UNDEF;
+        iPoint maxpt;
+        for (auto const & b:brd){
+          short h1 = get_val(b.x, b.y, false);
+          // original point is too close to data edge
+          if ((h1<SRTM_VAL_MIN) && (dist(b,p)<1.5)) {max = h1; break;}
+          if (h1>max) {max = h1; maxpt=b;}
+        }
+        if (max < SRTM_VAL_MIN) break;
+
+        // if max is higher then original point:
+        if (max > h0) { break; }
+
+        // if we descended more then DH or covered area more then PS:
+        if ((h0 - max > DH ) || (pts.size() > PS)) {
+          ret[dPoint(p)/(double)(w-1)] = h0;
+          break;
+        }
+        add_set_and_border(maxpt, pts, brd);
+        done.insert(maxpt);
+      } while (true);
+    }
+  }
+  return ret;
+}
+
+dMultiLine
+SRTM::find_holes(const dRect & range){
+  int w = get_srtm_width();
+  int x1  = int(floor((w-1)*range.tlc().x));
+  int x2  = int( ceil((w-1)*range.brc().x));
+  int y1  = int(floor((w-1)*range.tlc().y));
+  int y2  = int( ceil((w-1)*range.brc().y));
+  std::set<iPoint> set;
+  for (int y=y2; y>y1; y--){
+    for (int x=x1; x<x2-1; x++){
+      short h = get_val(x,y,false);
+      dPoint p1 = dPoint(x,y)/(double)(w-1);
+      if (h!=SRTM_VAL_UNDEF) continue;
+      set.insert(iPoint(x,y));
+    }
+  }
+  // convert points to polygons
+  dMultiLine ret = border_line(set);
+  return (ret - dPoint(0.5,0.5))/(double)(w-1);
+}

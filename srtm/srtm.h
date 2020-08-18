@@ -2,12 +2,14 @@
 #define SRTM_H
 
 #include <set>
+#include <map>
 #include <string>
 #include <mutex>
 
 #include "rainbow/rainbow.h"
 #include "cache/cache.h"
 #include "image/image_r.h"
+#include "geom/multiline.h"
 
 /*
 Read-only access to a SRTM data.
@@ -66,6 +68,9 @@ class SRTM {
     /// Constructor.
     SRTM(const Opt & o = Opt());
 
+    // get srtm width
+    int get_srtm_width() const {return srtm_width;}
+
     // Options can be used to change data dir and
     // color options.
     void set_opt(const Opt & opt);
@@ -105,6 +110,18 @@ class SRTM {
 
     /// get slope, 4-point interpolation, long-lat coordinates
     double get_slope_int4(const dPoint & p, const bool interp=false);
+
+
+    // make vector data: contours
+    std::map<short, dMultiLine> find_contours(const dRect & range, int step);
+
+    // make vector data: peaks
+    std::map<dPoint, short> find_peaks(const dRect & range, int DH, int PS);
+
+    // make vector data: holes
+    dMultiLine find_holes(const dRect & range);
+
+
 
 };
 

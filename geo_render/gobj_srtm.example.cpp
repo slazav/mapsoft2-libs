@@ -21,6 +21,12 @@ main(){
     o.put("srtm_interp_holes", 1);
     o.put("srtm_draw_mode", "shades");
     o.put("srtm_bgcolor", 0);
+    o.put("srtm_cnt", 1);
+    o.put("srtm_cnt_th", 0.5);
+    o.put("srtm_holes",  1);
+    o.put("srtm_holes_col",  0xFFFF00FF);
+    o.put("srtm_peaks", 1);
+//    o.put("srtm_peaks_col",  0xFF0000FF);
 
     GObjSRTM S(o);
 
@@ -28,7 +34,7 @@ main(){
     int y0 = 42;   // (datafile for this area N78E029.hgt should be in srtm_dir)
     int w = 1200;  // image size
     int h = 1200;
-    double k = 1; // scale
+    double k = 4; // scale
 
     CairoWrapper cr;
 
