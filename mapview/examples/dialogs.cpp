@@ -6,6 +6,7 @@
 
 #include "mapview/dlg_err.h"
 #include "mapview/dlg_confirm.h"
+#include "mapview/dlg_show_pt.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
 
@@ -22,6 +23,14 @@ class MyWindow : public Gtk::ApplicationWindow {
         sigc::bind(sigc::mem_fun(this, &MyWindow::on_conf), true));
     else
       std::cerr << "Confirmed!\n";
+  }
+
+  DlgShowPt showpt;
+  void on_showpt() {
+    showpt.call(dPoint(70.56072,39.43434), 0);
+  }
+  void on_crds_jump(const dPoint & p){
+    std::cerr << "Jump to: " << p << "\n";
   }
 
 
@@ -43,11 +52,20 @@ class MyWindow : public Gtk::ApplicationWindow {
       sigc::bind(sigc::mem_fun(this, &MyWindow::on_conf), false));
     conf.set_transient_for(*this);
 
+    // Show point dialog
+    auto b_showpt = manage(new Gtk::Button("DlgShowPt"));
+    b_showpt->signal_clicked().connect(
+      sigc::mem_fun(this, &MyWindow::on_showpt));
+    showpt.signal_jump().connect(
+      sigc::mem_fun(this, &MyWindow::on_crds_jump));
+    showpt.set_transient_for(*this);
+
     /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
-    vbox->pack_start(*b_err,  false, true, 5);
-    vbox->pack_start(*b_conf, false, true, 5);
+    vbox->pack_start(*b_err,    false, true, 5);
+    vbox->pack_start(*b_conf,   false, true, 5);
+    vbox->pack_start(*b_showpt, false, true, 5);
 
     add (*vbox);
     load_css("./widgets.css", *this);
