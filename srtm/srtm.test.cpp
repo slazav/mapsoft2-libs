@@ -38,6 +38,10 @@ main(){
     assert_err(S.get_val(x0+700, y0+1100, false),
       "SRTM: bad .hgt.gz file: ./test_srtm/N78E029.hgt.gz");
 
+    Opt o1 = S.get_opt();
+    assert_eq(o1.size(), 1);
+    assert_eq(o1.get("srtm_dir"), "./test_srtm");
+
 
   }
   catch (Err & e) {

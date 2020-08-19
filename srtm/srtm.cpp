@@ -109,8 +109,16 @@ SRTM::set_opt(const Opt & opt){
     area0 = pow(6380e3 * M_PI/srtm_width/180, 2);
     srtm_cache.clear();
   }
-
 }
+
+Opt
+SRTM::get_opt() const{
+  Opt o;
+  o.put("srtm_dir", srtm_dir);
+  // do not return srtm_width, we want to use autodetection.
+  return o;
+}
+
 
 /************************************************/
 

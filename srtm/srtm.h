@@ -71,10 +71,11 @@ class SRTM {
     // get srtm width
     int get_srtm_width() const {return srtm_width;}
 
-    // Options can be used to change data dir and
-    // color options.
+    // Options can be used to change data dir
     void set_opt(const Opt & opt);
 
+    // Get options
+    Opt get_opt() const;
 
     // Find set of points with same value (used
     // for hole interpolation in get_val) and its border.
