@@ -64,7 +64,12 @@ private:
     bool changed;
 
     // Do we have a "temporary" projection?
+    // If yes, it will be replaced by projection of the first loaded map
     bool tmpref;
+
+    // Do we have a "temporary" view?
+    // If yes, it will be scrolled to the first loaded map/data
+    bool tmpview;
 
 public:
 
@@ -124,9 +129,9 @@ public:
 
     /**********************************/
 
-    // to be done after loading a new map
+    // To be done after loading a new map
     void set_cnv_map(const GeoMap & m){
-      if (tmpref) viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)), true);
+      if (tmpref) viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)),!tmpview);
       tmpref=false;
     }
 

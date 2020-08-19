@@ -5,6 +5,7 @@
 
 Mapview::Mapview(const Opt & o) :
     tmpref(true),
+    tmpview(true),
     changed(false),
     viewer(&gobj),
     rubber(&viewer),
@@ -163,6 +164,7 @@ Mapview::add_data(const GeoData & data, bool scroll) {
     if (scroll){
       dRect box = expand(data.bbox_trks(), data.bbox_wpts());
       if (!box.is_zsize()) viewer.set_range(box, true);
+      tmpview=false;
     }
   }
   catch (Err & e) {}
