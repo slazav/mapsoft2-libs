@@ -69,6 +69,9 @@ class SimpleViewer : public Gtk::DrawingArea {
     // if fix_range=true, do scroll/resize to keep roughly same area on the screen.
     virtual void set_cnv(std::shared_ptr<ConvBase> c, bool fix_range);
 
+    // get conversion
+    virtual ConvBase & get_cnv() const {return *cnv;}
+
     // Set drawing options
     virtual void set_opt(const Opt & o);
 
