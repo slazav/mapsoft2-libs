@@ -49,6 +49,11 @@ try{
   k = {"a", "b", "d"};
   assert_err(O1.check_unknown(k), "unknown option: int");
 
+
+  /////////////////////////////////////////////
+  // clone_known()
+  assert_eq(type_to_str(O1.clone_known({"a", "d", "x"})), "{\"d\": \"123.1 \"}");
+
   /////////////////////////////////////////////
   // check_conflict()
   k = {"int","b"};

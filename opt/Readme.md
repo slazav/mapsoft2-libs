@@ -36,6 +36,9 @@ opts.put(opts1)
 - Find unknown options. List of known option names should be provided.
 ```opts.check_unknown (const std::list<std::string> & known) const```
 
+- Return Opt object only with known elements (specified in the list).
+```Opt opts.clone_known (const std::list<std::string> & known) const```
+
 - Find conflicting options. List of conflicting option names should be provided.
 ```opts.check_conflict(const std::list<std::string> & confl) const```
 
@@ -49,6 +52,9 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 
 -----------------
 ## Changelog:
+
+2020.08.18 V.Zavjalov 1.8:
+- Add clone_known() method -- return Opt object only with known elements
 
 2019.11.01 V.Zavjalov 1.7.1:
 - Add quotes in error messages

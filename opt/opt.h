@@ -137,6 +137,9 @@ class Opt : public std::map<std::string,std::string>{
   /// Find unknown options.
   void check_unknown (const std::list<std::string> & known) const;
 
+  /// return Opt object only with known elements
+  Opt clone_known(const std::list<std::string> & known) const;
+
   /// Find conflicting options.
   void check_conflict(const std::list<std::string> & confl) const;
 };
