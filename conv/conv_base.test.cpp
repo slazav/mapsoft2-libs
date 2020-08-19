@@ -37,18 +37,26 @@ main(){
     dPoint p(10,10);
     cnv0.frw(p);  assert_eq(p, dPoint(10,10));
     cnv0.bck(p);  assert_eq(p, dPoint(10,10));
+    assert_deq(cnv0.frw_pts(p), dPoint(10,10), 1e-8);
+    assert_deq(cnv0.bck_pts(p), dPoint(10,10), 1e-8);
 
     cnv0.rescale_src(3);
     cnv0.frw(p); assert_eq(p, dPoint(30,30));
     cnv0.bck(p); assert_eq(p, dPoint(10,10));
+    assert_deq(cnv0.frw_pts(p), dPoint(30,30),         1e-8);
+    assert_deq(cnv0.bck_pts(p), dPoint(10/3.0,10/3.0), 1e-8);
 
     cnv0.rescale_dst(3);
     cnv0.frw(p);  assert_eq(p, dPoint(90,90));
     cnv0.bck(p);  assert_eq(p, dPoint(10,10));
+    assert_deq(cnv0.frw_pts(p), dPoint(90,90),         1e-8);
+    assert_deq(cnv0.bck_pts(p), dPoint(10/9.0,10/9.0), 1e-8);
 
     cnv0.rescale_dst(1/9.0);
     cnv0.frw(p);  assert_eq(p, dPoint(10,10));
     cnv0.bck(p);  assert_eq(p, dPoint(10,10));
+    assert_deq(cnv0.frw_pts(p), dPoint(10,10), 1e-8);
+    assert_deq(cnv0.bck_pts(p), dPoint(10,10), 1e-8);
 
 
     MyConv cnv;

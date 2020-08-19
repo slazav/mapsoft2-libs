@@ -36,6 +36,8 @@ struct ConvBase{
     return std::shared_ptr<ConvBase>(new ConvBase(*this));
   }
 
+  /* conversions, in-place versions */
+
   /// Forward point transformation.
   virtual void frw(dPoint & p) const {frw_pt(p);}
 
@@ -43,21 +45,28 @@ struct ConvBase{
   virtual void bck(dPoint & p) const {bck_pt(p);}
 
   /// Convert a Line, point to point.
-  virtual void frw(dLine & l) const {
-    for (dLine::iterator i=l.begin(); i!=l.end(); i++) frw(*i); }
+  virtual void frw(dLine & l) const { for (auto & p:l) frw(p); }
 
   /// Convert a Line, point to point.
-  virtual void bck(dLine & l) const {
-    for (dLine::iterator i=l.begin(); i!=l.end(); i++) bck(*i); }
+  virtual void bck(dLine & l) const { for (auto & p:l) bck(p); }
 
   /// Convert a MultiLine, point to point.
-  virtual void frw(dMultiLine & l) const {
-    for (dMultiLine::iterator i=l.begin(); i!=l.end(); i++) frw(*i); }
+  virtual void frw(dMultiLine & ml) const { for (auto & l:ml) frw(l); }
 
   /// Convert a MultiLine, point to point.
-  virtual void bck(dMultiLine & l) const {
-    for (dMultiLine::iterator i=l.begin(); i!=l.end(); i++) bck(*i); }
+  virtual void bck(dMultiLine & ml) const { for (auto & l:ml) bck(l); }
 
+  /* conversions, no modification of original object */
+
+  /// Forward Point/Line/MultiLine transformation.
+  template <typename T>
+  T frw_pts(const T & p) const { T ret(p); frw(ret); return ret;}
+
+  /// Backward Point/Line/MultiLine transformation.
+  template <typename T>
+  T bck_pts(const T & p) const { T ret(p); bck(ret); return ret;}
+
+  /* conversions, with accuracy setting */
 
   /// Convert a line. Each segment can be divided to provide
   /// accuracy <acc> in source units.

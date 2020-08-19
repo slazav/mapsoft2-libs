@@ -12,9 +12,9 @@ Note that in some cases forward and backward conversions are non-symmetric
 
 - `ConvBase()` -- Constructor.
 
-- `frw_pt(dPoint &), bck_pt(dPoint &)` -- Functions to be redefined in children,
-   forward and backward in-place point conversion. By default is is
-   just a rescaling with `rescale_src*rescale_dst` factor.
+- `frw_pt(dPoint &), bck_pt(dPoint &)` -- Protected functions to be
+  redefined in children, forward and backward in-place point conversion. By
+  default is is just a rescaling with `rescale_src*rescale_dst` factor.
 
 - `clone()` -- make a std::shared_ptr copy of the object. Should
   be redefined in all derived classes. Allows to make a copy of
@@ -23,6 +23,9 @@ Note that in some cases forward and backward conversions are non-symmetric
 - `frw(dPoint &), bck(dPoint &), frw(dLine &), bck(dLine &),
    frw(dMultiLine &), bck(MultidLine &)` -- Convert points
     (same as frw_pt, bck_pt), lines and multilines (without changing number of points).
+
+- `frw_pts(const T &)`, `bck_pts(const T &)` -- Convert points, lines and multilines
+   without modification of the original object. Return result of the conversion.
 
 - `dLine frw_acc(const dLine & l, double acc) const`
 - `dLine bck_acc(const dLine & l, double acc) const` --
