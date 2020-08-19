@@ -8,6 +8,7 @@
 #include "mapview/dlg_confirm.h"
 #include "mapview/dlg_show_pt.h"
 #include "mapview/dlg_trk_opt.h"
+#include "mapview/dlg_srtm_opts.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
 
@@ -49,6 +50,18 @@ class MyWindow : public Gtk::ApplicationWindow {
     trkopt.hide();
   }
 
+  // SRTM drawing options dialog
+  DlgSrtmOpt srtmopt;
+  void on_srtmopt() {
+    srtmopt.show_all();
+  }
+  void on_srtmopt_ch() {
+    std::cerr << srtmopt.get_opt() << "\n";
+  }
+  void on_srtmopt_res(int r) {
+    srtmopt.hide();
+  }
+
   public:
 
   /***********************************/
@@ -85,14 +98,25 @@ class MyWindow : public Gtk::ApplicationWindow {
       sigc::mem_fun(this, &MyWindow::on_trkopt_res));
     trkopt.set_transient_for(*this);
 
+    // SRTM drawing options dialog
+    auto b_srtmopt = manage(new Gtk::Button("DlgSrtmOpt"));
+    b_srtmopt->signal_clicked().connect(
+      sigc::mem_fun(this, &MyWindow::on_srtmopt));
+    srtmopt.signal_changed().connect(
+      sigc::mem_fun(this, &MyWindow::on_srtmopt_ch));
+    srtmopt.signal_response().connect(
+      sigc::mem_fun(this, &MyWindow::on_srtmopt_res));
+    srtmopt.set_transient_for(*this);
+
 
     /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
-    vbox->pack_start(*b_err,    false, true, 5);
-    vbox->pack_start(*b_conf,   false, true, 5);
-    vbox->pack_start(*b_showpt, false, true, 5);
-    vbox->pack_start(*b_trkopt, false, true, 5);
+    vbox->pack_start(*b_err,     false, true, 5);
+    vbox->pack_start(*b_conf,    false, true, 5);
+    vbox->pack_start(*b_showpt,  false, true, 5);
+    vbox->pack_start(*b_trkopt,  false, true, 5);
+    vbox->pack_start(*b_srtmopt, false, true, 5);
 
     add (*vbox);
     load_css("./widgets.css", *this);

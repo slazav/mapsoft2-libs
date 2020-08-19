@@ -1,5 +1,6 @@
 MOD_HEADERS := mapview.h css.h\
-               dlg_err.h dlg_confirm.h dlg_show_pt.h dlg_trk_opt.h\
+               dlg_err.h dlg_confirm.h dlg_show_pt.h\
+               dlg_trk_opt.h dlg_srtm_opts.h\
                panel_status.h panel.h\
                panel_wpts.h panel_trks.h panel_maps.h\
                panel_mapdb.h\
@@ -9,7 +10,8 @@ MOD_HEADERS := mapview.h css.h\
                w_nom_box.h w_page_box.h
 
 MOD_SOURCES := mapview.cpp css.cpp\
-               dlg_err.cpp dlg_confirm.cpp dlg_show_pt.cpp dlg_trk_opt.cpp\
+               dlg_err.cpp dlg_confirm.cpp dlg_show_pt.cpp\
+               dlg_trk_opt.cpp dlg_srtm_opts.cpp\
                panel_wpts.cpp panel_trks.cpp panel_maps.cpp\
                action_manager.cpp\
                w_rainbow.cpp w_comboboxes.cpp w_coord_box.cpp\

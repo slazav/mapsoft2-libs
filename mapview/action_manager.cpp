@@ -82,8 +82,8 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(OpenMapDB,       "MapDB")
     ADD_ACT(CloseMapDB,      "MapDB")
 
-    ADD_ACT(ShowSRTM,        "SRTM")
-
+    ADD_ACT(AMShowSRTM,      "SRTM")
+    ADD_ACT(AMSrtmOpts,      "SRTM")
 
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")

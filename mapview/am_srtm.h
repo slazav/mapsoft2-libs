@@ -3,14 +3,13 @@
 
 /* Action modes for DEM/SRTM menu */
 #include "action_mode.h"
-//#include "dlg_srtm_opts.h"
 
 /**********************************************************/
 // Show/Hide SRTM layer
-class ShowSRTM : public ActionMode{
+class AMShowSRTM : public ActionMode{
   int state;
   public:
-    ShowSRTM (Mapview * mapview): ActionMode(mapview), state(0) { }
+    AMShowSRTM (Mapview * mapview): ActionMode(mapview), state(0) { }
 
     std::string get_name() { return "Show/Hide SRTM layer"; }
     std::string get_icon() { return "view"; }
@@ -24,41 +23,49 @@ class ShowSRTM : public ActionMode{
     }
 };
 
-/*
-// Edit SRTM options
-class DEMOpts : public ActionMode {
-public:
-    DEMOpts (Mapview * mapview) : ActionMode(mapview) {
-      dlg.set_transient_for(*mapview);
-      dlg.signal_response().connect(
-        sigc::mem_fun (this, &SrtmOpt::on_response));
-      dlg.signal_changed().connect(
-        sigc::bind(sigc::mem_fun (this, &SrtmOpt::on_response),1));
 
-      dlg.set_title(get_name());
+// Edit SRTM options
+#include "dlg_srtm_opts.h"
+class AMSrtmOpts : public ActionMode, public DlgSrtmOpt {
+public:
+    AMSrtmOpts (Mapview * mapview) : ActionMode(mapview) {
+      set_transient_for(*mapview);
+      signal_response().connect(
+        sigc::mem_fun (this, &AMSrtmOpts::on_response));
+      signal_changed().connect(
+        sigc::bind(sigc::mem_fun (this, &AMSrtmOpts::on_response),1));
+      set_title(get_name());
+      o = mapview->opts;
     }
 
-    std::string get_name() { return "configure"; }
+    std::string get_name() { return "SRTM drawing options"; }
     Gtk::StockID get_stockid() { return Gtk::Stock::PROPERTIES; }
 
     bool is_radio() { return false; }
 
     void activate() {
-      dlg.set_opt(o);
-      dlg.show_all();
+      set_opt(o);
+      show_all();
     }
 
     void on_response(int r){
-      if (r==Gtk::RESPONSE_CANCEL) mapview->srtm.set_opt(o);
-      if (r>0) mapview->panel_misc.set_opt(dlg.get_opt());
-      else dlg.hide_all();
+      // Unlike trk_opt dialog we need to emit signal_redraw_me explicitely.
+      // This is because tracks are located inside gobj_multi, which emits
+      // the signal. Something should be changed here...
+      if (r==Gtk::RESPONSE_CANCEL){
+        mapview->srtm->set_opt(o);
+        mapview->srtm->signal_redraw_me().emit(iRect());
+      }
+      if (r>0) {
+        mapview->srtm->set_opt(get_opt());
+        mapview->srtm->signal_redraw_me().emit(iRect());
+      }
+      else hide();
     }
 
 private:
-    DlgSrtmOpt dlg;
-    Options o;
+    Opt o;
 };
-*/
 
 #endif
 
