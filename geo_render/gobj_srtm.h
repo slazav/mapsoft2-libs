@@ -19,6 +19,9 @@ class GObjSRTM : public SRTM, public GObj {
     SRTM_DRAW_SLOPES,
   } draw_mode;
 
+  double hmin,hmax;  // limits for heights and shades modes
+  double smin,smax;  // limits for slopes mode
+
   bool interp_holes; // interpolate holes in data
   uint32_t bgcolor;  // how to draw holes
   double maxsc;      // max scale (srtm pixels / viewer pixels)
@@ -60,6 +63,8 @@ class GObjSRTM : public SRTM, public GObj {
     void set_cnv(const std::shared_ptr<ConvBase> c) override {cnv = c;}
 
     void set_opt(const Opt & o) override;
+
+    Opt get_opt() const;
 };
 
 
