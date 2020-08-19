@@ -37,6 +37,8 @@ GObjSRTM::set_opt(const Opt & o){
 
   interp_holes = o.get("srtm_interp_holes", 1);
   bgcolor = o.get<int>("srtm_bgcolor", 0);
+  maxsc    = o.get<double>("srtm_maxsc",   15);
+  maxscv   = o.get<double>("srtm_maxscv",  0.5);
 
   // contours parameters
   cnt          = o.get<bool>("srtm_cnt",      1);
@@ -67,37 +69,45 @@ GObjSRTM::set_opt(const Opt & o){
 int
 GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
+  dPoint scp = cnv->scales(draw_range);
+  double sc = std::min(scp.x, scp.y) * get_srtm_width();
+
   if (draw_mode != SRTM_DRAW_NONE) {
+    if (sc < maxsc) {
+      ImageR image(draw_range.w, draw_range.h, IMAGE_32ARGB);
+      for (int j=0; j<image.height(); j++){
+        if (is_stopped()) return GObj::FILL_NONE;
+        for (int i=0; i<image.width(); i++){
+          dPoint p(i + draw_range.x, j+draw_range.y);
+          if (cnv) cnv->frw(p);
+          short h = get_val_int4(p,  interp_holes);
+          if (h < SRTM_VAL_MIN){
+            image.set32(i,j, bgcolor);
+            continue;
+          }
+          double s = get_slope_int4(p, interp_holes);
+          uint32_t c;
 
-    ImageR image(draw_range.w, draw_range.h, IMAGE_32ARGB);
-    for (int j=0; j<image.height(); j++){
-      if (is_stopped()) return GObj::FILL_NONE;
-      for (int i=0; i<image.width(); i++){
-        dPoint p(i + draw_range.x, j+draw_range.y);
-        if (cnv) cnv->frw(p);
-        short h = get_val_int4(p,  interp_holes);
-        if (h < SRTM_VAL_MIN){
-          image.set32(i,j, bgcolor);
-          continue;
-        }
-        double s = get_slope_int4(p, interp_holes);
-        uint32_t c;
-
-        switch (draw_mode){
-          case SRTM_DRAW_NONE: break;
-          case SRTM_DRAW_SLOPES:  c = R.get(s); break;
-          case SRTM_DRAW_HEIGHTS: c = R.get(h); break;
-          case SRTM_DRAW_SHADES:  c = color_shade(R.get(h), 1-s/90.0); break;
-        }
-        image.set32(i,j, color_shade(c, 1-s/90.0));
+          switch (draw_mode){
+            case SRTM_DRAW_NONE: break;
+            case SRTM_DRAW_SLOPES:  c = R.get(s); break;
+            case SRTM_DRAW_HEIGHTS: c = R.get(h); break;
+            case SRTM_DRAW_SHADES:  c = color_shade(R.get(h), 1-s/90.0); break;
+          }
+          image.set32(i,j, color_shade(c, 1-s/90.0));
+       }
       }
+      cr->set_source(image_to_surface(image), draw_range.x, draw_range.y);
+      cr->paint();
     }
-    cr->set_source(image_to_surface(image), draw_range.x, draw_range.y);
-    cr->paint();
+    else {
+      cr->set_color_a(0x80FF0000);
+      cr->paint();
+    }
   }
 
   dRect wgs_range;
-  if (cnt || holes || peaks) {
+  if ((cnt || holes || peaks) && sc < maxscv) {
     wgs_range = cnv->frw_acc(draw_range);
     wgs_range.expand(1.0/get_srtm_width()); // +1 srtm point
     cr->set_line_cap(Cairo::LINE_CAP_ROUND);
@@ -105,7 +115,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   }
 
   // draw contours
-  if (cnt) {
+  if (cnt && sc < maxscv) {
     auto c_data = find_contours(wgs_range, cnt_step1);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
@@ -119,7 +129,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   }
 
   // draw holes
-  if (holes) {
+  if (holes && sc < maxscv) {
     auto h_data = find_holes(wgs_range);
     cr->set_color(holes_color);
     cr->set_line_width(holes_th);
@@ -132,7 +142,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   }
 
   // draw peaks
-  if (peaks) {
+  if (peaks && sc < maxscv) {
     auto p_data = find_peaks(wgs_range, peaks_dh, peaks_ps);
     cr->set_color(peaks_color);
     cr->set_line_width(peaks_th);

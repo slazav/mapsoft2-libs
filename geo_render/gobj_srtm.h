@@ -21,6 +21,8 @@ class GObjSRTM : public SRTM, public GObj {
 
   bool interp_holes; // interpolate holes in data
   uint32_t bgcolor;  // how to draw holes
+  double maxsc;      // max scale (srtm pixels / viewer pixels)
+  double maxscv;     // max scale for vector data
 
   bool cnt; // draw contours?
   int cnt_step1;
@@ -39,7 +41,6 @@ class GObjSRTM : public SRTM, public GObj {
   double peaks_th;
   int peaks_dh;
   int peaks_ps;
-
   bool peaks_text;
   double peaks_text_size;
   std::string peaks_text_font;
