@@ -110,13 +110,13 @@ Rubber::on_draw(Cairo::RefPtr<Cairo::Context> const & cr_){
          throw Err() << "Rubber: bad type: " << (s.flags & RUBBFL_TYPEMASK);
     }
   }
-  cr->set_source_rgb(1,1,1);
+  cr->set_source_rgb(1,0,0);
   cr->set_line_width(1);
   cr->set_line_cap(Cairo::LINE_CAP_ROUND);
   cr->set_line_join(Cairo::LINE_JOIN_ROUND);
 
   cr->stroke_preserve();
-  cr->set_source_rgb(0,0,0);
+  cr->set_source_rgb(0,0,1);
   cr->set_dash(3,3);
   cr->stroke();
 }
