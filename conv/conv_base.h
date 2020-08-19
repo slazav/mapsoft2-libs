@@ -19,13 +19,16 @@ struct ConvBase{
   /// constructor - trivial transformation
   ConvBase(double sc=1.0): sc_dst(1.0, 1.0, 1.0), sc_src(1.0, 1.0, 1.0){}
 
-  // forward point conversion (can be redefined)
-  virtual void frw_pt(dPoint & p) const {
-    p.x*=sc_src.x*sc_dst.x; p.y*=sc_src.y*sc_dst.y; p.z*=sc_src.z*sc_dst.z;}
+  protected:
+    // forward point conversion (can be redefined)
+    virtual void frw_pt(dPoint & p) const {
+      p.x*=sc_src.x*sc_dst.x; p.y*=sc_src.y*sc_dst.y; p.z*=sc_src.z*sc_dst.z;}
 
-  // backward point conversion (can be redefined)
-  virtual void bck_pt(dPoint & p) const {
-    p.x/=sc_src.x*sc_dst.x; p.y/=sc_src.y*sc_dst.y; p.z/=sc_src.z*sc_dst.z;}
+    // backward point conversion (can be redefined)
+    virtual void bck_pt(dPoint & p) const {
+      p.x/=sc_src.x*sc_dst.x; p.y/=sc_src.y*sc_dst.y; p.z/=sc_src.z*sc_dst.z;}
+
+  public:
 
   // Get copy of the object. Should be redefined in derived classes.
   // Allows to copy Conv* class without knowing its actual type.
