@@ -120,6 +120,7 @@ SimpleViewer::set_cnv(std::shared_ptr<ConvBase> c, bool fix_range){
   cnv = c;
   obj->set_cnv(cnv);
   if (fix_range) set_range(r, true);
+  else set_origin(iPoint(0,0));
 }
 
 void
