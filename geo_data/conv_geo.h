@@ -64,8 +64,9 @@ public:
   void set_2d(const bool v = true) {cnv2d = v;}
 
 private:
-  std::shared_ptr<void> pj_src, pj_dst;
+  std::shared_ptr<void> pj_src, pj_dst, pj_su;
   bool cnv2d; // Do 2D or 3D conversion
+  bool su_src, su_dst; // Use automatic 6-degree zones (for SU coordinate system)
 };
 
 

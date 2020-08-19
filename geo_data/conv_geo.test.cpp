@@ -236,6 +236,40 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
 
     }
 
+    // SU conversion with automatic zones
+    {
+      ConvGeo cnv1("SU", "WGS");
+      dPoint p1(32.780603, 56.221141);
+      dPoint p2(6486513.76, 6233327.52);
+
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("WGS", "SU");
+      assert_deq(cnv2.bck_pts(p2), p1, 1e-6);
+      assert_deq(cnv2.frw_pts(p1), p2, 0.1);
+
+      ConvGeo cnv3("SU", "SU33");
+      assert_deq(cnv3.bck_pts(p2), p2, 0.1);
+      assert_deq(cnv3.frw_pts(p2), p2, 0.1);
+
+      ConvGeo cnv4("SU", "SU33");
+      assert_deq(cnv4.bck_pts(p2), p2, 0.1);
+      assert_deq(cnv4.frw_pts(p2), p2, 0.1);
+
+      assert_eq(cnv1.is_src_deg(), false);
+      assert_eq(cnv1.is_dst_deg(), true);
+
+      assert_eq(cnv2.is_src_deg(), true);
+      assert_eq(cnv2.is_dst_deg(), false);
+
+      assert_eq(cnv3.is_src_deg(), false);
+      assert_eq(cnv3.is_dst_deg(), false);
+
+      assert_eq(cnv4.is_src_deg(), false);
+      assert_eq(cnv4.is_dst_deg(), false);
+    }
+
 
     // CnvMap
     {
