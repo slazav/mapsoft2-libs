@@ -66,6 +66,7 @@ ActionManager::ActionManager (Mapview * mapview_):
 
     ADD_ACT(FullScreen,      "View")
     ADD_ACT(HidePanels,      "View")
+    ADD_ACT(ShowPt,          "View")
 
     ADD_ACT(AMTrkOpt,        "Trks")
 
