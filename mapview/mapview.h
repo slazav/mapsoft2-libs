@@ -21,6 +21,7 @@
 #include "panel_maps.h"
 #include "panel_mapdb.h"
 #include "panel_status.h"
+#include "geo_render/gobj_srtm.h"
 
 #define DATADIR    "mapsoft2"
 #define ACCEL_FILE "mapsoft2.acc"
@@ -31,7 +32,8 @@
 #define PAGE_WPTS 0
 #define PAGE_TRKS 1
 #define PAGE_VMAP 2
-#define PAGE_MAPS 3
+#define PAGE_SRTM 3
+#define PAGE_MAPS 4
 
 class Mapview : public Gtk::ApplicationWindow {
 public:
@@ -48,6 +50,7 @@ public:
     std::shared_ptr<PanelWpts> panel_wpts;
     std::shared_ptr<PanelMaps> panel_maps;
     std::shared_ptr<PanelMapDB> panel_mapdb;
+    std::shared_ptr<GObjSRTM>   srtm;
 
     PanelStatus spanel; // status bar
     ActionManager amanager; // menus and action handling
@@ -122,6 +125,12 @@ public:
 
     // Close MapDB project
     void close_mapdb();
+
+    // Open SRTM layer
+    void open_srtm();
+
+    // Close SRTM layer
+    void close_srtm();
 
     // Exit Mapview application (confirmation dialog will appear
     // if previous project has been changed and force==false).

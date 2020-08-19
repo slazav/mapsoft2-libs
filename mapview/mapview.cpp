@@ -15,6 +15,7 @@ Mapview::Mapview(const Opt & o) :
     panel_trks(new PanelTrks),
     panel_maps(new PanelMaps),
     panel_mapdb(new PanelMapDB),
+    srtm(new GObjSRTM(o)),
     amanager(this)
 {
 
@@ -176,7 +177,8 @@ Mapview::clear_data() {
   panel_wpts->remove_all();
   panel_trks->remove_all();
   panel_maps->remove_all();
-  panel_mapdb->close();
+  close_mapdb();
+  close_srtm();
   tmpref = true;
 }
 
@@ -266,6 +268,17 @@ Mapview::close_mapdb(){
   catch (Err & e) { dlg_err.call(e); }
 }
 
+void
+Mapview::open_srtm(){
+  try {gobj.add(PAGE_SRTM, srtm);}
+  catch (Err & e) { dlg_err.call(e); }
+}
+
+void
+Mapview::close_srtm(){
+  try {gobj.del(srtm);}
+  catch (Err & e) { dlg_err.call(e); }
+}
 
 void
 Mapview::exit(bool force) {
