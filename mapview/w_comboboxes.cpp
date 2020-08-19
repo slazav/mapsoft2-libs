@@ -9,6 +9,7 @@ CBProj::CBProj(): SimpleCombo(){
     pair_t("ETRS89", "ETRS89 (Finland)"),
     pair_t("GB",     "EPSG:27700 (Great Britain)"),
     pair_t("CH",     "CH (Switzerland)"),
+    pair_t("SU",     "Pulkovo-1942 (USSR), m"),
     pair_t("SU_LL",  "Pulkovo-1942 (USSR), lon-lat"),
   };
   set_values(data_list,
