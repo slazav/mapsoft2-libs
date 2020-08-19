@@ -137,7 +137,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
             case SRTM_DRAW_HEIGHTS: c = R.get(h); break;
             case SRTM_DRAW_SHADES:  c = color_shade(R.get(h), 1-s/90.0); break;
           }
-          image.set32(i,j, color_shade(c, 1-s/90.0));
+          image.set32(i,j, c);
        }
       }
       cr->set_source(image_to_surface(image), draw_range.x, draw_range.y);
