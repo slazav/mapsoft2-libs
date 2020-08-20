@@ -4,7 +4,6 @@
 #include <set>
 #include <map>
 #include <string>
-#include <mutex>
 
 #include "rainbow/rainbow.h"
 #include "cache/cache.h"
@@ -50,9 +49,6 @@ class SRTM {
 
   /// data cache. key is lon,lat in degrees, images are of IMAGE_16 type
   Cache<iPoint, ImageR> srtm_cache;
-
-  /// try to do thread-safe cache
-  std::mutex cache_mutex;
 
   /// size (m) of 1 srtm point lat bow
   double size0;

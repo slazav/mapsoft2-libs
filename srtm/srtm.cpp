@@ -102,7 +102,6 @@ SRTM::set_opt(const Opt & opt){
 
   // set new values and clear data cache if needed
   if (width!=srtm_width || dir!=srtm_dir){
-    auto lk = std::unique_lock<std::mutex>(cache_mutex);
     srtm_width = width;
     srtm_dir = dir;
     size0 = 6380e3 * M_PI/srtm_width/180;
@@ -166,7 +165,6 @@ SRTM::get_val(const int x, const int y, const bool interp){
 
   int h;
   {
-    auto lk = std::unique_lock<std::mutex>(cache_mutex);
     if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
     auto im = srtm_cache.get(key);
     if (im.is_empty()) return SRTM_VAL_NOFILE;
@@ -288,7 +286,6 @@ SRTM::set_val(const int x, const int y, const short h){
   get_crd(y, srtm_width, key.y, crd.y);
   crd.y = srtm_width-crd.y-1;
 
-  auto lk = std::unique_lock<std::mutex>(cache_mutex);
   if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
   auto & im = srtm_cache.get(key);
   if (im.is_empty()) return SRTM_VAL_NOFILE;
