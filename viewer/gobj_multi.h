@@ -41,10 +41,16 @@ private:
 
   void process_error(std::exception & e);
 
+  // process redraw_me signals from sub-objects,
+  // emit redraw_me signal if counter == -1.
+  void redraw_me_deferred(iRect r);
+  int redraw_counter; // counter used for ignoring sub-obj signals:
+                      // -1 - emit signal, >=0 - only increase the counter.
+
 public:
 
   // constructor
-  GObjMulti(): error_policy(GOBJ_MULTI_ERR_WARN) {}
+  GObjMulti(): error_policy(GOBJ_MULTI_ERR_WARN), redraw_counter(-1) {}
 
   // Add new object at some depth (larger depth - earlier the object is drawn)
   void add(int depth, std::shared_ptr<GObj> o);

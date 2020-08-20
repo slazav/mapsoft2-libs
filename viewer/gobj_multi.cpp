@@ -29,6 +29,11 @@ GObjMulti::process_error(std::exception & e){
   }
 }
 
+void
+GObjMulti::redraw_me_deferred(iRect r = iRect()){
+  if (redraw_counter<0) signal_redraw_me().emit(iRect());
+  else redraw_counter++;
+}
 
 /************************************************/
 // Public methods
@@ -45,13 +50,12 @@ GObjMulti::add(int depth, std::shared_ptr<GObj> o){
   GObjData D;
   D.obj = o;
   D.on = true;
-  auto & sig = signal_redraw_me();
   D.redraw_conn = o->signal_redraw_me().connect(
-    sigc::mem_fun (&sig, &sigc::signal<void, iRect>::emit));
+    sigc::mem_fun (this, &GObjMulti::redraw_me_deferred));
   data.emplace(-depth, D); // we use negative depth for correct sorting
 
   stop_drawing(false);
-  signal_redraw_me().emit(iRect());
+  redraw_me_deferred();
 }
 
 std::vector<std::shared_ptr<GObj> >
@@ -92,7 +96,7 @@ GObjMulti::set_depth(std::shared_ptr<GObj> o, int depth){
   data.erase(it);
 
   stop_drawing(false);
-  signal_redraw_me().emit(iRect());
+  redraw_me_deferred();
 }
 
 void
@@ -107,7 +111,7 @@ GObjMulti::set_visibility(std::shared_ptr<GObj> o, bool on){
   it->second.on = on;
 
   stop_drawing(false);
-  signal_redraw_me().emit(iRect());
+  redraw_me_deferred();
 }
 
 void
@@ -123,7 +127,7 @@ GObjMulti::del(std::shared_ptr<GObj> o){
   data.erase(it);
 
   stop_drawing(false);
-  signal_redraw_me().emit(iRect());
+  redraw_me_deferred();
 }
 
 void
@@ -135,7 +139,7 @@ GObjMulti::clear(){
   data.clear();
 
   stop_drawing(false);
-  signal_redraw_me().emit(iRect());
+  redraw_me_deferred();
 }
 
 /************************************************/
@@ -175,6 +179,8 @@ GObjMulti::prepare_range(const dRect & range){
 void
 GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
   cnv = c;
+  // start ignoring (and counting) signals from sub-objects.
+  redraw_counter=0;
   for (auto const & p:data){
     auto o = p.second.obj;
     o->stop_drawing(true);
@@ -183,7 +189,9 @@ GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
     catch (std::exception & e) { process_error(e); }
     o->stop_drawing(false);
   }
-  signal_redraw_me().emit(iRect());
+  // if any of sub-objects emitted the signal, do it too
+  if (redraw_counter>0) redraw_me();
+  redraw_counter=-1;
 }
 
 void
@@ -199,6 +207,8 @@ GObjMulti::set_opt(const Opt & o) {
     error_policy = GOBJ_MULTI_ERR_EXC;
 
   // send options to children
+  // same redraw signal handling as in set_cnv
+  redraw_counter=0;
   for (auto const & p:data){
     auto o = p.second.obj;
     o->stop_drawing(true);
@@ -207,6 +217,7 @@ GObjMulti::set_opt(const Opt & o) {
     catch (std::exception & e) { process_error(e); }
     o->stop_drawing(false);
   }
-  signal_redraw_me().emit(iRect());
+  if (redraw_counter>0) redraw_me();
+  redraw_counter=-1;
 }
 

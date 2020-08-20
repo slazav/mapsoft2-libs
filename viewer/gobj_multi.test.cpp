@@ -120,6 +120,10 @@ main(){
     assert_eq(redraw_counter, 7);
     assert_eq(o.size(),0);
 
+    // no sub-objects - no signls
+    o.set_cnv(cnv);
+    assert_eq(redraw_counter, 7);
+
     o.add(20, o1); // fill
     o.add(10, o2); // dots
     assert_eq(redraw_counter, 9);
@@ -131,6 +135,16 @@ main(){
     dPoint pt(10,10);
     cnv->frw(pt);
     assert(dist2d(pt, dPoint(1,1)) < 1e-6);
+
+    o.add(30, o3); // another dots
+    assert_eq(redraw_counter, 11);
+    cnv->rescale_src(0.1);
+    o.set_cnv(cnv);
+    // two objects emit redraw_me signal,
+    // but we get only one
+    assert_eq(redraw_counter, 12);
+
+
 
   }
   catch (Err E){

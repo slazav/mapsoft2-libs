@@ -89,6 +89,9 @@ public:
     return signal_redraw_me_;
   }
 
+  /// emit signal_redraw_me
+  virtual void redraw_me() {signal_redraw_me_.emit(iRect());}
+
 private:
   sigc::signal<void, iRect> signal_redraw_me_;
 
