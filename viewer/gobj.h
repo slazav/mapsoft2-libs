@@ -112,6 +112,10 @@ public:
   // change options
   virtual void set_opt(const Opt & o) {};
 
+  // Get default options. In the case when the object is controlled
+  // by GUI it could be useful to get default state of the interface.
+  virtual Opt get_def_opt() const {return Opt();}
+
   /********************************************************/
 
   // If GObj is used from a DThreadViewer then the draw() method
