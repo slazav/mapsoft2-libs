@@ -265,6 +265,7 @@ GObjWpts::set_opt(const Opt & opt){
   cr->set_fc_font(color, text_font.c_str(), text_size);
 
   for (auto & wt:tmpls) update_pt_name(cr, wt); // update name
+  redraw_me();
 }
 
 void
@@ -276,6 +277,7 @@ GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   for (auto & wt:tmpls) update_pt_crd(wt, cnv);
   if (do_adj_pos) adjust_text_pos();
   update_range();
+  redraw_me();
 }
 
 

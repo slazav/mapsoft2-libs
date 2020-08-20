@@ -60,7 +60,7 @@ class GObjSRTM : public SRTM, public GObj {
 
     int draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
-    void set_cnv(const std::shared_ptr<ConvBase> c) override {cnv = c;}
+    void set_cnv(const std::shared_ptr<ConvBase> c) override {cnv = c; redraw_me();}
 
     void set_opt(const Opt & o) override;
 

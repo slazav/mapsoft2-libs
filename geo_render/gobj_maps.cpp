@@ -195,6 +195,7 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 
   }
   tiles.clear();
+  redraw_me();
 }
 
 void
@@ -204,4 +205,5 @@ GObjMaps::set_opt(const Opt & opt) {
   draw_refs = opt.get<int>("map_draw_refs", 0);
   draw_brd  = opt.get<int>("map_draw_brd",  0);
   fade      = opt.get("map_fade",     0);
+  redraw_me();
 }

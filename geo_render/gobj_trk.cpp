@@ -168,6 +168,7 @@ GObjTrk::set_opt(const Opt & opt){
 
   // if track is not closed, the last segment should be transparent
   if (!closed) segments[trk.size()-1].hide = true;
+  redraw_me();
 }
 
 
@@ -183,5 +184,6 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     segments[i>0? i-1: trk.size()-1].p2 = pt;
   }
   update_range();
+  redraw_me();
 }
 

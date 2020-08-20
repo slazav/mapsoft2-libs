@@ -56,6 +56,7 @@ GObjSRTM::set_opt(const Opt & o){
   peaks_text   = o.get<bool>("srtm_peaks_text",  1);
   peaks_text_size   = o.get<double>("srtm_peaks_text_size",  10);
   peaks_text_font   = o.get("srtm_peaks_text_font",  "serif");
+  redraw_me();
 }
 
 Opt
