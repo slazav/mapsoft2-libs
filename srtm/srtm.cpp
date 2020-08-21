@@ -6,6 +6,7 @@
 #include "geom/point_int.h"
 #include <zlib.h>
 
+
 // load srtm data from *.hgt file
 ImageR
 read_file(const std::string & file, const size_t srtm_width){
@@ -83,6 +84,21 @@ SRTM::SRTM(const Opt & o): srtm_cache(SRTM_CACHE_SIZE), srtm_width(0) {
   set_opt(o);
 }
 
+
+void
+ms2opt_add_srtm(GetOptSet & opts){
+  const char *g = "SRTM";
+  opts.add("srtm_dir", 1,0,g,
+    "Set srtm data folder, default - $HOME/.srtm_data");
+}
+
+Opt
+SRTM::get_def_opt() const{
+  Opt o;
+  o.put("srtm_dir", std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
+  return o;
+}
+
 void
 SRTM::set_opt(const Opt & opt){
 
@@ -90,15 +106,12 @@ SRTM::set_opt(const Opt & opt){
   std::string dir = opt.get("srtm_dir",
     std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
 
-  // Data width. If no option is set, read a number from
+  // Data width. Read a number from
   // srtm_width.txt file. Default 1201.
-  int width = opt.get<int>("srtm_width", 0);
-  if (width <= 0) {
-    std::ifstream ws(srtm_dir + "/srtm_width.txt");
-    if (!ws) width = 1201;
-    else ws >> width;
-    if (width<=0) width = 1201;
-  }
+  int width = 1201;
+  std::ifstream ws(srtm_dir + "/srtm_width.txt");
+  ws >> width;
+  if (width<=0) width = 1201;
 
   // set new values and clear data cache if needed
   if (width!=srtm_width || dir!=srtm_dir){
@@ -108,14 +121,6 @@ SRTM::set_opt(const Opt & opt){
     area0 = pow(6380e3 * M_PI/srtm_width/180, 2);
     srtm_cache.clear();
   }
-}
-
-Opt
-SRTM::get_opt() const{
-  Opt o;
-  o.put("srtm_dir", srtm_dir);
-  // do not return srtm_width, we want to use autodetection.
-  return o;
 }
 
 

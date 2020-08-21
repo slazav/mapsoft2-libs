@@ -39,6 +39,17 @@ Default data directory is DIR=$HOME/.srtm_data
 #define SRTM_INT_ZERO    20000 // zero on interpolated data
 #define SRTM_INT_MIN     10000 // min of interpolated data (for testing)
 
+// SRTM data interface
+
+/********************************************************************/
+#include "getopt/getopt.h"
+
+// add SRTM group of options
+void ms2opt_add_srtm(GetOptSet & opts);
+
+/********************************************************************/
+
+
 class SRTM {
 
   /// SRTM data folder.
@@ -70,8 +81,8 @@ class SRTM {
     // Options can be used to change data dir
     void set_opt(const Opt & opt);
 
-    // Get options
-    Opt get_opt() const;
+    // Get default options.
+    Opt get_def_opt() const;
 
     // Find set of points with same value (used
     // for hole interpolation in get_val) and its border.

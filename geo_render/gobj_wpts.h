@@ -80,11 +80,13 @@ public:
 
   /************************************************/
 
-  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
+  Opt get_def_opt() const override;
+
+  void set_opt(const Opt & o) override;
 
   void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  void set_opt(const Opt & o) override;
+  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
 };
 

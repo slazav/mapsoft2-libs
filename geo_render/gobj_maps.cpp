@@ -17,8 +17,8 @@ void
 ms2opt_add_drawmap(GetOptSet & opts){
   const char *g = "DRAWMAP";
   opts.add("map_smooth", 1,0,g,
-    "Smooth map drawing (interpolation for small scales, "
-    "averaging for large ones), default 0.");
+    "Smooth map drawing, interpolation for small scales, "
+    "averaging for large ones, (0|1, default - 0).");
   opts.add("map_clip_brd", 1,0,g,
     "Clip map to its border (default 1).");
   opts.add("map_draw_refs", 1,0,g,
@@ -29,6 +29,65 @@ ms2opt_add_drawmap(GetOptSet & opts){
     "Color to fade the map (default is 0, no fading).");
 }
 
+Opt
+GObjMaps::get_def_opt() const {
+  Opt o;
+  o.put("map_smooth",   false);
+  o.put("map_clip_brd", true);
+  o.put("map_draw_refs", 0);
+  o.put("map_draw_brd",  0);
+  o.put("map_fade",      0);
+  return o;
+}
+
+void
+GObjMaps::set_opt(const Opt & opt) {
+  smooth    = opt.get("map_smooth",   false);
+  clip_brd  = opt.get("map_clip_brd", true);
+  draw_refs = opt.get("map_draw_refs", 0);
+  draw_brd  = opt.get("map_draw_brd",  0);
+  fade      = opt.get("map_fade",     0);
+  redraw_me();
+}
+
+void
+GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
+  range = dRect();
+  for (auto & d:data){
+
+    // conversion viewer->map
+    d.cnv.reset();
+    if (cnv) d.cnv.push_back(*cnv, true); // viewer -> WGS
+    d.cnv.push_back(ConvMap(*d.src), false); // WGS -> map
+
+    // border in viewer coordinates
+    d.brd = d.cnv.bck_acc(close(d.src->border));
+
+    // reference points in viewer coordinates
+    d.refs = dLine();
+    for (auto const & r:d.src->ref)
+      d.refs.push_back(r.first);
+    d.cnv.bck(d.refs);
+
+    // map bbox in viewer coordinates
+    d.bbox = d.cnv.bck_acc(d.src_bbox);
+    range.expand(d.bbox);
+
+    // calculate map scale (map pixels per viewer pixel)
+    dPoint sc = d.cnv.scales(d.bbox);
+    double k = std::max(sc.x, sc.y);
+
+    // update map scale
+    d.set_scale(k, smooth);
+
+    // Simplify the conversion if possible.
+    // Use 0.5pt accuracy in source coordinates (viewer).
+    d.cnv.simplify(d.bbox, 5, 0.5);
+
+  }
+  tiles.clear();
+  redraw_me();
+}
 
 /**********************************************************/
 
@@ -157,53 +216,3 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
   return GObj::FILL_PART;
 }
 
-/**********************************************************/
-
-void
-GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
-  range = dRect();
-  for (auto & d:data){
-
-    // conversion viewer->map
-    d.cnv.reset();
-    if (cnv) d.cnv.push_back(*cnv, true); // viewer -> WGS
-    d.cnv.push_back(ConvMap(*d.src), false); // WGS -> map
-
-    // border in viewer coordinates
-    d.brd = d.cnv.bck_acc(close(d.src->border));
-
-    // reference points in viewer coordinates
-    d.refs = dLine();
-    for (auto const & r:d.src->ref)
-      d.refs.push_back(r.first);
-    d.cnv.bck(d.refs);
-
-    // map bbox in viewer coordinates
-    d.bbox = d.cnv.bck_acc(d.src_bbox);
-    range.expand(d.bbox);
-
-    // calculate map scale (map pixels per viewer pixel)
-    dPoint sc = d.cnv.scales(d.bbox);
-    double k = std::max(sc.x, sc.y);
-
-    // update map scale
-    d.set_scale(k, smooth);
-
-    // Simplify the conversion if possible.
-    // Use 0.5pt accuracy in source coordinates (viewer).
-    d.cnv.simplify(d.bbox, 5, 0.5);
-
-  }
-  tiles.clear();
-  redraw_me();
-}
-
-void
-GObjMaps::set_opt(const Opt & opt) {
-  smooth    = opt.get("map_smooth",   false);
-  clip_brd  = opt.get("map_clip_brd", true);
-  draw_refs = opt.get<int>("map_draw_refs", 0);
-  draw_brd  = opt.get<int>("map_draw_brd",  0);
-  fade      = opt.get("map_fade",     0);
-  redraw_me();
-}

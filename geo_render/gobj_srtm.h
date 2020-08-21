@@ -7,6 +7,14 @@
 
 /// SRTM data layer.
 
+/********************************************************************/
+#include "getopt/getopt.h"
+
+// add SRTM and DRAWSRTM groups of options
+void ms2opt_add_drawsrtm(GetOptSet & opts);
+
+/********************************************************************/
+
 class GObjSRTM : public SRTM, public GObj {
 
   std::shared_ptr<ConvBase> cnv;
@@ -28,27 +36,25 @@ class GObjSRTM : public SRTM, public GObj {
   double maxscv;     // max scale for vector data
 
   bool cnt; // draw contours?
-  int cnt_step1;
-  int cnt_step2;
+  int cnt_step;
+  int cnt_smult;
   uint32_t cnt_color;
-  double cnt_th;
-  double cnt_th2;
+  double cnt_w;
+  double cnt_wmult;
   double cnt_crv;
 
   bool holes; // draw holes?
   uint32_t holes_color;
-  double holes_th;
+  double holes_w;
 
   bool peaks; // draw summits?
   uint32_t peaks_color;
-  double peaks_th;
+  double peaks_w;
   int peaks_dh;
   int peaks_ps;
   bool peaks_text;
   double peaks_text_size;
   std::string peaks_text_font;
-
-
 
   public:
 
@@ -58,13 +64,16 @@ class GObjSRTM : public SRTM, public GObj {
 
   /************************************************/
 
-    int draw(const CairoWrapper & cr, const dRect & draw_range) override;
-
-    void set_cnv(const std::shared_ptr<ConvBase> c) override {cnv = c; redraw_me();}
+    Opt get_def_opt() const override;
 
     void set_opt(const Opt & o) override;
 
-    Opt get_opt() const;
+    void set_cnv(const std::shared_ptr<ConvBase> c) override;
+
+    int draw(const CairoWrapper & cr, const dRect & draw_range) override;
+
+
+
 };
 
 

@@ -33,9 +33,62 @@ ms2opt_add_drawwpt(GetOptSet & opts){
   opts.add("wpt_adj_brd", 1,0,g,
     "Adjust waypoint flag positions to prevent boundary collisions (default: 0).");
   opts.add("wpt_skip_far", 1,0,g,
-    "Skip points if their labels can not be placed close enough (default: 5*wpt_stick_len).");
+    "Skip points if their labels can not be placed close enough (default: 10*wpt_stick_len).");
 }
 
+Opt
+GObjWpts::get_def_opt() const {
+  Opt o;
+  o.put("wpt_text_font",  "serif");
+  o.put("wpt_text_size",  10);
+  o.put("wpt_text_pad",   2);
+  o.put("wpt_draw_size",  3);
+  o.put("wpt_line_width", 1);
+  o.put("wpt_stick_len",  10);
+  o.put("wpt_color",      0xFF000000);
+  o.put("wpt_bgcolor",    0xFFFFFFFF);
+  o.put("wpt_adj",        1);
+  o.put("wpt_adj_brd",    0);
+  o.put("wpt_skip_dist",  10*10);
+  return o;
+}
+
+void
+GObjWpts::set_opt(const Opt & opt){
+  text_font = opt.get("wpt_text_font",  "serif");
+  text_size = opt.get("wpt_text_size",  10);
+  text_pad  = opt.get("wpt_text_pad",   2);
+  size      = opt.get("wpt_draw_size",  3);
+  linewidth = opt.get("wpt_line_width", 1);
+  stick_len = opt.get("wpt_stick_len",  10);
+  color     = opt.get("wpt_color",      0xFF000000);
+  bgcolor   = opt.get("wpt_bgcolor",    0xFFFFFFFF);
+  do_adj_pos = opt.get("wpt_adj", 1);
+  do_adj_brd = opt.get("wpt_adj_brd", 0);
+  skip_dist = opt.get("wpt_skip_dist", stick_len*10);
+
+  // Update point sizes. We need a Cairo::context to
+  // measure size of text.
+  CairoWrapper cr;
+  cr.set_surface_img(1,1);
+  cr->set_fc_font(color, text_font.c_str(), text_size);
+
+  for (auto & wt:tmpls) update_pt_name(cr, wt); // update name
+  redraw_me();
+}
+
+
+void
+GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
+  // recalculate coordinates, update range
+  if (wpts.size()!=tmpls.size())
+    throw Err() << "GObjWpts: templates are not syncronized with data";
+
+  for (auto & wt:tmpls) update_pt_crd(wt, cnv);
+  if (do_adj_pos) adjust_text_pos();
+  update_range();
+  redraw_me();
+}
 
 /********************************************************************/
 
@@ -243,41 +296,4 @@ GObjWpts::adjust_text_brd(const dRect & rng){
 }
 
 /**********************************************************/
-
-void
-GObjWpts::set_opt(const Opt & opt){
-  text_font = opt.get("wpt_text_font",  "serif");
-  text_size = opt.get("wpt_text_size",  10);
-  size      = opt.get("wpt_draw_size",  3);
-  linewidth = opt.get("wpt_line_width", 1);
-  color     = opt.get("wpt_color",      0xFF000000);
-  bgcolor   = opt.get("wpt_bgcolor",    0xFFFFFFFF);
-
-  do_adj_pos = opt.get("wpt_adj", 1);
-  do_adj_brd = opt.get("wpt_adj_brd", 0);
-
-  text_pad  = opt.get("wpt_text_pad",  2);
-  stick_len = opt.get("wpt_stick_len",  10);
-  skip_dist = opt.get("wpt_skip_dist", stick_len*10);
-
-  CairoWrapper cr;
-  cr.set_surface_img(1000,1000);
-  cr->set_fc_font(color, text_font.c_str(), text_size);
-
-  for (auto & wt:tmpls) update_pt_name(cr, wt); // update name
-  redraw_me();
-}
-
-void
-GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
-  // recalculate coordinates, update range
-  if (wpts.size()!=tmpls.size())
-    throw Err() << "GObjWpts: templates are not syncronized with data";
-
-  for (auto & wt:tmpls) update_pt_crd(wt, cnv);
-  if (do_adj_pos) adjust_text_pos();
-  update_range();
-  redraw_me();
-}
-
 

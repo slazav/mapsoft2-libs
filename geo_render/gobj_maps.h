@@ -80,22 +80,23 @@ private:
   int  draw_refs;// draw map reference points (color)
   uint32_t fade; // map fade color
 
+  bool render_tile(const MapData & d, const dRect & range_dst);
+
 public:
   // constructor
   GObjMaps(GeoMapList & maps);
 
   /************************************************/
 
-  int draw(const CairoWrapper & cr, const dRect &box) override;
-
-  void prepare_range(const dRect & range) override;
-
-  void set_cnv(const std::shared_ptr<ConvBase> c) override;
+  Opt get_def_opt() const override;
 
   void set_opt(const Opt & o) override;
 
-private:
-  bool render_tile(const MapData & d, const dRect & range_dst);
+  void set_cnv(const std::shared_ptr<ConvBase> c) override;
+
+  void prepare_range(const dRect & range) override;
+
+  int draw(const CairoWrapper & cr, const dRect &box) override;
 
 };
 

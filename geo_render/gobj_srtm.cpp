@@ -3,6 +3,107 @@
 #include <fstream>
 
 void
+ms2opt_add_drawsrtm(GetOptSet & opts){
+
+  ms2opt_add_srtm(opts);
+
+  const char *g = "DRAWSRTM";
+  opts.add("srtm_draw_mode", 1,0,g,
+    "Track drawing mode (none, slopes, heights, shades, default - shades).");
+  opts.add("srtm_hmin", 1,0,g,
+    "Min height [m] for heights and shades modes (default - 0).");
+  opts.add("srtm_hmax", 1,0,g,
+    "Max height [m] for heights and shades modes (default - 5000).");
+  opts.add("srtm_smin", 1,0,g,
+    "Min slope [deg] for slopes mode (default - 35).");
+  opts.add("srtm_smax", 1,0,g,
+    "Max slope [deg] for slopes mode (default - 50).");
+  opts.add("srtm_interp_holes", 1,0,g,
+    "Interpolate holes (0|1, default 1).");
+  opts.add("srtm_bgcolor", 1,0,g,
+    "Color to draw no-data and out-of-scale areas (default 0x60FF0000).");
+  opts.add("srtm_maxsc", 1,0,g,
+    "Do not draw srtm data out of this scale (default 15).");
+  opts.add("srtm_cnt",1,0,g,
+    "Draw contours (0|1, default - 1).");
+  opts.add("srtm_cnt_step",1,0,g,
+    " Contour step [m], default 50.");
+  opts.add("srtm_cnt_smult",1,0,g,
+    " Step multiplier for thick contours, default - 5.");
+  opts.add("srtm_cnt_col",1,0,g,
+    " Contour color, default - 0xFF000000.");
+  opts.add("srtm_cnt_w",1,0,g,
+    " Contour line width, default - 0.25.");
+  opts.add("srtm_cnt_wmult",1,0,g,
+    " Width multiplier for thick contours, default - 2.");
+  opts.add("srtm_cnt_crv",1,0,g,
+    " Size of round corners on contours, in linewidth units, default - 20.");
+  opts.add("srtm_holes",1,0,g,
+    " Draw contours around data holes (1|0, default - 0).");
+  opts.add("srtm_holes_col",1,0,g,
+    " Color of hole contours, default - 0xFF000000.");
+  opts.add("srtm_holes_w",1,0,g,
+    " Linewidth of hole contours, default - 1.");
+  opts.add("srtm_peaks",1,0,g,
+    " Draw summits (0|1, default - 1).");
+  opts.add("srtm_peaks_col",1,0,g,
+    " Summit's color, default - 0xFF000000.");
+  opts.add("srtm_peaks_w",1,0,g,
+    " Summit point size, default - 3.");
+  opts.add("srtm_peaks_dh",1,0,g,
+    " DH parameter for peak finder [m], default - 20.");
+  opts.add("srtm_peaks_ps",1,0,g,
+    " PS parameter fr peak finder [pts], default - 1000.");
+  opts.add("srtm_peaks_text",1,0,g,
+    " Draw peak text (0|1, default - 1).");
+  opts.add("srtm_peaks_text_size",1,0,g,
+    " Peak text size, default - 10.");
+  opts.add("srtm_peaks_text_font",1,0,g,
+    " Peak text font, default - serif.");
+
+}
+
+Opt
+GObjSRTM::get_def_opt() const{
+
+  Opt o = SRTM::get_def_opt();
+  o.put("srtm_draw_mode", "shades");
+  o.put("srtm_hmin", 0);
+  o.put("srtm_hmax", 5000);
+  o.put("srtm_smin", 35);
+  o.put("srtm_smax", 50);
+  o.put("srtm_interp_holes", 1);
+  o.put("srtm_bgcolor", 0x60FF0000);
+  o.put("srtm_maxsc",   15);
+  o.put("srtm_maxscv",  0.5);
+
+  // contours parameters
+  o.put("srtm_cnt",       1);
+  o.put("srtm_cnt_step",  50);
+  o.put("srtm_cnt_smult", 5);
+  o.put("srtm_cnt_col",   0xFF000000);
+  o.put("srtm_cnt_w",     0.25);
+  o.put("srtm_cnt_wmult", 2);
+  o.put("srtm_cnt_crv",   20);
+
+  // holes parameters
+  o.put("srtm_holes",     0);
+  o.put("srtm_holes_col", 0xFF000000);
+  o.put("srtm_holes_w",   0.5);
+
+  // peaks parameters
+  o.put("srtm_peaks",      1);
+  o.put("srtm_peaks_col",  0xFF000000);
+  o.put("srtm_peaks_",     3);
+  o.put("srtm_peaks_dh",   20);
+  o.put("srtm_peaks_ps",   1000);
+  o.put("srtm_peaks_text", 1);
+  o.put("srtm_peaks_text_size", 10);
+  o.put("srtm_peaks_text_font", "serif");
+  return o;
+}
+
+void
 GObjSRTM::set_opt(const Opt & o){
   SRTM::set_opt(o);
 
@@ -35,22 +136,22 @@ GObjSRTM::set_opt(const Opt & o){
 
   // contours parameters
   cnt          = o.get<bool>("srtm_cnt",      1);
-  cnt_step1    = o.get<int>("srtm_cnt_step",  10);
-  cnt_step2    = o.get<int>("srtm_cnt_step2", cnt_step1*5);
+  cnt_step     = o.get<int>("srtm_cnt_step",  50);
+  cnt_smult    = o.get<int>("srtm_cnt_smult", 5);
   cnt_color    = o.get<int>("srtm_cnt_col",   0xFF000000);
-  cnt_th       = o.get<double>("srtm_cnt_th",   1);
-  cnt_th2      = o.get<double>("srtm_cnt_th2",  cnt_th*2);
+  cnt_w        = o.get<double>("srtm_cnt_w",    0.25);
+  cnt_wmult    = o.get<double>("srtm_cnt_wmult",2);
   cnt_crv      = o.get<double>("srtm_cnt_crv",  20.0);
 
   // holes parameters
-  holes        = o.get<bool>("srtm_holes",      1);
-  holes_color  = o.get<int>("srtm_holes_col",  0xFFFF0000);
-  holes_th     = o.get<double>("srtm_holes_th",  1);
+  holes        = o.get<bool>("srtm_holes",      0);
+  holes_color  = o.get<int>("srtm_holes_col",  0xFF000000);
+  holes_w      = o.get<double>("srtm_holes_w",  0.5);
 
   // peaks parameters
   peaks        = o.get<bool>("srtm_peaks",      1);
-  peaks_color  = o.get<int>("srtm_peaks_col",  0xFFFFFF00);
-  peaks_th     = o.get<double>("srtm_peaks_th",  3);
+  peaks_color  = o.get<int>("srtm_peaks_col",  0xFF000000);
+  peaks_w      = o.get<double>("srtm_peaks_w",  3);
   peaks_dh     = o.get<int>("srtm_peaks_dh",   20);
   peaks_ps     = o.get<int>("srtm_peaks_ps",  1000);
   peaks_text   = o.get<bool>("srtm_peaks_text",  1);
@@ -59,56 +160,11 @@ GObjSRTM::set_opt(const Opt & o){
   redraw_me();
 }
 
-Opt
-GObjSRTM::get_opt() const{
-  Opt o = SRTM::get_opt();
-
-  // srtm drawing mode:
-  switch (draw_mode) {
-    case SRTM_DRAW_NONE:    o.put("srtm_draw_mode", "none");    break;
-    case SRTM_DRAW_HEIGHTS: o.put("srtm_draw_mode", "heights"); break;
-    case SRTM_DRAW_SHADES:  o.put("srtm_draw_mode", "shades");  break;
-    case SRTM_DRAW_SLOPES:  o.put("srtm_draw_mode", "slopes");  break;
-  }
-
-  // limits
-  o.put("srtm_hmin", hmin),
-  o.put("srtm_hmax", hmax),
-  o.put("srtm_smin", smin),
-  o.put("srtm_smax", smax),
-
-  o.put("srtm_interp_holes", interp_holes);
-  o.put("srtm_bgcolor", bgcolor);
-  o.put("srtm_maxsc",   maxsc);
-  o.put("srtm_maxscv",  maxscv);
-
-  // contours parameters
-  o.put("srtm_cnt",       cnt);
-  o.put("srtm_cnt_step",  cnt_step1);
-  o.put("srtm_cnt_step2", cnt_step2);
-  o.put("srtm_cnt_col",   cnt_color);
-  o.put("srtm_cnt_th",    cnt_th);
-  o.put("srtm_cnt_th2",   cnt_th2);
-  o.put("srtm_cnt_crv",   cnt_crv);
-
-  // holes parameters
-  o.put("srtm_holes",     holes);
-  o.put("srtm_holes_col", holes_color);
-  o.put("srtm_holes_th",  holes_th);
-
-  // peaks parameters
-  o.put("srtm_peaks",      peaks);
-  o.put("srtm_peaks_col",  peaks_color);
-  o.put("srtm_peaks_th",   peaks_th);
-  o.put("srtm_peaks_dh",   peaks_dh);
-  o.put("srtm_peaks_ps",   peaks_ps);
-  o.put("srtm_peaks_text", peaks_text);
-  o.put("srtm_peaks_text_size", peaks_text_size);
-  o.put("srtm_peaks_text_font", peaks_text_font);
-
-  return o;
+void
+GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
+  cnv = c;
+  redraw_me();
 }
-
 
 int
 GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
@@ -160,11 +216,12 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw contours
   if (cnt && sc < maxscv) {
-    auto c_data = find_contours(wgs_range, cnt_step1);
+    auto c_data = find_contours(wgs_range, cnt_step);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
       if (is_stopped()) return GObj::FILL_NONE;
-      cr->set_line_width( c.first%cnt_step2? cnt_th:cnt_th2 );
+      bool isth = c.first%(cnt_step*cnt_smult); // is it a thick contour
+      cr->set_line_width(cnt_w*(isth? 1:cnt_wmult));
       dMultiLine l = c.second;
       cnv->bck(l);
       cr->mkpath_smline(l, 0, cnt_crv);
@@ -176,7 +233,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (holes && sc < maxscv) {
     auto h_data = find_holes(wgs_range);
     cr->set_color(holes_color);
-    cr->set_line_width(holes_th);
+    cr->set_line_width(holes_w);
     cnv->bck(h_data);
     for(auto const & l:h_data){
       if (is_stopped()) return GObj::FILL_NONE;
@@ -189,7 +246,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (peaks && sc < maxscv) {
     auto p_data = find_peaks(wgs_range, peaks_dh, peaks_ps);
     cr->set_color(peaks_color);
-    cr->set_line_width(peaks_th);
+    cr->set_line_width(peaks_w);
     for (auto & d:p_data){
       if (is_stopped()) return GObj::FILL_NONE;
       dPoint p0 = d.first;
@@ -212,4 +269,6 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (is_stopped()) return GObj::FILL_NONE;
   return GObj::FILL_ALL;
 }
+
+
 

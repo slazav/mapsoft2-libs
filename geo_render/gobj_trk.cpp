@@ -13,15 +13,11 @@ void
 ms2opt_add_drawtrk(GetOptSet & opts){
   const char *g = "DRAWTRK";
   opts.add("trk_draw_mode", 1,0,g,
-    "Track drawing mode (normal, speed, height).");
-  opts.add("trk_draw_th", 1,0,g,
-    "Line thickness, overrides track setting.");
-  opts.add("trk_draw_color", 1,0,g,
-    "Color (for normal drawing mode), overrides track color.");
+    "Track drawing mode (normal, speed, height, default - normal).");
+  opts.add("trk_draw_transp", 1,0,g,
+    "Use transparent color (0..1, default - 0).");
   opts.add("trk_draw_dots", 1,0,g,
     "Draw dots (for normal drawing mode), default: 1.");
-  opts.add("trk_draw_arrows", 1,0,g,
-    "Draw arrows (for normal drawing mode), default: 0.");
   opts.add("trk_draw_min",    1,0,g,
     "Min value (km/h for speed mode, m for height mode).");
   opts.add("trk_draw_max",    1,0,g,
@@ -30,87 +26,32 @@ ms2opt_add_drawtrk(GetOptSet & opts){
     "Color gradient (for speed or height modes), default: BCGYRM.");
 }
 
-/********************************************************************/
-
-GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_){
-  segments.resize(trk.size());
+Opt
+GObjTrk::get_def_opt() const {
+  Opt o;
+  o.put("trk_draw_transp", 0);
+  o.put("trk_draw_mode", "normal");
+  o.put("trk_draw_dots", 1);
+  o.put("trk_draw_grad", "BCGYRM");
+  // for speed mode
+  o.put("trk_draw_smin", 0);
+  o.put("trk_draw_smax", 10);
+  // for height mode
+  o.put("trk_draw_hmin", 0);
+  o.put("trk_draw_hmax", 5000);
+  return o;
 }
-
-int
-GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
-
-  if (is_stopped()) return GObj::FILL_NONE;
-  if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
-
-  int arr_w = linewidth * 2.0;
-  int dot_w = linewidth * 0.5;
-  int arr_dist = linewidth * 10; // minimal segment with arrow
-
-  // draw all segments
-  cr->cap_round();
-  cr->set_line_width(linewidth);
-  for (int i = 0; i<segments.size(); ++i){
-
-    if (is_stopped()) return GObj::FILL_NONE;
-
-    dPoint p1 = segments[i].p1;
-    dPoint p2 = segments[i].p2;
-    dRect r(p1,p2);
-    r.expand(arr_w + dot_w + linewidth);
-    if (intersect(draw_range, r).is_zsize()) continue;
-
-    cr->set_color_a(segments[i].color);
-
-    if (!segments[i].hide){
-      cr->move_to(p1);
-      cr->line_to(p2);
-    }
-
-    if (draw_dots ||
-        (segments[i].hide && segments[i>0?i-i:trk.size()-1].hide)){
-      cr->circle(p1, dot_w);
-    }
-
-    if (!segments[i].hide && draw_arrows && (len2d(p1-p2) > arr_dist)){
-      dPoint p0=(p1+p2)/2;
-      dPoint dp = norm2d(p1-p2) * arr_w;
-      dPoint p3 = p0 + dp + dPoint(dp.y, -dp.x) * 0.5;
-      dPoint p4 = p0 + dp - dPoint(dp.y, -dp.x) * 0.5;
-      cr->move_to(p0);
-      cr->line_to(p3);
-      cr->line_to(p4);
-      cr->line_to(p0);
-    }
-    cr->stroke();
-  }
-
-  return GObj::FILL_PART;
-}
-
-void
-GObjTrk::update_range(){
-  range = dRect();
-  for (auto const & s:segments)
-    range.expand(s.p1);
-  range.expand(linewidth);
-}
-
-/***************/
 
 void
 GObjTrk::set_opt(const Opt & opt){
   linewidth = trk.opts.get<double>("thickness", 1);
-  linewidth = opt.get<double>("trk_draw_th", linewidth);
-
   bool closed = trk.opts.get<double>("closed", false);
+  int  color  = trk.opts.get<int>("color", 0xFFFF000) | (0xFF << 24);
 
-  // Track color. Take value from the track, override by
-  // value from trk_draw_color option if it exists.
-  // Color from track is always non-transparent, but
-  // option can set a transparent color.
-  int  color  = trk.opts.get<int>("color", 0xFFFF000);
-  color |= 0xFF000000;
-  color       = opt.get("trk_draw_color", color);
+  // color from track is always non-transparent.
+  // set transparency (0..1)
+  double tr = opt.get<double>("trk_draw_transp", 0);
+  color = color & ((int)rint((1-tr)*255)<<24);
 
   // track drawing mode (normal, speed, height)
   string trk_mode = opt.get<string>("trk_draw_mode", "normal");
@@ -118,20 +59,17 @@ GObjTrk::set_opt(const Opt & opt){
   Rainbow RB(0,1);
   if (trk_mode == "normal"){
     draw_dots   = opt.get("trk_draw_dots", 1);
-    draw_arrows = opt.get("trk_draw_arrows", 1);
   }
   else if (trk_mode == "speed"){
-    draw_dots   = opt.get("trk_draw_dots", 0);
-    draw_arrows = opt.get("trk_draw_arrows", 0);
-    RB = Rainbow(opt.get<double>("trk_draw_min", 0),
-                 opt.get<double>("trk_draw_max", 10),
+    draw_dots   = 0;
+    RB = Rainbow(opt.get<double>("trk_draw_smin", 0),
+                 opt.get<double>("trk_draw_smax", 10),
                  opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
   else if (trk_mode == "height"){
-    draw_dots   = opt.get("trk_draw_dots", 0);
-    draw_arrows = opt.get("trk_draw_arrows", 0);
-    RB = Rainbow(opt.get<double>("trk_draw_min", -200),
-                 opt.get<double>("trk_draw_max", 8000),
+    draw_dots   = 0;
+    RB = Rainbow(opt.get<double>("trk_draw_smin", -200),
+                 opt.get<double>("trk_draw_smax", 8000),
                  opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
 
@@ -186,4 +124,62 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   update_range();
   redraw_me();
 }
+
+/********************************************************************/
+
+GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_){
+  segments.resize(trk.size());
+}
+
+int
+GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
+
+  if (is_stopped()) return GObj::FILL_NONE;
+  if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
+
+  int arr_w = linewidth * 2.0;
+  int dot_w = linewidth * 0.5;
+  int arr_dist = linewidth * 10; // minimal segment with arrow
+
+  // draw all segments
+  cr->cap_round();
+  cr->set_line_width(linewidth);
+  for (int i = 0; i<segments.size(); ++i){
+
+    if (is_stopped()) return GObj::FILL_NONE;
+
+    dPoint p1 = segments[i].p1;
+    dPoint p2 = segments[i].p2;
+    dRect r(p1,p2);
+    r.expand(arr_w + dot_w + linewidth);
+    if (intersect(draw_range, r).is_zsize()) continue;
+
+    cr->set_color_a(segments[i].color);
+
+    if (!segments[i].hide){
+      cr->move_to(p1);
+      cr->line_to(p2);
+    }
+
+    if (draw_dots ||
+        (segments[i].hide && segments[i>0?i-i:trk.size()-1].hide)){
+      cr->circle(p1, dot_w);
+    }
+    cr->stroke();
+  }
+
+  return GObj::FILL_PART;
+}
+
+void
+GObjTrk::update_range(){
+  range = dRect();
+  for (auto const & s:segments)
+    range.expand(s.p1);
+  range.expand(linewidth);
+}
+
+/***************/
+
+
 

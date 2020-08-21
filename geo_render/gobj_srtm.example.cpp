@@ -22,11 +22,9 @@ main(){
     o.put("srtm_draw_mode", "shades");
     o.put("srtm_bgcolor", 0);
     o.put("srtm_cnt", 1);
-    o.put("srtm_cnt_th", 0.5);
+    o.put("srtm_cnt_w", 0.2);
     o.put("srtm_holes",  1);
-    o.put("srtm_holes_col",  0xFFFF00FF);
     o.put("srtm_peaks", 1);
-//    o.put("srtm_peaks_col",  0xFF0000FF);
 
     GObjSRTM S(o);
 
