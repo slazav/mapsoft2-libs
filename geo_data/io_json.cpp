@@ -331,7 +331,7 @@ read_json(const string &fname, GeoData & data, const Opt & opts) {
   ifstream f(fname);
   istreambuf_iterator<char> begin(f), end;
   string buf(begin, end);
-  if (!f.good()) throw Err() << "Can't read file " << fname << " for writing";
+  if (!f.good()) throw Err() << "Can't read file " << fname;
 
   size_t flags = 0;
   json_error_t e;
