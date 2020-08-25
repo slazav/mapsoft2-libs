@@ -159,19 +159,19 @@ void read_geojson_pt(json_t *coord, T & pt){
   json_t *val;
   if (json_array_size(coord)>0 &&
      (val = json_array_get(coord, 0))){
-    if (json_is_number(val)) pt.x = json_real_value(val);
+    if (json_is_number(val)) pt.x = json_number_value(val);
     else if (!json_is_null(val))
       throw Err() << "number expected in GeoJSON coordinates";
   }
   if (json_array_size(coord)>1 &&
      (val = json_array_get(coord, 1))){
-    if (json_is_number(val)) pt.y = json_real_value(val);
+    if (json_is_number(val)) pt.y = json_number_value(val);
     else if (!json_is_null(val))
       throw Err() << "number expected in GeoJSON coordinates";
   }
   if (json_array_size(coord)>2 &&
      (val = json_array_get(coord, 2))){
-    if (json_is_number(val)) pt.z = json_real_value(val);
+    if (json_is_number(val)) pt.z = json_number_value(val);
     else if (!json_is_null(val))
       throw Err() << "number expected in GeoJSON coordinates";
   }
