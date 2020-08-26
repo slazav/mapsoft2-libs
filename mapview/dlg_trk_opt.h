@@ -7,12 +7,12 @@
 
 class DlgTrkOpt : public Gtk::Dialog{
 
-    Gtk::CheckButton  *dots, *arrows;
+    Gtk::CheckButton  *dots;
     Gtk::RadioButton  *m_normal, *m_speed, *m_height;
     RainbowWidget *rv, *rh;
     sigc::signal<void> signal_changed_;
 
-    void on_ch(int mode);
+    void on_ch(int mode, Gtk::RadioButton *b);
 
   public:
     DlgTrkOpt();

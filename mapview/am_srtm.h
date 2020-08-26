@@ -35,8 +35,7 @@ public:
       signal_changed().connect(
         sigc::bind(sigc::mem_fun (this, &AMSrtmOpts::on_response),1));
       set_title(get_name());
-      o = GObjSRTM::get_def_opt();
-      o.put(mapview->opts);
+      o = mapview->opts;
     }
 
     std::string get_name() { return "SRTM drawing options"; }

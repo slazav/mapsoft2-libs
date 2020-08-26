@@ -97,7 +97,6 @@ class MyWindow : public Gtk::ApplicationWindow {
     trkopt.signal_response().connect(
       sigc::mem_fun(this, &MyWindow::on_trkopt_res));
     trkopt.set_transient_for(*this);
-    trkopt.set_opt(GObjTrk::get_def_opt());
 
     // SRTM drawing options dialog
     auto b_srtmopt = manage(new Gtk::Button("DlgSrtmOpt"));
@@ -108,7 +107,6 @@ class MyWindow : public Gtk::ApplicationWindow {
     srtmopt.signal_response().connect(
       sigc::mem_fun(this, &MyWindow::on_srtmopt_res));
     srtmopt.set_transient_for(*this);
-    srtmopt.set_opt(GObjSRTM::get_def_opt());
 
     /***********************************/
     // Main vbox

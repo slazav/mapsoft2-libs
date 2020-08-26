@@ -9,7 +9,7 @@
 class DlgSrtmOpt : public Gtk::Dialog{
 
     Gtk::CheckButton  *cnt, *shades, *peaks, *interp, *holes;
-    Gtk::RadioButton  *m_heights, *m_slopes;
+    Gtk::RadioButton  *m_none, *m_heights, *m_slopes;
     Gtk::SpinButton   *cnt_val;
     Gtk::Button       *dirbtn;
     Gtk::Label        *dir;
@@ -17,7 +17,7 @@ class DlgSrtmOpt : public Gtk::Dialog{
     Gtk::FileChooserDialog fdlg;
 
     sigc::signal<void> signal_changed_;
-    void on_ch(int mode);
+    void on_ch(int mode, Gtk::RadioButton *b);
 
     void on_dirbtn();
     void on_fresult(int r);
