@@ -114,7 +114,7 @@ public:
 
   // Get default options. In the case when the object is controlled
   // by GUI it could be useful to get default state of the interface.
-  virtual Opt get_def_opt() const {return Opt();}
+  static Opt get_def_opt() {return Opt();}
 
   /********************************************************/
 

@@ -64,7 +64,7 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
 }
 
 Opt
-GObjSRTM::get_def_opt() const{
+GObjSRTM::get_def_opt(){
 
   Opt o = SRTM::get_def_opt();
   o.put("srtm_draw_mode", "shades");

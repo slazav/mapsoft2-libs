@@ -37,7 +37,7 @@ ms2opt_add_drawwpt(GetOptSet & opts){
 }
 
 Opt
-GObjWpts::get_def_opt() const {
+GObjWpts::get_def_opt() {
   Opt o;
   o.put("wpt_text_font",  "serif");
   o.put("wpt_text_size",  10);

@@ -93,7 +93,7 @@ ms2opt_add_srtm(GetOptSet & opts){
 }
 
 Opt
-SRTM::get_def_opt() const{
+SRTM::get_def_opt() {
   Opt o;
   o.put("srtm_dir", std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
   return o;

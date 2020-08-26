@@ -80,7 +80,7 @@ public:
 
   /************************************************/
 
-  Opt get_def_opt() const override;
+  static Opt get_def_opt();
 
   void set_opt(const Opt & o) override;
 

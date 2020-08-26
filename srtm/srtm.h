@@ -82,7 +82,7 @@ class SRTM {
     void set_opt(const Opt & opt);
 
     // Get default options.
-    Opt get_def_opt() const;
+    static Opt get_def_opt();
 
     // Find set of points with same value (used
     // for hole interpolation in get_val) and its border.

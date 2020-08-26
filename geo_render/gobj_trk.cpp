@@ -27,7 +27,7 @@ ms2opt_add_drawtrk(GetOptSet & opts){
 }
 
 Opt
-GObjTrk::get_def_opt() const {
+GObjTrk::get_def_opt(){
   Opt o;
   o.put("trk_draw_transp", 0);
   o.put("trk_draw_mode", "normal");

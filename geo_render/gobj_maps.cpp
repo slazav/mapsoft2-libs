@@ -30,7 +30,7 @@ ms2opt_add_drawmap(GetOptSet & opts){
 }
 
 Opt
-GObjMaps::get_def_opt() const {
+GObjMaps::get_def_opt() {
   Opt o;
   o.put("map_smooth",   false);
   o.put("map_clip_brd", true);
