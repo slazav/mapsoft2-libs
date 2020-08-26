@@ -18,10 +18,10 @@ ms2opt_add_drawtrk(GetOptSet & opts){
     "Use transparent color (0..1, default - 0).");
   opts.add("trk_draw_dots", 1,0,g,
     "Draw dots (for normal drawing mode), default: 1.");
-  opts.add("trk_draw_min",    1,0,g,
-    "Min value (km/h for speed mode, m for height mode).");
-  opts.add("trk_draw_max",    1,0,g,
-    "Max value (km/h for speed mode, m for height mode).");
+  opts.add("trk_draw_smin",    1,0,g, "Min value for speed mode [km/h].");
+  opts.add("trk_draw_smax",    1,0,g, "Max value for speed mode [km/h].");
+  opts.add("trk_draw_hmin",    1,0,g, "Min value for height mode [m].");
+  opts.add("trk_draw_hmax",    1,0,g, "Max value for height mode [m].");
   opts.add("trk_draw_grad",   1,0,g,
     "Color gradient (for speed or height modes), default: BCGYRM.");
 }
