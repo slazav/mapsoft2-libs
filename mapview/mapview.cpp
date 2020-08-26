@@ -54,6 +54,7 @@ Mapview::Mapview(const Opt & o) :
     // Add gobjs from panels.
     gobj.add(PAGE_WPTS, panel_wpts);
     gobj.add(PAGE_TRKS, panel_trks);
+    gobj.add(PAGE_SRTM, srtm);  gobj.set_visibility(srtm, false);
     gobj.add(PAGE_MAPS, panel_maps);
 
     /***************************************/
@@ -270,14 +271,12 @@ Mapview::close_mapdb(){
 
 void
 Mapview::open_srtm(){
-  try {gobj.add(PAGE_SRTM, srtm);}
-  catch (Err & e) { dlg_err.call(e); }
+  gobj.set_visibility(srtm, true);
 }
 
 void
 Mapview::close_srtm(){
-  try {gobj.del(srtm);}
-  catch (Err & e) { dlg_err.call(e); }
+  gobj.set_visibility(srtm, false);
 }
 
 void
