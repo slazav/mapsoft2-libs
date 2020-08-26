@@ -9,7 +9,7 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
 
   const char *g = "DRAWSRTM";
   opts.add("srtm_draw_mode", 1,0,g,
-    "Track drawing mode (none, slopes, heights, shades, default - shades).");
+    "SRTM drawing mode (none, slopes, heights, shades, default - shades).");
   opts.add("srtm_hmin", 1,0,g,
     "Min height [m] for heights and shades modes (default - 0).");
   opts.add("srtm_hmax", 1,0,g,

@@ -17,7 +17,8 @@ public:
       dlg.signal_changed().connect(
         sigc::bind(sigc::mem_fun (this, &AMTrkOpt::on_response),1));
       dlg.set_title(get_name());
-      o = mapview->opts;
+      o = GObjTrk::get_def_opt();
+      o.put(mapview->opts);
     }
 
     std::string get_name() { return "Track drawing Opt"; }
