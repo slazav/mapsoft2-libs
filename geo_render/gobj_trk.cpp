@@ -68,8 +68,8 @@ GObjTrk::set_opt(const Opt & opt){
   }
   else if (trk_mode == "height"){
     draw_dots   = 0;
-    RB = Rainbow(opt.get<double>("trk_draw_smin", -200),
-                 opt.get<double>("trk_draw_smax", 8000),
+    RB = Rainbow(opt.get<double>("trk_draw_hmin", -200),
+                 opt.get<double>("trk_draw_hmax", 8000),
                  opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
 
