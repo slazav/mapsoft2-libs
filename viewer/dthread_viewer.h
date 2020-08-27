@@ -28,6 +28,7 @@ class DThreadViewer : public SimpleViewer {
     // override set_cnv with locking
     virtual void set_cnv(std::shared_ptr<ConvBase> c, bool fix_range) override;
 
+    using SimpleViewer::rescale;
     virtual void rescale(const double k, const iPoint & cnt) override;
 
     // override set_cnv with locking
