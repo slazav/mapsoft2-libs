@@ -9,6 +9,7 @@
 #include "mapview/dlg_show_pt.h"
 #include "mapview/dlg_trk_opt.h"
 #include "mapview/dlg_srtm_opts.h"
+#include "mapview/dlg_pano.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
 
@@ -62,6 +63,18 @@ class MyWindow : public Gtk::ApplicationWindow {
     srtmopt.hide();
   }
 
+  // SRTM panoramic view
+  DlgPano pano;
+  void on_pano() {
+    pano.show_all();
+  }
+  void on_pano_point(const dPoint & p) {
+    std::cerr << "mark point: " << p << "\n";
+  }
+  void on_pano_go(const dPoint & p) {
+    std::cerr << "jump to: " << p << "\n";
+  }
+
   public:
 
   /***********************************/
@@ -108,6 +121,21 @@ class MyWindow : public Gtk::ApplicationWindow {
       sigc::mem_fun(this, &MyWindow::on_srtmopt_res));
     srtmopt.set_transient_for(*this);
 
+    // SRTM pano
+    Opt pano_opts;
+//    pano_opts.put("pano_pt", dPoint(29.5, 78.5));
+    pano_opts.put("pano_pt", dPoint(78.5, 41.5));
+    pano_opts.put("srtm_dir", "../../srtm/test_srtm");
+    pano.set_opt(pano_opts);
+    auto b_pano = manage(new Gtk::Button("DlgPano"));
+    b_pano->signal_clicked().connect(
+      sigc::mem_fun(this, &MyWindow::on_pano));
+    pano.signal_point().connect(
+      sigc::mem_fun(this, &MyWindow::on_pano_point));
+    pano.signal_go().connect(
+      sigc::mem_fun(this, &MyWindow::on_pano_go));
+    pano.set_transient_for(*this);
+
     /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
@@ -116,6 +144,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     vbox->pack_start(*b_showpt,  false, true, 5);
     vbox->pack_start(*b_trkopt,  false, true, 5);
     vbox->pack_start(*b_srtmopt, false, true, 5);
+    vbox->pack_start(*b_pano,    false, true, 5);
 
     add (*vbox);
     load_css("./widgets.css", *this);
