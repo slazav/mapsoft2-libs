@@ -41,9 +41,6 @@ class MyWindow : public Gtk::ApplicationWindow {
 
   // Track drawing options dialog
   DlgTrkOpt trkopt;
-  void on_trkopt() {
-    trkopt.show_all();
-  }
   void on_trkopt_ch() {
     std::cerr << trkopt.get_opt() << "\n";
   }
@@ -53,9 +50,6 @@ class MyWindow : public Gtk::ApplicationWindow {
 
   // SRTM drawing options dialog
   DlgSrtmOpt srtmopt;
-  void on_srtmopt() {
-    srtmopt.show_all();
-  }
   void on_srtmopt_ch() {
     std::cerr << srtmopt.get_opt() << "\n";
   }
@@ -65,9 +59,6 @@ class MyWindow : public Gtk::ApplicationWindow {
 
   // SRTM panoramic view
   DlgPano pano;
-  void on_pano() {
-    pano.show_all();
-  }
   void on_pano_point(const dPoint & p) {
     std::cerr << "mark point: " << p << "\n";
   }
@@ -104,7 +95,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     // Track drawing options dialog
     auto b_trkopt = manage(new Gtk::Button("DlgTrkOpt"));
     b_trkopt->signal_clicked().connect(
-      sigc::mem_fun(this, &MyWindow::on_trkopt));
+      sigc::mem_fun(trkopt, &DlgTrkOpt::show_all));
     trkopt.signal_changed().connect(
       sigc::mem_fun(this, &MyWindow::on_trkopt_ch));
     trkopt.signal_response().connect(
@@ -114,7 +105,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     // SRTM drawing options dialog
     auto b_srtmopt = manage(new Gtk::Button("DlgSrtmOpt"));
     b_srtmopt->signal_clicked().connect(
-      sigc::mem_fun(this, &MyWindow::on_srtmopt));
+      sigc::mem_fun(trkopt, &DlgSrtmOpt::show_all));
     srtmopt.signal_changed().connect(
       sigc::mem_fun(this, &MyWindow::on_srtmopt_ch));
     srtmopt.signal_response().connect(
@@ -129,7 +120,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     pano.set_opt(pano_opts);
     auto b_pano = manage(new Gtk::Button("DlgPano"));
     b_pano->signal_clicked().connect(
-      sigc::mem_fun(this, &MyWindow::on_pano));
+      sigc::mem_fun(pano, &DlgPano::show_all));
     pano.signal_point().connect(
       sigc::mem_fun(this, &MyWindow::on_pano_point));
     pano.signal_go().connect(
