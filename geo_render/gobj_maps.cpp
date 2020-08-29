@@ -70,11 +70,14 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     d.cnv.bck(d.refs);
 
     // map bbox in viewer coordinates
+    // Not good for large map in wrong projection,
+    // Distorsions can be really large!
     d.bbox = d.cnv.bck_acc(d.src_bbox);
     range.expand(d.bbox);
 
     // calculate map scale (map pixels per viewer pixel)
-    dPoint sc = d.cnv.scales(d.bbox);
+    // at the viewer's origin
+    dPoint sc = d.cnv.scales(dRect(0,0,1,1));
     double k = std::max(sc.x, sc.y);
 
     // update map scale
