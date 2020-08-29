@@ -153,8 +153,8 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
     if (is_stopped()) return GObj::FILL_NONE;
     cr->save();
     auto o = p.second.obj;
-    auto lk = o->get_lock();
     try {
+      auto lk = o->get_lock();
       int res1 = o->draw(cr, draw_range);
       if (res1 != GObj::FILL_NONE &&
           res!=GObj::FILL_ALL) res=res1;
@@ -170,7 +170,6 @@ GObjMulti::prepare_range(const dRect & range){
   for (auto const & p:data){
     if (!p.second.on) continue;
     auto o = p.second.obj;
-    auto lk = o->get_lock();
     try { o->prepare_range(range); }
     catch (std::exception & e) { process_error(e); }
   }

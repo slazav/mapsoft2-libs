@@ -92,10 +92,12 @@ DThreadViewer::updater(){
 
       if (obj){
         dRect r = tile_to_rect(key);
-        auto lk = obj->get_lock();
         crw->save();
         crw->translate(-r.tlc());
-        try { obj->draw(crw, r); }
+        try {
+          auto lk = obj->get_lock();
+          obj->draw(crw, r);
+        }
         catch (Err & e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
         crw->restore();
       }
