@@ -15,14 +15,11 @@ DlgSrtmOpt::get_opt() const{
     o.put<double>("srtm_cnt", 0);
   }
 
+  o.put("srtm_surf",  surf->get_active());
   o.put("srtm_holes", holes->get_active());
   o.put("srtm_peaks", peaks->get_active());
   o.put("srtm_interp_holes", interp->get_active());
 
-
-  if (m_none->get_active()){
-    o.put<string>("srtm_draw_mode", "none");
-  }
   if (m_heights->get_active()){
     bool sh = shades->get_active();
     o.put<string>("srtm_draw_mode", sh? "shades":"heights");
@@ -35,7 +32,6 @@ DlgSrtmOpt::get_opt() const{
     o.put<int>("srtm_smax", rs->get_v2());
   }
 
-
   o.put<string>("srtm_dir", dir->get_text());
   return o;
 }
@@ -47,8 +43,6 @@ DlgSrtmOpt::set_opt(const Opt & o){
   // keep others untouched:
   string mode = o.get<string>("srtm_draw_mode");
 
-  if (mode == "none")
-    m_none->set_active();
   if (mode == "heights")
     m_heights->set_active();
   if (mode == "shades"){
@@ -71,6 +65,9 @@ DlgSrtmOpt::set_opt(const Opt & o){
 
   if (o.exists("srtm_dir"))
     dir->set_text(o.get("srtm_dir", ""));
+
+  if (o.exists("srtm_surf"))
+     surf->set_active(o.get<bool>("srtm_surf", true));
 
   if (o.exists("srtm_cnt"))
     cnt->set_active(o.get<bool>("srtm_cnt", true));
@@ -98,8 +95,8 @@ DlgSrtmOpt::on_ch(int mode, Gtk::RadioButton *b){
   if (b && !b->get_active()) return; // signal from switching a button off
   if (!is_visible()) return;
   if ( ((mode == 1) && !cnt->get_active()) ||
-       ((mode == 2) && !m_heights->get_active()) ||
-       ((mode == 3) && !m_slopes->get_active()) ) return;
+       ((mode == 2) && (!m_heights->get_active() || !surf->get_active())) ||
+       ((mode == 3) && (!m_slopes->get_active() || !surf->get_active()))) return;
   signal_changed_.emit();
 }
 
@@ -112,13 +109,13 @@ DlgSrtmOpt::DlgSrtmOpt():
   cnt     = manage(new Gtk::CheckButton("Draw contours"));
   cnt_val = manage(new Gtk::SpinButton(cnt_adj, 10, 0));
 
+  surf    = manage(new Gtk::CheckButton("Draw color surface"));
   peaks   = manage(new Gtk::CheckButton("Draw summits"));
   holes   = manage(new Gtk::CheckButton("Draw holes"));
   interp  = manage(new Gtk::CheckButton("Interpolate holes"));
 
-  m_none =  manage(new Gtk::RadioButton("None"));
-  Gtk::RadioButtonGroup gr = m_none->get_group();
-  m_heights =  manage(new Gtk::RadioButton(gr, "Height"));
+  m_heights =  manage(new Gtk::RadioButton("Heights"));
+  Gtk::RadioButtonGroup gr = m_heights->get_group();
   m_slopes =  manage(new Gtk::RadioButton(gr, "Slopes"));
   shades = manage(new Gtk::CheckButton("Shades"));
 
@@ -136,7 +133,7 @@ DlgSrtmOpt::DlgSrtmOpt():
   t->attach(*peaks,    0, 1, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*interp,   0, 1, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*holes,    0, 1, 3, 4, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*m_none,   0, 1, 4, 5, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*surf,     0, 1, 4, 5, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*m_heights,0, 1, 5, 6, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*shades,   1, 2, 5, 6, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*rh,       0, 2, 6, 7, Gtk::FILL, Gtk::SHRINK, 3, 3);
@@ -147,14 +144,14 @@ DlgSrtmOpt::DlgSrtmOpt():
 
   get_vbox()->add(*t);
 
-  m_none->signal_toggled().connect(
-      sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, m_none));
   m_heights->signal_toggled().connect(
       sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, m_heights));
   m_slopes->signal_toggled().connect(
       sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, m_slopes));
 
   Gtk::RadioButton* b0(NULL);
+  surf->signal_toggled().connect(
+      sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, b0));
   cnt->signal_toggled().connect(
       sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, b0));
   cnt_val->signal_value_changed().connect(

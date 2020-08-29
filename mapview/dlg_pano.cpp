@@ -6,8 +6,6 @@ DlgPano::get_opt() const{
   o.put("pano_pt", pt);
   o.put("pano_alt", dh->get_value());
   o.put("pano_rmax", mr->get_value());
-  o.put("pano_hmin", rb->get_v1());
-  o.put("pano_hmax", rb->get_v2());
   return o;
 }
 
@@ -21,10 +19,6 @@ DlgPano::set_opt(const Opt & o) {
   if (o.exists("pano_rmax"))
     mr->set_value(o.get<double>("pano_rmax"));
 
-  if (o.exists("pano_hmin") && o.exists("pano_hmax"))
-    rb->set(
-      o.get<double>("pano_hmin"),
-      o.get<double>("pano_hmax"));
   gobj_pano.set_opt(o);
 }
 
@@ -36,8 +30,6 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
 
   signal_response().connect(
       sigc::hide(sigc::mem_fun(this, &DlgPano::hide)));
-
-  rb = manage(new RainbowWidget(256,8,-999, 9999, 100, 0));
 
   auto dh_adj = Gtk::Adjustment::create(20,0,9999,10);
   auto az_adj = Gtk::Adjustment::create(0,0,360,10);
@@ -51,16 +43,15 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   Gtk::Label * dhl = manage(new Gtk::Label("Altitude, m:", Gtk::ALIGN_END));
   Gtk::Label * mrl = manage(new Gtk::Label("Max.Dist., km:", Gtk::ALIGN_END));
 
-  Gtk::Table * t =   manage(new Gtk::Table(3,3));
+  Gtk::Table * t =   manage(new Gtk::Table(6,1));
 
       //  widget    l  r  t  b  x       y
   t->attach(*azl,   0, 1, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*az,    1, 2, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*dhl,   0, 1, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*dh,    1, 2, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*mrl,   0, 1, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*mr,    1, 2, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*rb,    2, 3, 0, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*dhl,   2, 3, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*dh,    3, 4, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*mrl,   4, 5, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*mr,    5, 6, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
 
   get_vbox()->pack_start (viewer, true, true);
   get_vbox()->pack_start (*t, false, true);
@@ -68,8 +59,6 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   viewer.set_can_focus();
   viewer.grab_focus();
 
-  rb->signal_changed().connect(
-      sigc::mem_fun(this, &DlgPano::on_ch));
   dh->signal_value_changed().connect(
       sigc::mem_fun(this, &DlgPano::on_ch));
   az->signal_value_changed().connect(
@@ -131,8 +120,7 @@ DlgPano::set_az(){
 }
 
 void
-DlgPano::get_az(iPoint p){
-  if (!viewer.is_on_drag()) return;
+DlgPano::get_az(const iPoint & p){
   double a = viewer.get_center(false).x * 360.0/gobj_pano.get_width();
   while (a>360) a-=360;
   while (a<0)   a+=360;

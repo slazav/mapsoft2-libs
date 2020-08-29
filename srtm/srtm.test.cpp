@@ -23,8 +23,8 @@ main(){
     assert_eq(S.get_val(x0+700, y0+1100, false), 20);
 
     // wgs coordinates
-    assert_eq(S.get_val(dPoint(x0+10, y0+10)/1200.0, false), 0);
-    assert_eq(S.get_val(dPoint(x0+700, y0+1100)/1200.0, false), 20);
+    assert_eq(S.get_val_int4(dPoint(x0+10, y0+10)/1200.0), 0);
+    assert_eq(S.get_val_int4(dPoint(x0+700, y0+1100)/1200.0), 20);
 
     // set value
     assert_eq(S.set_val(x0, y0-1, 100), SRTM_VAL_NOFILE);
@@ -32,8 +32,9 @@ main(){
     assert_eq(S.get_val(x0, y0, false), 100);
 
     Opt o1 = S.get_def_opt();
-    assert_eq(o1.size(), 1);
+    assert_eq(o1.size(), 8);
     assert_eq(o1.exists("srtm_dir"), true);
+    assert_eq(o1.get("srtm_draw_mode"), "shades");
 
 
   }

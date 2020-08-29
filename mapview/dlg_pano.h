@@ -13,7 +13,6 @@ class DlgPano : public Gtk::Dialog{
     GObjPano gobj_pano;
     DThreadViewer viewer;
     Rubber rubber;
-    RainbowWidget *rb;
     Gtk::SpinButton *az;
     Gtk::SpinButton *dh;
     Gtk::SpinButton *mr;
@@ -39,7 +38,7 @@ class DlgPano : public Gtk::Dialog{
     void set_origin(const dPoint & pt);
     void set_dir(const dPoint & pt);
     void set_az();
-    void get_az(iPoint p); // update az value from viewer signal
+    void get_az(const iPoint & p); // update az value from viewer signal
 
     sigc::signal<void, dPoint> signal_go();
     sigc::signal<void, dPoint> signal_point();

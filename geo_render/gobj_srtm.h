@@ -20,19 +20,7 @@ class GObjSRTM : public GObj {
   std::shared_ptr<ConvBase> cnv;
   SRTM * srtm;
 
-  /// how to draw data
-  enum draw_mode_t {
-    SRTM_DRAW_NONE,
-    SRTM_DRAW_SHADES, // heights shaded with slope value
-    SRTM_DRAW_HEIGHTS,
-    SRTM_DRAW_SLOPES,
-  } draw_mode;
-
-  double hmin,hmax;  // limits for heights and shades modes
-  double smin,smax;  // limits for slopes mode
-
-  bool interp_holes; // interpolate holes in data
-  uint32_t bgcolor;  // how to draw holes
+  bool surf;         // draw color surface
   double maxsc;      // max scale (srtm pixels / viewer pixels)
   double maxscv;     // max scale for vector data
 
@@ -59,7 +47,6 @@ class GObjSRTM : public GObj {
 
   public:
 
-    Rainbow R; // color converter
 
     GObjSRTM(SRTM *srtm, const Opt & o): srtm(srtm) { set_opt(o); }
 

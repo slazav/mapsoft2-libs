@@ -67,6 +67,24 @@ class SRTM {
   /// area (m^2) of 1x1 srtm point on equator
   double area0;
 
+  // color parameters:
+
+  /// how to draw data
+  enum draw_mode_t {
+    SRTM_DRAW_SHADES, // heights shaded with slope value
+    SRTM_DRAW_HEIGHTS,
+    SRTM_DRAW_SLOPES,
+  } draw_mode;
+
+  double hmin,hmax;  // limits for heights and shades modes
+  double smin,smax;  // limits for slopes mode
+
+  bool interp_holes; // interpolate holes in data
+  uint32_t bgcolor;  // how to draw holes
+
+  Rainbow R; // color converter
+
+
   /// load data into cache
   bool load(const iPoint & key);
 
@@ -91,33 +109,36 @@ class SRTM {
        std::set<iPoint>& set, std::set<iPoint>& brd, int max=0);
 
 
-    /// get altitude value at a given point (integer coordinates)
+    /// Get altitude value at a given point (integer coordinates).
+    /// Hole interpolation can be switched with `interp` parameter.
     short get_val(const int x, const int y, const bool interp=false);
 
-    /// get altitude value at a given point (long-lat coordinates)
-    short get_val(const dPoint & p, const bool interp=false) {
-      return get_val(rint(p.x*(srtm_width-1)), rint(p.y*(srtm_width-1)), interp); }
+    /// Get value, 4-point linear interpolation, long-lat coordinates.
+    /// Hole interpolation is done according with srtm_interp_holes option.
+    short get_val_int4(const dPoint & p);
 
-    /// get value, 4-point linear interpolation, long-lat coordinates
-    short get_val_int4(const dPoint & p, const bool interp=false);
-
-    /// get value, 16-point cubic interpolation, long-lat coordinates
-    short get_val_int16(const dPoint & p, const bool interp=false);
-
+    /// Get value, 16-point cubic interpolation, long-lat coordinates.
+    /// Hole interpolation is done according with srtm_interp_holes option.
+    short get_val_int16(const dPoint & p);
 
     /// set new hight in cached data (used for interpolation)
     short set_val(const int x, const int y, const short h);
 
-
-    /// get slope (in degrees) at a given point (integer coordinates)
+    /// Get slope (in degrees) at a given point (integer coordinates).
+    /// Hole interpolation can be switched with `interp` parameter.
     double get_slope(const int x, const int y, const bool interp=false);
 
-    /// get slope (in degrees) at a given point (long-lat coordinates)
-    short get_slope(const dPoint & p, const bool interp=false) {
-      return get_slope(rint(p.x*(srtm_width-1)), rint(p.y*(srtm_width-1)), interp); }
+    /// Get slope, 4-point interpolation, long-lat coordinates.
+    /// Hole interpolation is done according with srtm_interp_holes option.
+    double get_slope_int4(const dPoint & p);
 
-    /// get slope, 4-point interpolation, long-lat coordinates
-    double get_slope_int4(const dPoint & p, const bool interp=false);
+
+    // Get color for given height and slope, according with drawing options
+    uint32_t get_color(const double h, const double s);
+
+    /// Get color for a point (lon-lat coords), according with drawing options.
+    uint32_t get_color(const dPoint & p) {
+      return get_color(get_val_int4(p), get_slope_int4(p));}
 
 
     // make vector data: contours

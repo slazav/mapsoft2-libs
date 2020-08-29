@@ -8,8 +8,8 @@
 
 class DlgSrtmOpt : public Gtk::Dialog{
 
-    Gtk::CheckButton  *cnt, *shades, *peaks, *interp, *holes;
-    Gtk::RadioButton  *m_none, *m_heights, *m_slopes;
+    Gtk::CheckButton  *cnt, *shades, *peaks, *interp, *holes, *surf;
+    Gtk::RadioButton  *m_heights, *m_slopes;
     Gtk::SpinButton   *cnt_val;
     Gtk::Button       *dirbtn;
     Gtk::Label        *dir;
