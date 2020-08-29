@@ -48,8 +48,6 @@ main(){
     assert_err(o.get_visibility(o3), "GObjMulti::get_visibility: no such object");
     assert_err(o.get_visibility(NULL), "GObjMulti::get_visibility: no such object");
 
-    assert_eq(o.bbox(), dRect());
-
     /************************************************/
     // Image filled with black color + CairoWrapper
     ImageR img(100,100, IMAGE_32ARGB);

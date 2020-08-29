@@ -46,11 +46,8 @@ SimpleViewer::set_origin (iPoint p) {
     if (p.x < bbox.x) p.x=bbox.x;
   }
 
-  if (yloop){ p.y = p.y % bbox.h; }
-  else {
-    if (p.y + h >= bbox.y + bbox.h) p.y = bbox.y+ bbox.h - h - 1;
-    if (p.y < bbox.y) p.y=bbox.y;
-  }
+  if (p.y + h >= bbox.y + bbox.h) p.y = bbox.y+ bbox.h - h - 1;
+  if (p.y < bbox.y) p.y=bbox.y;
 
   // now win->scroll invalidates the whole window,
   // see Scrolling section in
@@ -161,12 +158,26 @@ SimpleViewer::draw(const CairoWrapper & crw, const iRect & r){
   crw1->set_color(bgcolor);
   crw1->paint();
 
-  if (obj){
-    crw1->save();
-    crw1->translate(-r.tlc()-origin);
-    obj->prepare_range(r+origin);
-    obj->draw(crw1, r+origin);
-    crw1->restore();
+  // It could be that viewer.bbox does not cover the whole
+  // range. It xloop is set we want to draw a few pictures.
+  // Calculate shifts:
+  int x1 = floor((origin.x + r.x - bbox.x) / (double)bbox.w);
+  int x2 =  ceil((origin.x + r.x + r.w - bbox.x) / (double)bbox.w)+1;
+
+  for (int x = x1; x<x2; x++) {
+    // if xloop = false we draw only x=0
+    if (!get_xloop() && x!=0) continue;
+
+    if (obj){
+      crw1->save();
+      crw1->translate(-r.tlc()-origin-iPoint(x*bbox.x,0));
+      iRect draw_range = r+origin;
+      draw_range.x -= x*bbox.x;
+      draw_range.intersect(bbox);
+      obj->prepare_range(draw_range);
+      obj->draw(crw1, draw_range);
+      crw1->restore();
+    }
   }
   crw1.get_surface()->flush();
   crw->set_source(crw1.get_surface(), r.x, r.y);

@@ -102,10 +102,11 @@ class SimpleViewer : public Gtk::DrawingArea {
     sigc::signal<void, iPoint, int, const Gdk::ModifierType&> & signal_click() {return signal_click_;}
 
     void set_bbox(const iRect & r) {bbox = r;}
+    iRect get_bbox() const {return bbox;}
     void reset_bbox() {
       bbox = iRect(iPoint(INT_MIN/2, INT_MIN/2), iPoint(INT_MAX/2, INT_MAX/2)); }
     void set_xloop(const bool v = true) {xloop = v;}
-    void set_yloop(const bool v = true) {yloop = v;}
+    bool get_xloop() const {return xloop;}
 
   private:
 

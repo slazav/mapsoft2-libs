@@ -295,6 +295,42 @@ Mapview::exit(bool force) {
 }
 
 /**********************************************************/
+
+void
+Mapview::set_cnv_map(const GeoMap & m){
+  if (!tmpref) return;
+  viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)),!tmpview);
+
+  // try to set bbox and xloop for this reference.
+  double xmin=+HUGE_VAL,xmax=-HUGE_VAL,ymin=+HUGE_VAL,ymax=-HUGE_VAL;
+  double lonmin=180,lonmax=-180,latmin=+90,latmax=-90;
+
+  // not very accurate for tmerc projections:
+  for (double lon = -180; lon <= 180; lon += 6){
+    try {
+      dPoint p = viewer.get_cnv().bck_pts(dPoint(lon,0));
+      if (std::isfinite(p.x) && xmin > p.x) {xmin = p.x; lonmin = lon;}
+      if (std::isfinite(p.x) && xmax < p.x) {xmax = p.x; lonmax = lon;}
+    } catch (Err & e) {};
+  }
+  // correct for merc, tmerc, web merc:
+  for (const double & lat: {-90.0, -85.084059, 85.051128, 85.051128, 85.084059, 90.0}) {
+    try {
+      dPoint p = viewer.get_cnv().bck_pts(dPoint((xmin+xmax)/2,lat));
+      if (std::isfinite(p.y) && latmin > lat) latmin = lat;
+      if (std::isfinite(p.y) && latmax < lat) latmax = lat;
+    } catch (Err & e) {};
+  }
+  if (lonmin < lonmax && latmin < latmax){
+    dRect ro(dPoint(lonmin,latmin), dPoint(lonmax,latmax));
+    iRect rv = rint(viewer.get_cnv().bck_acc(ro));
+    viewer.set_bbox(rv);
+    if (lonmin==-180 && lonmax==180) viewer.set_xloop();
+  }
+  tmpref=false;
+}
+
+/**********************************************************/
 #include <sys/stat.h>
 
 // Load accelerator map

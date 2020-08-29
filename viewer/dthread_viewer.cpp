@@ -92,14 +92,28 @@ DThreadViewer::updater(){
 
       if (obj){
         dRect r = tile_to_rect(key);
-        crw->save();
-        crw->translate(-r.tlc());
-        try {
-          auto lk = obj->get_lock();
-          obj->draw(crw, r);
+
+        auto box = get_bbox();
+        int x1 = floor((r.x - box.x) / (double)box.w);
+        int x2 =  ceil((r.x + r.w - box.x) / (double)box.w) + 1;
+        for (int x = x1; x<x2; x++) {
+          // if xloop = false we draw only x=0
+          if (!get_xloop() && x!=0) continue;
+
+
+          auto r1 = r; r1.x -= x*box.w;
+          r1.intersect(box);
+          if (r1.is_zsize()) continue;
+
+          crw->save();
+          crw->translate(-r1.tlc());
+          try {
+            auto lk = obj->get_lock();
+            obj->draw(crw, r1);
+          }
+          catch (Err & e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
+          crw->restore();
         }
-        catch (Err & e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
-        crw->restore();
       }
       crw.get_surface()->flush();
 
@@ -169,23 +183,50 @@ void DThreadViewer::on_done_signal(){
 void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
 
   if (!r) {redraw(); return;}
-  iRect tiles = ceil(dRect(r + get_origin())/(double)TILE_SIZE);
-  iPoint key;
 
+  // Background painting.
+  // Context should be saved/restored to keep original
+  // clipping range and clipped additionaly to the range extents.
+  crw->save();
+  crw->rectangle(r);
+  crw->clip(); // set clip region
+  crw->set_color(get_bgcolor());
+  crw->paint();
+  crw->restore();
+
+  // It could be that viewer.bbox does not cover the whole
+  // range. It xloop is set we want to draw a few pictures.
+  // Calculate shifts:
+  auto box = get_bbox();
+  auto org = get_origin();
+  int x1 = floor((org.x + r.x - box.x) / (double)box.w);
+  int x2 =  ceil((org.x + r.x + r.w - box.x) / (double)box.w) + 1;
+  for (int x = x1; x<x2; x++) {
+    // if xloop = false we draw only x=0
+    if (!get_xloop() && x!=0) continue;
+
+    // clip to viewer.bbox
+    iRect draw_range = r + org; draw_range.x -= x*box.w;
+    draw_range.intersect(box);
+    if (draw_range.is_zsize()) continue;
+
+    if (obj)
+      obj->prepare_range(draw_range);
+  }
 
   updater_mutex->lock();
   if (tiles_todo.empty()) signal_busy().emit();
   updater_mutex->unlock();
 
-  if (obj)
-    obj->prepare_range(r+get_origin());
+  iRect tiles = ceil(dRect(r + org)/(double)TILE_SIZE);
+  iPoint key;
 
   // note: updater extracts tiles from todo set sorted by x,y
   for (key.x = tiles.x; key.x<tiles.x+tiles.w; key.x++){
     for (key.y = tiles.y; key.y<tiles.y+tiles.h; key.y++){
 
       // region to paint in widget coordinates
-      iRect rect = tile_to_rect(key) - get_origin();
+      iRect rect = tile_to_rect(key) - org;
 
       // draw the tile from cache
       if (tiles_cache.count(key)>0){
@@ -195,24 +236,12 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
         crw->paint();
       }
 
-      else { // no tile in cache
-        // Background painting.
-        // Context should be saved/restored to keep original
-        // clipping range and clipped additionaly to the tile extents.
-        crw->save();
-        crw->rectangle(rect);
-        crw->clip(); // set clip region
-        crw->set_color(get_bgcolor());
-        crw->paint();
-        crw->restore();
-
-        // Put this tile in todo queue.
-        if (tiles_todo.count(key)==0){
-          updater_mutex->lock();
-          tiles_todo.insert(key);
-          updater_cond->signal();
-          updater_mutex->unlock();
-        }
+      // no tile in cache
+      else if (tiles_todo.count(key)==0){
+        updater_mutex->lock();
+        tiles_todo.insert(key);
+        updater_cond->signal();
+        updater_mutex->unlock();
       }
     }
   }
@@ -220,6 +249,7 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
   updater_mutex->lock();
   if (tiles_todo.empty()) signal_idle().emit();
   updater_mutex->unlock();
+
 }
 
 const int DThreadViewer::TILE_MARG;
