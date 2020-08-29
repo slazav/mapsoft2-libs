@@ -4,6 +4,7 @@
 #include <set>
 #include <map>
 #include <string>
+#include <mutex>
 
 #include "rainbow/rainbow.h"
 #include "cache/cache.h"
@@ -61,6 +62,12 @@ class SRTM {
   /// data cache. key is lon,lat in degrees, images are of IMAGE_16 type
   Cache<iPoint, ImageR> srtm_cache;
 
+  // Locking srtm cache (it can be accessed from different threads:
+  // main viewer, pano viewer,...)
+  std::mutex cache_mutex;
+  std::unique_lock<std::mutex> get_lock() {
+    return std::unique_lock<std::mutex>(cache_mutex);}
+
   /// size (m) of 1 srtm point lat bow
   double size0;
 
@@ -83,6 +90,7 @@ class SRTM {
   uint32_t bgcolor;  // how to draw holes
 
   Rainbow R; // color converter
+
 
 
   /// load data into cache

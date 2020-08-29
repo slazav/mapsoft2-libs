@@ -62,8 +62,6 @@ SRTM::load(const iPoint & key){
   file << NS << std::setfill('0') << std::setw(2) << abs(key.y)
        << EW << std::setw(3) << abs(key.x) << ".hgt";
 
-std::cerr << "srtm load: " << key << " " << (srtm_dir + "/" + file.str()) << "\n";
-
   // try <name>.hgt.gz
   ImageR im = read_zfile(srtm_dir + "/" + file.str() + ".gz", srtm_width);
 
@@ -143,6 +141,7 @@ SRTM::set_opt(const Opt & opt){
     srtm_dir = dir;
     size0 = 6380e3 * M_PI/srtm_width/180;
     area0 = pow(6380e3 * M_PI/srtm_width/180, 2);
+    auto lk = get_lock();
     srtm_cache.clear();
   }
 
@@ -219,6 +218,7 @@ SRTM::get_val(const int x, const int y, const bool interp){
 
   int h;
   {
+    auto lk = get_lock();
     if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
     auto im = srtm_cache.get(key);
     if (im.is_empty()) return SRTM_VAL_NOFILE;
@@ -340,6 +340,7 @@ SRTM::set_val(const int x, const int y, const short h){
   get_crd(y, srtm_width, key.y, crd.y);
   crd.y = srtm_width-crd.y-1;
 
+  auto lk = get_lock();
   if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
   auto & im = srtm_cache.get(key);
   if (im.is_empty()) return SRTM_VAL_NOFILE;
