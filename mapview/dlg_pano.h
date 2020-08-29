@@ -28,7 +28,7 @@ class DlgPano : public Gtk::Dialog{
     sigc::signal<void, dPoint> signal_point_;
 
   public:
-    DlgPano();
+    DlgPano(SRTM * s);
 
     // convert interface state to options
     Opt get_opt() const;

@@ -58,6 +58,7 @@ class MyWindow : public Gtk::ApplicationWindow {
   }
 
   // SRTM panoramic view
+  SRTM srtm;
   DlgPano pano;
   void on_pano_point(const dPoint & p) {
     std::cerr << "mark point: " << p << "\n";
@@ -69,7 +70,7 @@ class MyWindow : public Gtk::ApplicationWindow {
   public:
 
   /***********************************/
-  MyWindow(){
+  MyWindow(): pano(&srtm){
 
     set_default_size(200,200);
 
@@ -117,6 +118,7 @@ class MyWindow : public Gtk::ApplicationWindow {
 //    pano_opts.put("pano_pt", dPoint(29.5, 78.5));
     pano_opts.put("pano_pt", dPoint(78.5, 41.5));
     pano_opts.put("srtm_dir", "../../srtm/test_srtm");
+    srtm.set_opt(pano_opts);
     pano.set_opt(pano_opts);
     auto b_pano = manage(new Gtk::Button("DlgPano"));
     b_pano->signal_clicked().connect(

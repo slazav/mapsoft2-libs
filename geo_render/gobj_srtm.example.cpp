@@ -26,7 +26,8 @@ main(){
     o.put("srtm_holes",  1);
     o.put("srtm_peaks", 1);
 
-    GObjSRTM S(o);
+    SRTM s;
+    GObjSRTM S(&s, o);
 
     int x0 = 78;   // coordinates of top-left corner 
     int y0 = 42;   // (datafile for this area N78E029.hgt should be in srtm_dir)

@@ -17,10 +17,11 @@ void ms2opt_add_drawpano(GetOptSet & opts);
 
 /********************************************************************/
 
-class GObjPano : public SRTM, public GObj {
+class GObjPano : public GObj {
 private:
 
   std::shared_ptr<ConvBase> cnv; // used only for rescaling
+  SRTM *srtm;
 
   dPoint p0;
   double max_r;
@@ -84,7 +85,8 @@ public:
   dPoint xy2geo(const iPoint & pt);
 
 
-  GObjPano(const Opt & o): ray_cache(512), width(width0) { set_opt(o); }
+  GObjPano(SRTM * s, const Opt & o): srtm(s),
+     ray_cache(512), width(width0) { set_opt(o); }
 
   /************************************************/
 

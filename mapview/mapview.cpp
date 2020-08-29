@@ -15,7 +15,7 @@ Mapview::Mapview(const Opt & o) :
     panel_trks(new PanelTrks),
     panel_maps(new PanelMaps),
     panel_mapdb(new PanelMapDB),
-    srtm(new GObjSRTM(o)),
+    obj_srtm(new GObjSRTM(&srtm, o)),
     amanager(this)
 {
 
@@ -54,7 +54,7 @@ Mapview::Mapview(const Opt & o) :
     // Add gobjs from panels.
     gobj.add(PAGE_WPTS, panel_wpts);
     gobj.add(PAGE_TRKS, panel_trks);
-    gobj.add(PAGE_SRTM, srtm);  gobj.set_visibility(srtm, false);
+    gobj.add(PAGE_SRTM, obj_srtm);  gobj.set_visibility(obj_srtm, false);
     gobj.add(PAGE_MAPS, panel_maps);
 
     /***************************************/
@@ -271,12 +271,12 @@ Mapview::close_mapdb(){
 
 void
 Mapview::open_srtm(){
-  gobj.set_visibility(srtm, true);
+  gobj.set_visibility(obj_srtm, true);
 }
 
 void
 Mapview::close_srtm(){
-  gobj.set_visibility(srtm, false);
+  gobj.set_visibility(obj_srtm, false);
 }
 
 void

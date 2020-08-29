@@ -53,12 +53,12 @@ public:
       // This is because tracks are located inside gobj_multi, which emits
       // the signal. Something should be changed here...
       if (r==Gtk::RESPONSE_CANCEL){
-        mapview->srtm->set_opt(o);
-        mapview->srtm->signal_redraw_me().emit(iRect());
+        mapview->obj_srtm->set_opt(o);
+        mapview->obj_srtm->signal_redraw_me().emit(iRect());
       }
       if (r>0) {
-        mapview->srtm->set_opt(get_opt());
-        mapview->srtm->signal_redraw_me().emit(iRect());
+        mapview->obj_srtm->set_opt(get_opt());
+        mapview->obj_srtm->signal_redraw_me().emit(iRect());
       }
       else hide();
     }

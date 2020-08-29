@@ -15,9 +15,10 @@ void ms2opt_add_drawsrtm(GetOptSet & opts);
 
 /********************************************************************/
 
-class GObjSRTM : public SRTM, public GObj {
+class GObjSRTM : public GObj {
 
   std::shared_ptr<ConvBase> cnv;
+  SRTM * srtm;
 
   /// how to draw data
   enum draw_mode_t {
@@ -60,7 +61,7 @@ class GObjSRTM : public SRTM, public GObj {
 
     Rainbow R; // color converter
 
-    GObjSRTM(const Opt & o) { set_opt(o); }
+    GObjSRTM(SRTM *srtm, const Opt & o): srtm(srtm) { set_opt(o); }
 
   /************************************************/
 

@@ -34,7 +34,7 @@ GObjPano::set_opt(const Opt & o){
     o.get<double>("pano_hmax", 5000), RAINBOW_NORMAL);
   max_r = o.get<double>("pano_rmax", 100) * 1000; // convert km->m
   std::lock_guard<std::mutex> lk(cache_mutex);
-  SRTM::set_opt(o);
+  if (srtm) srtm->set_opt(o);
   ray_cache.clear();
   redraw_me();
 }
@@ -56,6 +56,8 @@ GObjPano::set_cnv(const std::shared_ptr<ConvBase> c) {
 std::vector<GObjPano::ray_data>
 GObjPano::get_ray(int x){
 
+  if (!srtm) return std::vector<GObjPano::ray_data>();
+
   // convert coordinate to angle, [0..2pi]
   while (x<0) x+=width;
   while (x>=width) x-=width;
@@ -67,7 +69,7 @@ GObjPano::get_ray(int x){
      return ray_cache.get(key);
   }
 
-  size_t srtmw = get_srtm_width()-1;
+  size_t srtmw = srtm->get_srtm_width()-1;
 
   double sa=sin(a), ca=cos(a), cx=cos(p0.y * M_PI/180.0);
   dPoint pt = p0*srtmw; // viewpoint coordinates in srtm points
@@ -97,17 +99,17 @@ GObjPano::get_ray(int x){
       int y2 = ceil(y);
       double h=SRTM_VAL_UNDEF,s;
       if (y1!=y2){
-        int h1 = get_val(x,y1, false);
-        int h2 = get_val(x,y2, false);
-        double s1 = get_slope(x,y1, false);
-        double s2 = get_slope(x,y2, false);
+        int h1 = srtm->get_val(x,y1, false);
+        int h2 = srtm->get_val(x,y2, false);
+        double s1 = srtm->get_slope(x,y1, false);
+        double s2 = srtm->get_slope(x,y2, false);
         if ((h1>SRTM_VAL_MIN) && (h2>SRTM_VAL_MIN))
           h = h1 + (h2-h1)*(y-y1)/(y2-y1);
         s = s1 + (s2-s1)*(y-y1)/(y2-y1);
       }
       else {
-        h = get_val(x,y1, false);
-        s = get_slope(x,y1, false);
+        h = srtm->get_val(x,y1, false);
+        s = srtm->get_slope(x,y1, false);
       }
       // Save data and do step:
       if  (h>SRTM_VAL_MIN) ret.emplace_back(rx/m2srtm, h, s);
@@ -122,17 +124,17 @@ GObjPano::get_ray(int x){
       int x2 = ceil(x);
       double h=SRTM_VAL_UNDEF,s;
       if (x1!=x2){
-        int h1 = get_val(x1,y, false);
-        int h2 = get_val(x2,y, false);
-        double s1 = get_slope(x1,y, false);
-        double s2 = get_slope(x2,y, false);
+        int h1 = srtm->get_val(x1,y, false);
+        int h2 = srtm->get_val(x2,y, false);
+        double s1 = srtm->get_slope(x1,y, false);
+        double s2 = srtm->get_slope(x2,y, false);
         if ((h1>SRTM_VAL_MIN) && (h2>SRTM_VAL_MIN))
           h = h1 + (h2-h1)*(x-x1)/(x2-x1);
         s = s1 + (s2-s1)*(x-x1)/(x2-x1);
       }
       else {
-        h = get_val(x1,y, false);
-        s = get_slope(x1,y, false);
+        h = srtm->get_val(x1,y, false);
+        s = srtm->get_slope(x1,y, false);
       }
       if  (h>SRTM_VAL_MIN) ret.push_back(ray_data(ry/m2srtm, h, s));
       ry+=dry;
@@ -219,8 +221,9 @@ GObjPano::xy2geo(const iPoint & pt){
 int
 GObjPano::draw(const CairoWrapper & cr, const dRect &box){
   if (is_stopped()) return GObj::FILL_NONE;
+  if (!srtm) return GObj::FILL_NONE;
 
-  double h0 = get_val_int4(p0) + dh; // altitude of observation point
+  double h0 = srtm->get_val_int4(p0) + dh; // altitude of observation point
   ImageR image(box.w, box.h, IMAGE_32ARGB);
   image.fill32(0xFF000000);
 

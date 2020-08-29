@@ -66,7 +66,7 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
 Opt
 GObjSRTM::get_def_opt(){
 
-  Opt o = SRTM::get_def_opt();
+  Opt o =SRTM::get_def_opt();
   o.put("srtm_draw_mode", "shades");
   o.put("srtm_hmin", 0);
   o.put("srtm_hmax", 5000);
@@ -105,7 +105,7 @@ GObjSRTM::get_def_opt(){
 
 void
 GObjSRTM::set_opt(const Opt & o){
-  SRTM::set_opt(o);
+  if (srtm) srtm->set_opt(o);
 
   // srtm drawing mode:
   auto m = o.get("srtm_draw_mode", "shades");
@@ -169,8 +169,10 @@ GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
 int
 GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
+  if (!srtm) return GObj::FILL_NONE;
+
   dPoint scp = cnv->scales(draw_range);
-  double sc = std::min(scp.x, scp.y) * get_srtm_width();
+  double sc = std::min(scp.x, scp.y) * srtm->get_srtm_width();
 
   if (draw_mode != SRTM_DRAW_NONE) {
     if (sc < maxsc) {
@@ -180,12 +182,12 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
         for (int i=0; i<image.width(); i++){
           dPoint p(i + draw_range.x, j+draw_range.y);
           if (cnv) cnv->frw(p);
-          short h = get_val_int4(p,  interp_holes);
+          short h = srtm->get_val_int4(p,  interp_holes);
           if (h < SRTM_VAL_MIN){
             image.set32(i,j, bgcolor);
             continue;
           }
-          double s = get_slope_int4(p, interp_holes);
+          double s = srtm->get_slope_int4(p, interp_holes);
           uint32_t c;
 
           switch (draw_mode){
@@ -209,14 +211,14 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   dRect wgs_range;
   if ((cnt || holes || peaks) && sc < maxscv) {
     wgs_range = cnv->frw_acc(draw_range);
-    wgs_range.expand(1.0/get_srtm_width()); // +1 srtm point
+    wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
     cr->set_line_cap(Cairo::LINE_CAP_ROUND);
     cr->set_line_join(Cairo::LINE_JOIN_ROUND);
   }
 
   // draw contours
   if (cnt && sc < maxscv) {
-    auto c_data = find_contours(wgs_range, cnt_step);
+    auto c_data = srtm->find_contours(wgs_range, cnt_step);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
       if (is_stopped()) return GObj::FILL_NONE;
@@ -231,7 +233,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw holes
   if (holes && sc < maxscv) {
-    auto h_data = find_holes(wgs_range);
+    auto h_data = srtm->find_holes(wgs_range);
     cr->set_color(holes_color);
     cr->set_line_width(holes_w);
     cnv->bck(h_data);
@@ -244,7 +246,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw peaks
   if (peaks && sc < maxscv) {
-    auto p_data = find_peaks(wgs_range, peaks_dh, peaks_ps);
+    auto p_data = srtm->find_peaks(wgs_range, peaks_dh, peaks_ps);
     cr->set_color(peaks_color);
     cr->set_line_width(peaks_w);
     for (auto & d:p_data){

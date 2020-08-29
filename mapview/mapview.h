@@ -43,6 +43,8 @@ public:
     Rubber        rubber;          // Rubber lines
     Opt           opts;            // Command-line options
 
+    SRTM srtm;
+
     // Right panel, a Gtk::Notebook with separate
     // panels for waypoints, tracks, maps ...
     Gtk::Notebook * panels;
@@ -50,7 +52,7 @@ public:
     std::shared_ptr<PanelWpts> panel_wpts;
     std::shared_ptr<PanelMaps> panel_maps;
     std::shared_ptr<PanelMapDB> panel_mapdb;
-    std::shared_ptr<GObjSRTM>   srtm;
+    std::shared_ptr<GObjSRTM>   obj_srtm;
 
     PanelStatus spanel; // status bar
     ActionManager amanager; // menus and action handling
