@@ -51,23 +51,6 @@ public:
   void set_origin(const dPoint & p) {p0=p; ray_cache.clear(); redraw_me();}
   dPoint get_origin(void) const {return p0;}
 
-/*
-  // altitude above terrain
-  void set_alt(double h) { dh=h;}
-  double get_alt(void) const { return dh;}
-
-  // rainbow limits
-  void set_colors(double min, double max) {R.set(min,max);}
-  double get_minh(void) const {return R.get_v1();}
-  double get_maxh(void) const {return R.get_v2();}
-
-  // max distance
-  void set_maxr(double r) {max_r=r; ray_cache.clear();}
-  double get_maxr(void) const {return max_r;}
-
-  void get_width() { width=w; }
-*/
-
   // 360deg width
   int get_width(void) const {return width;}
 
@@ -89,8 +72,6 @@ public:
      ray_cache(512), width(width0) { set_opt(o); }
 
   /************************************************/
-
-  bool get_xloop() const override {return true;}
 
   static Opt get_def_opt();
 

@@ -73,11 +73,6 @@ public:
   // Return bounding box in object coordinates (empty if not specified)
   virtual dRect bbox() const {return dRect();}
 
-  // This methods show to the caller if picture should be
-  // repeated periodically in x or y direction
-  virtual bool get_xloop() const {return false;};
-  virtual bool get_yloop() const {return false;}
-
   // signal_redraw_me should be emitted when data was changed and the
   // object has to be redrawn. Normally it is attached to Viewer::redraw
   // method.

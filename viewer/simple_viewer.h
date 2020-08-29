@@ -101,6 +101,12 @@ class SimpleViewer : public Gtk::DrawingArea {
     sigc::signal<void, iPoint> & signal_ch_origin()   {return signal_ch_origin_;}
     sigc::signal<void, iPoint, int, const Gdk::ModifierType&> & signal_click() {return signal_click_;}
 
+    void set_bbox(const iRect & r) {bbox = r;}
+    void reset_bbox() {
+      bbox = iRect(iPoint(INT_MIN/2, INT_MIN/2), iPoint(INT_MAX/2, INT_MAX/2)); }
+    void set_xloop(const bool v = true) {xloop = v;}
+    void set_yloop(const bool v = true) {yloop = v;}
+
   private:
 
     sigc::signal<void> signal_busy_;
@@ -120,6 +126,9 @@ class SimpleViewer : public Gtk::DrawingArea {
 
     int bgcolor;
     double sc;
+
+    iRect bbox;
+    bool xloop, yloop;
 
   protected:
     GObj * obj;

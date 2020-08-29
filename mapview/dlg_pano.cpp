@@ -56,8 +56,6 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   get_vbox()->pack_start (viewer, true, true);
   get_vbox()->pack_start (*t, false, true);
   add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-  viewer.set_can_focus();
-  viewer.grab_focus();
 
   dh->signal_value_changed().connect(
       sigc::mem_fun(this, &DlgPano::on_ch));
@@ -82,6 +80,11 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   int w = gobj_pano.get_width();
   viewer.set_origin(iPoint(w/2-320, w/4 - 240));
   az->set_value(180);
+
+  viewer.set_can_focus();
+  viewer.grab_focus();
+  viewer.set_xloop();
+  viewer.set_bbox(iRect(0,0,w,w/2));
 
   set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
   set_opt(GObjPano::get_def_opt()); //set default options

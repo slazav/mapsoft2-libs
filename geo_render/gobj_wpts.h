@@ -90,6 +90,8 @@ public:
 
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
+  dRect bbox() const override {return range;}
+
 };
 
 #endif

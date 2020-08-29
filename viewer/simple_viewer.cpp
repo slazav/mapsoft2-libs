@@ -11,7 +11,8 @@ SimpleViewer::SimpleViewer(GObj * o) :
     bgcolor(0xFF000000),
     sc(1.0),
     on_drag(false),
-    cnv(std::shared_ptr<ConvBase>(new ConvBase)) {
+    cnv(std::shared_ptr<ConvBase>(new ConvBase)),
+    xloop(false), yloop(false) {
 
   // which events we want to recieve
   set_events (
@@ -27,6 +28,7 @@ SimpleViewer::SimpleViewer(GObj * o) :
 
   // suppress default themed drawing of the widget's background
   set_app_paintable();
+  reset_bbox();
 }
 
 /***********************************************************/
@@ -35,27 +37,19 @@ void
 SimpleViewer::set_origin (iPoint p) {
   if (!obj) return;
 
-  iRect r = obj->bbox();
-  if (r.is_empty())
-    r = iRect(iPoint(INT_MIN/2, INT_MIN/2), iPoint(INT_MAX/2, INT_MAX/2));
-
   int w=get_width();
   int h=get_height();
 
-  if (obj->get_xloop()){
-    p.x = p.x % r.w;
-  }
+  if (xloop){ p.x = p.x % bbox.w; }
   else {
-    if (p.x + w >= r.x + r.w) p.x = r.x + r.w - w - 1;
-    if (p.x < r.x) p.x=r.x;
+    if (p.x + w >= bbox.x + bbox.w) p.x = bbox.x + bbox.w - w - 1;
+    if (p.x < bbox.x) p.x=bbox.x;
   }
 
-  if (obj->get_yloop()){
-    p.y = p.y % r.h;
-  }
+  if (yloop){ p.y = p.y % bbox.h; }
   else {
-    if (p.y + h >= r.y + r.h) p.y = r.y+ r.h - h - 1;
-    if (p.y < r.y) p.y=r.y;
+    if (p.y + h >= bbox.y + bbox.h) p.y = bbox.y+ bbox.h - h - 1;
+    if (p.y < bbox.y) p.y=bbox.y;
   }
 
   // now win->scroll invalidates the whole window,
@@ -122,6 +116,7 @@ void
 SimpleViewer::set_cnv(std::shared_ptr<ConvBase> c, bool fix_range){
   dRect r = get_range(true);
   cnv = c;
+  reset_bbox();
   obj->set_cnv(cnv);
   if (fix_range) set_range(r, true);
   else set_origin(iPoint(0,0));
@@ -139,6 +134,7 @@ SimpleViewer::rescale(const double k, const iPoint & cnt){
   iPoint wsize(get_width(), get_height());
   iPoint wcenter = get_origin() + cnt;
   wcenter=iPoint(wcenter.x * k, wcenter.y * k);
+  bbox = dRect(bbox)*k;
   set_origin(wcenter - cnt);
   if (cnv){
     cnv->rescale_src(1.0/k);

@@ -89,6 +89,7 @@ public:
 
   /************************************************/
 
+
   static Opt get_def_opt();
 
   void set_opt(const Opt & o) override;
@@ -98,6 +99,8 @@ public:
   void prepare_range(const dRect & range) override;
 
   ret_t draw(const CairoWrapper & cr, const dRect &box) override;
+
+  dRect bbox() const override {return range;}
 
 };
 
