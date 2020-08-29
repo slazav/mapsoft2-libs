@@ -127,7 +127,7 @@ GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
   redraw_me();
 }
 
-int
+GObj::ret_t
 GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (!srtm) return GObj::FILL_NONE;

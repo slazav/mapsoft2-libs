@@ -98,7 +98,7 @@ public:
 
   void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  int draw(const CairoWrapper & cr, const dRect &box) override;
+  ret_t draw(const CairoWrapper & cr, const dRect &box) override;
 
 };
 

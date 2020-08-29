@@ -47,18 +47,15 @@ An object which know how to draw itself using Cairo::Context.
 class GObj{
 protected:
 
-  // Object coordinate range
-  dRect range;
 public:
 
-  const static int FILL_NONE = 0; // object draws nothing
-  const static int FILL_PART = 1; // object draws some points
-  const static int FILL_ALL  = 2; // object fills in the whole image with opaque colors
-  const static iRect MAX_RANGE;
+  enum ret_t{
+    FILL_NONE = 0, // object draws nothing
+    FILL_PART = 1, // object draws some points
+    FILL_ALL  = 2  // object fills in the whole image with opaque colors
+  };
 
-  GObj():
-    range(MAX_RANGE), stop_drawing_flag(false) { }
-
+  GObj(): stop_drawing_flag(false) { }
 
   // Called by viewer before drawing the screen.
   // draw_range is the whole area, not tiles.
@@ -71,11 +68,10 @@ public:
    - GObj::FILL_ALL   -- all image has been covered with a non-dransparent drawing
    NOTE:
   */
-  virtual int draw(const CairoWrapper & cr, const dRect & draw_range) = 0;
+  virtual ret_t draw(const CairoWrapper & cr, const dRect & draw_range) = 0;
 
-  // return data bounding box (in viewer coords)
-  virtual iRect bbox(void) const {return range;}
-
+  // Return bounding box in object coordinates (empty if not specified)
+  virtual dRect bbox() const {return dRect();}
 
   // This methods show to the caller if picture should be
   // repeated periodically in x or y direction

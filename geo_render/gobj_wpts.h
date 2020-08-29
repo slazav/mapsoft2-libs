@@ -49,6 +49,8 @@ private:
   // Templates. Should be syncronized with the data.
   std::vector<WptDrawTmpl> tmpls;
 
+  dRect range; // data range
+
 public:
   // constructor
   GObjWpts(GeoWptList & wpts);
@@ -86,7 +88,7 @@ public:
 
   void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
+  ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
 };
 

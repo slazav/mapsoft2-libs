@@ -504,7 +504,7 @@ GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const d
   cr->restore();
 }
 
-int
+GObj::ret_t
 GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();

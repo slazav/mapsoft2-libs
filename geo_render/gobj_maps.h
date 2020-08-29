@@ -24,6 +24,7 @@ private:
 
   // Original data. It may be edited through the GObj interface.
   GeoMapList & maps;
+  dRect range; // data range in viewer coords
 
   struct MapData{
     ConvMulti cnv;  // conversion from viewer coordinates to the map coordinates
@@ -96,7 +97,7 @@ public:
 
   void prepare_range(const dRect & range) override;
 
-  int draw(const CairoWrapper & cr, const dRect &box) override;
+  ret_t draw(const CairoWrapper & cr, const dRect &box) override;
 
 };
 

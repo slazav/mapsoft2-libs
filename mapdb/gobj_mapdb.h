@@ -469,7 +469,7 @@ public:
     void draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align=false);
 
     // main drawing function
-    int draw(const CairoWrapper & cr, const dRect & draw_range) override;
+    ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
     // check valid step types
     void check_type(const int step_mask){

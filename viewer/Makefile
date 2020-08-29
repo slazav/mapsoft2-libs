@@ -2,7 +2,7 @@ MOD_HEADERS  := rubber.h gobj.h gobj_multi.h\
                 simple_viewer.h dthread_viewer.h\
                 gobj_test_dots.h gobj_test_fill.h
 
-MOD_SOURCES  :=  rubber.cpp gobj.cpp gobj_multi.cpp\
+MOD_SOURCES  :=  rubber.cpp gobj_multi.cpp\
                 simple_viewer.cpp dthread_viewer.cpp\
                 action_manager.cpp\
 

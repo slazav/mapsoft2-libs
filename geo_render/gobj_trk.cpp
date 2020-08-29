@@ -131,7 +131,7 @@ GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_){
   segments.resize(trk.size());
 }
 
-int
+GObj::ret_t
 GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
   if (is_stopped()) return GObj::FILL_NONE;

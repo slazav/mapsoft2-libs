@@ -160,7 +160,7 @@ GObjMaps::prepare_range(const dRect & range) {
 }
 
 
-int
+GObj::ret_t
 GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (is_stopped()) return GObj::FILL_NONE;

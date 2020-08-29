@@ -210,7 +210,7 @@ GObjPano::xy2geo(const iPoint & pt){
 
 /***********************************************************/
 
-int
+GObj::ret_t
 GObjPano::draw(const CairoWrapper & cr, const dRect &box){
   if (is_stopped()) return GObj::FILL_NONE;
   if (!srtm) return GObj::FILL_NONE;

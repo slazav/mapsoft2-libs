@@ -1,6 +1,7 @@
 #include "simple_viewer.h"
 
 #include <cassert>
+#include <climits>
 #include "image/image_r.h"
 #include "geom/rect.h"
 
@@ -34,7 +35,10 @@ void
 SimpleViewer::set_origin (iPoint p) {
   if (!obj) return;
 
-  iRect r = range();
+  iRect r = obj->bbox();
+  if (r.is_empty())
+    r = iRect(iPoint(INT_MIN/2, INT_MIN/2), iPoint(INT_MAX/2, INT_MAX/2));
+
   int w=get_width();
   int h=get_height();
 

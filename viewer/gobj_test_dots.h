@@ -16,7 +16,7 @@ public:
     redraw_me();
   }
 
-  int draw(const CairoWrapper & cr, const dRect & draw_range) override {
+  ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override {
     if (color>>24 == 0) return GObj::FILL_NONE;
     cr->set_color(color);
     cr->cap_round();

@@ -27,6 +27,7 @@ private:
 
   // Original data. It can be edited through the GObj interface.
   GeoTrk & trk;
+  dRect range; // data range
 
   int linewidth;
   bool draw_dots;
@@ -55,7 +56,7 @@ public:
 
   void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  int draw(const CairoWrapper & cr, const dRect & draw_range) override;
+  ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
 };
 

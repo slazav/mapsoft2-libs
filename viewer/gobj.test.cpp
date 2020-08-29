@@ -16,7 +16,7 @@ main(){
 //    std::shared_ptr<ConvBase> cnv(new ConvBase);
 //    o1.set_cnv(cnv); // now dots should be drawn in 20x20 pt grid
 
-    assert_eq(o1.bbox(), GObj::MAX_RANGE);
+    assert_eq(o1.bbox(), dRect());
 
     // Image filled with 0xFFFF00FF color + CairoWrapper
     ImageR img(100,100, IMAGE_32ARGB);

@@ -145,9 +145,9 @@ GObjMulti::clear(){
 /************************************************/
 // override default GObj methods
 
-int
+GObj::ret_t
 GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
-  int res = GObj::FILL_NONE;
+  auto res = GObj::FILL_NONE;
   for (auto const & p:data){
     if (!p.second.on) continue;
     if (is_stopped()) return GObj::FILL_NONE;
@@ -155,7 +155,7 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
     auto o = p.second.obj;
     try {
       auto lk = o->get_lock();
-      int res1 = o->draw(cr, draw_range);
+      auto res1 = o->draw(cr, draw_range);
       if (res1 != GObj::FILL_NONE &&
           res!=GObj::FILL_ALL) res=res1;
     }

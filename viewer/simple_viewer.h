@@ -56,14 +56,8 @@ class SimpleViewer : public Gtk::DrawingArea {
     // Get background color.
     virtual int get_bgcolor(void) const {return bgcolor;}
 
-
-    // Return range of object coordinates.
-    virtual iRect range() const {
-      return obj?obj->bbox():GObj::MAX_RANGE;}
-
     // Redraw the whole window or a rectangle in it
     virtual void redraw (const iRect & range = iRect());
-
 
     // Set conversion viewer -> object coordinates,
     // if fix_range=true, do scroll/resize to keep roughly same area on the screen.

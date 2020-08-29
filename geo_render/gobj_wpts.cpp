@@ -85,8 +85,8 @@ GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     throw Err() << "GObjWpts: templates are not syncronized with data";
 
   for (auto & wt:tmpls) update_pt_crd(wt, cnv);
-  if (do_adj_pos) adjust_text_pos();
   update_range();
+  if (do_adj_pos) adjust_text_pos();
   redraw_me();
 }
 
@@ -100,7 +100,7 @@ GObjWpts::GObjWpts(GeoWptList & wpts): wpts(wpts) {
   }
 }
 
-int
+GObj::ret_t
 GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (is_stopped()) return GObj::FILL_NONE;
@@ -204,7 +204,7 @@ void
 GObjWpts::adjust_text_pos() {
   // create geohash storage
   GeoHashStorage db;
-  db.set_bbox(GObj::MAX_RANGE);
+  db.set_bbox(range);
 
   // for each box
   for (int i=0; i<tmpls.size(); ++i){
