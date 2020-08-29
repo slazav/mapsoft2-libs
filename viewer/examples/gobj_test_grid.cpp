@@ -3,7 +3,7 @@
 
 GObjTestGrid::GObjTestGrid(const int delay_): delay(delay_){}
 
-int
+GObj::ret_t
 GObjTestGrid::draw(const CairoWrapper & cr, const dRect &box){
 
   ImageR img = cr.get_image();

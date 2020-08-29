@@ -4,7 +4,7 @@
 
 GObjTestTile::GObjTestTile(const bool slow_): slow(slow_){}
 
-int
+GObj::ret_t
 GObjTestTile::draw(const CairoWrapper & cr, const dRect &box){
 
   ImageR img = cr.get_image();
