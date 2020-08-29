@@ -83,6 +83,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(CloseMapDB,      "MapDB")
 
     ADD_ACT(AMShowSRTM,      "SRTM")
+    ADD_ACT(AMPano,          "SRTM")
     ADD_ACT(AMSrtmOpts,      "SRTM")
 
     // Wpt panel menu

@@ -44,6 +44,9 @@ public:
     Opt           opts;            // Command-line options
 
     SRTM srtm;
+    // signal is emitted when srtm is reconfigured
+    sigc::signal<void> signal_srtm_conf_;
+    sigc::signal<void> signal_srtm_conf() {return signal_srtm_conf_;}
 
     // Right panel, a Gtk::Notebook with separate
     // panels for waypoints, tracks, maps ...

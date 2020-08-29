@@ -39,6 +39,7 @@ class DlgPano : public Gtk::Dialog{
     void set_dir(const dPoint & pt);
     void set_az();
     void get_az(const iPoint & p); // update az value from viewer signal
+    void redraw() {viewer.redraw();}
 
     sigc::signal<void, dPoint> signal_go();
     sigc::signal<void, dPoint> signal_point();
