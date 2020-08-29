@@ -210,19 +210,19 @@ ActionManager::AddAction(ActionMode *action,
     // these stupid ifs...
     if (acckey.is_null())
       actions->add(
-        Gtk::Action::create_with_icon_name(id, icon, name, desc),
-        sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m));
+        Gtk::Action::create_with_icon_name(menu + ":" + id, icon, name, desc),
+        sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m, menu));
     else
       actions->add(
-        Gtk::Action::create_with_icon_name(id, icon, name, desc), acckey,
-        sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m));
+        Gtk::Action::create_with_icon_name(menu + ":" + id, icon, name, desc), acckey,
+        sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m, menu));
   }
 
   if (menu.substr(0,5) == "Popup"){
     ui_manager->add_ui_from_string(
       "<ui>"
       "  <popup name='" + menu + "'>"
-      "    <menuitem action='" + id + "'/>"
+      "    <menuitem action='" + menu + ":" + id + "'/>"
       "  </popup>"
       "</ui>"
     );
@@ -232,7 +232,7 @@ ActionManager::AddAction(ActionMode *action,
       "<ui>"
       "  <menubar name='MenuBar'>"
       "    <menu action='Menu" + menu + "'>"
-      "      <menuitem action='" + id + "'/>"
+      "      <menuitem action='" + menu + ":" + id + "'/>"
       "    </menu>"
       "  </menubar>"
       "</ui>"
@@ -247,11 +247,11 @@ ActionManager::clear_state (){
 }
 
 void
-ActionManager::set_mode (int mode){
+ActionManager::set_mode (int mode, const std::string & menu){
   if (modes[mode]->is_radio()){
     clear_state();
     mapview->spanel.message(modes[mode]->get_name());
     current_mode = mode;
   }
-  modes[mode]->activate();
+  modes[mode]->activate(menu);
 }

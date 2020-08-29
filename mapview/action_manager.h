@@ -15,7 +15,7 @@ public:
   void clear_state();
 
   // do clear_state, activate a new mode, put mode name to the statusbar
-  void set_mode (int new_mode);
+  void set_mode (int new_mode, const std::string & menu);
 
   void click (iPoint p, int button, const Gdk::ModifierType & state) {
     if (button == 3) clear_state();

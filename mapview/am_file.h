@@ -14,7 +14,7 @@ class New : public ActionMode{
     std::string get_icon() { return "document-new"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>n"); }
     bool is_radio() { return false; }
-    void activate() { mapview->new_project(); }
+    void activate(const std::string & menu) { mapview->new_project(); }
 };
 
 /**********************************************************/
@@ -59,7 +59,7 @@ class LoadFile : public ActionMode, public Gtk::FileChooserDialog{
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>l"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       set_current_folder(folder);
       if (run() == GTK_RESPONSE_ACCEPT){
          mapview->add_files(get_filenames());
@@ -79,7 +79,7 @@ public:
     std::string get_icon() { return "application-exit"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>q"); }
     bool is_radio() { return false; }
-    void activate() { mapview->exit(); }
+    void activate(const std::string & menu) { mapview->exit(); }
 };
 
 #endif

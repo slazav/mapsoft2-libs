@@ -26,7 +26,7 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       set_current_folder(folder);
       if (run() == GTK_RESPONSE_ACCEPT){
         folder = get_current_folder();
@@ -48,7 +48,7 @@ class CloseMapDB : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       mapview->close_mapdb();
     }
 };

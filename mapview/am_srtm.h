@@ -16,7 +16,7 @@ class AMShowSRTM : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       state = (state+1)%2;
       if (state==1) mapview->open_srtm();
       else mapview->close_srtm();
@@ -43,7 +43,7 @@ public:
 
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       set_opt(o);
       show_all();
     }

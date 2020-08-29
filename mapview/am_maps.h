@@ -17,7 +17,7 @@ class AddMapyCZ : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();
@@ -45,7 +45,7 @@ class AddOSM : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();
@@ -72,7 +72,7 @@ class AddESRI : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();
@@ -99,7 +99,7 @@ class AddYandexSat : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map;
@@ -135,7 +135,7 @@ class AddGoogleSat : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();
@@ -162,7 +162,7 @@ class AddBingSat : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();
@@ -189,7 +189,7 @@ class AddGBmap : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();
@@ -215,7 +215,7 @@ class AddPodmMap : public ActionMode{
 //    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       GeoData data_pre;
       GeoMapList maps;
       GeoMap map = geo_mkref_web();

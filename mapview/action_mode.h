@@ -25,8 +25,8 @@ public:
     // for non-radio modes only activate method is called.
     virtual bool is_radio() { return true; }
 
-    // Activates this mode.
-    virtual void activate() { }
+    // Activates this mode (menu parameter shows from which menu it was called).
+    virtual void activate(const std::string & menu) { }
 
     // Abandons any action in progress and deactivates mode.
     // no need to reset rubber

@@ -25,7 +25,7 @@ public:
 
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       dlg.set_opt(o);
       dlg.show_all();
     }

@@ -16,7 +16,7 @@ class FullScreen : public ActionMode{
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
     bool is_radio() { return false; }
 
-    void activate() {
+    void activate(const std::string & menu) {
       state = (state+1)%2;
       if (state==0) mapview->unfullscreen();
       else mapview->fullscreen();
@@ -33,7 +33,7 @@ class HidePanels : public ActionMode{
     std::string get_name() { return "Hide/Show Panels"; }
     Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>h"); }
     bool is_radio() { return false; }
-    void activate() {
+    void activate(const std::string & menu) {
       state = (state+1)%2;
       if (state==0){
         mapview->spanel.show();
