@@ -103,7 +103,7 @@ Mapview::Mapview(const Opt & o) :
 
     // set default map projection -- web mercator
     {
-      viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(geo_mkref_web())), false);
+      set_cnv_map(geo_mkref_web());
       // viewer does not know window size. We requested 640x480, just scale 2 times
       viewer.set_origin(dPoint(128,64));
       viewer.rescale(4.0, iPoint());
@@ -253,8 +253,8 @@ Mapview::open_mapdb(const std::string & dir){
     gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
     GeoMap r = panel_mapdb->get_gobj()->get_ref();
     if (!r.empty()){
-      viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(r)), false);
-      tmpref = false;
+      tmpref = true; // force changing the reference!
+      set_cnv_map(r);
     }
   }
   catch (Err & e) { dlg_err.call(e); }

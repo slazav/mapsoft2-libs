@@ -143,7 +143,7 @@ public:
 
     /**********************************/
 
-    // To be done after loading a new map
+    // Set geo reference
     void set_cnv_map(const GeoMap & m){
       if (tmpref) viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)),!tmpview);
       tmpref=false;
