@@ -144,7 +144,7 @@ public:
     /**********************************/
 
     // Set geo reference
-    void set_cnv_map(const GeoMap & m);
+    void set_cnv_map(const GeoMap & m, const bool force = false);
 
     /**********************************/
 

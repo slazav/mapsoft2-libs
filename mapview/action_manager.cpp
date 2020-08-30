@@ -127,6 +127,8 @@ ActionManager::ActionManager (Mapview * mapview_):
 //    ADD_ACT(DrawOpt,          "PopupTRKs")
 
     // Map panel menu
+    ADD_ACT(PanelMapRef,      "PopupMAPs")
+    AddSep("PopupMAPs");
     ADD_ACT(PanelGoto,        "PopupMAPs")
     ADD_ACT(PanelSave,        "PopupMAPs")
     AddSep("PopupMAPs");

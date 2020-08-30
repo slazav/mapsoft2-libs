@@ -226,4 +226,17 @@ public:
     }
 };
 
+class PanelMapRef : public ActionMode{
+public:
+    PanelMapRef (Mapview * mapview) : ActionMode(mapview){ }
+    std::string get_name() { return "Use map reference"; }
+    std::string get_icon() { return ""; }
+    bool is_radio() { return false; }
+    void activate(const std::string & menu) {
+      auto * ml = mapview->panel_maps->get_data();
+      if (ml == NULL || ml->size()<1) return;
+      mapview->set_cnv_map(ml->front(), true);
+    }
+};
+
 #endif

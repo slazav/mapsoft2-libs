@@ -100,6 +100,15 @@ public:
     GObjMulti::del(obj);
   }
 
+
+  // get selected data
+  Td * get_data() {
+    auto i = treeview->get_selection()->get_selected();
+    if (!i) return NULL;
+    std::shared_ptr<Td> d = (*i)[columns.data];
+    return d.get();
+  }
+
   // Hide/Show all
   void show_all(bool show=true){
     for (auto row:store->children())
@@ -253,6 +262,7 @@ public:
 
   // number of objects in the panel
   int size() {return GObjMulti::size();}
+
 
 protected:
   Glib::RefPtr<Gtk::ListStore> store;

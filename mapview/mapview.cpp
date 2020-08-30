@@ -253,8 +253,7 @@ Mapview::open_mapdb(const std::string & dir){
     gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
     GeoMap r = panel_mapdb->get_gobj()->get_ref();
     if (!r.empty()){
-      tmpref = true; // force changing the reference!
-      set_cnv_map(r);
+      set_cnv_map(r, true); // force changing the reference!
     }
   }
   catch (Err & e) { dlg_err.call(e); }
@@ -297,8 +296,8 @@ Mapview::exit(bool force) {
 /**********************************************************/
 
 void
-Mapview::set_cnv_map(const GeoMap & m){
-  if (!tmpref) return;
+Mapview::set_cnv_map(const GeoMap & m, const bool force){
+  if (!tmpref && !force) return;
   viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)),!tmpview);
 
   // try to set bbox and xloop for this reference.
