@@ -40,14 +40,16 @@ SimpleViewer::set_origin (iPoint p) {
   int w=get_width();
   int h=get_height();
 
-  if (xloop){ p.x = p.x % bbox.w; }
-  else {
-    if (p.x + w >= bbox.x + bbox.w) p.x = bbox.x + bbox.w - w - 1;
-    if (p.x < bbox.x) p.x=bbox.x;
-  }
+  if (bbox) {
+    if (xloop){ p.x = p.x % (int)rint(bbox.w); }
+    else {
+      if (p.x + w >= bbox.x + bbox.w) p.x = bbox.x + bbox.w - w - 1;
+      if (p.x < bbox.x) p.x=bbox.x;
+    }
 
-  if (p.y + h >= bbox.y + bbox.h) p.y = bbox.y+ bbox.h - h - 1;
-  if (p.y < bbox.y) p.y=bbox.y;
+    if (p.y + h >= bbox.y + bbox.h) p.y = bbox.y+ bbox.h - h - 1;
+    if (p.y < bbox.y) p.y=bbox.y;
+  }
 
   // now win->scroll invalidates the whole window,
   // see Scrolling section in
@@ -92,8 +94,8 @@ SimpleViewer::set_range(dRect dst, bool obj_crd){
 
   // calculate scaling factor (power of 2)
   double k = 1;
-  while (src.w > 2*k*dst.w || src.h > 2*k*dst.h) k*=2;
-  while (src.w <   k*dst.w || src.h <   k*dst.h) k/=2;
+  while (src.w > 2.1*k*dst.w || src.h > 2.1*k*dst.h) k*=2;
+  while (src.w < 0.9*k*dst.w || src.h < 0.9*k*dst.h) k/=2;
 
   // avoid rounding errors: first scaling, then moving
   rescale(k);
@@ -131,7 +133,7 @@ SimpleViewer::rescale(const double k, const iPoint & cnt){
   iPoint wsize(get_width(), get_height());
   iPoint wcenter = get_origin() + cnt;
   wcenter=iPoint(wcenter.x * k, wcenter.y * k);
-  bbox = dRect(bbox)*k;
+  if (bbox) bbox *= k;
   set_origin(wcenter - cnt);
   if (cnv){
     cnv->rescale_src(1.0/k);
@@ -161,9 +163,11 @@ SimpleViewer::draw(const CairoWrapper & crw, const iRect & r){
   // It could be that viewer.bbox does not cover the whole
   // range. It xloop is set we want to draw a few pictures.
   // Calculate shifts:
-  int x1 = floor((origin.x + r.x - bbox.x) / (double)bbox.w);
-  int x2 =  ceil((origin.x + r.x + r.w - bbox.x) / (double)bbox.w)+1;
-
+  int x1=0, x2=1;
+  if (bbox) {
+    x1 = floor((origin.x + r.x - bbox.x) / (double)bbox.w);
+    x2 =  ceil((origin.x + r.x + r.w - bbox.x) / (double)bbox.w)+1;
+  }
   for (int x = x1; x<x2; x++) {
     // if xloop = false we draw only x=0
     if (!get_xloop() && x!=0) continue;
@@ -172,8 +176,11 @@ SimpleViewer::draw(const CairoWrapper & crw, const iRect & r){
       crw1->save();
       crw1->translate(-r.tlc()-origin-iPoint(x*bbox.x,0));
       iRect draw_range = r+origin;
-      draw_range.x -= x*bbox.x;
-      draw_range.intersect(bbox);
+      if (bbox) {
+        draw_range.x -= x*bbox.x;
+        draw_range.intersect(bbox);
+        if (draw_range.is_zsize()) continue;
+      }
       obj->prepare_range(draw_range);
       obj->draw(crw1, draw_range);
       crw1->restore();

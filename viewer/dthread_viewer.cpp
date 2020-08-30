@@ -93,17 +93,22 @@ DThreadViewer::updater(){
       if (obj){
         dRect r = tile_to_rect(key);
 
+        int x1 = 0, x2 = 1;
         auto box = get_bbox();
-        int x1 = floor((r.x - box.x) / (double)box.w);
-        int x2 =  ceil((r.x + r.w - box.x) / (double)box.w) + 1;
+        if (box) {
+          x1 = floor((r.x - box.x) / (double)box.w);
+          x2 =  ceil((r.x + r.w - box.x) / (double)box.w) + 1;
+        }
         for (int x = x1; x<x2; x++) {
           // if xloop = false we draw only x=0
           if (!get_xloop() && x!=0) continue;
 
-
-          auto r1 = r; r1.x -= x*box.w;
-          r1.intersect(box);
-          if (r1.is_zsize()) continue;
+          auto r1 = r;
+          if (box){
+            r1.x -= x*box.w;
+            r1.intersect(box);
+            if (r1.is_zsize()) continue;
+          }
 
           crw->save();
           crw->translate(-r1.tlc());
@@ -199,16 +204,22 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
   // Calculate shifts:
   auto box = get_bbox();
   auto org = get_origin();
-  int x1 = floor((org.x + r.x - box.x) / (double)box.w);
-  int x2 =  ceil((org.x + r.x + r.w - box.x) / (double)box.w) + 1;
+  int x1=0, x2=1;
+  if (box) {
+    x1 = floor((org.x + r.x - box.x) / (double)box.w);
+    x2 =  ceil((org.x + r.x + r.w - box.x) / (double)box.w) + 1;
+  }
   for (int x = x1; x<x2; x++) {
     // if xloop = false we draw only x=0
     if (!get_xloop() && x!=0) continue;
 
     // clip to viewer.bbox
-    iRect draw_range = r + org; draw_range.x -= x*box.w;
-    draw_range.intersect(box);
-    if (draw_range.is_zsize()) continue;
+    iRect draw_range = r + org;
+    if (box) {
+      draw_range.x -= x*box.w;
+      draw_range.intersect(box);
+      if (draw_range.is_zsize()) continue;
+    }
 
     if (obj)
       obj->prepare_range(draw_range);
