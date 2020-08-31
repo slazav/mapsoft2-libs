@@ -4,7 +4,7 @@
 #include "image_t.h"
 
 std::string
-ImageT::make_url(const iPoint & key){
+ImageT::make_url(const std::string& tmpl, const iPoint & key){
   std::string ret;
   size_t n0 = 0;
   while (1) {
@@ -43,13 +43,13 @@ ImageT::prepare_range(const iRect &r){
   // same order as in DThreadViewer
   for (int x=x1; x<x2; x++)
     for (int y=y1; y<y2; y++)
-      dmanager.add(make_url(iPoint(x,y,zoom)));
+      dmanager.add(make_url(tmpl, iPoint(x,y,zoom)));
 }
 
 void
 ImageT::load_key(const iPoint & key) {
   if (tiles.contains(key)) return;
-  auto url = make_url(key);
+  auto url = make_url(tmpl, key);
   auto s = dmanager.get(url);
   std::istringstream str(s);
   ImageR img = image_load(str, 1);

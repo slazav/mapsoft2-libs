@@ -61,7 +61,7 @@ class ImageT: public Image {
        dmanager(IMAGE_T_DCACHE_SIZE, IMAGE_T_NCONN) {};
 
     // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
-    std::string make_url(const iPoint & key);
+    static std::string make_url(const std::string& tmpl, const iPoint & key);
 
     // set zoom level
     void set_zoom(int z) {zoom = z;}

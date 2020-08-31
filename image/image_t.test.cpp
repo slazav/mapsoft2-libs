@@ -10,34 +10,20 @@ main(){
 
     // test URL template substitutions
     iPoint p(10,20,5);
-    {
-      ImageT imgt("abc{x}/{y}");
-      assert_eq(imgt.make_url(p), "abc10/20");
-    }
 
-    {
-      ImageT imgt("abc{x}/{y}-{y}/{x} {{} {}}");
-      assert_eq(imgt.make_url(p), "abc10/20-20/10 { }");
-    }
-    {
-      ImageT imgt("abc{x}/{y}/{z}-{[abc]}");
-      assert_eq(imgt.make_url(p), "abc10/20/5-a");
-      p.x++;
-      assert_eq(imgt.make_url(p), "abc11/20/5-b");
-      p.y++;
-      assert_eq(imgt.make_url(p), "abc11/21/5-c");
-      p.y++;
-      assert_eq(imgt.make_url(p), "abc11/22/5-a");
-    }
+    assert_eq(ImageT::make_url("abc{x}/{y}", p), "abc10/20");
+    assert_eq(ImageT::make_url("abc{x}/{y}-{y}/{x} {{} {}}", p), "abc10/20-20/10 { }");
 
-    {
-      ImageT imgt("abc{x/{y}");
-      assert_err(imgt.make_url(p), "ImageT: unknown field x/{y in URL template: abc{x/{y}");
-    }
-    {
-      ImageT imgt("abc{x}/{y");
-      assert_err(imgt.make_url(p), "ImageT: } is missing in URL template: abc{x}/{y");
-    }
+    std::string tmpl("abc{x}/{y}/{z}-{[abc]}");
+    assert_eq(ImageT::make_url(tmpl, iPoint(10,20,5)), "abc10/20/5-a");
+    assert_eq(ImageT::make_url(tmpl, iPoint(11,20,5)), "abc11/20/5-b");
+    assert_eq(ImageT::make_url(tmpl, iPoint(11,21,5)), "abc11/21/5-c");
+    assert_eq(ImageT::make_url(tmpl, iPoint(11,22,5)), "abc11/22/5-a");
+
+    assert_err(ImageT::make_url("abc{x/{y}", p),
+      "ImageT: unknown field x/{y in URL template: abc{x/{y}");
+    assert_err(ImageT::make_url("abc{x}/{y", p),
+      "ImageT: } is missing in URL template: abc{x}/{y");
 
     {
 //      ImageT imgt("https://tiles.nakarte.me/eurasia25km/7/{x}/{y}", true);
