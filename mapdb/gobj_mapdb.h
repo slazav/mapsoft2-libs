@@ -515,6 +515,7 @@ public:
   // set drawing options
   void set_opt(const Opt & o) override {opt = o;}
 
+  dRect bbox() const override {return map->bbox();}
 
 };
 
