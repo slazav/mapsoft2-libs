@@ -108,46 +108,69 @@ point_in_polygon(const Point<T> & P, const Line<T> & L, const bool borders = tru
 }
 
 /// Check if one-segment polygon l covers (maybe partially) rectangle r.
+/// Return:
+///  0 - polygon and rectange are not crossing
+///  1 - border of the polygon is crossing rectangle boundary,
+///  2 - rectangle is fully inside the polygon,
+///  3 - polygon is fully inside the rectangle
 template <typename T>
-bool
+int
 rect_in_polygon(const Rect<T> & R, const Line<T> & L, const bool borders = true){
 
-  if (!R) return false;
+  if (!R) return 0;
 
   std::vector<double> cr;
   PolyTester<T> lth(L, true, borders), ltv(L,false, borders);
 
   // check if there is any crossing at any rectangle side
   cr = lth.get_cr(R.y);
-  for (auto const x0:cr){
-    if (R.x < x0 && x0 <R.x+R.w ) return true;
-    if (borders && (R.x==x0 || x0==R.x+R.w)) return true;
+  for (auto const & x0:cr){
+    if (R.x < x0 && x0 <R.x+R.w ) return 1;
+    if (borders && (R.x==x0 || x0==R.x+R.w)) return 1;
   }
   cr = lth.get_cr(R.y+R.h);
-  for (auto const x0:cr){
-    if (R.x < x0 && x0 <R.x+R.w ) return true;
-    if (borders && (R.x==x0 || x0==R.x+R.w)) return true;
+  for (auto const & x0:cr){
+    if (R.x < x0 && x0 <R.x+R.w ) return 1;
+    if (borders && (R.x==x0 || x0==R.x+R.w)) return 1;
   }
 
   cr = ltv.get_cr(R.x);
-  for (auto const y0:cr){
-    if (R.y < y0 && y0 <R.y+R.h ) return true;
-    if (borders && (R.y==y0 || y0==R.y+R.h)) return true;
+  for (auto const & y0:cr){
+    if (R.y < y0 && y0 <R.y+R.h ) return 1;
+    if (borders && (R.y==y0 || y0==R.y+R.h)) return 1;
   }
   cr = ltv.get_cr(R.x+R.w);
-  for (auto const y0:cr){
-    if (R.y < y0 && y0 <R.y+R.h ) return true;
-    if (borders && (R.y==y0 || y0==R.y+R.h)) return true;
+  for (auto const & y0:cr){
+    if (R.y < y0 && y0 <R.y+R.h ) return 1;
+    if (borders && (R.y==y0 || y0==R.y+R.h)) return 1;
   }
 
   // one rectangle corner is inside polygon
-  if (ltv.test_cr(cr, R.y)) return true;
+  if (ltv.test_cr(cr, R.y)) return 2;
 
   // one of polygon points is inside the rectangle
-  if (L.size() && borders && R.contains_u(L[0])) return true;
-  if (L.size() && !borders && R.contains_l(L[0])) return true;
-  return false;
+  if (L.size() && borders && R.contains_u(L[0])) return 3;
+  if (L.size() && !borders && R.contains_l(L[0])) return 3;
+  return 0;
 }
+
+
+/// Same for multi-segment polygons. 
+template <typename T>
+int
+rect_in_polygon(const Rect<T> & R, const MultiLine<T> & L, const bool borders = true){
+
+  if (!R) return 0;
+  int loops = 0;
+  for (auto const & l: L) {
+    int r = rect_in_polygon(R, l, borders);
+    if (r == 1) return 1; // there is a crossing
+    if (r == 2) loops++;  // rectangle is fully in a loop
+    if (r == 3 && loops==0) return 3; //
+  }
+  return (loops%2)? 2:0;
+}
+
 
 // Join a multi-segment polygon into a single-segment one
 // using shortest cuts.
