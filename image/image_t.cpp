@@ -47,6 +47,12 @@ ImageT::prepare_range(const iRect &r){
 }
 
 void
+ImageT::clear(){
+  tiles.clear();
+  dmanager.clear();
+}
+
+void
 ImageT::load_key(const iPoint & key) {
   if (tiles.contains(key)) return;
   auto url = make_url(tmpl, key);

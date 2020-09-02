@@ -70,9 +70,11 @@ class ImageT: public Image {
     int get_zoom() const {return zoom;}
 
 
-    // Start downloading all tiles in the range,
-    // remove tiles outside this range
+    // Start downloading all tiles in the range.
     void prepare_range(const iRect &r);
+
+    // Clear all data, including downloader's queue
+    void clear();
 
     // load tile to the cache
     void load_key(const iPoint & key);
