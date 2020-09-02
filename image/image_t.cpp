@@ -53,6 +53,11 @@ ImageT::clear(){
 }
 
 void
+ImageT::clear_queue(){
+  dmanager.clear_queue();
+}
+
+void
 ImageT::load_key(const iPoint & key) {
   if (tiles.contains(key)) return;
   auto url = make_url(tmpl, key);

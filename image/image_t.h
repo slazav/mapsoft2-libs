@@ -76,6 +76,9 @@ class ImageT: public Image {
     // Clear all data, including downloader's queue
     void clear();
 
+    // Clear downloader's queue
+    void clear_queue();
+
     // load tile to the cache
     void load_key(const iPoint & key);
 
