@@ -103,18 +103,20 @@ DThreadViewer::updater(){
           // if xloop = false we draw only x=0
           if (!get_xloop() && x!=0) continue;
 
-          auto r1 = r;
+          auto draw_rng = r;
+          int sh = 0;
           if (box){
-            r1.x -= x*box.w;
-            r1.intersect(box);
-            if (r1.is_zsize()) continue;
+            draw_rng.x -= x*box.w;
+            sh = (x-x1)*box.w;
+            draw_rng.intersect(box);
+            if (draw_rng.is_zsize()) continue;
           }
 
           crw->save();
-          crw->translate(-r1.tlc());
+          crw->translate(-draw_rng.tlc()+iPoint(sh,0));
           try {
             auto lk = obj->get_lock();
-            obj->draw(crw, r1);
+            obj->draw(crw, draw_rng);
           }
           catch (Err & e){ std::cerr << "Viewer warning: " << e.str() << "\n"; }
           crw->restore();
