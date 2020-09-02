@@ -22,8 +22,7 @@ Downloader::Downloader(const int cache_size, const int max_conn, const int log_l
 }
 
 Downloader::~Downloader(){
-  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
-  lk.lock();
+  std::unique_lock<std::mutex> lk(data_mutex);
   worker_needed = false;
   lk.unlock();
   add_cond.notify_one();
@@ -34,8 +33,7 @@ Downloader::~Downloader(){
 void
 Downloader::add(const std::string & url){
   if (data.contains(url)) return; // already in the cache
-  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
-  lk.lock();
+  std::unique_lock<std::mutex> lk(data_mutex);
   data.add(url, std::make_pair(0, std::string()));
   urls.push(url);
   if (log_level>1)
@@ -48,23 +46,19 @@ Downloader::add(const std::string & url){
 void
 Downloader::del(const std::string & url){
   if (!data.contains(url)) return;
-  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
-  lk.lock();
+  std::unique_lock<std::mutex> lk(data_mutex);
   data.erase(url);
   if (log_level>1)
     std::cerr << "Downloader: " << url << " (remove)\n";
-  lk.unlock();
 }
 
 /**********************************/
 void
 Downloader::clear(){
-  std::unique_lock<std::mutex> lk(data_mutex, std::defer_lock);
-  lk.lock();
+  std::unique_lock<std::mutex> lk(data_mutex);
   data.clear();
   if (log_level>1)
     std::cerr << "Downloader: clear all data\n";
-  lk.unlock();
 }
 
 /**********************************/
