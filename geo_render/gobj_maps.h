@@ -54,7 +54,7 @@ private:
 
       // calculate zoom level for tiled images
       if (timg){
-        zoom = ceil(log(1.0/k)/log(2.0));
+        zoom = rint(log(1.0/k)/log(2.0));
         if (zoom < 0) zoom = 0;
         if (zoom < src->tile_minz) zoom = src->tile_minz;
         if (zoom > src->tile_maxz) zoom = src->tile_maxz;
