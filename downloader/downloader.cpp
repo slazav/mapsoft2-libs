@@ -62,6 +62,16 @@ Downloader::clear(){
 }
 
 /**********************************/
+void
+Downloader::clear_queue(){
+  std::unique_lock<std::mutex> lk(data_mutex);
+  for (auto i=data.begin(); i!=data.end(); i++)
+    if (i->second.first < 2) i=data.erase(i);
+  if (log_level>1)
+    std::cerr << "Downloader: clear unfinished downloading\n";
+}
+
+/**********************************/
 int
 Downloader::get_status(const std::string & url){
   if (!data.contains(url)) return -1;

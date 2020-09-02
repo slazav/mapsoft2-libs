@@ -82,6 +82,9 @@ class Downloader {
   // Clear all data.
   void clear();
 
+  // Clear unfinished data.
+  void clear_queue();
+
   // get current status of the url:
   // -1: unknown, 0: in the queue, 1: in progress, 2: done, 3: error
   int get_status(const std::string & url);
