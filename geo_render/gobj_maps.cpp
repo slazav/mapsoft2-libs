@@ -87,6 +87,9 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     // Use 0.5pt accuracy in source coordinates (viewer).
     d.cnv.simplify(d.bbox, 5, 0.5);
 
+    // for tiled maps clear downloader's queue
+    if (d.timg) d.timg->clear_queue();
+
   }
   tiles.clear();
   redraw_me();
