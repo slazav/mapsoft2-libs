@@ -271,8 +271,14 @@ Class for walking alone a line (2D).
 * `bool point_in_polygon(const Point<T> & P, const Line<T> & L, const bool borders=true)` --
   Check if one-segment polygon L covers point P.
 
-* `bool rect_in_polygon(const Rect<T> & R, const Line<T> & L, const bool borders=true)` --
+* `int rect_in_polygon(const Rect<T> & R, const Line<T> & L, const bool borders=true)` --
   Check if one-segment polygon L covers (maybe partially) rectangle R.
+  Return values: 0 - polygon and rectange are not crossing, 1 - border of the polygon is
+  crossing rectangle boundary, 2 - rectangle is fully inside the polygon, 3 - polygon is
+  fully inside the rectangle.
+
+* `int rect_in_polygon(const Rect<T> & R, const MultiLine<T> & L, const bool borders=true)` --
+  Same for multi-segment polygons.
 
 * `Line<T> join_polygons(const MultiLine<T> & L)` -- Join a multi-segment
   polygon into a single-segment one using shortest cuts.
