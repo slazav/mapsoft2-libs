@@ -5,6 +5,11 @@
 #include "image/image_r.h"
 #include "geom/rect.h"
 
+// Do not do rescaling if bbox exists and
+// its size exceeds limits:
+#define MIN_BBOX_LIMIT  (1<<4)
+#define MAX_BBOX_LIMIT  (1<<30)
+
 SimpleViewer::SimpleViewer(GObj * o) :
     obj(o),
     origin(iPoint(0,0)),
@@ -129,6 +134,12 @@ SimpleViewer::set_opt(const Opt & o){
 
 void
 SimpleViewer::rescale(const double k, const iPoint & cnt){
+  // limit scaling according to the bbox size:
+  if (bbox){
+    if (k < 1 && (bbox.w < MIN_BBOX_LIMIT || bbox.h < MIN_BBOX_LIMIT)) return;
+    if (k > 1 && (bbox.w > MAX_BBOX_LIMIT || bbox.h > MAX_BBOX_LIMIT)) return;
+  }
+
   signal_on_rescale_.emit(k);
   iPoint wsize(get_width(), get_height());
   iPoint wcenter = get_origin() + cnt;
