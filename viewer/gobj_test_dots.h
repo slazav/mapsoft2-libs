@@ -21,7 +21,7 @@ public:
     cr->set_color(color);
     cr->cap_round();
     cr->set_line_width(3);
-    iRect r = 10*floor(cnv->frw_acc(draw_range)/10.0);
+    iRect r = 10*(iRect)floor(cnv->frw_acc(draw_range)/10.0);
 
     for (int y = r.y; y<=r.y+r.h; y+=10){
       for (int x = r.x; x<=r.x+r.w; x+=10){

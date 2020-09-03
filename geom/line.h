@@ -292,8 +292,8 @@ Line<T> invert(const Line<T> & l) {
 /// rint function: change corner coordenates to nearest integers
 /// \relates Line
 template <typename T>
-Line<int> rint(const Line<T> & l) {
-  Line<int> ret;
+Line<T> rint(const Line<T> & l) {
+  Line<T> ret;
   for (auto const & p:l) ret.push_back(rint(p));
   return ret;
 }
@@ -301,8 +301,8 @@ Line<int> rint(const Line<T> & l) {
 /// floor function: change coordinates to nearest smaller integers
 /// \relates Line
 template <typename T>
-Line<int> floor(const Line<T> & l) {
-  Line<int> ret;
+Line<T> floor(const Line<T> & l) {
+  Line<T> ret;
   for (auto const & p:l) ret.push_back(floor(p));
   return ret;
 }
@@ -310,8 +310,8 @@ Line<int> floor(const Line<T> & l) {
 /// ceil function: change coordinates to nearest larger integers
 /// \relates Line
 template <typename T>
-Line<int> ceil(const Line<T> & l) {
-  Line<int> ret;
+Line<T> ceil(const Line<T> & l) {
+  Line<T> ret;
   for (auto const & p:l) ret.push_back(ceil(p));
   return ret;
 }

@@ -327,27 +327,27 @@ Rect<T> operator+ (const Point<T> & p, const Rect<T> & r) { return r+p; }
 /// rint function: change corner coordenates to nearest integers
 /// we can not use rr.to_rint() because of rounding problems (?)
 template <typename T>
-Rect<int> rint(const Rect<T> & r) {
-  if (r.e) return Rect<int>();
-  return Rect<int>(rint(r.tlc()), rint(r.brc()));
+Rect<T> rint(const Rect<T> & r) {
+  if (r.e) return Rect<T>();
+  return Rect<T>(rint(r.tlc()), rint(r.brc()));
 }
 
 /// floor function: shrink the rectangle to nearest integer coordinate
 /// Rectangle can be shriked to empty one.
 template <typename T>
-Rect<int> floor(const Rect<T> & r) {
-  if (r.e) return Rect<int>();
-  Point<int> p1 = ceil(r.tlc());
-  Point<int> p2 = floor(r.brc());
-  if (p1.x > p2.x || p1.y > p2.y) {return Rect<int>();}
-  return Rect<int>(p1,p2);
+Rect<T> floor(const Rect<T> & r) {
+  if (r.e) return Rect<T>();
+  Point<T> p1 = ceil(r.tlc());
+  Point<T> p2 = floor(r.brc());
+  if (p1.x > p2.x || p1.y > p2.y) {return Rect<T>();}
+  return Rect<T>(p1,p2);
 }
 
 /// ceil function: expand the rectangle to nearest integer coordinates
 template <typename T>
-Rect<int> ceil(const Rect<T> & r) {
-  if (r.e) return Rect<int>();
-  return Rect<int>(floor(r.tlc()), ceil(r.brc()));
+Rect<T> ceil(const Rect<T> & r) {
+  if (r.e) return Rect<T>();
+  return Rect<T>(floor(r.tlc()), ceil(r.brc()));
 }
 
 /// Expand rectangle to each side by val value.

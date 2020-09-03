@@ -231,8 +231,8 @@ Rect<T> bbox(const MultiLine<T> & l) { return l.bbox(); }
 /// rint function: change corner coordenates to nearest integers
 /// \relates Line
 template <typename T>
-MultiLine<int> rint(const MultiLine<T> & ml) {
-  MultiLine<int> ret;
+MultiLine<T> rint(const MultiLine<T> & ml) {
+  MultiLine<T> ret;
   for (auto & l:ml) ret.push_back(rint(l));
   return ret;
 }
@@ -240,8 +240,8 @@ MultiLine<int> rint(const MultiLine<T> & ml) {
 /// floor function: change coordinates to nearest smaller integers
 /// \relates Line
 template <typename T>
-MultiLine<int> floor(const MultiLine<T> & ml) {
-  MultiLine<int> ret;
+MultiLine<T> floor(const MultiLine<T> & ml) {
+  MultiLine<T> ret;
   for (auto & l:ml) ret.push_back(floor(l));
   return ret;
 }
@@ -249,8 +249,8 @@ MultiLine<int> floor(const MultiLine<T> & ml) {
 /// ceil function: change coordinates to nearest larger integers
 /// \relates Line
 template <typename T>
-MultiLine<int> ceil(const MultiLine<T> & ml) {
-  MultiLine<int> ret;
+MultiLine<T> ceil(const MultiLine<T> & ml) {
+  MultiLine<T> ret;
   for (auto const & l:ml) ret.push_back(ceil(l));
   return ret;
 }

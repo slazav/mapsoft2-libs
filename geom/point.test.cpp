@@ -101,19 +101,19 @@ main(){
     dPoint dp, dp1(1.1,2.8,3.8), dp2(-0.1,-3.9,-4.6);
 
     dp = dp1;
-    assert_deq(rint(dp), iPoint(1,3,4), 1e-6);
+    assert_deq(rint(dp), dPoint(1,3,4), 1e-6);
     assert_deq(dp, dp1, 1e-6);
     dp.to_rint();
     assert_deq(dp, dPoint(1,3,4), 1e-6);
 
     dp = dp1;
-    assert_deq(floor(dp), iPoint(1,2,3), 1e-6);
+    assert_deq(floor(dp), dPoint(1,2,3), 1e-6);
     assert_deq(dp, dp1, 1e-6);
     dp.to_floor();
     assert_deq(dp, dPoint(1,2,3), 1e-6);
 
     dp = dp1;
-    assert_deq(ceil(dp), iPoint(2,3,4), 1e-6);
+    assert_deq(ceil(dp), dPoint(2,3,4), 1e-6);
     assert_deq(dp, dp1, 1e-6);
     dp.to_ceil();
     assert_deq(dp, dPoint(2,3,4), 1e-6);
@@ -125,19 +125,19 @@ main(){
     assert_deq(dp1, dp1, 1e-6);
 
     dp = dp2;
-    assert_deq(rint(dp), iPoint(0,-4,-5), 1e-6);
+    assert_deq(rint(dp), dPoint(0,-4,-5), 1e-6);
     assert_deq(dp, dp2, 1e-6);
     dp.to_rint();
     assert_deq(dp, dPoint(0,-4,-5), 1e-6);
 
     dp = dp2;
-    assert_deq(floor(dp), iPoint(-1,-4,-5), 1e-6);
+    assert_deq(floor(dp), dPoint(-1,-4,-5), 1e-6);
     assert_deq(dp, dp2, 1e-6);
     dp.to_floor();
     assert_deq(dp, dPoint(-1,-4,-5), 1e-6);
 
     dp = dp2;
-    assert_deq(ceil(dp), iPoint(0,-3,-4), 1e-6);
+    assert_deq(ceil(dp), dPoint(0,-3,-4), 1e-6);
     assert_deq(dp, dp2, 1e-6);
     dp.to_ceil();
     assert_deq(dp, dPoint(0,-3,-4), 1e-6);

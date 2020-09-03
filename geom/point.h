@@ -174,20 +174,20 @@ Point<T> operator* (const T k, const Point<T> & p) { return p*k; }
 /// rint function
 /// \relates Point
 template <typename T>
-Point<int> rint(const Point<T> & p){
-  return Point<int>((T)::rint(p.x),(T)::rint(p.y),(T)::rint(p.z)); }
+Point<T> rint(const Point<T> & p){
+  return Point<T>((T)::rint(p.x),(T)::rint(p.y),(T)::rint(p.z)); }
 
 /// floor function
 /// \relates Point
 template <typename T>
-Point<int> floor(const Point<T> & p){
-  return Point<int>((T)::floor(p.x),(T)::floor(p.y),(T)::floor(p.z)); }
+Point<T> floor(const Point<T> & p){
+  return Point<T>((T)::floor(p.x),(T)::floor(p.y),(T)::floor(p.z)); }
 
 /// ceil function
 /// \relates Point
 template <typename T>
-Point<int> ceil(const Point<T> & p){
-  return Point<int>((T)::ceil(p.x),(T)::ceil(p.y),(T)::ceil(p.z)); }
+Point<T> ceil(const Point<T> & p){
+  return Point<T>((T)::ceil(p.x),(T)::ceil(p.y),(T)::ceil(p.z)); }
 
 /// abs function
 /// \relates Point
