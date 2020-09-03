@@ -190,23 +190,29 @@ struct Rect {
   /// rint function: change corner coordenates to nearest integers
   void to_rint() {
     if (e) return;
-    *this = Rect<T>(rint(tlc()), rint(brc()));
+    Point<T> p1 = rint(tlc());
+    Point<T> p3(rint((x-p1.x)+w), rint((y-p1.y)+h));
+    *this = p1 + Rect<T>(dPoint(0,0),p3);
   }
 
   /// floor function: shrink the rectangle to nearest integer coordinate
   /// Rectangle can be shriked to empty one.
+  /// We also want to work with large x and y without loosing precision in w and h.
   void to_floor() {
     if (e) return;
     Point<T> p1 = ceil(tlc());
     Point<T> p2 = floor(brc());
     if (p1.x > p2.x || p1.y > p2.y) {*this = Rect(); return;}
-    *this = Rect<T>(p1,p2);
+    Point<T> p3(floor((x-p1.x)+w), floor((y-p1.y)+h));
+    *this = p1 + Rect<T>(dPoint(0,0),p3);
   }
 
   /// ceil function: expand the rectangle to nearest integer coordinates
   void to_ceil() {
     if (e) return;
-    *this = Rect<T>(floor(tlc()), ceil(brc()));
+    Point<T> p1 = floor(tlc());
+    Point<T> p3(ceil((x-p1.x)+w), ceil((y-p1.y)+h));
+    *this = p1 + Rect<T>(dPoint(0,0),p3);
   }
 
   /// Expand rectangle to each side by val value.
@@ -327,28 +333,16 @@ Rect<T> operator+ (const Point<T> & p, const Rect<T> & r) { return r+p; }
 /// rint function: change corner coordenates to nearest integers
 /// we can not use rr.to_rint() because of rounding problems (?)
 template <typename T>
-Rect<T> rint(const Rect<T> & r) {
-  if (r.e) return Rect<T>();
-  return Rect<T>(rint(r.tlc()), rint(r.brc()));
-}
+Rect<T> rint(const Rect<T> & r) { Rect<T> ret(r); ret.to_rint(); return ret;}
 
 /// floor function: shrink the rectangle to nearest integer coordinate
 /// Rectangle can be shriked to empty one.
 template <typename T>
-Rect<T> floor(const Rect<T> & r) {
-  if (r.e) return Rect<T>();
-  Point<T> p1 = ceil(r.tlc());
-  Point<T> p2 = floor(r.brc());
-  if (p1.x > p2.x || p1.y > p2.y) {return Rect<T>();}
-  return Rect<T>(p1,p2);
-}
+Rect<T> floor(const Rect<T> & r) { Rect<T> ret(r); ret.to_floor(); return ret; }
 
 /// ceil function: expand the rectangle to nearest integer coordinates
 template <typename T>
-Rect<T> ceil(const Rect<T> & r) {
-  if (r.e) return Rect<T>();
-  return Rect<T>(floor(r.tlc()), ceil(r.brc()));
-}
+Rect<T> ceil(const Rect<T> & r) { Rect<T> ret(r); ret.to_ceil(); return ret; }
 
 /// Expand rectangle to each side by val value.
 /// \relates Rect

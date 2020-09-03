@@ -40,21 +40,21 @@ void test_intersect(const iRect & r0, const iRect & r1, const iRect & rr){
     assert_eq(r, rr);
 }
 
-void test_rint(const dRect & r0, const iRect & rr){
+void test_rint(const dRect & r0, const dRect & rr){
     dRect r(r0);
     assert_eq(rint(r0), rr);
     r.to_rint();
     assert_eq(r, rr);
 }
 
-void test_floor(const dRect & r0, const iRect & rr){
+void test_floor(const dRect & r0, const dRect & rr){
     dRect r(r0);
     assert_eq(floor(r0), rr);
     r.to_floor();
     assert_eq(r, rr);
 }
 
-void test_ceil(const dRect & r0, const iRect & rr){
+void test_ceil(const dRect & r0, const dRect & rr){
     dRect r(r0);
     assert_eq(ceil(r0), rr);
     r.to_ceil();
@@ -208,6 +208,17 @@ main(){
     test_ceil(dr1, dRect(dPoint(5,6), dPoint(8,9)));
     test_ceil(-dr1, -dRect(dPoint(5,6), dPoint(8,9)));
     test_ceil(dRect(), dRect());
+
+    // large values
+     dRect R(7e9, 7e9, 256, 256);
+     test_floor(dRect(7e9, 7e9, 256, 256),  dRect(7e9, 7e9, 256, 256));
+     test_floor(dRect(7e99, 7e99, 256, 256),  dRect(7e99, 7e99, 256, 256));
+
+     test_ceil(dRect(7e9, 7e9, 256, 256),  dRect(7e9, 7e9, 256, 256));
+     test_ceil(dRect(7e99, 7e99, 256, 256),  dRect(7e99, 7e99, 256, 256));
+
+     test_rint(dRect(7e9, 7e9, 256, 256),  dRect(7e9, 7e9, 256, 256));
+     test_rint(dRect(7e99, 7e99, 256, 256),  dRect(7e99, 7e99, 256, 256));
   }
 
   //expand, intersect, contains
@@ -270,6 +281,8 @@ main(){
      assert_eq(dist(r1,r1), 0);
 
   }
+
+
 
 /*
   // tile_cover, tile_in
