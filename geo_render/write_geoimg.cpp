@@ -3,6 +3,10 @@
 #include "geo_data/geo_io.h"
 #include "geo_data/conv_geo.h"
 #include "write_geoimg.h"
+#include "image/image_t.h"       // ImageT::make_url
+#include "geo_mkref/geo_mkref.h" // for tiled maps
+#include "geom/poly_tools.h"     // for rect_in_polygon
+#include "geo_tiles/geo_tiles.h"
 
 
 void
@@ -25,10 +29,63 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "Do not write image file (can be used if only the map file is needed). "
     "Option -o <file> should be provided anyway, the filename "
     "will be written to the map-file.");
+  opts.add("tmap", 0,0,g,
+    "Write tiled map. In this case `fname` parameter should contain a template "
+    "with {x}, {y}, {z} fields. Output of map file is not supported at "
+    "the moment. `mkref` options are ignored.");
+  opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
+  opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
 }
 
+#define TMAP_TILE_SIZE 256
 void
 write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts){
+
+  // process tiled maps
+  if (opts.exists("tmap")){
+    // calculate zoom range
+    int zmin = opts.get("zmin", 0);
+    int zmax = opts.get("zmax", 0);
+
+    ConvMap cnv0(ref); // conversion original map->wgs
+    auto brd = cnv0.frw_acc(ref.border); // -> wgs
+
+    GeoTiles tcalc;  // tile calculator
+    // for each zoom level
+    for (int z = zmin; z<=zmax; z++){
+      iRect tiles = tcalc.range_to_gtiles(obj.bbox(),z); // tile range
+
+      // Build new options for write_geoimg. We do not need "tmap", "map",
+      // "skip_image" options, only "fmt" my be useful.
+      Opt o;
+      if (opts.exists("fmt")) o.put(opts.get("fmt"));
+
+      // render tiles
+      for (int y = tiles.y; y < tiles.y + tiles.h; y++){
+        for (int x = tiles.x; x < tiles.x + tiles.w; x++) {
+          iPoint tile(x,y,z);
+          std::string f = ImageT::make_url(fname, tile);
+          dRect trange_wgs = tcalc.gtile_to_range(tile, z); // Google, not TMS tiles
+          if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
+
+          // make reference for the tile (similar to code in geo_mkref) 
+          GeoMap r;
+          r.proj = "WEB";
+          r.image_size = iPoint(1,1)*TMAP_TILE_SIZE;
+          dLine pts_w = rect_to_line(trange_wgs, false);
+          dLine pts_r = rect_to_line(dRect(dPoint(0,0),r.image_size), false);
+          pts_r.flip_y(r.image_size.y);
+          r.add_ref(pts_r, pts_w);
+          ConvMap cnv1(r);
+          write_geoimg(f, obj, r, o);
+        }
+      }
+
+      // ImageT::make_url()
+    }
+    return;
+  }
+
 
   std::string fmt;
   if      (file_ext_check(fname, ".pdf"))  fmt="pdf";
@@ -62,7 +119,6 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   dRect box = dRect(dPoint(), (dPoint)ref.image_size);
   if (box.is_zsize()) box = ref.border.bbox();
   if (box.is_zsize()) throw Err() << "write_img: can't get map dimensions";
-
   // setup cairo context
   CairoWrapper cr;
   ImageR img;
