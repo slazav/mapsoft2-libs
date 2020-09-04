@@ -12,6 +12,7 @@
 #include "filename/filename.h"
 #include "image/image_r.h"
 #include "geo_data/geo_data.h"
+#include "geo_data/conv_geo.h"
 #include "opt/opt.h"
 
 #include "mapdb.h"
@@ -97,6 +98,7 @@ private:
   GeoMap ref;            // default map reference
   double max_text_size;  // for selecting text objects
   double obj_scale;      // object scale
+  dMultiLine border;        // border (WGS84) from set_ref
 
 public:
 
@@ -496,7 +498,11 @@ public:
   // get default reference
   GeoMap get_ref() const { return ref; }
 
-  void set_ref(const GeoMap & r) { ref = r; }
+  void set_ref(const GeoMap & r) {
+    ConvMap cnv(r);
+    border = cnv.frw_acc(r.border);
+    ref = r;
+  }
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir, const Opt & o);

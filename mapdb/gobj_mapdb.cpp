@@ -113,7 +113,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
           read_geo(vs[2], d);
           if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
             << "setref: can't read any reference from file: " << vs[2];
-          ref = (*d.maps.begin())[0];
+          set_ref( (*d.maps.begin())[0] );
         }
         else if (vs[1] == "nom") {
           if (vs.size()!=4) throw Err()
@@ -122,7 +122,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
           o.put("mkref", "nom");
           o.put("name", vs[2]);
           o.put("dpi", vs[3]);
-          ref = geo_mkref(o);
+          set_ref( geo_mkref(o) );
         }
         else throw Err() << "setref command: 'file' or 'nom' word is expected";
         continue;
@@ -841,9 +841,11 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
 
   // BRD drawing step:
-  if (action == STEP_DRAW_BRD && mapdb_gobj->ref.border.size()>0) {
+  if (action == STEP_DRAW_BRD && mapdb_gobj->border.size()>0) {
+    dMultiLine brd(mapdb_gobj->border);
+    if (cnv) brd = cnv->bck_acc(brd);
     cr->begin_new_path();
-    cr->mkpath_smline(mapdb_gobj->ref.border, true, sm);
+    cr->mkpath_smline(brd, true, sm);
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
