@@ -39,6 +39,18 @@ GeoTrk::operator dLine() const {
   return ret;
 }
 
+GeoTrk::operator dMultiLine() const {
+  dMultiLine ret;
+  ret.resize(1);
+  for (auto i:*this){
+    if (i.start && ret.rbegin()->size()>0) ret.emplace_back();
+    ret.rbegin()->push_back(dPoint(i));
+  }
+  if (ret.rbegin()->size()==0) ret.resize(ret.size()-1);
+  return ret;
+}
+
+
 GeoMap operator* (const double k, const GeoMap & l) { return l*k; }
 
 GeoMap operator+ (const dPoint & p, const GeoMap & l) { return l+p; }

@@ -79,13 +79,28 @@ main(){
       l1.push_back(GeoTpt(37.403169, 55.803693, 210));
       l1.push_back(GeoTpt(24.803224, 60.174925, 20,0));
       assert_eq(l1.size(), 2);
-      assert(fabs(l1.length() - 886625) < 1);
+      assert_feq(l1.length(), 886625, 1);
       assert_eq(iRect(l1.bbox()*10.0), iRect(248,558,125,43));
       assert_eq(l1[0].z, 210);
       assert_eq(l1[1].z, 20);
       l1.clear_alt();
       assert(std::isnan(l1[0].z));
       assert(std::isnan(l1[1].z));
+
+      GeoTrk l2;
+      l2.emplace_back(1,2,3,0);
+      l2.emplace_back(2,3,4,0);
+      l2.emplace_back(3,4,5,1);
+      l2.emplace_back(4,5,6,0);
+      l2.emplace_back(5,6,7,0);
+      l2.emplace_back(6,7,8,1);
+
+      // convert to dLine/dMultiline
+      assert_eq(dMultiLine(l2),
+        dMultiLine("[ [[1,2,3],[2,3,4]], [[3,4,5],[4,5,6],[5,6,7]], [[6,7,8]]]"));
+      assert_eq(dLine(l2),
+        dLine("[[1,2,3],[2,3,4],[3,4,5],[4,5,6],[5,6,7],[6,7,8]]"));
+
     }
 
     { // GeoMap

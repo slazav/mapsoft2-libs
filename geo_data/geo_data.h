@@ -100,8 +100,11 @@ struct GeoTrk : std::vector<GeoTpt>{
   /// Get length in m (using Haversine formula).
   double length() const;
 
-  /// convert to dLine
+  /// convert to dLine (join all segments)
   operator dLine() const;
+
+  /// convert to dMultiLine (keep segments)
+  operator dMultiLine() const;
 
   /// set the altitude of all points to undefined state
   void clear_alt();
