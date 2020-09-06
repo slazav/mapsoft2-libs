@@ -103,28 +103,44 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         if (c == false) {skip = true; break;}
       if (skip) continue;
 
-      // setref command
+      // set_ref command
       if (vs.size() > 1 && vs[0] == "set_ref") {
         st.reset(); // "+" should not work after the command
         if (vs[1] == "file") {
           if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: setref file <filename>";
+            << "wrong number of arguments: set_ref file <filename>";
           GeoData d;
           read_geo(vs[2], d);
           if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
-            << "setref: can't read any reference from file: " << vs[2];
+            << "set_ref: can't read any reference from file: " << vs[2];
           set_ref( (*d.maps.begin())[0] );
         }
         else if (vs[1] == "nom") {
           if (vs.size()!=4) throw Err()
-            << "wrong number of arguments: setref nom <name> <dpi>";
+            << "wrong number of arguments: set_ref nom <name> <dpi>";
           Opt o;
           o.put("mkref", "nom");
           o.put("name", vs[2]);
           o.put("dpi", vs[3]);
           set_ref( geo_mkref(o) );
         }
-        else throw Err() << "setref command: 'file' or 'nom' word is expected";
+        else throw Err() << "set_ref command: 'file' or 'nom' word is expected";
+        continue;
+      }
+
+      // set_brd command
+      if (vs.size() > 1 && vs[0] == "set_brd") {
+        st.reset(); // "+" should not work after the command
+        if (vs[1] == "file") {
+          if (vs.size()!=3) throw Err()
+            << "wrong number of arguments: set_brd file <filename>";
+          GeoData d;
+          read_geo(vs[2], d);
+          if (d.trks.size()<1) throw Err()
+            << "set_brd: can't read any track from file: " << vs[2];
+          border = *d.trks.begin();
+        }
+        else throw Err() << "set_brd command: 'file' word is expected";
         continue;
       }
 

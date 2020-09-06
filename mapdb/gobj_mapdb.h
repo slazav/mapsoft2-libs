@@ -69,8 +69,9 @@ order is following: pattern, then fill, then stroke, then img.
 
 other commands in the configuration file
 
-    set_ref file <filename> -- set map reference from a file
-    set_ref nom <name> <dpi> -- set map reference as a Soviet nomenclature name
+    set_ref file <filename> -- set map reference including border from a file
+    set_ref nom <name> <dpi> -- set map reference and border as a Soviet nomenclature name
+    set_brd file <filename> -- set map border from track file
     max_text_size <value> -- set max_text_size value for selecting text objects in the database
     define <name> <definition> -- redefine a word (substitution works on full words and done once)
     if <word1> (==|!=) <word2>, else, endif --  if statement. If condition is true/false
