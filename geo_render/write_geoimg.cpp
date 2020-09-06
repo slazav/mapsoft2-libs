@@ -51,14 +51,17 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     auto brd = cnv0.frw_acc(ref.border); // -> wgs
 
     GeoTiles tcalc;  // tile calculator
+
+    // Build new options for write_geoimg. We do not need "tmap", "map",
+    // "skip_image" options, only "fmt" my be useful.
+    Opt o;
+    if (opts.exists("fmt"))     o.put("fmt",     opts.get("fmt"));
+    if (opts.exists("bgcolor")) o.put("bgcolor", opts.get("bgcolor"));
+
     // for each zoom level
     for (int z = zmin; z<=zmax; z++){
       iRect tiles = tcalc.range_to_gtiles(obj.bbox(),z); // tile range
 
-      // Build new options for write_geoimg. We do not need "tmap", "map",
-      // "skip_image" options, only "fmt" my be useful.
-      Opt o;
-      if (opts.exists("fmt")) o.put(opts.get("fmt"));
 
       // render tiles
       for (int y = tiles.y; y < tiles.y + tiles.h; y++){
@@ -76,12 +79,13 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
           dLine pts_r = rect_to_line(dRect(dPoint(0,0),r.image_size), false);
           pts_r.flip_y(r.image_size.y);
           r.add_ref(pts_r, pts_w);
+
+          // convert border to pixel coordinates of this tile
           ConvMap cnv1(r);
+          r.border = cnv1.bck_acc(brd);
           write_geoimg(f, obj, r, o);
         }
       }
-
-      // ImageT::make_url()
     }
     return;
   }
@@ -137,6 +141,10 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   // fill the image with bgcolor
   cr->set_color_a(opts.get<int>("bgcolor", 0xFFFFFFFF));
   cr->paint();
+  if (ref.border.size()) {
+    cr->mkpath_smline(ref.border, true, 0);
+    cr->clip();
+  }
 
   // draw tracks and waypoints
   obj.draw(cr, box);
