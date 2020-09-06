@@ -30,6 +30,9 @@ GeoMap geo_mkref(const Opt & o);
 // no mkref option
 GeoMap geo_mkref(const GeoData & data, const Opt & o);
 
+// update border (WGS84) from options
+void geo_mkref_brd(const Opt & o, dMultiLine & brd);
+
 // create default web-mercator projection (256x256 image)
 GeoMap geo_mkref_web();
 

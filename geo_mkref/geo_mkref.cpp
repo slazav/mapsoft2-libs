@@ -300,12 +300,24 @@ geo_mkref(const Opt & o){
   }
 
   // Set border
+  dMultiLine brd;
+  geo_mkref_brd(o, brd);
+  if (brd.size()){
+    ConvMap cnv(map);
+    map.border = cnv.bck_acc(brd);
+  }
+
+  return map;
+}
+
+
+// update border (WGS84) from options
+void
+geo_mkref_brd(const Opt & o, dMultiLine & brd){
   o.check_conflict({"border_wgs", "border_file"});
 
   if (o.exists("border_wgs")){
-    auto brd = o.get<dMultiLine>("border_wgs");
-    ConvMap cnv(map);
-    map.border = cnv.bck_acc(brd);
+    brd = o.get<dMultiLine>("border_wgs");
   }
 
   if (o.exists("border_file")){
@@ -314,12 +326,8 @@ geo_mkref(const Opt & o){
     read_geo(name, d);
     if (d.trks.size()<1) throw Err()
       << "mkref: can't read any track from border_file: " << name;
-    ConvMap cnv(map);
-    dMultiLine brd(*d.trks.begin());
-    map.border = cnv.bck_acc(brd);
+    brd = *d.trks.begin();
   }
-
-  return map;
 }
 
 // try to get some information from GeoData if there is
