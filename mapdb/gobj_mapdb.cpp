@@ -19,13 +19,50 @@ void
 ms2opt_add_mapdb_render(GetOptSet & opts){
   const char *g = "MAPDB_RENDER";
   opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
+  opts.add("obj_scale", 1,0,g, "Rescaling factor for all objects, default 1.0.");
 }
+/**********************************************************/
+
+// For conversion points->wgs get mean point size in m.
+#include "geo_data/geo_utils.h"
+double
+get_ptsize(ConvBase & cnv, const dRect & r) {
+  // calculate point size for this range
+  dPoint p1 = r.tlc(), p1w = cnv.frw_pts(p1);
+  dPoint p2 = r.trc(), p2w = cnv.frw_pts(p2);
+  dPoint p3 = r.blc(), p3w = cnv.frw_pts(p3);
+
+  return (geo_dist_2d(p1w,p2w)/dist(p1,p2) +
+          geo_dist_2d(p1w,p3w)/dist(p1,p3))/2;
+}
+
+// set reference
+void
+GObjMapDB::set_ref(const GeoMap & r, bool set_ptsize) {
+  ref = r;
+  if (ref.ref.size()==0) return;
+  ConvMap cnv(ref);
+  border = cnv.frw_acc(ref.border);
+  if (set_ptsize) ptsize0 = get_ptsize(cnv, r.bbox());
+}
+
+// set WGS border
+void
+GObjMapDB::set_brd(const dMultiLine & brd) {
+  border = brd;
+  if (ref.ref.size()==0) return;
+  ConvMap cnv(ref);
+  ref.border = cnv.bck_acc(border);
+}
+
+
 /**********************************************************/
 
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
+  ptsize0 = 1.0;
   max_text_size = 1024;
-  obj_scale = o.get("obj_scale", 1.0) * o.get("map_scale", 1.0);
+  k = obj_scale = o.get("obj_scale", 1.0);
 
   opt = o;
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
@@ -113,7 +150,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
           read_geo(vs[2], d);
           if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
             << "set_ref: can't read any reference from file: " << vs[2];
-          set_ref( (*d.maps.begin())[0] );
+          set_ref( (*d.maps.begin())[0], true );
         }
         else if (vs[1] == "nom") {
           if (vs.size()!=4) throw Err()
@@ -122,7 +159,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
           o.put("mkref", "nom");
           o.put("name", vs[2]);
           o.put("dpi", vs[3]);
-          set_ref( geo_mkref(o) );
+          set_ref( geo_mkref(o), true );
         }
         else throw Err() << "set_ref command: 'file' or 'nom' word is expected";
         continue;
@@ -525,7 +562,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();
   MapDB *map = mapdb_gobj->map.get();
-  double osc = mapdb_gobj->obj_scale;
+  double osc = mapdb_gobj->k;
 
   std::set<uint32_t> ids;
 
@@ -894,3 +931,13 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 }
 
 /**********************************************************/
+
+
+GObj::ret_t
+GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
+
+  // calculate scaling for this range
+  k = obj_scale * ptsize0/get_ptsize(*cnv, draw_range);
+
+  return GObjMulti::draw(cr, draw_range);
+}

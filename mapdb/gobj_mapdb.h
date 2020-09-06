@@ -99,7 +99,9 @@ private:
   GeoMap ref;            // default map reference
   double max_text_size;  // for selecting text objects
   double obj_scale;      // object scale
-  dMultiLine border;        // border (WGS84) from set_ref
+  dMultiLine border;     // border (WGS84) from set_ref
+  double ptsize0;        // 1pt size in meters for linewidths, font size etc.
+  double k;              // scale factor for objects: obj_scale * ptsize/ptsize0
 
 public:
 
@@ -496,21 +498,18 @@ public:
     }
   }
 
-  // get default reference
+  // get reference
   GeoMap get_ref() const { return ref; }
 
-  // set default reference
-  void set_ref(const GeoMap & r) {
-    ConvMap cnv(r);
-    border = cnv.frw_acc(r.border);
-    ref = r;
-  }
+  // Set reference. If set_ptsize=true, then set ptsize0
+  // using the reference.
+  void set_ref(const GeoMap & r, bool set_ptsize = false);
 
   // get WGS border
   dMultiLine get_brd() const { return border; }
 
   // set WGS border
-  void set_brd(const dMultiLine & brd) { border = brd; }
+  void set_brd(const dMultiLine & brd);
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir, const Opt & o);
@@ -530,6 +529,10 @@ public:
   void set_opt(const Opt & o) override {opt = o;}
 
   dRect bbox() const override {return map->bbox();}
+
+  // Draw all objects
+  ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
+
 
 };
 
