@@ -499,11 +499,18 @@ public:
   // get default reference
   GeoMap get_ref() const { return ref; }
 
+  // set default reference
   void set_ref(const GeoMap & r) {
     ConvMap cnv(r);
     border = cnv.frw_acc(r.border);
     ref = r;
   }
+
+  // get WGS border
+  dMultiLine get_brd() const { return border; }
+
+  // set WGS border
+  void set_brd(const dMultiLine & brd) { border = brd; }
 
   // constructor -- open new map
   GObjMapDB(const std::string & mapdir, const Opt & o);
