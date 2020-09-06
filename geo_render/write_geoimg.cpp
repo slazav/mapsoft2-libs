@@ -156,6 +156,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   cr->set_color_a(opts.get<int>("bgcolor", 0xFFFFFFFF));
   cr->paint();
   if (ref.border.size()) {
+    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
     cr->mkpath_smline(ref.border, true, 0);
     cr->clip();
   }
