@@ -167,11 +167,7 @@ main(){
       assert_eq(map.proj, "WEB");
       assert_eq(map.image_dpi, 300);
       assert_eq(map.image_size, iPoint(256*2,256*3));
-      assert_deq(map.border, dMultiLine(
-        "[[[193.422222,250.866843],[216.177778,277.663273],[233.244444,297.713129],"
-        "[258.844444,327.712532],[284.444444,357.622598],[261.688889,384.135334],"
-        "[241.777778,407.277563],[224.355556,427.484296],[193.866667,462.751329],"
-        "[171,489.123493],[153.85,508.859246],[128.125,538.394019],[102.4,567.847206]]]"), 1e-3);
+      assert_eq((iMultiLine)map.border, iMultiLine("[[[193,250],[284,357],[193,463],[102,567]]]"));
       dLine l;
       for (auto & r:map.ref) {l.push_back(r.first); l.push_back(r.second);}
       assert_deq(l, dLine(
@@ -294,8 +290,8 @@ main(){
       assert_eq(map.proj, "SU27");
       assert_eq(map.image_dpi, 300);
       assert_eq(map.image_size, iPoint(199,214));
-      assert_deq(map.border, dMultiLine(
-         "[[[45,203],[5,47],[156,16],[188,167]]]"), 1e-3);
+      assert_eq(iMultiLine(rint(map.border)), iMultiLine(
+         "[[[45,203],[5,47],[156,16],[188,167]]]"));
       dLine l;
       for (auto & r:map.ref) {l.push_back(r.first); l.push_back(r.second);}
       assert_deq(l, dLine(

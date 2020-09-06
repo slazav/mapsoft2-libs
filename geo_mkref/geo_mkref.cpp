@@ -2,6 +2,7 @@
 #include <iomanip>
 
 #include "geo_data/conv_geo.h"
+#include "geo_data/geo_io.h"
 #include "geo_tiles/geo_tiles.h"
 #include "geo_nom/geo_nom.h"
 #include "geo_data/geo_utils.h"
@@ -19,8 +20,8 @@ ms2opt_add_mkref(GetOptSet & opts){
   opts.add("mkref", 1,0,g,
     "Choose map type (nom, google_tile, tms_tile, proj)");
   opts.add("name", 1,0,g,
-    "Set map name. For \"nom\" maps it should contain a "
-    "valid Soviet nomenclature name.");
+    "Set map name. For --mkref=\"nom\" it should contain a "
+    "valid Soviet nomenclature name. For --mkref=\"file\" it should contain map-file name.");
   opts.add("dpi", 1,0,g,
     "Map resolution, pixels per inch (\"nom\" and \"proj\" maps)");
   opts.add("mag", 1,0,g,
@@ -46,15 +47,17 @@ ms2opt_add_mkref(GetOptSet & opts){
     "Figure can be a rectangle written as [x,y,w,h], or a line, "
     "[[x1,y1],[x2,y2], ...], or a multi-segment line, "
     "[<line>, <line>, ...].");
-  opts.add("border", 1,0,g,
-    "Map border in projection coordinates (\"proj\" maps), "
-    "a line or a multi-segment line.");
   opts.add("coords_wgs", 1,0,g,
     "Figure in wgs84 coordinates to be covered by the map "
     "(\"*_tile\" or \"proj\" maps), a rectangle, a line, or a multi-segment line.");
-  opts.add("border_wgs", 1,0,g,
-    "Map border in wgs84 coordinates (\"*_tile\" or \"proj\" maps), "
+  opts.add("border", 1,0,g,
+    "Map border in projection coordinates (For --mkref=\"proj\" maps), "
     "a line or a multi-segment line.");
+  opts.add("border_wgs", 1,0,g,
+    "Set map border in wgs84 coordinates "
+    "(argument is a line or a multi-segment line).");
+  opts.add("border_file", 1,0,g,
+    "Set map border from track in a file.");
   opts.add("proj", 1,0,g,
     "Projection setting, \"libproj\" parameter string "
     "(e.g. \"+datum=WGS84 +proj=lonlat\") "
@@ -146,18 +149,17 @@ geo_mkref(const Opt & o){
     // Add refpoints:
     map.add_ref(pts_r, pts_w);
 
-    return map;
   }
 
   /***************************************/
-  if (reftype == "tms_tile" || reftype == "google_tile"){
+  else if (reftype == "tms_tile" || reftype == "google_tile"){
 
     bool G = (reftype == "google_tile");
     int  z = o.get("zindex",-1);
     list<string> confl = {"tiles", "coords"};
     o.check_conflict(confl);
 
-    // get tile range and WGS84 border
+    // get tile range
     iRect tile_range;
 
     if (o.exists("tiles")){
@@ -188,10 +190,6 @@ geo_mkref(const Opt & o){
     // z-index should be set here
     if (z<0) throw Err() << "geo_mkref: z-index not set";
 
-    // Set border
-    dMultiLine brd;
-    if (o.exists("border_wgs"))
-      brd = o.get("border_wgs", dMultiLine());
 
     /*** fill map parameters ***/
 
@@ -218,24 +216,10 @@ geo_mkref(const Opt & o){
 
     pts_r.flip_y(map.image_size.y);
     map.add_ref(pts_r, pts_w);
-
-    // convert border to map pixels
-    if (brd.size()>0){
-      // We need ConvGeo because of convenient bck_acc function.
-      ConvGeo cnv(map.proj); // webmercator -> wgs84
-
-      map.border = cnv.bck_acc(brd); // lonlat -> mercator m
-      for (auto & l:map.border) for (auto & pt:l)
-        pt = tcalc.m_to_px(pt, z); // mercator m -> px
-      map.border -= tcalc.get_tsize()*tile_range.tlc();
-      map.border.flip_y(map.image_size.y);
-      map.border *= mag;
-    }
-    return map;
   }
 
   /***************************************/
-  if (reftype == "proj"){
+  else if (reftype == "proj"){
 
     // map projection
     map.proj = o.get("proj", "WGS");
@@ -253,14 +237,10 @@ geo_mkref(const Opt & o){
     double k = scale * 2.54/ map.image_dpi;
     cnv.rescale_src(k); // now cnv1: map pixels -> wgs84
 
-    // get bounding box and border (in map pixels)
+    // get bounding box (in map pixels)
     dRect range;
 
-    list<string> confl = {"coords", "coords_wgs"};
-    o.check_conflict(confl);
-    confl = {"border", "border_wgs"};
-    o.check_conflict(confl);
-
+    o.check_conflict({"coords", "coords_wgs"});
 
     if (o.exists("coords"))
       range = figure_bbox<double>(o.get("coords",""))/k;
@@ -286,15 +266,6 @@ geo_mkref(const Opt & o){
     range = dRect(range.x-ml, range.y-mb,
                   range.w+ml+mr, range.h+mt+mb);
 
-    // Set border
-    dMultiLine brd;
-    if (o.exists("border"))
-      brd = o.get("border", dMultiLine())/k;
-    if (o.exists("border_wgs"))
-      brd = cnv.bck_acc(o.get("border_wgs", dMultiLine()));
-
-    /* border and range are set now */
-
     // Refpoints
     dLine pts_r = rect_to_line(range, false);
     dLine pts_w(pts_r);
@@ -303,18 +274,52 @@ geo_mkref(const Opt & o){
     cnv.frw(pts_w);
     map.add_ref(pts_r, pts_w);
 
-    // border
+    // Border in proj coordinates
+    dMultiLine brd;
+    if (o.exists("border"))
+      brd = o.get("border", dMultiLine())/k;
     map.border = rint(brd - range.tlc());
     map.border.flip_y(range.h);
 
     // image_size
     map.image_size = dPoint(range.w, range.h);
-
-    return map;
   }
 
-  /***************************************/
-  throw Err() << "geo_mkref: unknown reference type: " << reftype;
+  else if (reftype == "file"){
+    std::string name = o.get("name", "");
+    if (name == "") throw Err() << "Option --name is not set for --mkref=file";
+    GeoData d;
+    read_geo(name, d);
+    if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
+      << "mkref: can't read any map reference from file: " << name;
+    map = (*d.maps.begin())[0];
+  }
+
+  else {
+    throw Err() << "geo_mkref: unknown reference type: " << reftype;
+  }
+
+  // Set border
+  o.check_conflict({"border_wgs", "border_file"});
+
+  if (o.exists("border_wgs")){
+    auto brd = o.get<dMultiLine>("border_wgs");
+    ConvMap cnv(map);
+    map.border = cnv.bck_acc(brd);
+  }
+
+  if (o.exists("border_file")){
+    std::string name = o.get("border_file");
+    GeoData d;
+    read_geo(name, d);
+    if (d.trks.size()<1) throw Err()
+      << "mkref: can't read any track from border_file: " << name;
+    ConvMap cnv(map);
+    dMultiLine brd(*d.trks.begin());
+    map.border = cnv.bck_acc(brd);
+  }
+
+  return map;
 }
 
 // try to get some information from GeoData if there is
