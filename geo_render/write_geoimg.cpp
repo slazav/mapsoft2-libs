@@ -47,8 +47,22 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     int zmin = opts.get("zmin", 0);
     int zmax = opts.get("zmax", 0);
 
-    ConvMap cnv0(ref); // conversion original map->wgs
-    auto brd = cnv0.frw_acc(ref.border); // -> wgs
+    // For rendering tiles we do not need to use the user-supply reference.
+    // The problem is that we may want to have border, which is normally
+    // comes with the reference.
+
+    // There is a workaround: to process border options separately, in the
+    // same way as it is done in geo_mkref().
+
+    dMultiLine brd;
+    // if there is a reference:
+    if (ref.ref.size()) {
+      ConvMap cnv0(ref); // conversion original map->wgs
+      brd = cnv0.frw_acc(ref.border); // -> wgs
+    }
+
+    // update border from optons
+    geo_mkref_brd(opts, brd);
 
     GeoTiles tcalc;  // tile calculator
 
