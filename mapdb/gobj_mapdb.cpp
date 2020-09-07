@@ -19,6 +19,7 @@ void
 ms2opt_add_mapdb_render(GetOptSet & opts){
   const char *g = "MAPDB_RENDER";
   opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
+  opts.add("define",    1,0,g, "Definitions for vector map rendering (json object)");
   opts.add("obj_scale", 1,0,g, "Rescaling factor for all objects, default 1.0.");
 }
 /**********************************************************/
