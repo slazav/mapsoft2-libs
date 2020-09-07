@@ -19,8 +19,13 @@ void
 ms2opt_add_mapdb_render(GetOptSet & opts){
   const char *g = "MAPDB_RENDER";
   opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
-  opts.add("define",    1,0,g, "Definitions for vector map rendering (json object)");
-  opts.add("obj_scale", 1,0,g, "Rescaling factor for all objects, default 1.0.");
+  opts.add("define",      1,0,g, "Definitions for vector map rendering (json object)");
+  opts.add("obj_scale",   1,0,g, "Rescaling factor for all objects, default 1.0.");
+  opts.add("mapdb_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
+           "reference). Below it the map is drawn by with color "
+           "(see --mapdb_minsc_color option). Default is 0.01");
+  opts.add("mapdb_minsc_color", 1,0,g, "Color to draw maps below minimum scale (see --mapdb_minsc). "
+           "Default is 0xFFDB5A00).");
 }
 /**********************************************************/
 
@@ -63,9 +68,9 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
   ptsize0 = 1.0;
   sc = 1.0;
-  minsc = 0.01;
-  minsc_color = 0xFFDB5A00;
-  obj_scale = o.get("obj_scale", 1.0);
+  minsc       = o.get<double>("mapdb_minsc", 0.01);
+  minsc_color = o.get<uint32_t>("mapdb_minsc_color", 0xFFDB5A00);
+  obj_scale   = o.get<double>("obj_scale", 1.0);
   max_text_size = 1024;
 
   opt = o;
@@ -191,6 +196,24 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: max_text_size <number>";
         max_text_size = str_to_type<double>(vs[1]);
+        continue;
+      }
+
+      // minsc command
+      if (vs[0] == "minsc") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: minsc <number>";
+        minsc = str_to_type<double>(vs[1]);
+        continue;
+      }
+
+      // minsc_color command
+      if (vs[0] == "minsc_color") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: minsc_color <color>";
+        minsc_color = str_to_type<uint32_t>(vs[1]);
         continue;
       }
 
