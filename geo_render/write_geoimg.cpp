@@ -68,9 +68,10 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
 
     // Build new options for write_geoimg. We do not need "tmap", "map",
     // "skip_image" options, only "fmt" my be useful.
-    Opt o;
-    if (opts.exists("fmt"))     o.put("fmt",     opts.get("fmt"));
-    if (opts.exists("bgcolor")) o.put("bgcolor", opts.get("bgcolor"));
+    Opt o(opts);
+    o.erase("tmap");
+    o.erase("map");
+    o.erase("skip_image");
 
     // for each zoom level
     for (int z = zmin; z<=zmax; z++){
