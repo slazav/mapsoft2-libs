@@ -101,7 +101,11 @@ private:
   double obj_scale;      // object scale
   dMultiLine border;     // border (WGS84) from set_ref
   double ptsize0;        // 1pt size in meters for linewidths, font size etc.
-  double k;              // scale factor for objects: obj_scale * ptsize/ptsize0
+                         // Set when a "natural" reference is set with set_ref configuration command.
+  double sc;             // Scale factor for objects: ptsize/ptsize0.
+                         // Recalculated for each drawing process.
+  double minsc;          // Min scale (ptsize/ptsize0), below this map is just filled with minsc_color.
+  uint32_t minsc_color;  // Color for drawing too small scales.
 
 public:
 
