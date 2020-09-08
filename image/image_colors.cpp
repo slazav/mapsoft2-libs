@@ -44,6 +44,9 @@ void ms2opt_add_image_cmap(GetOptSet & opts){
   opts.add("cmap_save", 1,0, g, "Save colormap to PNG file.");
   opts.add("cmap_load", 1,0, g, "Load colormap from PNG file "
     "(make in from the image");
+  opts.add("cmap_add", 1,0, g, "Add a color to colormap "
+    "(useful to add transparent color to non-transparent colormap) "
+    "TODO: allow multiple colors.");
 }
 
 /**********************************************************/
@@ -290,6 +293,12 @@ image_colormap(const ImageR & img, const Opt & opt){
   }
 
   save:
+
+  // add colors if needed
+  if (opt.exists("cmap_add")){
+    auto c = opt.get<uint32_t>("cmap_add");
+    ret.push_back(c);
+  }
 
   // save colormap if needed
   std::string cmap_save = opt.get("cmap_save", "");
