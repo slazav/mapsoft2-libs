@@ -10,13 +10,17 @@ enum methodForLargest {LARGE_NORM, LARGE_LUM};
 enum methodForRep {REP_CENTER_BOX, REP_AVERAGE_COLORS, REP_AVERAGE_PIXELS};
 enum methodForSplit {SPLIT_MAX_PIXELS, SPLIT_MAX_DIM, SPLIT_MAX_COLORS};
 
+// Functions from io.h, for saving/loading colormaps (see --cmap_save, --cmap_load)
+ImageR image_load(const std::string & file, const double scale=1, const Opt & opt = Opt());
+void image_save(const ImageR & im, const std::string & file, const Opt & opt = Opt());
+
 /**********************************************************/
 void ms2opt_add_image_cmap(GetOptSet & opts){
   const char *g = "IMAGE_CMAP";
   opts.add("cmap_colors", 1,0, g,
-    "Colormap size for reducing image colors (2..256). "
+    "Colormap size for reducing image colors (0..256, default 255, if 0 - use all colors). "
     "Image colors are reduced when saving to GIF, to PNG "
-    "with --png_format=pal, to TIFF with --tiff_format=pal");
+    "with --png_format=pal, to TIFF with --tiff_format=pal.");
   opts.add("cmap_alpha", 1,0, g,
     "Alpha channel: none (default) -- remove it; full -- treat it "
     "equally with other channels; gif -- keep only fully-transparent "
@@ -37,6 +41,9 @@ void ms2opt_add_image_cmap(GetOptSet & opts){
     "How to choose a box in the color space for splitting: by its "
     "maximum dimension, maximum number of pixels or colors in it. "
     "Values: maxdim (default), maxpix, maxcol.");
+  opts.add("cmap_save", 1,0, g, "Save colormap to PNG file.");
+  opts.add("cmap_load", 1,0, g, "Load colormap from PNG file "
+    "(make in from the image");
 }
 
 /**********************************************************/
@@ -44,6 +51,14 @@ void ms2opt_add_image_cmap(GetOptSet & opts){
 // Based on pnmcolormap.c from netpbm package.
 std::vector<uint32_t>
 image_colormap(const ImageR & img, const Opt & opt){
+
+
+  // load colormap
+  std::string cmap_load = opt.get("cmap_load", "");
+  if (cmap_load!=""){
+    Opt o("{\"cmap_colors\": \"0\"}");
+    return image_colormap(image_load(cmap_load), o);
+  }
 
   // parameters
   int  req_colors = opt.get("cmap_colors", 256);
@@ -119,10 +134,10 @@ image_colormap(const ImageR & img, const Opt & opt){
   // if we want all colors OR
   // if we want more colors then we have in the image
   // THEN make and return full colormap
+  std::vector<uint32_t> ret;
   if (req_colors < 1 || bv[0].hist.size() < req_colors) {
-    std::vector<uint32_t> ret;
     for (auto const & c:bv[0].hist) ret.push_back(c.first);
-    return ret;
+    goto save;
   }
 
   // component weights
@@ -251,7 +266,6 @@ image_colormap(const ImageR & img, const Opt & opt){
 
 
   // Make colormap from the box vector
-  std::vector<uint32_t> ret;
   for (auto const & b:bv){
     uint8_t buf[4];
 
@@ -274,6 +288,17 @@ image_colormap(const ImageR & img, const Opt & opt){
     }
     ret.push_back(buf[0] + (buf[1]<<8) + (buf[2]<<16) + (buf[3]<<24));
   }
+
+  save:
+
+  // save colormap if needed
+  std::string cmap_save = opt.get("cmap_save", "");
+  if (cmap_save!=""){
+    ImageR cmap_img(ret.size(), 1, IMAGE_32ARGB);
+    for (int i=0; i<ret.size(); ++i) cmap_img.set32(i,0,ret[i]);
+    image_save(cmap_img, cmap_save);
+  }
+
   return ret;
 }
 
