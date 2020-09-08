@@ -35,6 +35,9 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "the moment. `mkref` options are ignored.");
   opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
   opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
+  opts.add("tmap_scale", 1,0,g,
+    "When creating tile map with multiple zoom levels scale larger tiles to "
+    "create smaller ones (instead of rendering all tiles separately). Default: 0");
 }
 
 #define TMAP_TILE_SIZE 256
@@ -72,9 +75,10 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     o.erase("tmap");
     o.erase("map");
     o.erase("skip_image");
+    o.erase("tmap_scale");
 
     // for each zoom level
-    for (int z = zmin; z<=zmax; z++){
+    for (int z = zmax; z>=zmin; --z){
       iRect tiles = tcalc.range_to_gtiles(obj.bbox(),z); // tile range
 
 
@@ -82,23 +86,63 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
       for (int y = tiles.y; y < tiles.y + tiles.h; y++){
         for (int x = tiles.x; x < tiles.x + tiles.w; x++) {
           iPoint tile(x,y,z);
-          std::string f = ImageT::make_url(fname, tile);
           dRect trange_wgs = tcalc.gtile_to_range(tile, z); // Google, not TMS tiles
           if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
 
-          // make reference for the tile (similar to code in geo_mkref) 
-          GeoMap r;
-          r.proj = "WEB";
-          r.image_size = iPoint(1,1)*TMAP_TILE_SIZE;
-          dLine pts_w = rect_to_line(trange_wgs, false);
-          dLine pts_r = rect_to_line(dRect(dPoint(0,0),r.image_size), false);
-          pts_r.flip_y(r.image_size.y);
-          r.add_ref(pts_r, pts_w);
+          // render tile in a normal way
+          if (z == zmax || opts.get("tmap_scale", false)){
+            // make reference for the tile (similar to code in geo_mkref) 
+            GeoMap r;
+            r.proj = "WEB";
+            r.image_size = iPoint(1,1)*TMAP_TILE_SIZE;
+            dLine pts_w = rect_to_line(trange_wgs, false);
+            dLine pts_r = rect_to_line(dRect(dPoint(0,0),r.image_size), false);
+            pts_r.flip_y(r.image_size.y);
+            r.add_ref(pts_r, pts_w);
 
-          // convert border to pixel coordinates of this tile
-          ConvMap cnv1(r);
-          r.border = cnv1.bck_acc(brd);
-          write_geoimg(f, obj, r, o);
+            // convert border to pixel coordinates of this tile
+            ConvMap cnv1(r);
+            r.border = cnv1.bck_acc(brd);
+
+            // write to file
+            std::string f = ImageT::make_url(fname, tile);
+            write_geoimg(f, obj, r, o);
+          }
+
+          // collect the tile from four larger tiles
+          else {
+            int w = tcalc.get_tsize();
+            ImageR img(w, w, IMAGE_32ARGB);
+            img.fill32(0);
+            for (int t=0; t<4; t++){
+              iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
+              std::string src_f = ImageT::make_url(fname, src_tile);
+              struct stat info;
+              if (stat(src_f.c_str(), &info ) != 0 ) continue;
+
+              ImageR src_img = image_load(src_f);
+              if (src_img.width() != w || src_img.height()!=w)
+                throw Err() << "wrong tile size: " << src_f << ": " << src_img; 
+              for (int y1 = 0; y1<w/2; ++y1){
+                for (int x1 = 0; x1<w/2; ++x1){
+                  // calculate 4-point average for all 4 color components
+                  int cc[4] = {0,0,0,0};
+                  for (int t1 = 0; t1<4; t1++){
+                    uint32_t c =  src_img.get_argb(2*x1 + t1%2, 2*y1 + t1/2);
+                    for (int i = 0; i<4; ++i) cc[i] += ((c>>(8*i)) & 0xff);
+                  }
+                  uint32_t c = 0;
+                  for (int i = 0; i<4; ++i)
+                    c += ((cc[i]/4) & 0xff) << (8*i);
+
+                  img.set32(x1 + (t%2)*w/2, y1 + (t/2)*w/2, c);
+                }
+              }
+            }
+            std::string f = ImageT::make_url(fname, tile);
+            image_save(img, f, o);
+          }
+
         }
       }
     }
