@@ -15,7 +15,7 @@
 /*********************************************************************/
 
 // distance between two colors
-double color_dist(const uint32_t c1, const uint32_t c2);
+double color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled=true);
 
 // Assemble 32-bit color from a,r,g,b components.
 // Prescaled semi-transparent colors are used

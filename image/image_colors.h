@@ -16,8 +16,7 @@ void ms2opt_add_image_cmap(GetOptSet & opts);
 std::vector<uint32_t> image_colormap(const ImageR & img, const Opt & opt = Opt());
 
 // Reduce number of colors
-ImageR image_remap(const ImageR & img, const std::vector<uint32_t> & cmap,
-                  const Opt & opt = Opt());
+ImageR image_remap(const ImageR & img, const std::vector<uint32_t> & cmap);
 
 // convert image data to 32-bit colors (for making Cairo patterns etc).
 ImageR image_to_argb(const ImageR & img);

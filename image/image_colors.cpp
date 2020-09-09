@@ -126,7 +126,9 @@ image_colormap(const ImageR & img, const Opt & opt){
         c = img.get_rgb(x,y);
       else
         c = img.get_argb(x,y);
+
       if (transp_mode==2)
+        // convert to unscaled colors + remove semi-transparent
         c = color_rem_transp(c, 1);
 
       if (bv[0].hist.count(c) == 0) bv[0].hist[c] = 1;
@@ -314,16 +316,10 @@ image_colormap(const ImageR & img, const Opt & opt){
 
 // Reduce number of colors
 ImageR
-image_remap(const ImageR & img, const std::vector<uint32_t> & cmap, const Opt & opt){
+image_remap(const ImageR & img, const std::vector<uint32_t> & cmap){
 
   std::string str;
   int transp_mode = 1;
-  str = opt.get("cmap_alpha", "none");
-  if      (str == "full") transp_mode = 0;
-  else if (str == "none") transp_mode = 1;
-  else if (str == "gif")  transp_mode = 2;
-  else throw Err() << "image_remap: unknown value "
-                      "for cmap_alpha parameter: " << str;
 
   // we return 8bpp image, palette length should be 1..256
   if (cmap.size() < 1 || cmap.size() > 256)
@@ -334,18 +330,7 @@ image_remap(const ImageR & img, const std::vector<uint32_t> & cmap, const Opt & 
   for (int y=0; y<img.height(); ++y){
     for (int x=0; x<img.width(); ++x){
       // get color
-      uint32_t c;
-      // no transparency
-      if (transp_mode == 1 ||
-          img.type() == IMAGE_24RGB ||
-          img.type() == IMAGE_16 ||
-          img.type() == IMAGE_8 ||
-          img.type() == IMAGE_1)
-        c = img.get_rgb(x,y);
-      else
-        c = img.get_argb(x,y);
-      if (transp_mode==2)
-        c = color_rem_transp(c, 1);
+      uint32_t c = img.get_argb(x,y);
 
       // find nearest palette value
       double d0 = +HUGE_VAL;

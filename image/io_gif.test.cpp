@@ -48,9 +48,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xff0a0000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
       assert_eq(I.get_argb(128,0), 0x00000000);
-      assert_eq(I.get_argb(255,127), 0xfff50000);
+      assert_eq(I.get_argb(255,127), 0xfff40000);
       assert_eq(I.get_argb(64,64), 0xFF848600);
-      assert_eq(I.get_argb(192,64), 0xFF830000);
+      assert_eq(I.get_argb(192,64), 0xFF820000);
       Opt o;
 
       o.put("cmap_colors", 120);
@@ -60,12 +60,12 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xff0a0000);
+      assert_eq(I.get_argb(0,0), 0xff090000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
-      assert_eq(I.get_argb(128,0), 0xffffffff);
-      assert_eq(I.get_argb(255,127), 0xfff50000);
+      assert_eq(I.get_argb(128,0), 0xff090000);
+      assert_eq(I.get_argb(255,127), 0xfff30000);
       assert_eq(I.get_argb(64,64), 0xFF8C7600);
-      assert_eq(I.get_argb(192,64), 0xFF8B0000);
+      assert_eq(I.get_argb(192,64), 0xFF890000);
 
       o.put("cmap_colors", 120);
       o.put("cmap_alpha", "full"); // same as default, same as gif
@@ -77,9 +77,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xff0a0000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
       assert_eq(I.get_argb(128,0), 0x00000000);
-      assert_eq(I.get_argb(255,127), 0xfff50000);
+      assert_eq(I.get_argb(255,127), 0xfff40000);
       assert_eq(I.get_argb(64,64), 0xFF8C7600);
-      assert_eq(I.get_argb(192,64), 0xFF8B0000);
+      assert_eq(I.get_argb(192,64), 0xFF8A0000);
 
       o.put("cmap_colors", 120);
       o.put("cmap_alpha", "gif");
@@ -91,9 +91,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xff0A0000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
       assert_eq(I.get_argb(128,0), 0x00000000);
-      assert_eq(I.get_argb(255,127), 0xfff50000);
+      assert_eq(I.get_argb(255,127), 0xfff40000);
       assert_eq(I.get_argb(64,64), 0xFF8C7600);
-      assert_eq(I.get_argb(192,64), 0xFF8B0000);
+      assert_eq(I.get_argb(192,64), 0xFF8A0000);
     }
 
     /*********************************************/
@@ -109,12 +109,12 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xff0a0000);
+      assert_eq(I.get_argb(0,0), 0xff090000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
-      assert_eq(I.get_argb(128,0), 0xFFFFFFFF);
-      assert_eq(I.get_argb(255,127), 0xfff50000);
+      assert_eq(I.get_argb(128,0), 0xFF090000);
+      assert_eq(I.get_argb(255,127), 0xfff30000);
       assert_eq(I.get_argb(64,64), 0xFF848600);
-      assert_eq(I.get_argb(192,64), 0xFF830000);
+      assert_eq(I.get_argb(192,64), 0xFF810000);
     }
 
     /*********************************************/
@@ -134,10 +134,10 @@ main(){
       assert_eq(I.height(), 128);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe0e0e0);
-      assert_eq(I.get_argb(128,0), 0xFFFFFFFF);
+      assert_eq(I.get_argb(128,0), 0xFF000000);
       assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
       assert_eq(I.get_argb(64,64), 0xFF717171);
-      assert_eq(I.get_argb(192,64), 0xFF262626);
+      assert_eq(I.get_argb(192,64), 0xFF252525);
 
     }
 
@@ -159,7 +159,7 @@ main(){
       assert_eq(I.height(), 128);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFE1E1E1);
-      assert_eq(I.get_argb(128,0), 0xFFFFFFFF);
+      assert_eq(I.get_argb(128,0), 0xFF000000);
       assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
@@ -174,12 +174,12 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xff0a0000);
+      assert_eq(I.get_argb(0,0), 0xff090000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
-      assert_eq(I.get_argb(128,0), 0xffffffff);
-      assert_eq(I.get_argb(255,127), 0xfff50000);
+      assert_eq(I.get_argb(128,0), 0xff090000);
+      assert_eq(I.get_argb(255,127), 0xfff30000);
       assert_eq(I.get_argb(64,64), 0xff848600);
-      assert_eq(I.get_argb(192,64), 0xff830000);
+      assert_eq(I.get_argb(192,64), 0xff810000);
     }
 
 

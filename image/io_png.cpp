@@ -238,7 +238,9 @@ image_load_png(std::istream & str, const double scale){
       else if (img.type() == IMAGE_16){
         for (int x=0; x<w1; ++x){
           int xs = scale==1.0? x:rint(x*scale);
-          ((uint16_t*)img.data())[w1*y+x] = ((uint16_t*)row_buf)[xs];
+          // swap bytes
+          ((uint8_t*)img.data())[2*(w1*y+x)]   = ((uint8_t*)row_buf)[2*xs+1];
+          ((uint8_t*)img.data())[2*(w1*y+x)+1] = ((uint8_t*)row_buf)[2*xs];
         }
       }
 
@@ -349,7 +351,7 @@ image_save_png(const ImageR & im, std::ostream & str,
     ImageR im8 = im;
     if (s == "pal"){
       std::vector<uint32_t> colors = image_colormap(im, opt);
-      im8 = image_remap(im, colors, opt);
+      im8 = image_remap(im, colors);
     }
 
     png_ptr = png_create_write_struct
@@ -414,8 +416,11 @@ image_save_png(const ImageR & im, std::ostream & str,
         case PNG_COLOR_TYPE_GRAY:
           if (bits==8)
             buf[x] = im.get_grey8(x, y);
-          else
-            ((uint16_t*)buf)[x] = im.get_grey16(x, y);
+          else {
+            // swap bytes
+            uint16_t c = im.get_grey16(x, y);
+            ((uint16_t*)buf)[x] = ((c>>8)&0xFF) | ((c<<8)&0xFF00);
+          }
           break;
         case PNG_COLOR_TYPE_GRAY_ALPHA:
           ((uint16_t*)buf)[x]  = im.get_agrey8(x, y);

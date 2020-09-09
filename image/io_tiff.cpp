@@ -344,7 +344,7 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
       Opt opt1(opt);
       opt1.put("cmap_alpha", "none");
       std::vector<uint32_t> colors = image_colormap(im, opt1);
-      im8 = image_remap(im, colors, opt1);
+      im8 = image_remap(im, colors);
     }
 
     // open file

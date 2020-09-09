@@ -216,7 +216,7 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
   if (opt1.get("cmap_alpha", "")!="none")
     opt1.put("cmap_alpha", "gif");
   std::vector<uint32_t> colors = image_colormap(im, opt1);
-  ImageR im8 = image_remap(im, colors, opt1);
+  ImageR im8 = image_remap(im, colors);
 
   if (im8.cmap.size()<2 || im8.cmap.size()>256) throw Err() <<
     "image_save_gif: bad size of image colormap" << im8.cmap.size();
