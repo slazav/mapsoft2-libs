@@ -90,7 +90,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
           if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
 
           // render tile in a normal way
-          if (z == zmax || opts.get("tmap_scale", false)){
+          if (z == zmax || !opts.get("tmap_scale", false)){
             // make reference for the tile (similar to code in geo_mkref) 
             GeoMap r;
             r.proj = "WEB";
