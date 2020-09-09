@@ -59,7 +59,7 @@ image_colormap(const ImageR & img, const Opt & opt){
   // load colormap
   std::string cmap_load = opt.get("cmap_load", "");
   if (cmap_load!=""){
-    Opt o("{\"cmap_colors\": \"0\"}");
+    Opt o("{\"cmap_colors\": \"0\",\"cmap_alpha\": \"full\"}");
     return image_colormap(image_load(cmap_load), o);
   }
 
