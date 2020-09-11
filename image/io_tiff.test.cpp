@@ -37,7 +37,6 @@ main(){
     // * Save them with different image_save_tiff() options.
     // * Read saved file and check result.
 
-/*
     { // IMAGE_32ARGB
       ImageR img = img32;
       image_save_tiff(img, "test_tiff/img_32_def.tif");
@@ -133,9 +132,8 @@ main(){
         "image_remap: palette length is out of range: test_tiff/img_32_xpal.tif");
 
     }
-*/
+
     /*********************************************/
-/*
     { // IMAGE_24RGB
       ImageR img(256,128, IMAGE_24RGB);
       for (int y=0; y<img.height(); ++y){
@@ -196,9 +194,8 @@ main(){
       assert_eq(I.get_argb(64,64), 0xFF8C7600);
       assert_eq(I.get_argb(192,64), 0xFF890000);
     }
-*/
+
     /*********************************************/
-/*
     { // IMAGE_16
       ImageR img(256,128, IMAGE_16);
       for (int y=0; y<img.height(); ++y){
@@ -275,7 +272,7 @@ main(){
       assert_eq(I.get_argb(192,64), 0xFF222222);
 
     }
-*/
+
     /*********************************************/
     { // IMAGE_8
       ImageR img(256,128, IMAGE_8);
