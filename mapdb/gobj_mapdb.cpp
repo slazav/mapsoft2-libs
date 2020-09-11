@@ -66,7 +66,7 @@ GObjMapDB::set_brd(const dMultiLine & brd) {
 
 GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
 
-  ptsize0 = 1.0;
+  ptsize0 = 0;
   sc = 1.0;
   minsc       = o.get<double>("mapdb_minsc", 0.01);
   minsc_color = o.get<uint32_t>("mapdb_minsc_color", 0xFFDB5A00);
@@ -589,7 +589,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();
   MapDB *map = mapdb_gobj->map.get();
-  double osc = mapdb_gobj->sc * mapdb_gobj->obj_scale;
+  double osc = mapdb_gobj->obj_scale;
+  if (mapdb_gobj->sc!=0) osc *= mapdb_gobj->sc;
 
   std::set<uint32_t> ids;
 
@@ -966,7 +967,7 @@ GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
   // calculate scaling for this range
   sc = ptsize0/get_ptsize(*cnv, draw_range);
 
-  if (sc < minsc){
+  if (sc!=0 && sc < minsc){
     cr->set_color_a(minsc_color);
     cr->paint();
     return GObj::FILL_PART;

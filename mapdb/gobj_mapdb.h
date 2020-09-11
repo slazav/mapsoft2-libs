@@ -102,8 +102,11 @@ private:
   dMultiLine border;     // border (WGS84) from set_ref
   double ptsize0;        // 1pt size in meters for linewidths, font size etc.
                          // Set when a "natural" reference is set with set_ref configuration command.
+                         // In the beginning it is 0, this means that objects are not
+                         // rescaled when map scale changes.
   double sc;             // Scale factor for objects: ptsize/ptsize0.
                          // Recalculated for each drawing process.
+                         // Could be 0 (no rescaling).
   double minsc;          // Min scale (ptsize/ptsize0), below this map is just filled with minsc_color.
   uint32_t minsc_color;  // Color for drawing too small scales.
 
