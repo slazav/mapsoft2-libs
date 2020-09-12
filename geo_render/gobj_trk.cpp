@@ -1,4 +1,4 @@
-#include <vector>
+#include <map>
 #include <cmath>
 
 #include "geom/line.h"
@@ -180,7 +180,68 @@ GObjTrk::update_range(){
   range.expand(linewidth);
 }
 
-/***************/
+/********************************************************************/
 
+std::vector<size_t>
+GObjTrk::find_points(const dPoint & pt, double r){
+  std::map<double, size_t> m;
+  for (size_t i = 0; i < segments.size(); ++i){
+    double d = dist(segments[i].p1, pt);
+    if (d<r) m.emplace(d,i);
+  }
+  std::vector<size_t> ret;
+  for (const auto & x:m) ret.push_back(x.second);
+  return ret;
+}
+
+std::vector<size_t>
+GObjTrk::find_points(const dRect & r){
+  std::vector<size_t> ret;
+  for (size_t i = 0; i < segments.size(); ++i)
+    if (r.contains(segments[i].p1)) ret.push_back(i);
+  return ret;
+}
+
+std::vector<size_t>
+GObjTrk::find_segments(const dPoint & pt, const double r){
+  std::map<double, size_t> m;
+  std::vector<size_t> ret;
+
+  size_t s = segments.size();
+  if (s<1)
+    return ret;
+
+  if (s==1){
+    double d = dist(segments[0].p1,pt);
+    if (d<r)  ret.push_back(0);
+    return ret;
+  }
+
+  for (size_t i=0; i<s; ++i) {
+    if (segments[i].hide) continue;
+    auto p1 = segments[i].p1;
+    auto p2 = segments[i].p2;
+    double d12 = dist(p2,p1);
+
+    // for point projection to the segment
+    // calculate length of p1->proj(pt)
+    double vn = pscal(pt-p1, p2-p1)/d12;
+
+    if (vn < -r || vn > d12 + r)
+      continue;
+
+    double d;
+    if (vn < 0)
+      d = dist(segments[i].p1, pt);
+    else if (vn > d12)
+      d = dist(segments[i].p2, pt);
+    else {
+      d = dist(pt-p1, norm(p2-p1) * vn);
+    }
+    if (d < r) m.emplace(d,i);
+  }
+  for (const auto & x:m) ret.push_back(x.second);
+  return ret;
+}
 
 

@@ -1,6 +1,8 @@
 #ifndef GOBJ_TRK_H
 #define GOBJ_TRK_H
 
+#include <vector>
+
 #include "cairo/cairo_wrapper.h"
 #include "conv/conv_base.h"
 #include "geo_data/geo_data.h"
@@ -59,6 +61,20 @@ public:
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
   dRect bbox() const override {return range;}
+
+  /************************************************/
+
+  // Find track points near pt within radius r.
+  // Return point numbers, sorted by distance.
+  std::vector<size_t> find_points (const dPoint & pt, const double r = 3.0);
+
+  // Find all track points within rectangle r.
+  // Return point numbers.
+  std::vector<size_t> find_points(const dRect & r);
+
+  // Find segments near pt within radius r.
+  // Return numbers of starting points.
+  std::vector<size_t> find_segments(const dPoint & pt, const double r = 3.0);
 
 };
 
