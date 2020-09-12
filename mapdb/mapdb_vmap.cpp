@@ -395,17 +395,17 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
       l1.ang = std::isnan(l.angle)? 0:l.angle;
       l1.hor = std::isnan(l.angle);
       switch (l.align) {
-        case MAPDB_ALIGN_NE:
-        case MAPDB_ALIGN_E:
-        case MAPDB_ALIGN_SE:
+        case MAPDB_ALIGN_NW:
+        case MAPDB_ALIGN_W:
+        case MAPDB_ALIGN_SW:
           l1.dir = 0; break;
         case MAPDB_ALIGN_N:
         case MAPDB_ALIGN_C:
         case MAPDB_ALIGN_S:
           l1.dir = 1; break;
-        case MAPDB_ALIGN_NW:
-        case MAPDB_ALIGN_W:
-        case MAPDB_ALIGN_SW:
+        case MAPDB_ALIGN_NE:
+        case MAPDB_ALIGN_E:
+        case MAPDB_ALIGN_SE:
           l1.dir = 2; break;
       }
       l1.fsize = 0; // todo: convert scale?
