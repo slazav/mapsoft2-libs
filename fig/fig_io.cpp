@@ -120,7 +120,6 @@ int read_figobj_header(FigObj & o, const std::string & header){
     throw Err() << "FigObj: can't read object: [" << header << "]";
 
   int ret = 0;
-  int n;
   int x1,x2,x3,y1,y2,y3;
   switch (o.type) {
     case FIG_ELLIPSE:
@@ -322,7 +321,7 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     // read coordinates
     if (o.type == FIG_POLYLINE || o.type == FIG_SPLINE) {
       o.resize(hret);
-      for (int i=0; i<o.size(); i++){
+      for (size_t i=0; i<o.size(); i++){
         s >> o[i].x >> o[i].y >> std::ws;
         if (s.fail()) throw Err() << "FigObj: can't read line coordinates";
       }
@@ -330,7 +329,7 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     // read spline factors
     if (o.type == FIG_SPLINE) {
       o.f.resize(hret);
-      for (int i=0; i<o.f.size(); i++){
+      for (size_t i=0; i<o.f.size(); i++){
         s >> o.f[i] >> std::ws;
         if (s.fail()) throw Err() << "FigObj: can't read spline coordinates";
       }
@@ -362,8 +361,7 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
 /// write comments
 void
 write_comments(std::ostream & s, const vector<string> & comment, const IConv & cnv){
-  int n;
-  for (n=0; n<comment.size(); n++){
+  for (size_t n=0; n<comment.size(); n++){
     if (n>99) {cerr << "fig comment contains > 100 lines! Cutting...\n"; break;}
     string str = comment[n];
     if (str.size()>1022){

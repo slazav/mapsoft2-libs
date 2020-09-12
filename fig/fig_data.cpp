@@ -239,7 +239,7 @@ FigObj::operator< (const FigObj & o) const{
 
 void FigObj::set_points(const dLine & v){
   clear();
-  for (int i=0;i<v.size();i++)
+  for (size_t i=0;i<v.size();i++)
     push_back(iPoint(lround(v[i].x), lround(v[i].y)));
 }
 
