@@ -55,7 +55,7 @@ IConv::Impl::cnv(const std::string & s) const{
   while(icnt){
     char *obuf_ptr = obuf;
     size_t ocnt = OSIZE;
-    size_t res = iconv((iconv_t)(cdp.get()), &ibuf_ptr, &icnt, &obuf_ptr, &ocnt);
+    ssize_t res = iconv((iconv_t)(cdp.get()), &ibuf_ptr, &icnt, &obuf_ptr, &ocnt);
 
     if (( res == -1) && (errno != E2BIG ) && (icnt>0) && (ocnt>0)){
       // skip unknown char
