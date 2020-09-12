@@ -10,6 +10,7 @@
 #include "mapview/dlg_trk_opt.h"
 #include "mapview/dlg_srtm_opts.h"
 #include "mapview/dlg_pano.h"
+#include "mapview/dlg_trk.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
 
@@ -67,6 +68,9 @@ class MyWindow : public Gtk::ApplicationWindow {
     std::cerr << "jump to: " << p << "\n";
   }
 
+  // Edit track dialog
+  DlgTrk trk;
+
   public:
 
   /***********************************/
@@ -106,7 +110,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     // SRTM drawing options dialog
     auto b_srtmopt = manage(new Gtk::Button("DlgSrtmOpt"));
     b_srtmopt->signal_clicked().connect(
-      sigc::mem_fun(trkopt, &DlgSrtmOpt::show_all));
+      sigc::mem_fun(srtmopt, &DlgSrtmOpt::show_all));
     srtmopt.signal_changed().connect(
       sigc::mem_fun(this, &MyWindow::on_srtmopt_ch));
     srtmopt.signal_response().connect(
@@ -129,6 +133,11 @@ class MyWindow : public Gtk::ApplicationWindow {
       sigc::mem_fun(this, &MyWindow::on_pano_go));
     pano.set_transient_for(*this);
 
+    // Edit track dialog
+    auto b_trk = manage(new Gtk::Button("DlgTrk"));
+    b_trk->signal_clicked().connect(
+      sigc::mem_fun(trk, &DlgTrk::show_all));
+
     /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
@@ -138,6 +147,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     vbox->pack_start(*b_trkopt,  false, true, 5);
     vbox->pack_start(*b_srtmopt, false, true, 5);
     vbox->pack_start(*b_pano,    false, true, 5);
+    vbox->pack_start(*b_trk,     false, true, 5);
 
     add (*vbox);
     load_css("./widgets.css", *this);
