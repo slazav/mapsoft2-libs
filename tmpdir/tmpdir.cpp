@@ -57,7 +57,7 @@ TmpDir::add(const std::string & fname) {
 
   // was it created already?
   bool exists=false;
-  for (int j=0; j<files.size(); j++)
+  for (size_t j=0; j<files.size(); j++)
     if (files[j] == fname) {exists=true; break;}
   if (exists) return fpath;
 
@@ -89,7 +89,7 @@ TmpDir::zip(const std::string & zipname) const{
   if (!Z) throw Err() << "Can't open ZIP file " << zipname << " for writing";
 
   std::vector<std::string>::const_iterator f;
-  for (int i=0; i<files.size(); i++){
+  for (size_t i=0; i<files.size(); i++){
 
     // directory
     if (*files[i].rbegin() == '/'){
