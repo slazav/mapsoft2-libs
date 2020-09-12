@@ -1,16 +1,17 @@
 #ifndef RAINBOW_H
 #define RAINBOW_H
 #include <vector>
+#include <stdint.h>
 
 ///@{
 
 /// rainbow data type
 struct rainbow_data{
   double v; ///< value
-  unsigned int c; ///< color
+  uint32_t c; ///< color
 };
 
-int color_shade(int c, double k);
+uint32_t color_shade(int c, double k);
 
 #define RAINBOW_NORMAL   "BCGYRM"
 #define RAINBOW_BURNING  "WYRMBb"
@@ -40,10 +41,10 @@ public:
   Rainbow();
   Rainbow(const std::vector<rainbow_data> & RD_);
   Rainbow(double min, double max, const char *colors = RAINBOW_NORMAL);
-  Rainbow(double min, double max, int cmin, int cmax);
+  Rainbow(double min, double max, uint32_t cmin, uint32_t cmax);
 
-  int get(double val) const;
-  void set_limits(int low_c = -1, int high_c = -1);
+  uint32_t get(double val) const;
+  void set_limits(int64_t low_c = -1, int64_t high_c = -1);
 };
 
 #endif

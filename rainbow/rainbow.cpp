@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstring>
 
-int
+uint32_t
 color_shade(int c, double k){
   unsigned char a=(c>>24)&0xff, r=(c>>16)&0xff, g=(c>>8)&0xff,  b=c&0xff;
   r=rint(r*k); g=rint(g*k); b=rint(b*k);
@@ -23,7 +23,7 @@ Rainbow::Rainbow(double min, double max, const char *colors){
   update_data();
 }
 
-Rainbow::Rainbow(double min, double max, int cmin, int cmax){
+Rainbow::Rainbow(double min, double max, uint32_t cmin, uint32_t cmax){
   RD=std::vector<rainbow_data>(2);
   RD[0].c = cmin; RD[0].v = min;
   RD[1].c = cmax; RD[1].v = max;
@@ -63,7 +63,7 @@ Rainbow::update_data(){
 void
 Rainbow::set_color_string(double min, double max, const char *colors){
   RD.resize(0);
-  for (int i=0; i<strlen(colors); i++) {
+  for (size_t i=0; i<strlen(colors); i++) {
     switch (colors[i]){
       case 'R': RD.push_back({0, 0xffff0000}); break;
       case 'G': RD.push_back({0, 0xff00ff00}); break;
@@ -87,20 +87,20 @@ Rainbow::set_color_string(double min, double max, const char *colors){
 
 void
 Rainbow::set_range(double min, double max){
-  for (int i=0; i<RD.size(); i++)
+  for (size_t i=0; i<RD.size(); i++)
     RD[i].v = min + (max-min)/double(RD.size()-1)*i;
 }
 
 /********************************************************************/
 
 void
-Rainbow::set_limits(int low_c, int high_c){
+Rainbow::set_limits(int64_t low_c, int64_t high_c){
   lc = low_c; hc = high_c;
   if (lc==-1) lc = dir>0 ? cc[0] : cc[N-1];
   if (hc==-1) hc = dir>0 ? cc[N-1] : cc[0];
 }
 
-int
+uint32_t
 Rainbow::get(double val) const{
   if (N<1) return 0;
   if (val < lv) return lc;
