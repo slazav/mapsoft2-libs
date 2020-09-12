@@ -310,7 +310,7 @@ template <typename T>
 double dist(const MultiLine<T> & A, const MultiLine<T> & B){
   double ret = 0;
   if (A.size() != B.size()) return INFINITY;
-  for (int i=0; i<A.size(); i++) ret+=pow(dist(A[i],B[i]),2);
+  for (size_t i=0; i<A.size(); i++) ret+=pow(dist(A[i],B[i]),2);
   return sqrt(ret);
 }
 

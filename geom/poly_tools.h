@@ -50,7 +50,7 @@ public:
   /// y=const (or x=const if horiz=false) line
   std::vector<double> get_cr(T y){
     std::vector<double> cr;
-    for (int k = 0; k < sb.size(); k++){
+    for (size_t k = 0; k < sb.size(); k++){
       if ((sb[k].y > y)&&(se[k].y > y)) continue; // segment is above the row
       if ((sb[k].y < y)&&(se[k].y < y)) continue; // segment is below the row
 

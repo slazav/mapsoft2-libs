@@ -8,7 +8,7 @@ LineWalker::LineWalker(const dLine & _line, bool close) {
 
   double l=0;
   ls.push_back(0);
-  for (int j=1; j<line.size(); j++){
+  for (size_t j=1; j<line.size(); j++){
     dPoint p1 (line[j-1]);
     dPoint p2 (line[j]);
     l+=len(p1-p2);

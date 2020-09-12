@@ -186,14 +186,6 @@ main(){
     // rint, floor, ceil
     dRect dr1 = dRect(dPoint(5.8,6.8), dPoint(7.2,8.8));
 
-    dRect dr2 = dRect(-dPoint(5.8,6.8), -dPoint(7.2,8.8));
-
-    dRect dr1f = dRect(dPoint(6,7), dPoint(7,8));
-    dRect dr2f = dRect(dPoint(-6,-7), dPoint(-8,-9));
-
-    dRect dr1c = dRect(dPoint(6,7), dPoint(8,9));
-    dRect dr2c = dRect(dPoint(-5,-6), dPoint(-7,-8));
-
     test_rint(dr1, dRect(dPoint(6,7), dPoint(7,9)));
     test_rint(-dr1,-dRect(dPoint(6,7), dPoint(7,9)));
     test_rint(dRect(dPoint(4.8,5.8), dPoint(5.3,9.3)), dRect(dPoint(5,6), dPoint(5,9)));

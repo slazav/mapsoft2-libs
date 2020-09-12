@@ -143,7 +143,7 @@ struct Line : std::vector<Point<T> > {
   /// Calculate line length.
   double length() const {
     double ret=0;
-    for (int i=1; i<this->size(); i++)
+    for (size_t i=1; i<this->size(); i++)
       ret+=dist((*this)[i-1], (*this)[i]);
     return ret;
   }
@@ -151,7 +151,7 @@ struct Line : std::vector<Point<T> > {
   /// Calculate line length.
   double length2d() const {
     double ret=0;
-    for (int i=1; i<this->size(); i++)
+    for (size_t i=1; i<this->size(); i++)
       ret+=dist2d((*this)[i-1], (*this)[i]);
     return ret;
   }
@@ -386,7 +386,7 @@ template <typename T>
 double dist(const Line<T> & A, const Line<T> & B){
   double ret = 0;
   if (A.size() != B.size()) return INFINITY;
-  for (int i=0; i<A.size(); i++) ret+=pow(dist(A[i],B[i]),2);
+  for (size_t i=0; i<A.size(); i++) ret+=pow(dist(A[i],B[i]),2);
   return sqrt(ret);
 }
 
