@@ -148,9 +148,9 @@ parse_options_all(int *argc, char ***argv,
 HelpPrinter::HelpPrinter(
     bool pod, const GetOptSet & opts,
     const std::string & name):
-    s(std::cout),
-    pod(pod), opts_(opts), name_(name),
-    usage_head(false), width(80) {
+      s(std::cout), name_(name),
+      pod(pod), opts_(opts),
+      usage_head(false), width(80) {
 
   struct winsize size;
   if (ioctl(STDOUT_FILENO,TIOCGWINSZ,&size) != -1) {
@@ -259,13 +259,13 @@ HelpPrinter::~HelpPrinter(){
 void
 HelpPrinter::format(int ind0, int ind1, const std::string & text){
   int lsp=0;
-  int ii=0;
-  const int text_width = width-ind1;
+  size_t ii=0;
+  size_t text_width = width>ind1 ? width-ind1 : width;
   s << string(ind0, ' ');
-  for (int i=0; i<text.size(); i++,ii++){
+  for (size_t i=0; i<text.size(); i++,ii++){
     if ((text[i]==' ') || (text[i]=='\n')) lsp=i+1;
     if ((ii>=text_width) || (text[i]=='\n')){
-      if (lsp <= i-ii) lsp = i;
+      if (lsp <= (ssize_t)i-(ssize_t)ii) lsp = i;
       if (ii!=i) s << string(ind1, ' ');
       s << text.substr(i-ii, lsp-i+ii-1) << endl;
       ii=i-lsp;

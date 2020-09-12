@@ -16,7 +16,6 @@ void
 usage(bool pod=false){
   HelpPrinter pr(pod, options, "getopt.test");
 
-  const char * prog = "getopt.test";
   pr.name("example of mapsoft-style getopt");
   pr.head(1, "Usage:");
   pr.usage("[<general_options>|<global_input_options>]\\\n"
