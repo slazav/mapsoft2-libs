@@ -93,9 +93,11 @@ GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 /********************************************************************/
 
 GObjWpts::GObjWpts(GeoWptList & wpts): wpts(wpts) {
+  set_opt(Opt());
   for (auto & w:wpts){
     WptDrawTmpl wt;
     wt.src = &w;
+    update_pt_crd(wt, NULL);
     tmpls.push_back(wt);
   }
 }
@@ -181,7 +183,8 @@ void
 GObjWpts::update_pt_bbox(WptDrawTmpl & wt){
   wt.bbox = dRect(dPoint(wt), dPoint(wt));
   wt.bbox.expand(size + linewidth);
-  wt.bbox.expand(wt.text_pt + wt.text_box);
+  if (!wt.text_box.is_empty())
+    wt.bbox.expand(wt.text_pt + wt.text_box);
   wt.bbox.to_ceil();
 }
 
