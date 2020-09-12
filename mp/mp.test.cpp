@@ -96,7 +96,7 @@ main(){
     );
 
   }
-  catch (Err E){
+  catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";
     return 1;
   }
