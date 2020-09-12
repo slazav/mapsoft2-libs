@@ -12,7 +12,7 @@ image_to_surface(const ImageR & img) {
   // check if surface raw data compatable with Image
   if (img.type() != IMAGE_32ARGB)
     throw Err() << "Cairo::image_to_surface: only 32-bpp images are supported";
-  if (Cairo::ImageSurface::format_stride_for_width(format, img.width()) != img.width()*4)
+  if ((size_t)Cairo::ImageSurface::format_stride_for_width(format, img.width()) != img.width()*4)
     throw Err() << "Cairo::image_to_surface: non-compatable data";
   return Cairo::ImageSurface::create(img.data(),
       format, img.width(), img.height(), img.width()*4);
@@ -30,7 +30,7 @@ image_to_pattern(const ImageR & img, double scx, double scy, double dx, double d
     patt->set_matrix(M);
     return patt;
   }
-  catch (Cairo::logic_error err){
+  catch (Cairo::logic_error & err){
     throw Err() << err.what();
   }
 }
@@ -61,7 +61,7 @@ svg_to_pattern(const std::string & fname, double scx, double scy, double dx, dou
     patt->set_matrix(M);
     return patt;
   }
-  catch (Cairo::logic_error err){
+  catch (Cairo::logic_error & err){
     throw Err() << err.what();
   }
 }
@@ -84,7 +84,7 @@ CairoExtra::mkpath_smline(const dLine & o, bool close, double curve_l){
 
   // simple lines, no smoothing
   if (curve_l==0){
-    for (int i=0; i<o.size(); i++) {
+    for (size_t i=0; i<o.size(); i++) {
       dPoint p = o[i];
       if (i==0) move_to(p);
       else line_to(p);
@@ -94,7 +94,7 @@ CairoExtra::mkpath_smline(const dLine & o, bool close, double curve_l){
   }
 
   // lines with smoothing
-  for (int i=0; i<o.size(); i++) {
+  for (size_t i=0; i<o.size(); i++) {
     dPoint p = o[i];
     dPoint pp = o[i>0? i-1: o.size()-1];
     dPoint pn = o[i<o.size()-1? i+1: 0];
