@@ -218,7 +218,6 @@ SRTM::get_val(const int x, const int y, const bool interp){
 
   int h;
   {
-    auto lk = get_lock();
     if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
     auto im = srtm_cache.get(key);
     if (im.is_empty()) return SRTM_VAL_NOFILE;
@@ -340,7 +339,6 @@ SRTM::set_val(const int x, const int y, const short h){
   get_crd(y, srtm_width, key.y, crd.y);
   crd.y = srtm_width-crd.y-1;
 
-  auto lk = get_lock();
   if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
   auto & im = srtm_cache.get(key);
   if (im.is_empty()) return SRTM_VAL_NOFILE;

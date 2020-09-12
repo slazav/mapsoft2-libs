@@ -62,11 +62,8 @@ class SRTM {
   /// data cache. key is lon,lat in degrees, images are of IMAGE_16 type
   Cache<iPoint, ImageR> srtm_cache;
 
-  // Locking srtm cache (it can be accessed from different threads:
-  // main viewer, pano viewer,...)
+  // Locking srtm cache
   std::mutex cache_mutex;
-  std::unique_lock<std::mutex> get_lock() {
-    return std::unique_lock<std::mutex>(cache_mutex);}
 
   /// size (m) of 1 srtm point lat bow
   double size0;
@@ -158,7 +155,11 @@ class SRTM {
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);
 
-
+    // Get lock. SRTM class goes not lock anything itself,
+    // User must lock set_opt, get_val, ... methods if they are
+    // used from different threads.
+    std::unique_lock<std::mutex> get_lock() {
+      return std::unique_lock<std::mutex>(cache_mutex);}
 
 };
 

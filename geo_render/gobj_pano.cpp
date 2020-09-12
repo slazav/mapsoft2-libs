@@ -79,6 +79,7 @@ GObjPano::get_ray(int x){
   else                 { dry=ry=rM; }
 
   std::vector<GObjPano::ray_data> ret;
+  auto srtm_lock = srtm->get_lock();
   while (rx<rM || ry<rM){ // Go from zero to rM
 
     while (rx <= ry && rx<rM){ // step in x
@@ -215,7 +216,11 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
   if (is_stopped()) return GObj::FILL_NONE;
   if (!srtm) return GObj::FILL_NONE;
 
-  double h0 = srtm->get_val_int4(p0) + dh; // altitude of observation point
+  double h0;
+  {
+    auto srtm_lock = srtm->get_lock();
+    h0 = srtm->get_val_int4(p0) + dh; // altitude of observation point
+  }
   ImageR image(box.w, box.h, IMAGE_32ARGB);
   image.fill32(0xFF000000);
 
