@@ -102,7 +102,7 @@ GEOHASH_decode(const std::string & hash) {
     }
 
 std::string
-GEOHASH_encode(const dPoint & pt, unsigned int len) {
+GEOHASH_encode(const dPoint & pt, size_t len) {
     dPoint p(pt);
     if (p.y<-90.0) p.y=-90.0;
     if (p.y>+90.0) p.y=+90.0;
@@ -115,7 +115,7 @@ GEOHASH_encode(const dPoint & pt, unsigned int len) {
     double min1 = -180, max1 = 180, val1 = p.x;
     double min2 =  -90, max2 =  90, val2 = p.y;
 
-    for (int i=0; i < len; i++) {
+    for (size_t i=0; i < len; i++) {
         double mid;
         unsigned char bits = 0;
         SET_BIT(bits, mid, min1, max1, val1, 4);
@@ -134,7 +134,7 @@ GEOHASH_encode(const dPoint & pt, unsigned int len) {
 }
 
 std::string
-GEOHASH_encode(const dRect & r, unsigned int maxlen) {
+GEOHASH_encode(const dRect & r, size_t maxlen) {
     // encode 4 corners
     std::string h1 = GEOHASH_encode(r.tlc(), maxlen);
     std::string h2 = GEOHASH_encode(r.trc(), maxlen);
@@ -146,7 +146,7 @@ GEOHASH_encode(const dRect & r, unsigned int maxlen) {
     assert(h1.size() == h4.size());
     assert(h1.size() == maxlen);
 
-    int i;
+    size_t i;
     for (i=0; i<maxlen; i++){
      if (h1[i] != h2[i] || h1[i] != h3[i] || h1[i] != h4[i]) break;
     }
@@ -154,7 +154,7 @@ GEOHASH_encode(const dRect & r, unsigned int maxlen) {
 }
 
 std::set<std::string>
-GEOHASH_encode4(const dRect & r, unsigned int maxlen) {
+GEOHASH_encode4(const dRect & r, size_t maxlen) {
     // todo: objects crossing +/-180 degrees!
     // encode 4 corners
     std::string h1 = GEOHASH_encode(r.tlc(), maxlen);
@@ -168,7 +168,7 @@ GEOHASH_encode4(const dRect & r, unsigned int maxlen) {
     assert(h1.size() == h4.size());
     assert(h1.size() == maxlen);
 
-    int i;
+    size_t i;
     for (i=0; i<maxlen; i++){
      // all 4 hashes are same
      if (h1[i] == h2[i] && h1[i] == h3[i] && h1[i] == h4[i]) continue;
@@ -204,7 +204,6 @@ GEOHASH_encode4(const dRect & r, unsigned int maxlen) {
 
 std::string
 GEOHASH_adjacent(const std::string & hash, int dir) {
-
     dir = dir%8;
 
     // even dirs
@@ -214,12 +213,12 @@ GEOHASH_adjacent(const std::string & hash, int dir) {
     if (dir==7) return GEOHASH_adjacent(GEOHASH_adjacent(hash,0),6);
 
     // odd dirs
-    int len  = hash.size();
+    size_t len  = hash.size();
     if (len==0) return "";
 
     char last = tolower(hash[len-1]);
 
-    int idx  = dir + (len % 2);
+    size_t idx  = dir + (len % 2);
     const char *border_table = BORDERS_TABLE[idx];
 
     std::string base(hash);

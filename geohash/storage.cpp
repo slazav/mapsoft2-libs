@@ -23,10 +23,9 @@ GeoHashStorage::get(const dRect & range){
   std::set<int> ret;
   std::set<std::string> done;
   for (auto const & h:hashes) {
-    for (int i=0; i<=h.size(); i++) {
+    for (size_t i=0; i<=h.size(); i++) {
       std::string hh = h.substr(0,i);
       if (done.count(hh)) continue; // do not repeat queries with same hash
-      bool exact = i < h.size();  // for full hashes look also for smaller regions.
       done.insert(hh);
       // std::cerr << "GET [" << hh << "] " << (i<h.size()) << "\n";
       std::set<int> r = get_hash(hh, i<h.size());
