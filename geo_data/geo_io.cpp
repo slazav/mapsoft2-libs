@@ -88,7 +88,7 @@ read_geo (const string &fname, GeoData & data, const Opt & opt){
     TmpDir tmpdir("mapsoft_read_kmz_XXXXXX");
     tmpdir.unzip(fname);
     vector<string> paths = tmpdir.get_paths();
-    for (int i=0; i<paths.size(); i++){
+    for (size_t i=0; i<paths.size(); i++){
       if (*paths[i].rbegin() == '/') continue;
       read_kml(paths[i], (GeoData &) data, opt);
     }

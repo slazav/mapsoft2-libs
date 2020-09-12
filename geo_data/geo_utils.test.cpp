@@ -96,7 +96,7 @@ main(){
   assert_eq(GEO_PROJ_SU(-10), "SU-9");
 
   }
-  catch (Err E){
+  catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";
     return 1;
   }

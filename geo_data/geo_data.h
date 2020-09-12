@@ -225,7 +225,7 @@ struct GeoMap{
   void add_ref(const dLine & lr, const dLine & lw){
     if (lr.size()!=lw.size())
       throw Err() << "GeoMap::add_ref: wrong number of ref points";
-    for (int i = 0; i<lr.size(); i++)
+    for (size_t i = 0; i<lr.size(); i++)
        ref.insert(std::make_pair(lr[i],lw[i]));
   }
 

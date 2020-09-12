@@ -45,6 +45,5 @@ crdx2nonpref(const double X){
 
 string
 GEO_PROJ_SU(double lon){
-  int lon0 = lon2lon0(lon);
   return "SU" + type_to_str((int)lon2lon0(lon));
 }

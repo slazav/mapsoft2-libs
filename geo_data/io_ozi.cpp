@@ -50,7 +50,7 @@ str_trim(string & s){
  Missing fields are returned as empty strings.
 */
 vector<string> unpack_ozi_csv(const string & str, unsigned int count, bool trim = false){
-  int p1=0, p2=0;
+  size_t p1=0, p2=0;
   vector<string> ret;
   do {
     p2=str.find(',', p1);
@@ -465,8 +465,7 @@ void write_ozi_wpt (const string &fname, const GeoWptList & wpt, const Opt & opt
 
   IConv cnv("UTF-8", opts.get("ozi_enc", ozi_default_enc) );
 
-  int num = wpt.size();
-  int n=0;
+  size_t n=0;
   f << "OziExplorer Waypoint File Version 1.1\r\n"
     << "WGS 84\r\n"
     << "Reserved 2\r\n"

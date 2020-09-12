@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <map>
 #include <math.h>
 
@@ -44,7 +45,7 @@ void end_element(xmlTextWriterPtr & writer, const char *name){
 }
 
 void write_cdata_element(xmlTextWriterPtr & writer, const char *name, const string & value){
-  if (name == "" || value == "") return;
+  if (name == NULL || strlen(name)==0 || value == "") return;
   start_element(writer, name);
   if (xmlTextWriterWriteFormatCDATA(writer, "%s", value.c_str())<0)
     throw string("writing <") + name + "> element";
@@ -136,7 +137,7 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
       write_cdata_element(writer, "description", trk.comm);
       start_element(writer, "MultiGeometry");
 
-      const char *linename;
+      const char *linename = NULL;
       int cnt=0;
       for (auto tp : trk) {
         cnt++;
@@ -144,8 +145,8 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
 
         if (tp.start || cnt == 1) {
           if (cnt >1) {
-            if (xmlTextWriterEndElement(writer) < 0) throw "closing <coordinates> element";
-            if (xmlTextWriterEndElement(writer) < 0) throw "closing line element";
+            end_element(writer, "coordinates");
+            end_element(writer, linename);
           }
           start_element(writer, linename);
           if (xmlTextWriterWriteFormatElement(writer,
@@ -158,8 +159,10 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
            " %.7f,%.7f,%.2f", tp.x, tp.y, tp.z)<0)
           throw "writing <coordinates> element";
       }
-      end_element(writer, "coordinates");
-      end_element(writer, linename);
+      if (cnt>0){
+        end_element(writer, "coordinates");
+        if (linename) end_element(writer, linename);
+      }
       end_element(writer, "MultiGeometry");
       end_element(writer, "Placemark");
     }
