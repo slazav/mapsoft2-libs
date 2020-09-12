@@ -32,7 +32,7 @@ public:
     typedef typename std::map<K, V>::iterator iterator;
 
     /// Constructor: create the cache with size n
-    SizeCache (int size) : upper_limit(size), current_size(0) { }
+    SizeCache (size_t size) : upper_limit(size), current_size(0) { }
 
     /// Copy constructor
     SizeCache (SizeCache const & other)
@@ -57,22 +57,22 @@ public:
     }
 
     /// Return number of elements in the cache
-    int count(){
+    size_t count(){
       return storage.size();
     }
 
     /// Return cache size
-    int size_total(){
+    size_t size_total(){
       return upper_limit;
     }
 
     /// Return total size of all elements
-    int size_used() {
+    size_t size_used() {
         return current_size;
     }
 
     /// Add element to the cache
-    int add (K const & key, V const & value) {
+    size_t add (K const & key, V const & value) {
         if (contains(key)) {
             erase(key);
 #ifdef DEBUG_CACHE
@@ -84,10 +84,10 @@ public:
 #endif
         }
 
-        int size = value.size();
+        size_t size = value.size();
         while (storage.size() > 0 && current_size + size > upper_limit) {
             el_index lru = usage[usage.size() - 1];
-            int s = lru->second.size();
+            size_t s = lru->second.size();
 #ifdef DEBUG_CACHE
             std::cout << "no free space:"
                       << " current_size=" << current_size
@@ -106,7 +106,7 @@ public:
 
 #ifdef DEBUG_CACHE
         std::cout << "cache usage:";
-        for (int i = 0; i < usage.size(); ++i) {
+        for (size_t i = 0; i < usage.size(); ++i) {
           std::cout << " " << usage[i].first;
         }
         std::cout << std::endl;
@@ -135,7 +135,7 @@ public:
       el_index ind = storage.find(key);
       if (ind == storage.end())  return;
 
-      for (int k = 0; k < usage.size(); ++k) {
+      for (size_t k = 0; k < usage.size(); ++k) {
         if (usage[k] == ind) {
           usage.erase(usage.begin() + k);
           break;
@@ -172,7 +172,7 @@ public:
 
     /// Erase an element pointed to by the iterator
     iterator erase(iterator it) {
-      for (int k = 0; k < usage.size(); ++k) {
+      for (size_t k = 0; k < usage.size(); ++k) {
         if (usage[k] == it) {
           usage.erase(usage.begin() + k);
           break;
@@ -186,8 +186,8 @@ public:
     }
 
 private:
-    int upper_limit;
-    int current_size;
+    size_t upper_limit;
+    size_t current_size;
 
     typedef typename std::map<K, V>::iterator el_index;
     std::map<K, V> storage;
@@ -195,16 +195,16 @@ private:
 
     // index end is removed
     template <typename T>
-    void push_vector (std::vector<T> & vec, int start, int end) {
+    void push_vector (std::vector<T> & vec, size_t start, size_t end) {
 #ifdef DEBUG_CACHE_GET
       std::cout << "cache push_vector: start=" << start << " end=" << end << " size=" << vec.size() << std::endl;
 #endif
-      for (int i = end; i > start; --i)
+      for (size_t i = end; i > start; --i)
         vec[i] = vec[i-1];
     }
 
     void use (el_index ind) {
-      int i;
+      size_t i;
       for (i = 0; i < usage.size() && usage[i] != ind; ++i);
       if (i == usage.size()) {
         usage.resize (usage.size()+1);
