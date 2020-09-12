@@ -392,8 +392,15 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
       if (l.get_class() != MAPDB_TEXT) continue;
       if (l.size()==0 || l[0].size()==0) continue;
       l1.pos = l[0][0];
-      l1.ang = std::isnan(l.angle)? 0:l.angle;
-      l1.hor = std::isnan(l.angle);
+      if (std::isnan(l.angle)){
+        l1.hor = true;
+        l1.ang = 0;
+      }
+      else {
+        l1.hor = false;
+        double a = -l.angle;
+        l1.ang = 180/M_PI*atan2(cos(M_PI/180*l1.pos.y)*sin(M_PI/180*a), cos(M_PI/180*a));
+      }
       switch (l.align) {
         case MAPDB_ALIGN_NW:
         case MAPDB_ALIGN_W:
