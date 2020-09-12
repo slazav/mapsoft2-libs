@@ -226,9 +226,9 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
     auto ray = get_ray(x+box.x);
     if (!ray.size()) continue;
 
-    size_t yo = image.height(); // Old y-coord, previously painted point.
+    ssize_t yo = image.height(); // Old y-coord, previously painted point.
                              // It is used to skip hidden parts.
-    size_t yp = width/2.0-box.y;// Previous value, differs from yo on hidden 
+    ssize_t yp = width/2.0-box.y;// Previous value, differs from yo on hidden 
                              // and partially hydden segments.
                              // It is used to interpolate height and slope.
                              // Y axis goes from top to buttom!
@@ -241,12 +241,12 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
       if (r>max_r) break;
 
       double b = atan2(hn-h0, r); // vertical angle
-      size_t yn = (1 - 2*b/M_PI) * width/4.0 - box.y; // y-coord
+      ssize_t yn = (1 - 2*b/M_PI) * width/4.0 - box.y; // y-coord
 
       if (yn<0)  {i=ray.size();}     // above image -- draw the rest of segment and exit
       if (yn>=yo) {yp=yn; continue;} // point below image -- skip segment
 
-      for (size_t y = yn; y < yp; y++){
+      for (ssize_t y = yn; y < yp; y++){
         if (y<0 || y>=yo) continue; // select visible points
         double s = sp + (sn-sp)*(y-yp)/double(yn-yp); // Interpolate slope and altitude
         double h = hp + (hn-hp)*(y-yp)/double(yn-yp); //  and calculate point color.
@@ -257,7 +257,7 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
       yp=yn;
     }
 
-    for (size_t y = 0; y < yo; y++) // draw sky points
+    for (ssize_t y = 0; y < yo; y++) // draw sky points
       image.set32(x,y,0xFFBBBBFF);
   }
 
