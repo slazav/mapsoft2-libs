@@ -81,7 +81,6 @@ Opt::check_unknown (const std::list<std::string> & known) const {
 Opt
 Opt::clone_known(const std::list<std::string> & known) const {
   Opt ret;
-  int n=0;
   for (auto i : *this){
     if (std::find(known.begin(), known.end(), i.first) != known.end())
       ret.insert(i);

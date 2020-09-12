@@ -149,7 +149,7 @@ try{
 
   assert_eq(O1.get("hex8",0), 0xFF);
   assert_eq(O1.get("hex16",0), 0xFFFF);
-  assert_eq(O1.get("hex32",0), 0xFFFFFFFF);
+  assert_eq(O1.get("hex32",0u), 0xFFFFFFFFu);
 
   assert_eq(O1.get("hex8"),  "0xFF");
   assert_eq(O1.get("hex16"), "0xFFFF");
