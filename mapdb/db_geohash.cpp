@@ -112,7 +112,7 @@ GeoHashDB::Impl::get(const uint32_t type, const dRect & range){
   std::set<std::string> hashes = GEOHASH_encode4(range, HASHLEN);
   std::set<std::string> done;
   for (auto const & h:hashes) {
-    for (int i=0; i<=h.size(); i++) {
+    for (size_t i=0; i<=h.size(); i++) {
       std::string hh = h.substr(0,i);
       if (done.count(hh)) continue; // do not repeat queries with same hash
       bool exact = i < h.size();  // for full hashes look also for smaller regions.

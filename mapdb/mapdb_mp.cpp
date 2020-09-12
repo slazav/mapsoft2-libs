@@ -176,10 +176,10 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
 
     // choose data level (move to MP?)
     int l = -1;
-    if (level < o.Data.size() && o.Data[level].size()>0) l = level;
+    if (level < (int)o.Data.size() && o.Data[level].size()>0) l = level;
     if (level <= o.EndLevel){
       for (int i = level; i>0; i--){
-        if (i<o.Data.size() && o.Data[i].size()>0) {l=i; break;}
+        if (i<(int)o.Data.size() && o.Data[i].size()>0) {l=i; break;}
       }
     }
     if (l==-1) continue; // no data for the requested level
@@ -188,7 +188,7 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
     o1.dMultiLine::operator=(o.Data[l]);
 
     // add object
-    uint32_t id = add(o1);
+    add(o1);
 
   }
 

@@ -77,7 +77,7 @@ string_unpack_crds(istream & s){
   uint32_t size;
   s.read((char*)&size, sizeof(uint32_t));
   dLine ret;
-  for (int i=0;i<size/2/sizeof(int32_t);i++) {
+  for (size_t i=0; i<size/2/sizeof(int32_t); i++) {
     int32_t crd[2];
     s.read((char*)crd, 2*sizeof(int32_t));
     dPoint p(crd[0]/1e7, crd[1]/1e7);

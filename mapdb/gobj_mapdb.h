@@ -182,7 +182,7 @@ public:
             << "Too many arguments. Expected arguments: " << list;
       }
 
-      for (int i=0; i<templ.size(); i++){
+      for (size_t i=0; i<templ.size(); i++){
         if (i<args.size()) continue;
         if (templ[i].substr(0,1) == "?") continue;
         if (templ[i] == "...") break;
@@ -465,14 +465,15 @@ public:
   /*******************************************/
   // drawing step class
   struct DrawingStep : public GObj {
+    GObjMapDB * mapdb_gobj; // back reference to the mapdb gobj
     StepAction action;  // what to do
     uint32_t etype;     // object extended type (type + (cl<<16) )
     std::string step_name;  // step name
     std::string group_name; // group name
     std::map<StepFeature, std::shared_ptr<Feature> > features;
-    GObjMapDB * mapdb_gobj; // back reference to the mapdb gobj
 
-    DrawingStep(GObjMapDB * mapdb_gobj): mapdb_gobj(mapdb_gobj), action(STEP_UNKNOWN), etype(0) {}
+    DrawingStep(GObjMapDB * mapdb_gobj):
+       mapdb_gobj(mapdb_gobj), action(STEP_UNKNOWN), etype(0) {}
     std::string get_name() const {return step_name;}
     std::string get_group() const {return group_name;}
 

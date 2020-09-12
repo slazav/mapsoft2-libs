@@ -533,7 +533,7 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
         }
 
         dPoint t(1,0);
-        double dd = nearest_pt(lines, t, p, ftr->dist);
+        nearest_pt(lines, t, p, ftr->dist);
         if (ftr->rotate) O.angle = atan2(t.y, t.x);
       }
     }

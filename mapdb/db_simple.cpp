@@ -127,7 +127,6 @@ DBSimple::Impl::unpack_uint32(DBT *k){
 
 bool
 DBSimple::Impl::exists(const uint32_t key){
-  DB  *dbp = (DB*)db.get();
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -153,7 +152,6 @@ DBSimple::Impl::put(const uint32_t key, const std::string & val){
 // Set key to 0xFFFFFFFF if nothing is found.
 std::string
 DBSimple::Impl::get(uint32_t & key, int flags){
-  DB  *dbp = (DB*)db.get();
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -171,7 +169,6 @@ DBSimple::Impl::get(uint32_t & key, int flags){
 // Delete function.
 uint32_t
 DBSimple::Impl::del(const uint32_t key){
-  DB  *dbp = (DB*)db.get();
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
