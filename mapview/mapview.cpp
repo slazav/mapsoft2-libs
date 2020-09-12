@@ -4,19 +4,19 @@
 #include "geo_mkref/geo_mkref.h"
 
 Mapview::Mapview(const Opt & o) :
-    tmpref(true),
-    tmpview(true),
-    changed(false),
     viewer(&gobj),
     rubber(&viewer),
     opts(o),
-    dlg_confirm("Data have been changed. Continue?"),
-    panel_wpts(new PanelWpts),
     panel_trks(new PanelTrks),
+    panel_wpts(new PanelWpts),
     panel_maps(new PanelMaps),
     panel_mapdb(new PanelMapDB),
     obj_srtm(new GObjSRTM(&srtm, o)),
-    amanager(this)
+    amanager(this),
+    dlg_confirm("Data have been changed. Continue?"),
+    changed(false),
+    tmpref(true),
+    tmpview(true)
 {
 
     /// window initialization
@@ -301,7 +301,7 @@ Mapview::set_cnv_map(const GeoMap & m, const bool force){
   viewer.set_cnv(std::shared_ptr<ConvMap>(new ConvMap(m)),!tmpview);
 
   // try to set bbox and xloop for this reference.
-  double xmin=+HUGE_VAL,xmax=-HUGE_VAL,ymin=+HUGE_VAL,ymax=-HUGE_VAL;
+  double xmin=+HUGE_VAL,xmax=-HUGE_VAL;
   double lonmin=180,lonmax=-180,latmin=+90,latmax=-90;
 
   // not very accurate for tmerc projections:
@@ -383,7 +383,7 @@ Mapview::load_css(){
     }
   }
 
-  catch (Glib::Error e){
+  catch (Glib::Error & e){
     std::cerr << "Mapview: Reading CSS files: " << e.what() << "\n";
   }
 }

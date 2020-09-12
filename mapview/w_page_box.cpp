@@ -140,7 +140,7 @@ PageBox::ch_units(){
   int mu = m_units->get_active_id();
   int u = units->get_active_id();
   double d = dpi->get_value();
-  iPoint pi = page->get_active_id();
+  //iPoint pi = page->get_active_id();
   no_ch=true;
   if (u!=old_u){
     double f = u2mm(old_u,d) / u2mm(u,d);

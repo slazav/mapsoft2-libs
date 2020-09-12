@@ -11,8 +11,9 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
     std::string folder; // current folder
   public:
     OpenMapDB (Mapview * mapview):
-        ActionMode(mapview), folder("./"),
-        Gtk::FileChooserDialog(get_name(), Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER) {
+        ActionMode(mapview),
+        Gtk::FileChooserDialog(get_name(), Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER),
+        folder("./") {
 
       add_button("_Cancel", GTK_RESPONSE_CANCEL);
       add_button("_Open",   GTK_RESPONSE_ACCEPT);

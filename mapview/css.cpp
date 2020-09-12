@@ -18,7 +18,7 @@ void load_css(const std::string & fname, Gtk::Widget & w){
          GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
   }
-  catch (Glib::Error e){
+  catch (Glib::Error & e){
     std::cerr << "Mapview: Reading CSS files: " << e.what() << "\n";
   }
 }
