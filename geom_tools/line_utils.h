@@ -24,7 +24,7 @@ double nearest_pt(const Line<T> & line, dPoint & vec, Point<T> & pt, double maxd
 
   Point<T> pm = pt;
 
-  for (int j=1; j<line.size(); j++){
+  for (size_t j=1; j<line.size(); j++){
     Point<T> p1(line[j-1]);
     Point<T> p2(line[j]);
 
