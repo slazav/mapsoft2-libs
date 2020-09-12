@@ -169,7 +169,9 @@ Mapview::add_data(const GeoData & data, bool scroll) {
       tmpview=false;
     }
   }
-  catch (Err & e) {}
+  catch (Err & e) {
+    std::cerr << "Viewer: can'r set map projection or view: " << e.str() << "\n";
+  }
 
 }
 
