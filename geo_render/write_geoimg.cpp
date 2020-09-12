@@ -111,7 +111,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
 
           // collect the tile from four larger tiles
           else {
-            int w = tcalc.get_tsize();
+            size_t w = tcalc.get_tsize();
             ImageR img(w, w, IMAGE_32ARGB);
             img.fill32(0);
             for (int t=0; t<4; t++){
@@ -123,8 +123,8 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
               ImageR src_img = image_load(src_f);
               if (src_img.width() != w || src_img.height()!=w)
                 throw Err() << "wrong tile size: " << src_f << ": " << src_img; 
-              for (int y1 = 0; y1<w/2; ++y1){
-                for (int x1 = 0; x1<w/2; ++x1){
+              for (size_t y1 = 0; y1<w/2; ++y1){
+                for (size_t x1 = 0; x1<w/2; ++x1){
                   // calculate 4-point average for all 4 color components
                   int cc[4] = {0,0,0,0};
                   for (int t1 = 0; t1<4; t1++){

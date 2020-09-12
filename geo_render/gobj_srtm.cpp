@@ -138,9 +138,9 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (surf) {
     if (sc < maxsc) {
       ImageR image(draw_range.w, draw_range.h, IMAGE_32ARGB);
-      for (int j=0; j<image.height(); j++){
+      for (size_t j=0; j<image.height(); j++){
         if (is_stopped()) return GObj::FILL_NONE;
-        for (int i=0; i<image.width(); i++){
+        for (size_t i=0; i<image.width(); i++){
           dPoint p(i + draw_range.x, j+draw_range.y);
           if (cnv) cnv->frw(p);
           image.set32(i,j, srtm->get_color(p));

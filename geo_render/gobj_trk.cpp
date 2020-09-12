@@ -75,7 +75,7 @@ GObjTrk::set_opt(const Opt & opt){
 
 
   // set segment colors
-  for (int i=0; i<trk.size(); i++){
+  for (size_t i=0; i<trk.size(); i++){
 
     segments[i].color = 0xFF000000;
 
@@ -115,7 +115,7 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   if (trk.size() != segments.size())
     throw Err() << "GObjTrk: segments are not syncronized with track";
 
-  for (int i=0; i<trk.size(); i++){
+  for (size_t i=0; i<trk.size(); i++){
     dPoint pt(trk[i]);
     if (cnv) cnv->bck(pt);
     segments[i].p1 = pt;
@@ -139,12 +139,11 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
   int arr_w = linewidth * 2.0;
   int dot_w = linewidth * 0.5;
-  int arr_dist = linewidth * 10; // minimal segment with arrow
 
   // draw all segments
   cr->cap_round();
   cr->set_line_width(linewidth);
-  for (int i = 0; i<segments.size(); ++i){
+  for (size_t i = 0; i<segments.size(); ++i){
 
     if (is_stopped()) return GObj::FILL_NONE;
 

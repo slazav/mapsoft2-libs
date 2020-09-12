@@ -28,7 +28,7 @@ private:
   double dh;
   Rainbow R;
 
-  static const int width0 = 4096;
+  static const size_t width0 = 4096;
   int width;
 
   struct ray_data{
@@ -36,7 +36,7 @@ private:
     ray_data(double r_, double h_, double s_):r(r_),h(h_),s(s_){}
   };
 
-  Cache<int, std::vector<ray_data> > ray_cache;
+  Cache<size_t, std::vector<ray_data> > ray_cache;
   std::mutex cache_mutex;
 
 public:
@@ -69,7 +69,7 @@ public:
 
 
   GObjPano(SRTM * s, const Opt & o): srtm(s),
-     ray_cache(512), width(width0) { set_opt(o); }
+      width(width0), ray_cache(512) { set_opt(o); }
 
   /************************************************/
 

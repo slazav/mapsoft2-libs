@@ -54,7 +54,7 @@ GObjPano::get_ray(int x){
   while (x<0) x+=width;
   while (x>=width) x-=width;
   double a = 2.0*M_PI*x/width;
-  int key=round(a*1e6); // key for the cache
+  size_t key=round(a*1e6); // key for the cache
 
   if (ray_cache.contains(key)){
      std::lock_guard<std::mutex> lk(cache_mutex);
@@ -155,7 +155,7 @@ GObjPano::geo2xy(const dPoint & pt){
   double h0 = ray[0].h+dh;
   double rp = 0;
 
-  for (int i=0; i<ray.size(); i++){
+  for (size_t i=0; i<ray.size(); i++){
     double hn=ray[i].h;
     double rn=ray[i].r;
 
@@ -181,13 +181,13 @@ dPoint
 GObjPano::xy2geo(const iPoint & pt){
 
   auto ray = get_ray(pt.x);
-  if (!ray.size()) return iPoint(0,180);
+  if (!ray.size()) return dPoint(0.0,180.0);
 
   double h0 = ray[0].h+dh;
   int yp, yo;
   yo=yp=width/2.0;
   double rp = 0;
-  for (int i=0; i<ray.size(); i++){
+  for (size_t i=0; i<ray.size(); i++){
     double hn=ray[i].h;
     double rn=ray[i].r;
 
@@ -219,20 +219,20 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
   ImageR image(box.w, box.h, IMAGE_32ARGB);
   image.fill32(0xFF000000);
 
-  for (int x=0; x < image.width(); x++){
+  for (size_t x=0; x < image.width(); x++){
     if (is_stopped()) return GObj::FILL_NONE;
 
     // get ray data -- r,h,s values for a giver x-coord
     auto ray = get_ray(x+box.x);
     if (!ray.size()) continue;
 
-    int yo = image.height(); // Old y-coord, previously painted point.
+    size_t yo = image.height(); // Old y-coord, previously painted point.
                              // It is used to skip hidden parts.
-    int yp = width/2.0-box.y;// Previous value, differs from yo on hidden 
+    size_t yp = width/2.0-box.y;// Previous value, differs from yo on hidden 
                              // and partially hydden segments.
                              // It is used to interpolate height and slope.
                              // Y axis goes from top to buttom!
-    for (int i=1; i<ray.size(); i++){
+    for (size_t i=1; i<ray.size(); i++){
       double hp=ray[i-1].h;  // altitudes and slopes at the end of segment
       double sp=ray[i-1].s;
       double hn=ray[i].h;
@@ -241,12 +241,12 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
       if (r>max_r) break;
 
       double b = atan2(hn-h0, r); // vertical angle
-      int yn = (1 - 2*b/M_PI) * width/4.0 - box.y; // y-coord
+      size_t yn = (1 - 2*b/M_PI) * width/4.0 - box.y; // y-coord
 
       if (yn<0)  {i=ray.size();}     // above image -- draw the rest of segment and exit
       if (yn>=yo) {yp=yn; continue;} // point below image -- skip segment
 
-      for (int y = yn; y < yp; y++){
+      for (size_t y = yn; y < yp; y++){
         if (y<0 || y>=yo) continue; // select visible points
         double s = sp + (sn-sp)*(y-yp)/double(yn-yp); // Interpolate slope and altitude
         double h = hp + (hn-hp)*(y-yp)/double(yn-yp); //  and calculate point color.
@@ -257,7 +257,7 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
       yp=yn;
     }
 
-    for (int y = 0; y < yo; y++) // draw sky points
+    for (size_t y = 0; y < yo; y++) // draw sky points
       image.set32(x,y,0xFFBBBBFF);
   }
 

@@ -39,7 +39,7 @@ private:
     std::unique_ptr<ImageT> timg; // normal maps use a single img_cache for data storage;
                     // tiled maps have one ImageT object per map.
 
-    MapData(const GeoMap & m): src_bbox(m.bbox()), src(&m), zoom(0), load_sc(1.0){
+    MapData(const GeoMap & m): load_sc(1.0), zoom(0), src_bbox(m.bbox()), src(&m){
       if (m.is_tiled) timg =
         std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
     }

@@ -99,7 +99,7 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 
 GObjMaps::GObjMaps(GeoMapList & maps):
     maps(maps), img_cache(IMAGE_CACHE_SIZE), tiles(TILE_CACHE_SIZE),
-    smooth(false), clip_brd(true), draw_refs(0), draw_brd(0), fade(0) {
+    smooth(false), clip_brd(true), draw_brd(0), draw_refs(0), fade(0) {
 
   for (auto & m:maps){
     m.update_size();
@@ -134,9 +134,9 @@ GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
 
   double avr = d.scale/d.load_sc;
   // render image
-  for (int yd=0; yd<image_dst.height(); ++yd){
+  for (size_t yd=0; yd<image_dst.height(); ++yd){
     if (is_stopped()) return false;
-    for (int xd=0; xd<image_dst.width(); ++xd){
+    for (size_t xd=0; xd<image_dst.width(); ++xd){
       dPoint p(xd,yd);
       p += range_dst.tlc();
       d.cnv.frw(p);

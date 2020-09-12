@@ -207,7 +207,7 @@ GObjWpts::adjust_text_pos() {
   db.set_bbox(range);
 
   // for each box
-  for (int i=0; i<tmpls.size(); ++i){
+  for (int i=0; i<(int)tmpls.size(); ++i){
     dRect bi = tmpls[i].text_box + tmpls[i].text_pt;
     tmpls[i].style = Normal; // all points are Normal in the beginning
     db.put(i, bi);
