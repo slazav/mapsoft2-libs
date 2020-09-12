@@ -16,7 +16,7 @@ ConvBase::frw_acc(const dLine & l, double acc) const {
   dPoint P2, P2a;
 
   // for all line segments:
-  for (int i=1; i<l.size(); i++){
+  for (size_t i=1; i<l.size(); i++){
     // start with a whole segment
     P1 = l[i-1];
     P2 = l[i];
@@ -72,7 +72,7 @@ ConvBase::bck_acc(const dLine & l, double acc) const {
   bck(P1a); ret.push_back(P1a); // add first point
   dPoint P2, P2a;
 
-  for (int i=1; i<l.size(); i++){
+  for (size_t i=1; i<l.size(); i++){
     // start with a whole segment
     P1 = l[i-1];
     P2 = l[i];

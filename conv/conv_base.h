@@ -17,7 +17,7 @@
 struct ConvBase{
 
   /// constructor - trivial transformation
-  ConvBase(double sc=1.0): sc_dst(1.0, 1.0, 1.0), sc_src(1.0, 1.0, 1.0){}
+  ConvBase(double sc=1.0): sc_src(1.0, 1.0, 1.0), sc_dst(1.0, 1.0, 1.0){}
 
   protected:
     // forward point conversion (can be redefined)
