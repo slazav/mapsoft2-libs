@@ -387,7 +387,7 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
     // labels
     for (auto const & li:o.children){
-      auto l = get(1);
+      auto l = get(li);
       VMapLab l1;
       if (l.get_class() != MAPDB_TEXT) continue;
       if (l.size()==0 || l[0].size()==0) continue;
