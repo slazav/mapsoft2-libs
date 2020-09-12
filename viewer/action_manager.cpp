@@ -2,8 +2,7 @@
 #include <cassert>
 
 ActionManager::ActionManager(SimpleViewer * v):
-    viewer(v),
-    current(NULL){
+    current(NULL), viewer(v) {
 
   assert(viewer!=NULL);
 

@@ -8,8 +8,8 @@ int
 main(){
   try {
 
-    int col1 = 0xFFFF00FF;
-    int col2 = 0xFF000000;
+    uint32_t col1 = 0xFFFF00FFu;
+    uint32_t col2 = 0xFF000000u;
 
     GObjDots o1;
 
@@ -60,7 +60,7 @@ main(){
     cr->restore();
 
   }
-  catch (Err E){
+  catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";
     return 1;
   }

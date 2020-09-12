@@ -122,7 +122,6 @@ class SimpleViewer : public Gtk::DrawingArea {
 
     bool on_drag;
     iPoint drag_pos, drag_start;
-    unsigned int waiting;
 
     int bgcolor;
     double sc;

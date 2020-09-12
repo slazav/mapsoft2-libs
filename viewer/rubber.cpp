@@ -8,7 +8,7 @@ RubberSegment::RubberSegment(
     const dPoint & p1_, const dPoint & p2_,
     const dPoint & q1_, const dPoint & q2_,
     const rubbfl_t flags_):
-    p1(p1_), p2(p2_), q1(q1_), q2(q2_), flags(flags_){
+    flags(flags_), p1(p1_), p2(p2_), q1(q1_), q2(q2_){
 }
 
 dPoint

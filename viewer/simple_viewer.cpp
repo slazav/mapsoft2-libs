@@ -11,13 +11,11 @@
 #define MAX_BBOX_LIMIT  (1<<30)
 
 SimpleViewer::SimpleViewer(GObj * o) :
-    obj(o),
-    origin(iPoint(0,0)),
+    cnv(std::shared_ptr<ConvBase>(new ConvBase)),
+    on_drag(false),
     bgcolor(0xFF000000),
     sc(1.0),
-    on_drag(false),
-    cnv(std::shared_ptr<ConvBase>(new ConvBase)),
-    xloop(false), yloop(false) {
+    xloop(false), yloop(false), obj(o) {
 
   // which events we want to recieve
   set_events (
@@ -95,7 +93,7 @@ SimpleViewer::set_range(dRect dst, bool obj_crd){
   // then just skip conversion
   if (obj_crd && cnv) try {
     dst = cnv->bck_acc(dst);
-  } catch(Err e) {}
+  } catch(Err & e) {}
 
   // calculate scaling factor (power of 2)
   double k = 1;

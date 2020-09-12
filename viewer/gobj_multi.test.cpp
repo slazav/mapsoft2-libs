@@ -15,9 +15,9 @@ int
 main(){
   try {
 
-    int col0 = 0xFF000000;
-    int col1 = 0xFFFF00FF;
-    int col2 = 0xFF00FF00;
+    uint32_t col0 = 0xFF000000u;
+    uint32_t col1 = 0xFFFF00FFu;
+    uint32_t col2 = 0xFF00FF00u;
 
     // make objects
     std::shared_ptr<ConvBase> cnv(new ConvBase);
@@ -145,7 +145,7 @@ main(){
 
 
   }
-  catch (Err E){
+  catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";
     return 1;
   }
