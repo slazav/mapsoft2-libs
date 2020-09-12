@@ -92,6 +92,16 @@ public:
 
   dRect bbox() const override {return range;}
 
+  /************************************************/
+
+  // Find waypoints near pt within radius r.
+  // Return point numbers, sorted by distance.
+  std::vector<size_t> find_points (const dPoint & pt, const double r = 3.0);
+
+  // Find all waypoints within rectangle r.
+  // Return point numbers.
+  std::vector<size_t> find_points(const dRect & r);
+
 };
 
 #endif

@@ -6,7 +6,7 @@ MOD_SOURCES := gobj_trk.cpp gobj_wpts.cpp gobj_maps.cpp\
                gobj_srtm.cpp gobj_pano.cpp\
                draw_pulk_grid.cpp write_geoimg.cpp
 
-SIMPLE_TESTS := gobj_trk
+SIMPLE_TESTS := gobj_trk gobj_wpts
 
 PROGRAMS := gobj_srtm.example
 
