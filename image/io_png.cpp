@@ -409,8 +409,8 @@ image_save_png(const ImageR & im, std::ostream & str,
     png_bytep buf = (png_bytep)png_malloc(png_ptr, im.width()*4);
     if (!buf) throw Err() << "PNG: malloc error";
 
-    for (int y=0; y<im.height(); y++){
-      for (int x=0; x<im.width(); x++){
+    for (size_t y=0; y<im.height(); y++){
+      for (size_t x=0; x<im.width(); x++){
         uint32_t c;
         switch (color_type){
         case PNG_COLOR_TYPE_GRAY:

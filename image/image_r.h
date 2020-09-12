@@ -210,17 +210,17 @@ class ImageR : public Image {
     /******************************************************/
     // overrides for Image interface
 
-    bool check_crd(const int x, const int y) const override{
+    bool check_crd(const size_t x, const size_t y) const override{
       return x>=0 && x<w && y>=0 && y<h;
     }
 
-    bool check_rng(const int x1, const int y1,
-                   const int x2, const int y2) const override{
+    bool check_rng(const size_t x1, const size_t y1,
+                   const size_t x2, const size_t y2) const override{
       return x1>=0 && x2<w && y1>=0 && y2<h;
     }
 
     // redefine Image::get_color:
-    uint32_t get_color_fast(const int x, const int y) override { return get_argb(x,y); }
+    uint32_t get_color_fast(const size_t x, const size_t y) override { return get_argb(x,y); }
 
     /******************************************************/
     // Fast set functions for different image types.
@@ -272,13 +272,13 @@ class ImageR : public Image {
 
     // Fill function for image type IMAGE_32ARGB.
     void fill32(const uint32_t v) const{
-      for (int i=0; i<w*h; i++)
+      for (size_t i=0; i<w*h; i++)
         ((uint32_t*)data_.get())[i] = v;
     }
 
     // Fill function for image type IMAGE_24RGB
     void fill24(const uint32_t v) const{
-      for (int i=0; i<w*h; i++) {
+      for (size_t i=0; i<w*h; i++) {
         data_.get()[3*i]   = (v>>16) & 0xFF;
         data_.get()[3*i+1] = (v>>8)  & 0xFF;
         data_.get()[3*i+2] = v & 0xFF;
@@ -287,32 +287,32 @@ class ImageR : public Image {
 
     // Fill function for image type IMAGE_16
     void fill16(const uint16_t v) const{
-      for (int i=0; i<w*h; i++)
+      for (size_t i=0; i<w*h; i++)
         ((uint16_t *)data_.get())[i] = v;
     }
 
     // Fill function for image types IMAGE_8 and IMAGE_8PAL
     void fill8(const uint8_t v) const{
-      for (int i=0; i<w*h; i++)
+      for (size_t i=0; i<w*h; i++)
         data_.get()[i] = v;
     }
 
     // Fill function for image type IMAGE_1.
     void fill1(const bool v) const{
-      for (int i=0; i<dsize(); i++)
+      for (size_t i=0; i<dsize(); i++)
         data_.get()[i] = v? 0xFF:0x00;
     }
 
     // Fill function for image type IMAGE_FLOAT
     void fillF(const float v) const{
-      for (int i=0; i<w*h; i++)
+      for (size_t i=0; i<w*h; i++)
         ((float*)data_.get())[i] = v;
     }
 
 
     // Fill function for image type IMAGE_DOUBLE
     void fillD(const double v) const{
-      for (int i=0; i<w*h; i++)
+      for (size_t i=0; i<w*h; i++)
         ((double*)data_.get())[i] = v;
     }
 
@@ -330,7 +330,9 @@ class ImageR : public Image {
           case IMAGE_8:       s << "Grey, 8bpp"; break;
           case IMAGE_8PAL:    s << "Palette, 8bpp"; break;
           case IMAGE_1:       s << "B/W, 1bpp"; break;
-          case IMAGE_UNKNOWN: s << "Unknown data format"; break;
+          case IMAGE_FLOAT:   s << "float"; break;
+          case IMAGE_DOUBLE:  s << "double"; break;
+          default: s << "Unknown data format"; break;
         }
         s << ")";
       }

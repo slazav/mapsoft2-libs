@@ -31,17 +31,17 @@ class Image {
     uint32_t get_bgcolor() const { return bgcolor; }
 
     // Check if coordinates are valid
-    virtual bool check_crd(const int x, const int y) const {return true;}
+    virtual bool check_crd(const size_t x, const size_t y) const {return true;}
 
     // Check if coordinate range is valid.
     // x1<=x2, y1<=y2
-    virtual bool check_rng(const int x1, const int y1,
-                           const int x2, const int y2) const {return true;}
+    virtual bool check_rng(const size_t x1, const size_t y1,
+                           const size_t x2, const size_t y2) const {return true;}
 
     // Get color for a given point. To be redefined.
     // This is fast version, without range checks. Should be
     // used only after check_crd/check_rng checks.
-    virtual uint32_t get_color_fast(const int x, const int y) {
+    virtual uint32_t get_color_fast(const size_t x, const size_t y) {
       return bgcolor; }
 
     // Get color value for a dPoint<double>
@@ -52,7 +52,7 @@ class Image {
 
     // Get color for a given point. Should work for any
     // coordinates, returns bgcolor if check_crd() fails.
-    uint32_t get_color(const int x, const int y) {
+    uint32_t get_color(const size_t x, const size_t y) {
       return check_crd(x,y) ? get_color_fast(x,y) : bgcolor;}
 
     // Get color value for a dPoint<double>. Should work for any

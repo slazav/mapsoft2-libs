@@ -32,6 +32,6 @@ int image_classify_alpha(const ImageR & img);
 // returns 1: color,     <=clen colors.
 // returns 2: color,     >clen colors.
 // colors[clen] array is filled with the color palette.
-int image_classify_color(const ImageR & img, uint32_t *colors, int clen=256);
+int image_classify_color(const ImageR & img, uint32_t *colors, size_t clen=256);
 
 #endif

@@ -64,7 +64,7 @@ image_colormap(const ImageR & img, const Opt & opt){
   }
 
   // parameters
-  int  req_colors = opt.get("cmap_colors", 256);
+  size_t req_colors = opt.get("cmap_colors", 256);
   if (req_colors < 0) throw Err() << "image_colormap: bad "
      " cmap_colors value: " << opt.get("cmap_colors", "");
 
@@ -104,7 +104,7 @@ image_colormap(const ImageR & img, const Opt & opt){
   // make vector with a single box with the whole image histogram
   struct box_t {
     std::map<uint32_t, uint64_t> hist;
-    int64_t pixels;
+    uint64_t pixels;
     int maxdim;
     double maxspread;
     box_t(): pixels(0), maxdim(-1), maxspread(0) {}
@@ -114,8 +114,8 @@ image_colormap(const ImageR & img, const Opt & opt){
   bv[0].pixels = img.width()*img.height();
 
   // compute the histogram
-  for (int y=0; y<img.height(); ++y){
-    for (int x=0; x<img.width(); ++x){
+  for (size_t y=0; y<img.height(); ++y){
+    for (size_t x=0; x<img.width(); ++x){
       uint32_t c;
       // no transparency
       if (transp_mode == 1 ||
@@ -163,7 +163,7 @@ image_colormap(const ImageR & img, const Opt & opt){
   while (bv.size() < req_colors){
 
     // Calculate max spread and max dimension for each box if needed
-    for (int i=0; i<bv.size(); ++i){
+    for (size_t i=0; i<bv.size(); ++i){
       if (bv[i].maxdim>0) continue;
 
       bv[i].maxspread=0;
@@ -185,9 +185,9 @@ image_colormap(const ImageR & img, const Opt & opt){
     // The box should contain at least two colors.
     int bi=-1; // box index
     {
-      int64_t bs=0;
+      uint64_t bs=0;
       double max = 0;
-      for (int i=0; i<bv.size(); ++i){
+      for (size_t i=0; i<bv.size(); ++i){
         if (bv[i].hist.size() < 2) continue;
 
         switch (method_for_split) {
@@ -244,7 +244,6 @@ image_colormap(const ImageR & img, const Opt & opt){
     // Transfer all points which are above median to a new box
     box_t newbox; newbox.pixels = 0;
     auto it = bv[bi].hist.begin();
-    uint64_t count=0;
     while (it != bv[bi].hist.end()){
       uint8_t key = (it->first >> (bv[bi].maxdim*8)) & 0xFF;
       if (key<median) {++it; continue;}
@@ -306,7 +305,7 @@ image_colormap(const ImageR & img, const Opt & opt){
   std::string cmap_save = opt.get("cmap_save", "");
   if (cmap_save!=""){
     ImageR cmap_img(ret.size(), 1, IMAGE_32ARGB);
-    for (int i=0; i<ret.size(); ++i) cmap_img.set32(i,0,ret[i]);
+    for (size_t i=0; i<ret.size(); ++i) cmap_img.set32(i,0,ret[i]);
     image_save(cmap_img, cmap_save);
   }
 
@@ -319,7 +318,6 @@ ImageR
 image_remap(const ImageR & img, const std::vector<uint32_t> & cmap){
 
   std::string str;
-  int transp_mode = 1;
 
   // we return 8bpp image, palette length should be 1..256
   if (cmap.size() < 1 || cmap.size() > 256)
@@ -327,15 +325,15 @@ image_remap(const ImageR & img, const std::vector<uint32_t> & cmap){
 
   // Construct the new image
   ImageR img1(img.width(), img.height(), IMAGE_8PAL);
-  for (int y=0; y<img.height(); ++y){
-    for (int x=0; x<img.width(); ++x){
+  for (size_t y=0; y<img.height(); ++y){
+    for (size_t x=0; x<img.width(); ++x){
       // get color
       uint32_t c = img.get_argb(x,y);
 
       // find nearest palette value
       double d0 = +HUGE_VAL;
       int i0 = 0;
-      for (int i=0; i<cmap.size(); ++i){
+      for (size_t i=0; i<cmap.size(); ++i){
         double d = color_dist(c, cmap[i]);
         if (d0>d) {d0=d; i0 = i;}
       }
@@ -354,8 +352,8 @@ image_remap(const ImageR & img, const std::vector<uint32_t> & cmap){
 ImageR image_to_argb(const ImageR & img){
   if (img.type() == IMAGE_32ARGB) return img;
   ImageR ret(img.width(), img.height(), IMAGE_32ARGB);
-  for (int x=0; x<img.width(); ++x){
-    for (int y=0; y<img.height(); ++y){
+  for (size_t x=0; x<img.width(); ++x){
+    for (size_t y=0; y<img.height(); ++y){
       ret.set32(x,y, img.get_argb(x,y));
     }
   }
@@ -370,8 +368,8 @@ image_classify_alpha(const ImageR & img){
   if (img.type() != IMAGE_32ARGB) throw Err() <<
     "image_classify: only 32-bpp images are supported";
 
-  for (int y=0; y<img.height(); y++){
-    for (int x=0; x<img.width(); x++){
+  for (size_t y=0; y<img.height(); y++){
+    for (size_t x=0; x<img.width(); x++){
       uint32_t c = img.get32(x, y);
       int a = (c >> 24) & 0xFF;
 
@@ -383,17 +381,17 @@ image_classify_alpha(const ImageR & img){
 }
 
 int
-image_classify_color(const ImageR & img, uint32_t *colors, int clen){
+image_classify_color(const ImageR & img, uint32_t *colors, size_t clen){
   int ret=0;
   if (img.type() != IMAGE_32ARGB &&
       img.type() != IMAGE_24RGB) throw Err() <<
     "image_classify: only 32-bpp images are supported";
 
-  int nc=0; // number of colors
-  for (int i=0; i<clen; ++i) colors[i]=0;
+  size_t nc=0; // number of colors
+  for (size_t i=0; i<clen; ++i) colors[i]=0;
 
-  for (int y=0; y<img.height(); ++y){
-    for (int x=0; x<img.width(); ++x){
+  for (size_t y=0; y<img.height(); ++y){
+    for (size_t x=0; x<img.width(); ++x){
       uint32_t c = img.get_argb(x, y);
       int r = (c >> 16) & 0xFF;
       int g = (c >> 8) & 0xFF;
@@ -403,7 +401,7 @@ image_classify_color(const ImageR & img, uint32_t *colors, int clen){
 
       if (nc<=clen){
         bool found=false;
-        for (int i=0; i<nc; i++)
+        for (size_t i=0; i<nc; i++)
           if (c==colors[i]){ found=true; break;}
         if (!found){
           if (nc<clen) colors[nc] = c;

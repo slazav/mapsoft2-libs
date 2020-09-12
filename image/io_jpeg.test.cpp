@@ -26,8 +26,8 @@ main(){
     /*********************************************/
     // Original image
     ImageR img32(256,128, IMAGE_32ARGB);
-    for (int y=0; y<128; ++y){
-      for (int x=0; x<128; ++x){
+    for (size_t y=0; y<128; ++y){
+      for (size_t x=0; x<128; ++x){
         img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
         img32.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
       }
@@ -76,8 +76,8 @@ main(){
     /*********************************************/
     { // IMAGE_24RGB
       ImageR img(256,128, IMAGE_24RGB);
-      for (int y=0; y<img.height(); ++y){
-        for (int x=0; x<img.width(); ++x){
+      for (size_t y=0; y<img.height(); ++y){
+        for (size_t x=0; x<img.width(); ++x){
           img.set24(x,y, color_rem_transp(img32.get32(x,y), false));
         }
       }
@@ -97,8 +97,8 @@ main(){
     /*********************************************/
     { // IMAGE_16
       ImageR img(256,128, IMAGE_16);
-      for (int y=0; y<img.height(); ++y){
-        for (int x=0; x<img.width(); ++x){
+      for (size_t y=0; y<img.height(); ++y){
+        for (size_t x=0; x<img.width(); ++x){
           uint32_t c = color_rem_transp(img32.get32(x,y), false);
           img.set16(x,y, color_rgb_to_grey16(c));
         }
@@ -121,8 +121,8 @@ main(){
 
     { // IMAGE_8
       ImageR img(256,128, IMAGE_8);
-      for (int y=0; y<img.height(); ++y){
-        for (int x=0; x<img.width(); ++x){
+      for (size_t y=0; y<img.height(); ++y){
+        for (size_t x=0; x<img.width(); ++x){
           uint32_t c = color_rem_transp(img32.get32(x,y), false);
           img.set8(x,y, color_rgb_to_grey8(c));
         }
@@ -160,8 +160,8 @@ main(){
 
     { // IMAGE_1
       ImageR img(256,128, IMAGE_1);
-      for (int y=0; y<img.height(); ++y){
-        for (int x=0; x<img.width(); ++x){
+      for (size_t y=0; y<img.height(); ++y){
+        for (size_t x=0; x<img.width(); ++x){
           img.set1(x,y, (int)(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
         }
       }
@@ -182,19 +182,20 @@ main(){
 
     { //scale tests
       ImageR I0 = image_load_jpeg("test_jpeg/img_32_def.jpg", 1);
-      iPoint pt(101,32);
       for (double sc=1; sc<10; sc+=0.8){
         ImageR I1 = image_load_jpeg("test_jpeg/img_32_def.jpg", sc);
         assert_eq(I1.width(), floor((I0.width()-1)/sc+1));
         assert_eq(I1.height(), floor((I0.height()-1)/sc+1));
-        iPoint pt1 = (dPoint)pt/sc;
-        assert(color_dist(I1.get_rgb(pt1.x, pt1.y),
-                          I0.get_rgb(rint(pt1.x*sc), rint(pt1.y*sc))) < 10);
 
-        pt = iPoint(I0.width()-1, I0.height()-1);
-        pt1 = (dPoint)pt/sc;
-        assert(pt1.x < I1.width());
-        assert(pt1.y < I1.height());
+        Point<size_t> pt(101,32);
+        Point<size_t> pt1(pt.x/sc,pt.y/sc);
+        assert(color_dist(I1.get_rgb(pt1.x, pt1.y),
+                          I0.get_rgb(rint(pt1.x*sc), rint(pt1.y*sc))) < 20);
+
+        pt.x = I0.width()-1;   pt.y = I0.height()-1;
+        pt1.x = pt.x/sc; pt1.y = pt.y/sc;
+        assert(pt.x/sc < I1.width());
+        assert(pt.y/sc < I1.height());
         assert(color_dist(I1.get_rgb(pt1.x, pt1.y),
                           I0.get_rgb(rint(pt1.x*sc), rint(pt1.y*sc))) < 20);
       }

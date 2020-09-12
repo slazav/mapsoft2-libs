@@ -70,7 +70,7 @@ image_load_gif(const std::string & file, const double scale){
   ImageR img;
   GifFileType *gif = NULL; // gif handler
   GifByteType *GifLine = NULL;
-  int w, h, dx, dy;
+  int w, h;
   std::vector<uint32_t> colors; // color palette
 
   try {
@@ -89,7 +89,7 @@ image_load_gif(const std::string & file, const double scale){
 
     // Go to the first image, skip all extensions
     GifRecordType RecordType;
-    int ExtCode, GifLineLen;
+    int ExtCode;
     GifByteType *Extension;
     int trcol = -1; // transparent color index
     do {
@@ -123,8 +123,8 @@ image_load_gif(const std::string & file, const double scale){
 
     w  = gif->Image.Width;
     h  = gif->Image.Height;
-    dx = gif->Image.Left;
-    dy = gif->Image.Top;
+    //dx = gif->Image.Left;
+    //dy = gif->Image.Top;
 
     if (w != gif->SWidth ||
         h != gif->SHeight) throw Err() 
@@ -223,7 +223,7 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
 
   // find fully transparent color
   int trcol = -1;
-  for (int i=0; i<im8.cmap.size(); i++)
+  for (size_t i=0; i<im8.cmap.size(); i++)
     if (((im8.cmap[i]>>24)&0xFF) == 0) {trcol = i; break;}
 
   // gif color map should have 2^x size.
@@ -244,7 +244,7 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
     if (!gif_cmap) throw Err() <<
       "image_save_gif: can't initialize GIF color map";
 
-    for (int i=0; i<im8.cmap.size(); ++i){
+    for (size_t i=0; i<im8.cmap.size(); ++i){
       gif_cmap->Colors[i].Blue  = im8.cmap[i] & 0xFF;
       gif_cmap->Colors[i].Green = (im8.cmap[i] >> 8) & 0xFF;
       gif_cmap->Colors[i].Red   = (im8.cmap[i] >> 16) & 0xFF;
@@ -256,7 +256,6 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
     // Graphic control extension (0xF9, 4 bytes)
     if (trcol>=0){
       char buf[4] = {1,0xA,0,(char)trcol};
-      unsigned int ext = 0x01000000 + trcol;
       if (EGifPutExtension(gif, 0xF9, 4, &buf) == GIF_ERROR)
         GifErr();
     }

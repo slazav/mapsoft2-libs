@@ -147,8 +147,8 @@ image_load_tiff(std::istream & str, const double scale){
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
 
     // scaled image size
-    int w1 = floor((w-1)/scale+1);
-    int h1 = floor((h-1)/scale+1);
+    uint32_t w1 = floor((w-1)/scale+1);
+    uint32_t h1 = floor((h-1)/scale+1);
 
     // can we do random access to lines?
     int compression_type, rows_per_strip;
@@ -220,15 +220,15 @@ image_load_tiff(std::istream & str, const double scale){
 
 
     // allocate buffer
-    int scan = TIFFScanlineSize(tif);
+    size_t scan = TIFFScanlineSize(tif);
     cbuf = (uint8 *)_TIFFmalloc(scan);
 
     // Main loop
     // Note that there are less checks then in the image creation switch().
     //
 
-    int line = 0;
-    for (int y=0; y<h1; ++y){
+    size_t line = 0;
+    for (size_t y=0; y<h1; ++y){
 
       if (can_skip_lines) line = y*scale;
 
@@ -237,8 +237,7 @@ image_load_tiff(std::istream & str, const double scale){
         ++line;
       }
 
-      for (int x=0; x<w1; ++x){
-        uint32_t c;
+      for (size_t x=0; x<w1; ++x){
         int xs = scale==1.0? x:rint(x*scale);
         switch (photometric){
 
@@ -376,7 +375,7 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
 
     uint16 cmap[3][256];
     if (use_cmap){
-      for (int i=0; i<im8.cmap.size(); i++){
+      for (size_t i=0; i<im8.cmap.size(); i++){
         cmap[0][i] = (im8.cmap[i]>>8)&0xFF00;
         cmap[1][i] =  im8.cmap[i]    &0xFF00;
         cmap[2][i] = (im8.cmap[i]<<8)&0xFF00;
@@ -391,8 +390,8 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
     buf = _TIFFmalloc(scan);
     uint8 *cbuf = (uint8 *)buf;
 
-    for (int y=0; y<im.height(); y++){
-      for (int x=0; x<im.width(); x++){
+    for (size_t y=0; y<im.height(); y++){
+      for (size_t x=0; x<im.width(); x++){
         uint32_t c;
         //uint16_t c16;
         switch (samples*bps){

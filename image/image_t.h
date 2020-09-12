@@ -48,12 +48,12 @@ capacity, 16 tiles).
 #define IMAGE_T_NCONN   4
 
 class ImageT: public Image {
+  std::string tmpl;
   size_t tsize;
   bool swapy;
   Cache<iPoint, ImageR> tiles;
-  Downloader dmanager;
-  std::string tmpl;
   int zoom;
+  Downloader dmanager;
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
@@ -83,7 +83,7 @@ class ImageT: public Image {
     void load_key(const iPoint & key);
 
     // get point color
-    uint32_t get_color_fast(const int x, const int y) override {
+    uint32_t get_color_fast(const size_t x, const size_t y) override {
       iPoint key(x/tsize, y/tsize, zoom);
       iPoint crd(x%tsize, y%tsize);
       if (swapy) key.y = (1<<zoom) - key.y - 1;

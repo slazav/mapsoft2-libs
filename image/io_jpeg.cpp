@@ -60,7 +60,7 @@ void
 skip_input_data(j_decompress_ptr cinfo, long count) {
   if (count<1) return;
   auto data = (my_source_mgr *)(cinfo->src);
-  if (count<data->pub.bytes_in_buffer){
+  if ((size_t)count < data->pub.bytes_in_buffer){
     data->pub.bytes_in_buffer -= count;
     data->pub.next_input_byte += count;
     return;
@@ -298,8 +298,8 @@ image_save_jpeg(const ImageR & im, std::ostream & str, const Opt & opt){
 
     buf = new unsigned char[im.width() * 3];
 
-    for (int y = 0; y < im.height(); y++){
-      for (int x = 0; x < im.width(); x++){
+    for (size_t y = 0; y < im.height(); y++){
+      for (size_t x = 0; x < im.width(); x++){
         int c = im.get_rgb(x, y);
         buf[3*x+2] = c & 0xFF;
         buf[3*x+1] = (c >> 8) & 0xFF;
