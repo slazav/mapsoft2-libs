@@ -27,8 +27,8 @@ class Cache {
     typedef CacheIterator<K, V> iterator;
 
     /// Constructor: create a cache with size n.
-    Cache (int n) : capacity (n) {
-      for (int i = 0; i < capacity; ++i){
+    Cache (size_t n) : capacity (n) {
+      for (size_t i = 0; i < capacity; ++i){
         free_list.insert (i);
       }
     }
@@ -59,15 +59,15 @@ class Cache {
     }
 
     /// Return cache size.
-    int size_total() const { return capacity; }
+    size_t size_total() const { return capacity; }
 
     /// Return size of used space.
-    int size_used() const { return capacity-free_list.size(); }
+    size_t size_used() const { return capacity-free_list.size(); }
 
     /// Add an element to the cache.
-    int add (K const & key, V const & value) {
+    size_t add (K const & key, V const & value) {
       if (contains(key)) {
-        int idx = index[key];
+        size_t idx = index[key];
         storage[idx].second = value;
         return 0;
       }
@@ -75,7 +75,7 @@ class Cache {
       std::cout << "cache: add " << key << " ";
 #endif
       if (free_list.size() == 0) {
-        int to_delete = usage[usage.size() - 1];
+        size_t to_delete = usage[usage.size() - 1];
 #ifdef DEBUG_CACHE
         std::cout << "no free space ";
         std::cout << "usage size " << usage.size() << " to_delete=" << to_delete << " key=" << storage[to_delete].first;
@@ -84,7 +84,7 @@ class Cache {
         free_list.insert (to_delete);
       }
 
-      int free_ind = *(free_list.begin());
+      size_t free_ind = *(free_list.begin());
       free_list.erase (free_list.begin());
 #ifdef DEBUG_CACHE
       std::cout << std::endl;
@@ -103,7 +103,7 @@ class Cache {
 
 #ifdef DEBUG_CACHE
       std::cout << "cache usage:";
-      for (int i = 0; i < usage.size(); ++i) {
+      for (size_t i = 0; i < usage.size(); ++i) {
         std::cout << " " << usage[i];
       }
       std::cout << std::endl;
@@ -118,7 +118,7 @@ class Cache {
     /// Get element from the cache.
     V & get (K const & key) {
       if (!contains(key)) throw Err() << "Cache: key does not exists";
-      int ind = index[key];
+      size_t ind = index[key];
 #ifdef DEBUG_CACHE_GET
       std::cout << "cache get: " << key << " ind: " << ind << std::endl;
 #endif
@@ -128,10 +128,10 @@ class Cache {
 
     /// Remove an element from the cache.
     void erase(K const & key) {
-      int i = index[key];
+      size_t i = index[key];
       index.erase(key);
       free_list.insert(i);
-      for (int k = 0; k < usage.size(); ++k) {
+      for (size_t k = 0; k < usage.size(); ++k) {
         if (usage[k] == i) {
           usage.erase(usage.begin() + k);
           break;
@@ -141,7 +141,7 @@ class Cache {
 
     /// Clear the cache.
     void clear () {
-      for (int i = 0; i < capacity; ++i) free_list.insert (i);
+      for (size_t i = 0; i < capacity; ++i) free_list.insert (i);
       index.clear();
       usage.clear();
     }
@@ -166,34 +166,34 @@ class Cache {
 
     /// Erase an element pointed to by the iterator
     iterator erase(iterator it) {
-      typename std::map<K, int>::const_iterator it2 = it++;
+      typename std::map<K, size_t>::const_iterator it2 = it++;
       erase(it2->first);
       return it;
     }
 
 private:
 
-    int capacity;
+    size_t capacity;
     std::vector<std::pair<K,V> > storage;
-    std::map<K, int> index;
-    std::set<int> free_list;
-    std::vector<int> usage;
+    std::map<K, size_t> index;
+    std::set<size_t> free_list;
+    std::vector<size_t> usage;
 
     friend class CacheIterator<K, V>;
 
     // index end is removed
     template <typename T>
-    void  push_vector (std::vector<T> & vec, int start, int end) {
+    void  push_vector (std::vector<T> & vec, size_t start, size_t end) {
 #ifdef DEBUG_CACHE_GET
       std::cout << "cache push_vector: start=" << start << " end=" << end << " size=" << vec.size() << std::endl;
 #endif
-      for (int i = end; i > start; --i) {
+      for (size_t i = end; i > start; --i) {
         vec[i] = vec[i-1];
       }
     }
 
-    void use (int ind) {
-      int i;
+    void use (size_t ind) {
+      size_t i;
       for (i = 0; i < usage.size() && usage[i] != ind; ++i);
       if (i == usage.size()) {
         usage.resize (usage.size()+1);
@@ -212,7 +212,7 @@ private:
 template <typename K, typename V>
 std::ostream & operator<< (std::ostream & s, const Cache<K,V> & cache) {
   s   << "Cache(\n";
-  for (int i=0; i<cache.storage.size(); i++){
+  for (size_t i=0; i<cache.storage.size(); i++){
     s << "  " << cache.storage[i].first << " => " << cache.storage[i].second << "\n";
   }
   s << ")";
@@ -223,21 +223,21 @@ std::ostream & operator<< (std::ostream & s, const Cache<K,V> & cache) {
 /// Iterator class for cache
 ///\relates Cache
 template <typename K, typename V>
-class CacheIterator : public std::map<K, int>::const_iterator {
+class CacheIterator : public std::map<K, size_t>::const_iterator {
  public:
     std::pair<K, V>& operator*() {
-      return cache->storage[std::map<K, int>::const_iterator::operator*().second];
+      return cache->storage[std::map<K, size_t>::const_iterator::operator*().second];
     }
 
     std::pair<K, V>* operator->() {
-      return &(cache->storage[std::map<K, int>::const_iterator::operator*().second]);
+      return &(cache->storage[std::map<K, size_t>::const_iterator::operator*().second]);
     }
 
  private:
     friend class Cache<K, V>;
     CacheIterator (Cache<K, V>* cache_,
-           typename std::map<K, int>::const_iterator iter_)
-      : std::map<K, int>::const_iterator(iter_),
+           typename std::map<K, size_t>::const_iterator iter_)
+      : std::map<K, size_t>::const_iterator(iter_),
         cache(cache_)
     { }
 
