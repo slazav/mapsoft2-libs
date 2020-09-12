@@ -41,6 +41,14 @@ class Downloader {
   private:
     int max_conn; // number of parallel connections
     int num_conn; // current number of connections
+    int log_level;        // log level (0 - no messages; 1 - only download results;
+                          // 2 - adding/removing urls to queue; 3 - libcurl messages)
+
+    bool worker_needed; // flag used to stop the second thread
+    std::thread worker_thread;
+    std::mutex data_mutex;
+    std::condition_variable add_cond; // notify worker_thread about adding new URL
+    std::condition_variable ready_cond; // notify the main thread when data is ready
 
     // Data cache: url ->(status,data)
     // status values: 0: waiting, 1: in progress, 2: ok, 3: error
@@ -56,14 +64,6 @@ class Downloader {
     // Used in the worker thread to store data obtained from libcurl
     std::map<std::string, std::string> dat_store;
 
-    bool worker_needed; // flag used to stop the second thread
-    std::thread worker_thread;
-    std::mutex data_mutex;
-    std::condition_variable add_cond; // notify worker_thread about adding new URL
-    std::condition_variable ready_cond; // notify the main thread when data is ready
-
-    int log_level;        // log level (0 - no messages; 1 - only download results;
-                          // 2 - adding/removing urls to queue; 3 - libcurl messages)
     std::string user_ag;  // user agent
     std::string http_ref; // http referer
 
