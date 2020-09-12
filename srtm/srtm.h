@@ -114,7 +114,7 @@ class SRTM {
     // for hole interpolation in get_val) and its border.
     // `max` is max.set size (default is 0 for no limits).
     void plane_and_border(const iPoint& p,
-       std::set<iPoint>& set, std::set<iPoint>& brd, int max=0);
+       std::set<iPoint>& set, std::set<iPoint>& brd, size_t max=0);
 
 
     /// Get altitude value at a given point (integer coordinates).
@@ -153,7 +153,7 @@ class SRTM {
     std::map<short, dMultiLine> find_contours(const dRect & range, int step);
 
     // make vector data: peaks
-    std::map<dPoint, short> find_peaks(const dRect & range, int DH, int PS);
+    std::map<dPoint, short> find_peaks(const dRect & range, int DH, size_t PS);
 
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);

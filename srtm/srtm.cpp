@@ -14,13 +14,13 @@ read_file(const std::string & file, const size_t srtm_width){
   if (!F) return ImageR();
 
   ImageR im(srtm_width,srtm_width, IMAGE_16);
-  int length = srtm_width*srtm_width*sizeof(short);
+  size_t length = srtm_width*srtm_width*sizeof(short);
 
   if (length != fread(im.data(), 1, length, F)){
     throw Err() << "SRTM: bad .hgt file: " << file;
     return ImageR();
   }
-  for (int i=0; i<length/2; i++){ // swap bytes
+  for (size_t i=0; i<length/2; i++){ // swap bytes
     uint16_t tmp = ((uint16_t*)im.data())[i];
     ((uint16_t*)im.data())[i] = (tmp >> 8) + (tmp << 8);
   }
@@ -79,7 +79,7 @@ SRTM::load(const iPoint & key){
 
 /************************************************/
 
-SRTM::SRTM(const Opt & o): srtm_cache(SRTM_CACHE_SIZE), srtm_width(0) {
+SRTM::SRTM(const Opt & o): srtm_width(0), srtm_cache(SRTM_CACHE_SIZE) {
   set_opt(o);
 }
 
@@ -130,7 +130,7 @@ SRTM::set_opt(const Opt & opt){
 
   // Data width. Read a number from
   // srtm_width.txt file. Default 1201.
-  int width = 1201;
+  size_t width = 1201;
   std::ifstream ws(srtm_dir + "/srtm_width.txt");
   ws >> width;
   if (width<=0) width = 1201;
@@ -179,7 +179,7 @@ SRTM::set_opt(const Opt & opt){
 // for hole interpolation in get_val) and its border.
 void
 SRTM::plane_and_border(const iPoint& p,
-     std::set<iPoint>& set, std::set<iPoint>& brd, int max){
+     std::set<iPoint>& set, std::set<iPoint>& brd, size_t max){
 
   std::queue<iPoint> q;
   short h = get_val(p.x,p.y);
@@ -448,7 +448,7 @@ SRTM::find_contours(const dRect & range, int step){
       }
       // Put contours which are crossing the data cell twice to `ret`.
       short h=SRTM_VAL_UNDEF;
-      double v1,v2;
+      double v1=0,v2=1;
 
       for (auto const & i:pts){
         if (h!=i.first){
@@ -518,7 +518,7 @@ SRTM::find_contours(const dRect & range, int step){
 }
 
 std::map<dPoint, short>
-SRTM::find_peaks(const dRect & range, int DH, int PS){
+SRTM::find_peaks(const dRect & range, int DH, size_t PS){
   int w = get_srtm_width();
   int x1  = int(floor((w-1)*range.tlc().x));
   int x2  = int( ceil((w-1)*range.brc().x));
@@ -586,7 +586,6 @@ SRTM::find_holes(const dRect & range){
   for (int y=y2; y>y1; y--){
     for (int x=x1; x<x2-1; x++){
       short h = get_val(x,y,false);
-      dPoint p1 = dPoint(x,y)/(double)(w-1);
       if (h!=SRTM_VAL_UNDEF) continue;
       set.insert(iPoint(x,y));
     }
