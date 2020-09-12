@@ -50,16 +50,16 @@ protect_name(const string & s){
 bool
 icasecmp(const string& l, const string& r) {
   if (l.size() != r.size()) return false;
-  for (int i=0; i<l.size(); i++)
+  for (size_t i=0; i<l.size(); i++)
     if (toupper(l[i]) != toupper(r[i])) return false;
   return true;
 }
 
 // icasencmp for std::strings
 bool
-icasencmp(const string& l, const string& r, const int n) {
+icasencmp(const string& l, const string& r, size_t n) {
   if (l.size()<n || r.size()<n) return false;
-  for (int i=0; i<n; i++)
+  for (size_t i=0; i<n; i++)
     if (toupper(l[i]) != toupper(r[i])) return false;
   return true;
 }
@@ -153,7 +153,7 @@ void read_mp(istream & f, MP & data, const Opt & opts){
     }
     if (icasencmp(key, "Level", 5)){
       int n = str_to_type<int>(key.substr(5));
-      if (n<0 || n>=data.Levels.size())
+      if (n<0 || n>=(int)data.Levels.size())
         throw Err() << "read_mp: wrong level number: [" << l << "]";
       data.Levels[n]=str_to_type<int>(val);
       if (n>0 && data.Levels[n]>=data.Levels[n-1])
@@ -277,7 +277,7 @@ void read_mp(istream & f, MP & data, const Opt & opts){
     if (icasencmp(key, "Data", 4) ||
         icasencmp(key, "Origin", 6)){
       int n = str_to_type<int>(key.substr( key[0]=='D'? 4:6) );
-      if (n<0 || n>=data.Levels.size()-1)
+      if (n<0 || n>=(int)data.Levels.size()-1)
         throw Err() << "read_mp: wrong level number: [" << l << "]";
       o.Data.resize(data.Levels.size()-1);
       // read coordinates
@@ -339,9 +339,9 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
   if (data.Levels.size()>10 || data.Levels.size()<2)
     throw Err() << "mp_write: Levels setting 2..10 exected instead of " << data.Levels.size();
   out << "Levels=" << data.Levels.size() << "\r\n";
-  for (int i=0; i<data.Levels.size(); i++)
+  for (size_t i=0; i<data.Levels.size(); i++)
     out << "Level" << i << "=" << data.Levels[i] << "\r\n";
-  for (int i=0; i<data.Levels.size(); i++)
+  for (size_t i=0; i<data.Levels.size(); i++)
     out << "Zoom" << i << "=" << i << "\r\n";
 
   // other options
@@ -369,10 +369,10 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
     if (obj.Data.size() > data.Levels.size()-1)
       throw Err() << "write_mp: too large level in data: " << obj.Data.size();
 
-    for (int i=0; i<obj.Data.size(); i++){
+    for (size_t i=0; i<obj.Data.size(); i++){
       for (auto l:obj.Data[i]){
         out << "Data" << i << "=";
-        for (int j=0; j<l.size(); j++){
+        for (size_t j=0; j<l.size(); j++){
           out << ((j!=0)?",":"")
               << "(" << l[j].y << "," << l[j].x << ")";
         }
