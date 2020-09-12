@@ -129,6 +129,8 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 
 GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_){
   segments.resize(trk.size());
+  set_cnv(NULL);
+  set_opt(Opt());
 }
 
 GObj::ret_t
