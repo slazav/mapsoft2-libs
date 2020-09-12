@@ -86,6 +86,9 @@ of all filter classes set SIGPIPE to SIG_IGN (ignore).
 ------------
 ## Changelog:
 
+2020.09.12 V.Zavjalov 1.5:
+- fix overflow error in OFilter
+
 2019.11.24 V.Zavjalov 1.4:
 - add timers to IOFilter
 - ignore SIGPIPE to avoid main program exit when the filter program terminates

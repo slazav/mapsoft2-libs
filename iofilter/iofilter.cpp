@@ -66,7 +66,7 @@ class IFilter::Impl{
       char buf[BUFSIZ];
       while (!istr.eof()){
         istr.read(buf, BUFSIZ);
-        size_t size = istr.gcount();
+        ssize_t size = istr.gcount();
         if (size == 0) continue;
         if (write(fd1[1], buf, size)!=size)
           std::cerr << "iofilter: write error\n";
@@ -242,7 +242,7 @@ class OFilter::Impl{
         std::cerr << e.str() << "\n";
       }
       ::close(fd1[1]);
-      ::close(fd2[2]);
+      ::close(fd2[0]);
       std::_Exit(0);
     }
 
@@ -335,7 +335,7 @@ class IOFilter::Impl{
 
     if (pipe(fd1)<0 || pipe(fd2)<0) throw Err() << "iofilter: pipe error";
 
-    signal(SIGPIPE, SIG_IGN)!=0; // ignore sigpipe (to avoid program exit)
+    signal(SIGPIPE, SIG_IGN); // ignore sigpipe (to avoid program exit)
 
     if ( (pid = fork()) < 0 ) throw Err() << "iofilter: fork1 error";
 
