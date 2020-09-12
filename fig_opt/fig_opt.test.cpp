@@ -51,7 +51,7 @@ main(){
     assert_eq(str[5], "\\key4=10");
 
   }
-  catch (Err E){
+  catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";
     return 1;
   }
