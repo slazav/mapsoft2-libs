@@ -85,8 +85,8 @@ GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     throw Err() << "GObjWpts: templates are not syncronized with data";
 
   for (auto & wt:tmpls) update_pt_crd(wt, cnv);
-  update_range();
   if (do_adj_pos) adjust_text_pos();
+  update_range();
   redraw_me();
 }
 
