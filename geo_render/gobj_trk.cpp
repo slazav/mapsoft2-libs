@@ -127,7 +127,8 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 
 /********************************************************************/
 
-GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_){
+GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_),
+    linewidth(0), draw_dots(true), selected(false) {
   segments.resize(trk.size());
   set_cnv(NULL);
   set_opt(Opt());
@@ -139,8 +140,30 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
   if (is_stopped()) return GObj::FILL_NONE;
   if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
 
-  int arr_w = linewidth * 2.0;
-  int dot_w = linewidth * 0.5;
+  // draw selection
+  if (selected) {
+    for (size_t i = 0; i<segments.size(); ++i){
+      if (is_stopped()) return GObj::FILL_NONE;
+      dPoint p1 = segments[i].p1;
+      dPoint p2 = segments[i].p2;
+      dRect r(p1,p2);
+      r.expand(sel_w + linewidth*(dot_w+1));
+      if (intersect(draw_range, r).is_zsize()) continue;
+
+      if (!segments[i].hide){
+        cr->move_to(p1);
+        cr->line_to(p2);
+      }
+      if (draw_dots ||
+          (segments[i].hide && segments[i>0?i-i:trk.size()-1].hide)){
+        cr->circle(p1, dot_w*linewidth);
+      }
+    }
+    cr->cap_round();
+    cr->set_line_width(linewidth + 2*sel_w);
+    cr->set_color_a(sel_col);
+    cr->stroke();
+  }
 
   // draw all segments
   cr->cap_round();
@@ -152,7 +175,7 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
     dPoint p1 = segments[i].p1;
     dPoint p2 = segments[i].p2;
     dRect r(p1,p2);
-    r.expand(arr_w + dot_w + linewidth);
+    r.expand((1+dot_w)*linewidth);
     if (intersect(draw_range, r).is_zsize()) continue;
 
     cr->set_color_a(segments[i].color);
@@ -164,7 +187,7 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
     if (draw_dots ||
         (segments[i].hide && segments[i>0?i-i:trk.size()-1].hide)){
-      cr->circle(p1, dot_w);
+      cr->circle(p1, dot_w*linewidth);
     }
     cr->stroke();
   }
@@ -177,7 +200,8 @@ GObjTrk::update_range(){
   range = dRect();
   for (auto const & s:segments)
     range.expand(s.p1);
-  range.expand(linewidth);
+  // linewidth + sel_w + dot_w
+  range.expand((dot_w+1)*linewidth + sel_w);
 }
 
 /********************************************************************/

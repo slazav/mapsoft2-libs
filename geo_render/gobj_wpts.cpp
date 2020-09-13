@@ -92,7 +92,7 @@ GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 
 /********************************************************************/
 
-GObjWpts::GObjWpts(GeoWptList & wpts): wpts(wpts) {
+GObjWpts::GObjWpts(GeoWptList & wpts): wpts(wpts), selected(false) {
   set_opt(Opt());
   for (auto & w:wpts){
     WptDrawTmpl wt;
@@ -110,6 +110,30 @@ GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
 
   if (do_adj_brd) adjust_text_brd(draw_range);
+
+
+  // selection
+  if (selected){
+    for (auto const & wt:tmpls){
+      if (is_stopped()) return GObj::FILL_NONE;
+      if (intersect(draw_range, wt.bbox).is_zsize()) continue;
+
+      // flag sticks
+      cr->move_to(wt);
+      cr->line_to(wt.text_pt);
+      // dots
+      cr->circle(wt, size);
+      // flags
+      if (wt.style == Skip) continue;
+      if (wt.style == Multi)
+        cr->rectangle(wt.text_pt+wt.text_box+dPoint(2,2));
+      cr->rectangle(wt.text_pt+wt.text_box);
+    }
+    cr->set_line_width(linewidth + 2*sel_w);
+    cr->set_color(sel_col);
+    cr->stroke();
+  }
+
 
   // use single line width for drawing
   cr->set_line_width(linewidth);
@@ -185,6 +209,7 @@ GObjWpts::update_pt_bbox(WptDrawTmpl & wt){
   wt.bbox.expand(size + linewidth);
   if (!wt.text_box.is_empty())
     wt.bbox.expand(wt.text_pt + wt.text_box);
+  wt.bbox.expand(sel_w);
   wt.bbox.to_ceil();
 }
 

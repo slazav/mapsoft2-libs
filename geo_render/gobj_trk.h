@@ -31,9 +31,13 @@ private:
   GeoTrk & trk;
   dRect range; // data range
 
+  const double dot_w = 0.5; // multiple of linewidth
+  const double sel_w = 1.5; // pixels
+  const uint32_t sel_col = 0x80FFFF00;
+
   int linewidth;
   bool draw_dots;
-  bool draw_arrows;
+  bool selected;
 
   struct segment_t{
     dPoint p1, p2;
@@ -49,6 +53,7 @@ public:
 
   // recalculate range (after changing coordinates)
   void update_range();
+
 
   /************************************************/
 
@@ -75,6 +80,9 @@ public:
   // Find segments near pt within radius r.
   // Return numbers of starting points.
   std::vector<size_t> find_segments(const dPoint & pt, const double r = 3.0);
+
+  // select/unselect track
+  void select(bool v=true) {selected = v; redraw_me();}
 
 };
 

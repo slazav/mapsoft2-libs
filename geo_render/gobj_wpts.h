@@ -18,9 +18,23 @@ void ms2opt_add_drawwpt(GetOptSet & opts);
 class GObjWpts : public GObj {
 private:
 
+  // Original data. It may be edited through the GObj interface.
+  GeoWptList & wpts;
+
+  const double sel_w = 1.5; // pixels
+  const uint32_t sel_col = 0x80FFFF00;
+
   double text_size, size, linewidth;
   int color, bgcolor;
   std::string text_font;
+  bool selected;
+
+  int skip_dist;      // skip point if its label has to be drawn
+                      // too far (distance in points).
+  int stick_len;      // default flag stick length
+  int text_pad;
+  bool do_adj_pos;    // adjust text positions to avoid collisions
+  bool do_adj_brd;    // adjust text positions fit into picture
 
   enum DrawStyleType {Normal, Multi, Skip};
 
@@ -35,16 +49,6 @@ private:
     DrawStyleType style;
     WptDrawTmpl(): src(NULL), style(Normal) {};
   };
-
-  int skip_dist;      // skip point if its label has to be drawn
-                      // too far (distance in points).
-  int stick_len;      // default flag stick length
-  int text_pad;
-  bool do_adj_pos;    // adjust text positions to avoid collisions
-  bool do_adj_brd;    // adjust text positions fit into picture
-
-  // Original data. It may be edited through the GObj interface.
-  GeoWptList & wpts;
 
   // Templates. Should be syncronized with the data.
   std::vector<WptDrawTmpl> tmpls;
@@ -101,6 +105,9 @@ public:
   // Find all waypoints within rectangle r.
   // Return point numbers.
   std::vector<size_t> find_points(const dRect & r);
+
+  // select/unselect waypoints
+  void select(bool v=true) {selected = v; redraw_me();}
 
 };
 
