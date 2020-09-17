@@ -5,16 +5,18 @@
 // distance between two colors
 double
 color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled){
-  int a1 = (c1>>24)&0xFF, a2 = (c2>>24)&0xFF;
-  int r1 = (c1>>16)&0xFF, r2 = (c2>>16)&0xFF;
-  int g1 = (c1>>8)&0xFF,  g2 = (c2>>8)&0xFF;
-  int b1 = c1&0xFF,       b2 = c2&0xFF;
+  double a1 = (c1>>24)&0xFF, a2 = (c2>>24)&0xFF;
+  double r1 = (c1>>16)&0xFF, r2 = (c2>>16)&0xFF;
+  double g1 = (c1>>8)&0xFF,  g2 = (c2>>8)&0xFF;
+  double b1 = c1&0xFF,       b2 = c2&0xFF;
 
-  if (!prescaled || (a1==0xFF && a2==0xFF))
-    return sqrt(
-      pow( a1-a2, 2) + pow( r1-r2, 2) +
-      pow( g1-g2, 2) + pow( b1-b2, 2)
-    );
+  if (!prescaled || (a1==0xFF && a2==0xFF)){
+    double da = a1-a2;
+    double dr = r1-r2;
+    double dg = g1-g2;
+    double db = b1-b2;
+    return sqrt( da*da + dr*dr + dg*dg + db*db );
+  }
 
   if (r1>a1 || g1>a1 || b1>a1)
     throw Err() << "color_dist: non-prescaled color: 0x"
@@ -23,13 +25,16 @@ color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled){
     throw Err() << "color_dist: non-prescaled color: 0x"
                 << std::hex << std::setfill('0') << std::setw(8) << c2;
 
-  // note: two almost trransparent colorse can have up to 0xFF distance
-  // in each component; we want distance 0xFF between fully transparent and
+  // note: two almost transparent colors can have up to 0xFF distance
+  // in each component; we want distance sqrt(3)*0xFF between fully transparent and
   // any almost transparent color, and distance 0 between same colors.
+  if (a1==0 && a2==0) return 0;
+  if (a1==0 || a2==0) return sqrt((a1-a2)*(a1-a2)+ 3*0xFF*0xFF);
+
   double da = a1-a2;
-  double dr = (a1>0 && a2>0) ? r1*255.0/a1 - r2*255.0/a2 : (a1!=0 || a2!=0)? 0xFF:0;
-  double dg = (a1>0 && a2>0) ? g1*255.0/a1 - g2*255.0/a2 : (a1!=0 || a2!=0)? 0xFF:0;
-  double db = (a1>0 && a2>0) ? b1*255.0/a1 - b2*255.0/a2 : (a1!=0 || a2!=0)? 0xFF:0;
+  double dr = r1*255.0/a1 - r2*255.0/a2;
+  double dg = g1*255.0/a1 - g2*255.0/a2;
+  double db = b1*255.0/a1 - b2*255.0/a2;
 
   return sqrt( da*da + dr*dr + dg*dg + db*db );
 }
