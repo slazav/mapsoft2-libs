@@ -48,15 +48,15 @@ uint32_t color_argb(const uint8_t a, const uint8_t r,
 // remove transparency (for scaled colors)
 uint32_t color_rem_transp(const uint32_t c, const bool gifmode){
   int a = (c>>24)&0xFF;
+  if (a==255) return c;
+
   int r = (c>>16)&0xFF;
   int g = (c>>8)&0xFF;
   int b = c&0xFF;
   if (r>a || g>a || b>a)
     throw Err() << "color_rem_transp: non-prescaled color: 0x"
                 << std::hex << std::setfill('0') << std::setw(8) << c;
-
   if (a==0) return gifmode? 0 : 0xFF000000;
-  if (a==255) return c;
 
   r = (r*255)/a;
   g = (g*255)/a;
