@@ -335,7 +335,12 @@ image_remap(const ImageR & img, const std::vector<uint32_t> & cmap){
       int i0 = 0;
       for (size_t i=0; i<cmap.size(); ++i){
         double d = color_dist(c, cmap[i]);
-        if (d0>d) {d0=d; i0 = i;}
+        // Because of integer color components we often have
+        // same distances between different colors.
+        // This can cause different behaviour in 32 and 64 bit
+        // systems. To avoid this use a small tolerance when
+        //  comparing colors:
+        if (d0 > d + 1e-6) {d0=d; i0 = i;}
       }
       img1.set8(x,y,i0);
     }
