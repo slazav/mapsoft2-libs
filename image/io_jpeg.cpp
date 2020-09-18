@@ -4,20 +4,35 @@
 #include <jpeglib.h>
 #include <stdio.h>
 #include <cstring>
+#include <setjmp.h>
 
 std::string jpeg_error_message;
 
 /**********************************************************/
 
-// error prefix
-std::string error_pref = "jpeg";
+/*
+Error handling:
+  On error libjpeg calls my_error_exit callback which should not return.
+  It is not good to throw errors from the callback because
+  it's called from C (not C++ code). This does not work on
+  some systems, e.g. armh in Altlinux, see:
+  https://lists.altlinux.org/pipermail/devel/2020-June/211248.html
+  https://lists.altlinux.org/pipermail/devel/2020-June/211250.html
+  To avoid this we prepare error to be thrown and do longjmp.
+*/
+
+
+std::string error_pref = "jpeg"; // error prefix
+Err jpg_err; // error to be thrown
+jmp_buf jpg_jmp_buf;
 
 // custom error handler
 void
 my_error_exit (j_common_ptr cinfo) {
   const char buffer[JMSG_LENGTH_MAX] = "";
   (*cinfo->err->format_message) (cinfo, (char *)buffer);
-  throw Err() << error_pref << ": " << buffer;
+  jpg_err = Err() << error_pref << ": " << buffer;
+  longjmp(jpg_jmp_buf, 0);
 }
 
 /**********************************************************/
@@ -110,8 +125,11 @@ image_size_jpeg(std::istream & str){
   cinfo.err = jpeg_std_error(&jerr);
   jerr.error_exit = my_error_exit;
   error_pref = "image_size_jpeg";
+  if (setjmp(jpg_jmp_buf)) throw jpg_err;
   // note: it is an error to do jpeg_destroy_decompress
   // before jpeg_create_decompress.
+
+
   jpeg_create_decompress(&cinfo);
 
   try {
@@ -146,6 +164,7 @@ image_load_jpeg(std::istream & str, const double scale){
     cinfo.err = jpeg_std_error(&jerr);
     jerr.error_exit = my_error_exit;
     error_pref = "image_load_jpeg";
+    if (setjmp(jpg_jmp_buf)) throw jpg_err;
 
     jpeg_read_header(&cinfo, TRUE);
 
@@ -282,7 +301,10 @@ image_save_jpeg(const ImageR & im, std::ostream & str, const Opt & opt){
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
+  jerr.error_exit = my_error_exit;
   error_pref = "image_save_jpeg";
+  if (setjmp(jpg_jmp_buf)) throw jpg_err;
+
   jpeg_create_compress(&cinfo);
 
   try {
