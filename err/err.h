@@ -41,10 +41,15 @@ class Err: public std::exception {
 
   public:
     /// Constructor with optional error code.
-    Err(int c_ = -1): c(c_) {}
+    Err(int c_ = -1): c(c_), s(std::ostringstream::ate) {}
 
     /// Copy constructor.
-    Err(const Err & o) { c=o.c; s << o.s.str(); buf = s.str();}
+    Err(const Err & o): s(std::ostringstream::ate) {
+      c=o.c; s.str(o.s.str()); buf = s.str();}
+
+    /// operator=
+    Err operator=(const Err & o) {c=o.c; s.str(o.s.str()); buf = o.buf; return *this;}
+
 
     /// Operator << for error messages.
     template <typename T>

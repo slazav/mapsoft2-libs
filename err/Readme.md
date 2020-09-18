@@ -28,6 +28,8 @@ assert_err(<code>, <expected error>)
 
 ------------------
 ## Changelog:
+2020.09.18 V.Zavjalov 1.3:
+- Add Err::operator=
 
 2019.10.10 V.Zavjalov 1.2:
 - Add assert_eq, assert_deq, and assert_feq macro
