@@ -10,12 +10,12 @@
 ## Log class
 
 It is a simple class for writing log messages to stdin or file.
-Most function are static members of the class and work globally.
+Most functions are static members of the class and work globally.
 `Log` objects are created only for formatting messages.
 
 Usage:
 ```
-Log(lavel) << data;
+Log(level) << data;
 ```
 
 */
