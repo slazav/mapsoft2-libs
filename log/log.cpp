@@ -3,7 +3,7 @@
 std::ostream *Log::log = &std::cout;
 std::ofstream Log::flog;
 int Log::log_level = 0;
-
+std::mutex Log::mtx;
 
 void
 Log::set_log_file(const std::string & fname){

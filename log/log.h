@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include "err/err.h"
 
 /*************************************************/
@@ -26,6 +27,13 @@ class Log {
   static int log_level;
   bool empty;
 
+
+  // Lock for the output stream. We lock it in the constructor
+  // and unlock in destructor to avoid co-existing of Log objects
+  // and have nice formatting of log files in multi-thread programs.
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lk;
+
 public:
 
   /// Set log file (use "-" for stdin). By default log messages are printed using stdin.
@@ -38,8 +46,8 @@ public:
   static int get_log_level(){ return log_level; }
 
   /// Create log object
-  Log(int l): empty(l>log_level) { }
-  ~Log() { if (!empty) (*log) << "\n";}
+  Log(int l): empty(l>log_level), lk(mtx) { }
+  ~Log() { if (!empty) (*log) << "\n"; }
 
   /// Operator << for log messages.
   template <typename T>
