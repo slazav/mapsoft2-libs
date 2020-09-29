@@ -33,6 +33,17 @@ If no value is set for this key, the `def` object is returned.
 opts.put(opts1)
 ```
 
+- Adding missing values (to add defaults to axisting options)
+
+```c
+opts.put_missing("key", v);
+```
+
+- Adding missing values from another Opt object:
+```c
+opts.put_missing(opts1);
+```
+
 - Find unknown options. List of known option names should be provided.
 ```opts.check_unknown (const std::list<std::string> & known) const```
 
@@ -52,6 +63,9 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 
 -----------------
 ## Changelog:
+
+2020.09.29 V.Zavjalov 1.9:
+- Add put_missing() methods -- Adding missing values.
 
 2020.08.18 V.Zavjalov 1.8:
 - Add clone_known() method -- return Opt object only with known elements

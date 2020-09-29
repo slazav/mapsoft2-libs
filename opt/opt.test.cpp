@@ -33,8 +33,20 @@ try{
   assert_eq(O1.get("d", "1 2 3"), "1 2 3 4 5");
   assert_eq(O1.get("x", "1 2 3"), "1 2 3");
 
-
   O1.put("d", "123.1 ");
+
+  { // put_missing
+    Opt O2;
+    O2.put("a", 1);
+    O2.put_missing("a", 2);
+    assert_eq(O2.get("a",0), 1);
+    O2.put_missing("b", 2);
+    assert_eq(O2.get("b",0), 2);
+    O2.put("x", 1);
+    O2.put_missing(O1);
+    assert_eq(O2.get("x",0), 1);
+    assert_eq(O2.get("d",""), "123.1 ");
+  }
 
   /////////////////////////////////////////////
   // check_unknown()
