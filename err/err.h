@@ -36,7 +36,14 @@ catch (Err E){
 
 class Err: public std::exception {
   std::ostringstream s;    // stream for error messages
+
+  // This buf string is here only because of std::exception interface.
+  // To return `const char*` we need some place where to keep
+  // the message until Err object exists. Unfortunately we
+  // can not fill the buffer in what() method because it is
+  // marked as const.
   std::string buf;
+
   int c;
 
   public:

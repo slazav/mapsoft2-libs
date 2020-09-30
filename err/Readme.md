@@ -31,6 +31,9 @@ assert_err(<code>, <expected error>)
 2020.09.18 V.Zavjalov 1.3:
 - Add Err::operator=
 
+2020.08.13 V.Zavjalov 1.2.5:
+- err: add std::exception interface
+
 2019.10.10 V.Zavjalov 1.2:
 - Add assert_eq, assert_deq, and assert_feq macro
 - Print more information in assert_*
