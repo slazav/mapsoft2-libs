@@ -182,6 +182,19 @@ try{
 //  assert_eq(O1.get("h1", 0.0), 255);
 //  assert_eq(O1.get("h2", 0.0), 254);
 
+  // ip
+   assert_eq(str_to_type_ip4("127.0.0.1"), 0x7F000001u);
+   assert_eq(str_to_type_ip4("255.255.255.255"), 0xFFFFFFFFu);
+   assert_err(str_to_type_ip4("127.0.0."), "bad IP: unexpected end of output:127.0.0.");
+   assert_err(str_to_type_ip4("127.0.0"), "bad IP: unexpected end of output:127.0.0");
+   assert_err(str_to_type_ip4("1271.0.0.0"), "bad IP: number out of range: 1271.0.0.0");
+   assert_err(str_to_type_ip4("256.0.0.0"), "bad IP: number out of range: 256.0.0.0");
+   assert_err(str_to_type_ip4("127.1.1.1x"), "bad IP: extra characters at the end: 127.1.1.1x");
+
+   assert_eq(type_to_str_ip4(0xffffffffu), "255.255.255.255");
+   assert_eq(type_to_str_ip4(0x7f000001u), "127.0.0.1");
+   assert_eq(type_to_str_ip4(0), "0.0.0.0");
+
 }
 catch (Err & e) {
   std::cerr << "Error: " << e.str() << "\n";

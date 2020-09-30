@@ -18,6 +18,12 @@ string one can use function
 str = type_to_str_hex(int_v);
 ```
 
+For IP4 addresses there are functions:
+```c
+string type_to_str_ip4(int32_t);
+int32_t str_to_type_ip4(string);
+```
+
 - Creating Opt class, putting and extracting values:
 ```c
 Opt o;
@@ -63,6 +69,9 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 
 -----------------
 ## Changelog:
+
+2020.09.30 V.Zavjalov 1.10:
+- add str_to_type_ip4(), type_to_str_ip4() - parsing IP4
 
 2020.09.29 V.Zavjalov 1.9:
 - Add put_missing() methods -- Adding missing values.

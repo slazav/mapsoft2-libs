@@ -30,6 +30,9 @@ std::string str_to_type<std::string>(const std::string & s);
 template<>
 int str_to_type<int>(const std::string & s);
 
+// parsing ip
+int32_t str_to_type_ip4(const std::string & s);
+
 /// Convert any type to std::string (similar to boost::lexical_cast).
 /// \relates Opt
 template<typename T>
@@ -47,6 +50,9 @@ std::string type_to_str_hex(const T & t){
   ss << std::hex << std::showbase << t;
   return ss.str();
 }
+
+// version for ip
+std::string type_to_str_ip4(const uint32_t & v);
 
 
 /// version for std::string, much simplier
