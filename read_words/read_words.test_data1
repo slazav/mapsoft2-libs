@@ -1,10 +1,10 @@
-a \# ABc aBC\D\e " a\' s " # aa
+a \# ABc aBC " a\' s " # aa
 d e f " a\' s"
 \\
 
 #
-abc\
-def
+ab\nc\
+de\tf
 abc\
  def
 aa bb "cc\"\"dd\'\'ee"
