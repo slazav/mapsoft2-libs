@@ -8,6 +8,7 @@ std::vector<std::string> read_words(
   std::string str;
   std::vector<std::string> ret;
   bool quote1=false, quote2=false, comment=false;
+  bool qq=false; // empty strings are added if they were quoted.
 
   try {
 
@@ -19,8 +20,8 @@ std::vector<std::string> read_words(
       // end of line
       if (c == '\n' && !quote1 && !quote2) {
         comment=false;
-        if (str!="") ret.push_back(str);
-        str="";
+        if (str!="" || qq) ret.push_back(str);
+        str=""; qq=false;
         if (ret.size()) return ret;
         else continue;
       }
@@ -36,8 +37,8 @@ std::vector<std::string> read_words(
           //protected \n works as word separator:
           case '\n':
             if (line_num) line_num[1]++;
-            if (str!="") ret.push_back(str);
-            str="";
+            if (str!="" || qq) ret.push_back(str);
+            str=""; qq=false;
             continue;
           // standard ANSI escape sequences + '#', space, tab:
           case 'a': c = '\a'; break;
@@ -93,14 +94,14 @@ std::vector<std::string> read_words(
       }
 
       // quote
-      if (c == '"'  && !quote2) {quote1=!quote1; continue; }
-      if (c == '\'' && !quote1) {quote2=!quote2; continue; }
+      if (c == '"'  && !quote2) {quote1=!quote1; qq=true; continue; }
+      if (c == '\'' && !quote1) {quote2=!quote2; qq=true; continue; }
 
 
       // space -- word separaters unless quoted
       if (!quote1 && !quote2 && (c == ' ' || c == '\t')){
-         if (str!="") ret.push_back(str);
-         str="";
+         if (str!="" || qq) ret.push_back(str);
+         str=""; qq=false;
          continue;
       }
 
@@ -122,6 +123,6 @@ std::vector<std::string> read_words(
     throw;
   }
 
-  if (str!="") ret.push_back(str);
+  if (str!="" | qq) ret.push_back(str);
   return ret;
 }

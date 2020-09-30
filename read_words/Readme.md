@@ -8,7 +8,7 @@ Read one line from the stream and extract words, separated by spaces.
 
  - Words are splitted by SPACE or TAB symbols, or by '\' + NEWLINE sequence.
 
- - Words can be quoted by " or '.
+ - Words can be quoted by " or '. Empty words can be created as '' or "".
 
  - ANSY escape sequences are supported: \a, \b, \f, \n, \r, \t, \v,
    \\, \", \'. In addition, symbols #, SPACE and TAB can be escaped.
@@ -47,6 +47,9 @@ Opt read_conf(const std::string & fname,
 
 ------------
 ## Changelog:
+
+2020.09.30 V.Zavjalov 1.6:
+- allow empty words, '' or "".
 
 2020.09.30 V.Zavjalov 1.5:
 - read_conf function

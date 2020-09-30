@@ -22,7 +22,7 @@ assert "$(cat test_data/read_words1 | "$prog")" \
 6-7: [ab
 c] [de	f]
 8-9: [abc] [def]
-10-10: [aa] [bb] [cc""dd''ee]
+10-10: [aa] [bb] [cc""dd''ee] [] [] ['']
 EOF
 )"
 
@@ -35,7 +35,7 @@ assert "$(cat test_data/read_words1 | "$prog" -l)" \
 6-7: [ab
 c] [de	f]
 8-9: [abc] [def]
-10-10: [aa] [bb] [cc""dd''ee]
+10-10: [aa] [bb] [cc""dd''ee] [] [] ['']
 EOF
 )"
 
