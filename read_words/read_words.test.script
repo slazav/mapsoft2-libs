@@ -14,7 +14,7 @@ assert(){
   return 0
 }
 
-assert "$(cat read_words.test_data1 | "$prog")" \
+assert "$(cat test_data/read_words1 | "$prog")" \
 "$(cat <<EOF
 1-1: [a] [#] [ABc] [aBC] [ a' s ]
 2-2: [d] [e] [f] [ a' s]
@@ -27,7 +27,7 @@ EOF
 )"
 
 # same with lowercase option
-assert "$(cat read_words.test_data1 | "$prog" -l)" \
+assert "$(cat test_data/read_words1 | "$prog" -l)" \
 "$(cat <<EOF
 1-1: [a] [#] [abc] [abc] [ a' s ]
 2-2: [d] [e] [f] [ a' s]
@@ -41,7 +41,7 @@ EOF
 
 
 
-assert "$(cat read_words.test_data2 | "$prog")" \
+assert "$(cat test_data/read_words2 | "$prog")" \
 "$(cat <<EOF
 1-1: [a] [b "C" d] [e e]
 2-2: [a] [b 'C' d] [e	e]
@@ -55,7 +55,7 @@ c]
 EOF
 )"
 
-assert "$(cat read_words.test_data3 | "$prog")" \
+assert "$(cat test_data/read_words3 | "$prog")" \
 "$(cat <<EOF
 5-5: [a
 ]

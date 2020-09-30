@@ -25,11 +25,31 @@ Read one line from the stream and extract words, separated by spaces.
 
  - If lc parameter is true then all Latin characters are converted to lower case.
 
-`std::vector<std::string> read_words(
-   std::istream & ss, int line_num[] = NULL, const bool lc=false);`
+```c++
+std::vector<std::string> read_words(
+   std::istream & ss, int line_num[] = NULL, const bool lc=false);
+```
+
+## read_conf
+
+This is an example of using `read_words`.
+Read options from a simple config file. All known options should be
+mentioned in `known` list. If `should_exist=true` and file is missing
+then error will be thrown.
+
+Each line shold contain pairs of words:
+ <parameter name> <parameter value>
+
+```c++
+Opt read_conf(const std::string & fname,
+  std::list<std::string> known, bool should_exist=false);
+```
 
 ------------
 ## Changelog:
+
+2020.09.30 V.Zavjalov 1.5:
+- read_conf function
 
 2020.09.30 V.Zavjalov 1.4:
 - Use ANSI escape sequencies (\n, \t, etc.).
