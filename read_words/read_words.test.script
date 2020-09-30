@@ -16,24 +16,26 @@ assert(){
 
 assert "$(cat read_words.test_data1 | "$prog")" \
 "$(cat <<EOF
-1: [a] [#] [ABc] [aBCDe] [ a' s ]
-2: [d] [e] [f] [ a' s]
-3: [\]
-6: [abc] [def]
-8: [abc] [def]
-10: [aa] [bb] [cc""dd''ee]
+1-1: [a] [#] [ABc] [aBC] [ a' s ]
+2-2: [d] [e] [f] [ a' s]
+3-3: [\]
+6-7: [ab
+c] [de	f]
+8-9: [abc] [def]
+10-10: [aa] [bb] [cc""dd''ee]
 EOF
 )"
 
 # same with lowercase option
 assert "$(cat read_words.test_data1 | "$prog" -l)" \
 "$(cat <<EOF
-1: [a] [#] [abc] [abcDe] [ a' s ]
-2: [d] [e] [f] [ a' s]
-3: [\]
-6: [abc] [def]
-8: [abc] [def]
-10: [aa] [bb] [cc""dd''ee]
+1-1: [a] [#] [abc] [abc] [ a' s ]
+2-2: [d] [e] [f] [ a' s]
+3-3: [\]
+6-7: [ab
+c] [de	f]
+8-9: [abc] [def]
+10-10: [aa] [bb] [cc""dd''ee]
 EOF
 )"
 
@@ -41,31 +43,48 @@ EOF
 
 assert "$(cat read_words.test_data2 | "$prog")" \
 "$(cat <<EOF
-1: [a] [b "C" d] [e e]
-2: [a] [b 'C' d] [e	e]
-3: [a
+1-1: [a] [b "C" d] [e e]
+2-2: [a] [b 'C' d] [e	e]
+3-6: [a
 b
 c
 ]
-7: [a
+7-9: [a
 b
 c]
 EOF
 )"
 
-assert "$(echo abcdez | "$prog")" "1: [abcdez]"
-assert "$(echo ABCDEZ | "$prog")" "1: [ABCDEZ]"
+assert "$(cat read_words.test_data3 | "$prog")" \
+"$(cat <<EOF
+5-5: [a
+]
+6-6: [a
+]
+7-7: [a
+]
+10-10: [a
+9]
+12-12: [a1
+9]
+21-21: [
+]
+EOF
+)"
 
-assert "$(echo abcdez | "$prog" -l)" "1: [abcdez]"
-assert "$(echo ABCDEZ | "$prog" -l)" "1: [abcdez]"
 
-assert "$(echo абвгдеёжзийклмнопрстуфхцчшщъыьэюя | "$prog")" "1: [абвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
-assert "$(echo АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ | "$prog")" "1: [АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ]"
+assert "$(echo abcdez | "$prog")" "1-1: [abcdez]"
+assert "$(echo ABCDEZ | "$prog")" "1-1: [ABCDEZ]"
 
-assert "$(echo абвгдеёжзийклмнопрстуфхцчшщъыьэюя | "$prog" -l)" "1: [абвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
-assert "$(echo АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ | "$prog" -l)" "1: [АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ]"
+assert "$(echo abcdez | "$prog" -l)" "1-1: [abcdez]"
+assert "$(echo ABCDEZ | "$prog" -l)" "1-1: [abcdez]"
+
+assert "$(echo абвгдеёжзийклмнопрстуфхцчшщъыьэюя | "$prog")" "1-1: [абвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
+assert "$(echo АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ | "$prog")" "1-1: [АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ]"
+
+assert "$(echo абвгдеёжзийклмнопрстуфхцчшщъыьэюя | "$prog" -l)" "1-1: [абвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
+assert "$(echo АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ | "$prog" -l)" "1-1: [АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ]"
 
 assert "$(printf "#a\n\n\"b\n\nc" | "$prog" 2>&1)" \
-"Error: Unclosed quote in line 3"
-
+"Error: Unclosed quote in line 4"
 
