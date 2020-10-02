@@ -47,6 +47,9 @@ clean:
 ######################################################
 # Build and include dependency file (using get_deps script).
 $(shell $(MODDIR)/get_deps $(MODDIR) . > Makefile.deps)
+ifneq (${.SHELLSTATUS},0)
+$(error "get_deps failed: ${.SHELLSTATUS}")
+endif
 -include Makefile.deps
 
 ######################################################
