@@ -43,3 +43,12 @@ file_get_prefix(const std::string &fname){
   int i = fname.rfind('/');
   return i<0? "" : std::string(fname.begin(), fname.begin()+i+1);
 }
+
+#include <sys/types.h>
+#include <sys/stat.h>
+bool
+file_exists(const std::string & fname){
+  struct stat st_buf;
+  return stat(fname.c_str(), &st_buf) == 0;
+}
+

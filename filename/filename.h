@@ -24,5 +24,7 @@ std::vector<std::string> file_get_dirs(const std::string &fname);
 /* Extract directory prefix from a filename */
 std::string file_get_prefix(const std::string &fname);
 
+// check if the file exists
+bool file_exists(const std::string & fname);
 
 #endif

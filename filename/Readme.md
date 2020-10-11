@@ -30,3 +30,8 @@ std::string file_get_prefix(const std::string &fname);
 ```
 Example: d1/d2/d3/../d4/f.ext -> d1/d2/d3/../d4/
 
+* Check if file exists
+```c++
+bool file_exists(const std::string & fname);
+```
+
