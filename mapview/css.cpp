@@ -1,5 +1,6 @@
 #include "css.h"
 #include "err/err.h"
+#include "filename/filename.h"
 
 // load css
 void load_css(const std::string & fname, Gtk::Widget & w){
@@ -7,9 +8,8 @@ void load_css(const std::string & fname, Gtk::Widget & w){
   if (!css_provider) throw Err() << "can't get Gtk::CssProvider";
   auto style_context = Gtk::StyleContext::create();
   if (!style_context) throw Err() << "can't get Gtk::StyleContext";
-  struct stat st_buf;
   try{
-    if (stat(fname.c_str(), &st_buf) == 0 &&
+    if (file_exists(fname) &&
       css_provider->load_from_path(fname)){
       auto screen = w.get_screen();
       if (!screen) throw Err() << "can't get screen";

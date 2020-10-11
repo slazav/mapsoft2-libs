@@ -2,6 +2,7 @@
 #include "mapview.h"
 #include "geo_data/conv_geo.h"
 #include "geo_mkref/geo_mkref.h"
+#include "filename/filename.h"
 
 Mapview::Mapview(const Opt & o) :
     viewer(&gobj),
@@ -364,9 +365,8 @@ Mapview::load_css(){
   auto style_context = Gtk::StyleContext::create();
   if (!style_context) throw Err() << "Mapview: can't get Gtk::StyleContext";
 
-  struct stat st_buf;
   try{
-    if (stat(css_glo.c_str(), &st_buf) == 0 &&
+    if (file_exists(css_glo) &&
       css_provider->load_from_path(css_glo)){
       auto screen = get_screen();
       if (!screen) throw Err() << "Mapview: can't get screen";
@@ -375,7 +375,7 @@ Mapview::load_css(){
          GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
-    if (stat(css_loc.c_str(), &st_buf) == 0 &&
+    if (file_exists(css_loc) &&
       css_provider->load_from_path(css_loc)){
       auto screen = get_screen();
       if (!screen) throw Err() << "Mapview: can't get screen";
