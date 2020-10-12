@@ -95,7 +95,6 @@ public:
 
   // Functions for setting coordinate conversion and options.
   // Should be redefined in the GObj implementation.
-  // locking and emitting signal_redraw_me is not needed (done by caller)
 
   // change coordinate transformation
   virtual void set_cnv(const std::shared_ptr<ConvBase> c) {};
