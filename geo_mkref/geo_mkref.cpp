@@ -327,6 +327,7 @@ geo_mkref_brd(const Opt & o, dMultiLine & brd){
     if (d.trks.size()<1) throw Err()
       << "mkref: can't read any track from border_file: " << name;
     brd = *d.trks.begin();
+    brd.flatten(); // remove z component
   }
 }
 
