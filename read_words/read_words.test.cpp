@@ -14,7 +14,7 @@ main(int argc, const char* argv[]){
       std::vector<std::string> vs = read_words(std::cin, N, lc);
       if (vs.size()<1) break;
 
-      std::cout << N[0] << ":";
+      std::cout << N[0] << "-" << N[1] << ":";
       for (auto const & i:vs) std::cout << " [" << i << "]";
       std::cout << "\n";
 

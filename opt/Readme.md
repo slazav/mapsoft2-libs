@@ -18,6 +18,12 @@ string one can use function
 str = type_to_str_hex(int_v);
 ```
 
+For IP4 addresses there are functions:
+```c
+string type_to_str_ip4(int32_t);
+int32_t str_to_type_ip4(string);
+```
+
 - Creating Opt class, putting and extracting values:
 ```c
 Opt o;
@@ -31,6 +37,17 @@ If no value is set for this key, the `def` object is returned.
 - Merging options (adding options from opts1, replacing old values):
 ```c
 opts.put(opts1)
+```
+
+- Adding missing values (to add defaults to axisting options)
+
+```c
+opts.put_missing("key", v);
+```
+
+- Adding missing values from another Opt object:
+```c
+opts.put_missing(opts1);
 ```
 
 - Find unknown options. List of known option names should be provided.
@@ -52,6 +69,12 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 
 -----------------
 ## Changelog:
+
+2020.09.30 V.Zavjalov 1.10:
+- add str_to_type_ip4(), type_to_str_ip4() - parsing IP4
+
+2020.09.29 V.Zavjalov 1.9:
+- Add put_missing() methods -- Adding missing values.
 
 2020.08.18 V.Zavjalov 1.8:
 - Add clone_known() method -- return Opt object only with known elements

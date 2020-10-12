@@ -1,0 +1,9 @@
+# this is example config file
+
+key1 val1
+
+key2 "val 2"
+
+key3 "val3a
+      val3b"
+

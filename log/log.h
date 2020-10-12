@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include "err/err.h"
 
 /*************************************************/
@@ -10,12 +11,12 @@
 ## Log class
 
 It is a simple class for writing log messages to stdin or file.
-Most function are static members of the class and work globally.
+Most functions are static members of the class and work globally.
 `Log` objects are created only for formatting messages.
 
 Usage:
 ```
-Log(lavel) << data;
+Log(level) << data;
 ```
 
 */
@@ -25,6 +26,13 @@ class Log {
   static std::ofstream flog; // log stream for file logs
   static int log_level;
   bool empty;
+
+
+  // Lock for the output stream. We lock it in the constructor
+  // and unlock in destructor to avoid co-existing of Log objects
+  // and have nice formatting of log files in multi-thread programs.
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lk;
 
 public:
 
@@ -38,8 +46,8 @@ public:
   static int get_log_level(){ return log_level; }
 
   /// Create log object
-  Log(int l): empty(l>log_level) { }
-  ~Log() { if (!empty) (*log) << "\n";}
+  Log(int l): empty(l>log_level), lk(mtx) { }
+  ~Log() { if (!empty) (*log) << "\n"; }
 
   /// Operator << for log messages.
   template <typename T>

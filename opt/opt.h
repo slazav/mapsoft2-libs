@@ -30,6 +30,9 @@ std::string str_to_type<std::string>(const std::string & s);
 template<>
 int str_to_type<int>(const std::string & s);
 
+// parsing ip
+int32_t str_to_type_ip4(const std::string & s);
+
 /// Convert any type to std::string (similar to boost::lexical_cast).
 /// \relates Opt
 template<typename T>
@@ -47,6 +50,9 @@ std::string type_to_str_hex(const T & t){
   ss << std::hex << std::showbase << t;
   return ss.str();
 }
+
+// version for ip
+std::string type_to_str_ip4(const uint32_t & v);
 
 
 /// version for std::string, much simplier
@@ -101,7 +107,7 @@ class Opt : public std::map<std::string,std::string>{
   /// Set option value for a given key.
   template<typename T>
   void put (const std::string & key, const T & val) {
-    // imtermediate string is needed on
+    // intermediate string is needed on
     // some architectures if val == *this
     std::string str = type_to_str(val);
     (*this)[key] = str;
@@ -112,11 +118,22 @@ class Opt : public std::map<std::string,std::string>{
     for (auto const & o: opts) (*this)[o.first] = o.second;
   }
 
-
   /// Set option value for a given key (hex version).
   template<typename T>
   void put_hex (const std::string & key, const T & val) {
     (*this)[key] = type_to_str_hex(val);
+  }
+
+  // put value only if it is missing
+  template<typename T>
+  void put_missing(const std::string & key, const T & val){
+    if (!exists(key)) put(key, val);
+  }
+
+  /// Fill missing values from another Opt object.
+  void put_missing (const Opt & opts) {
+    for (auto const & o: opts)
+      if (!exists(o.first)) (*this)[o.first] = o.second;
   }
 
   /// Returns value for a given key.

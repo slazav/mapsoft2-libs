@@ -20,6 +20,7 @@ main(){
   assert(e2.code()==12);
   assert(e3.code()==12);
 
+  // copy constructor test
   e3 = Err() << "aaaa";
   e3 << "mm";
   assert(e3.str()=="aaaamm");
@@ -52,7 +53,7 @@ main(){
   }
   return 0;
 
-
+  // std::exception interface test
   try {
     throw Err(3) << "text " << 123;
   }

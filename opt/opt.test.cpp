@@ -33,8 +33,20 @@ try{
   assert_eq(O1.get("d", "1 2 3"), "1 2 3 4 5");
   assert_eq(O1.get("x", "1 2 3"), "1 2 3");
 
-
   O1.put("d", "123.1 ");
+
+  { // put_missing
+    Opt O2;
+    O2.put("a", 1);
+    O2.put_missing("a", 2);
+    assert_eq(O2.get("a",0), 1);
+    O2.put_missing("b", 2);
+    assert_eq(O2.get("b",0), 2);
+    O2.put("x", 1);
+    O2.put_missing(O1);
+    assert_eq(O2.get("x",0), 1);
+    assert_eq(O2.get("d",""), "123.1 ");
+  }
 
   /////////////////////////////////////////////
   // check_unknown()
@@ -169,6 +181,19 @@ try{
 
 //  assert_eq(O1.get("h1", 0.0), 255);
 //  assert_eq(O1.get("h2", 0.0), 254);
+
+  // ip
+   assert_eq(str_to_type_ip4("127.0.0.1"), 0x7F000001u);
+   assert_eq(str_to_type_ip4("255.255.255.255"), 0xFFFFFFFFu);
+   assert_err(str_to_type_ip4("127.0.0."), "bad IP: unexpected end of output:127.0.0.");
+   assert_err(str_to_type_ip4("127.0.0"), "bad IP: unexpected end of output:127.0.0");
+   assert_err(str_to_type_ip4("1271.0.0.0"), "bad IP: number out of range: 1271.0.0.0");
+   assert_err(str_to_type_ip4("256.0.0.0"), "bad IP: number out of range: 256.0.0.0");
+   assert_err(str_to_type_ip4("127.1.1.1x"), "bad IP: extra characters at the end: 127.1.1.1x");
+
+   assert_eq(type_to_str_ip4(0xffffffffu), "255.255.255.255");
+   assert_eq(type_to_str_ip4(0x7f000001u), "127.0.0.1");
+   assert_eq(type_to_str_ip4(0), "0.0.0.0");
 
 }
 catch (Err & e) {

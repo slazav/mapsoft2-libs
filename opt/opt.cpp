@@ -23,6 +23,44 @@ T str_to_type_hex(const std::string & s){
   return val;
 }
 
+// parse IP4, e.g. 127.0.0.1
+int32_t
+str_to_type_ip4(const std::string & s){
+  std::istringstream ss(s);
+  char sep;
+  int32_t ret = 0;
+
+  ss >> std::noskipws >> std::ws;
+  for (int i=0; i<4; ++i){
+    int v;
+    ss >> v;
+    if (!ss) throw Err()
+      << "bad IP: unexpected end of output:" << s;
+
+    if (v<0 || v>255) throw Err()
+      << "bad IP: number out of range: " << s;
+
+    ret = (ret<<8) | v;
+    if (i==3) break;
+
+    ss >> sep;
+    if (sep!='.') throw Err()
+      << "bad IP: expected . separator: " << s;
+  }
+  if (!ss.eof()) throw Err()
+      << "bad IP: extra characters at the end: " << s;
+  return ret;
+}
+
+std::string type_to_str_ip4(const uint32_t & v){
+  std::ostringstream ss;
+  ss << ((v>>24)&0xff) << "."
+     << ((v>>16)&0xff) << "."
+     << ((v>>8)&0xff) << "."
+     << (v&0xff);
+ return ss.str();
+}
+
 // parse dec/hex numbers
 template<>
 int16_t str_to_type<int16_t>(const std::string & s){

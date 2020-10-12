@@ -1,24 +1,65 @@
 ## read_words
 
 Read one line from the stream and extract words, separated by spaces.
+
  - Comments (everything from # symbol to end of the line) are skipped.
+
  - Empty lines are skipped.
- - Words are splitted by ' ' or '\t' symbols, or by '\' + '\n' sequence.
- - Words can be quoted by " or '.
- - Any symbol (including newline) can be escaped by '\'. Protected newline
-   symbol works as word separator.
+
+ - Words are splitted by SPACE or TAB symbols, or by '\' + NEWLINE sequence.
+
+ - Words can be quoted by " or '. Empty words can be created as '' or "".
+
+ - ANSY escape sequences are supported: \a, \b, \f, \n, \r, \t, \v,
+   \\, \", \'. In addition, symbols #, SPACE and TAB can be escaped.
+   Escaped NEWLINE works as word separator.
+   Escape sequences \<oct> and \x<hex> are supported. Octal number
+   can contain 1..3 digits, hex number should always contain 2 digits.
+
  - Empty vector is returned only at the end of input.
+
  - If line_num parameter is not NULL, it should be initialized
    by 0,0 before the first call. Then starting line number of the first
    word and number of the last line read is returned there.
- - If lc parameter is true then all Latin characters except ones protected
-   by '\' are converted to lower case.
+   In this error messages will contain line number.
 
-`std::vector<std::string> read_words(
-   std::istream & ss, int line_num[] = NULL, const bool lc=false);`
+ - If lc parameter is true then all Latin characters are converted to lower case.
+
+```c++
+std::vector<std::string> read_words(
+   std::istream & ss, int line_num[] = NULL, const bool lc=false);
+```
+
+## read_conf
+
+This is an example of using `read_words`.
+Read options from a simple config file. All known options should be
+mentioned in `known` list. If `should_exist=true` and file is missing
+then error will be thrown.
+
+Each line shold contain pairs of words:
+ <parameter name> <parameter value>
+
+```c++
+Opt read_conf(const std::string & fname,
+  std::list<std::string> known, bool should_exist=false);
+```
 
 ------------
 ## Changelog:
+
+2020.09.30 V.Zavjalov 1.6:
+- allow empty words, '' or "".
+
+2020.09.30 V.Zavjalov 1.5:
+- read_conf function
+
+2020.09.30 V.Zavjalov 1.4:
+- Use ANSI escape sequencies (\n, \t, etc.).
+- Do not allow escaping normal characters (A, c, etc.).
+- Use \<oct> and \x<hex> sequences.
+- Fix error in line counting.
+
 2020.01.02 V.Zavjalov 1.3:
 - symbol \n protected by \ works as word separator, not as literal \n
 

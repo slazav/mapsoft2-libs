@@ -47,19 +47,27 @@ clean:
 ######################################################
 # Build and include dependency file (using get_deps script).
 $(shell $(MODDIR)/get_deps $(MODDIR) . > Makefile.deps)
+ifneq (${.SHELLSTATUS},0)
+$(error "get_deps failed: ${.SHELLSTATUS}")
+endif
 -include Makefile.deps
 
 ######################################################
 # Building flags
+# user-defined flags are added _after_ this
 
-override CXXFLAGS += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
+
+override CXXFLAGS_ += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                         pkg-config --cflags '$(PKG_CONFIG)')
-override LDLIBS   += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
+override LDLIBS_   += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                         pkg-config --libs '$(PKG_CONFIG)')
-override CXXFLAGS += -std=gnu++11 -Werror=return-type -O2 -fPIC
-override CXXFLAGS += -I$(MODDIR)
+
+override CXXFLAGS_ += -std=gnu++11 -Werror=return-type -O2 -fPIC -I$(MODDIR)
+
+CXXFLAGS := $(CXXFLAGS_) $(CXXFLAGS)
+LDLIBS   := $(LDLIBS_) $(LDLIBS)
 
 ######################################################
 # make_deps/make_nodeps building rules:
