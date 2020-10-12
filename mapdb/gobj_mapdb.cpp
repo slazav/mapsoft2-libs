@@ -46,7 +46,7 @@ get_ptsize(ConvBase & cnv, const dRect & r) {
 void
 GObjMapDB::set_ref(const GeoMap & r, bool set_ptsize) {
   ref = r;
-  if (ref.ref.size()==0) return;
+  if (ref.empty()) return;
   ConvMap cnv(ref);
   border = cnv.frw_acc(ref.border);
   if (set_ptsize) ptsize0 = get_ptsize(cnv, r.bbox());
@@ -927,6 +927,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (cnv) brd = cnv->bck_acc(brd);
     cr->begin_new_path();
     cr->mkpath_smline(brd, true, sm);
+    cr->reset_clip();
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
@@ -971,6 +972,15 @@ GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
     cr->set_color_a(minsc_color);
     cr->paint();
     return GObj::FILL_PART;
+  }
+
+  // clip to border
+  if (border.size()) {
+    dMultiLine brd(border);
+    if (cnv) brd = cnv->bck_acc(brd); // wgs -> points
+    cr->begin_new_path();
+    cr->mkpath_smline(brd, true, 0);
+    cr->clip();
   }
 
   return GObjMulti::draw(cr, draw_range);
