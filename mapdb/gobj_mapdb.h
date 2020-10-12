@@ -100,6 +100,7 @@ private:
   double max_text_size;  // for selecting text objects
   double obj_scale;      // object scale
   dMultiLine border;     // border (WGS84) from set_ref
+  bool clip_border;      // clip objects to the border (default: true unless brd drawing step is used)
   double ptsize0;        // 1pt size in meters for linewidths, font size etc.
                          // Set when a "natural" reference is set with set_ref configuration command.
                          // In the beginning it is 0, this means that objects are not
@@ -536,7 +537,10 @@ public:
   // set drawing options
   void set_opt(const Opt & o) override {opt = o;}
 
-  dRect bbox() const override {return map->bbox();}
+  dRect bbox() const override {
+    if (border.size()) return border.bbox(); // wgs
+    else return map->bbox();
+  }
 
   // Draw all objects
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;

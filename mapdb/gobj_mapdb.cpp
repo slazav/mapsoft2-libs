@@ -72,6 +72,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   minsc_color = o.get<uint32_t>("mapdb_minsc_color", 0xFFDB5A00);
   obj_scale   = o.get<double>("obj_scale", 1.0);
   max_text_size = 1024;
+  clip_border = true;
 
   opt = o;
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
@@ -226,6 +227,16 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         continue;
       }
 
+      // clip_border
+      if (vs[0] == "clip_border") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: clip_border (1|0)";
+        clip_border = str_to_type<bool>(vs[1]);
+        continue;
+      }
+
+
 
       /**********************************************************/
       /// Commands with features
@@ -263,6 +274,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         st->action = STEP_DRAW_BRD;
         st->step_name = vs[0];
         ftr = vs[1];
+        clip_border = false;
         vs.erase(vs.begin(), vs.begin()+2);
         add(depth--, st);
       }
@@ -927,7 +939,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (cnv) brd = cnv->bck_acc(brd);
     cr->begin_new_path();
     cr->mkpath_smline(brd, true, sm);
-    cr->reset_clip();
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
@@ -975,7 +986,7 @@ GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
   }
 
   // clip to border
-  if (border.size()) {
+  if (clip_border && border.size()) {
     dMultiLine brd(border);
     if (cnv) brd = cnv->bck_acc(brd); // wgs -> points
     cr->begin_new_path();
