@@ -35,7 +35,10 @@ public:
       signal_changed().connect(
         sigc::bind(sigc::mem_fun (this, &AMSrtmOpts::on_response),1));
       set_title(get_name());
+
       o = mapview->opts;
+      o.put_missing(mapview->obj_srtm->get_def_opt());
+      set_opt(o);
     }
 
     std::string get_name() { return "SRTM drawing options"; }
@@ -43,24 +46,30 @@ public:
 
     bool is_radio() { return false; }
 
-    void activate(const std::string & menu) {
-      set_opt(o);
-      show_all();
-    }
+    void activate(const std::string & menu) { show_all(); }
 
     void on_response(int r){
       // Unlike trk_opt dialog we need to emit signal_redraw_me explicitely.
       // This is because tracks are located inside gobj_multi, which emits
       // the signal. Something should be changed here...
+
+      // Cancel button: set old options. DlgSrtmOpt will emit
+      // signal_changed and this function will be called again with r=1
       if (r==Gtk::RESPONSE_CANCEL){
-        mapview->obj_srtm->set_opt(o);
-        mapview->signal_srtm_conf().emit();
+        set_opt(o);
+        hide();
+        return;
       }
-      if (r>0) {
-        mapview->obj_srtm->set_opt(get_opt());
-        mapview->signal_srtm_conf().emit();
+      // OK button: just save options, do not redraw anything
+      if (r==Gtk::RESPONSE_OK){
+        o = get_opt();
+        hide();
+        return;
       }
-      else hide();
+
+      // Any changes: update options in srtm layer
+      mapview->obj_srtm->set_opt(get_opt());
+      mapview->signal_srtm_conf().emit();
     }
 
 private:
