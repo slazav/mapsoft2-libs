@@ -33,7 +33,6 @@ DThreadViewer::redraw(const iRect & range){
   updater_mutex->lock();
   tiles_cache.clear();
   updater_mutex->unlock();
-  obj->stop_drawing(false);
   SimpleViewer::redraw(range);
 }
 
@@ -47,7 +46,6 @@ DThreadViewer::set_cnv(std::shared_ptr<ConvBase> c, bool fix_range){
   }
   // note: set_range -> rescale -> set_cnv with its own locking
   if (fix_range) set_range(r, true);
-  obj->stop_drawing(false);
 }
 
 void
@@ -55,7 +53,6 @@ DThreadViewer::rescale(const double k, const iPoint & cnt){
   obj->stop_drawing(true);
   auto lk = obj->get_lock();
   SimpleViewer::rescale(k,cnt);
-  obj->stop_drawing(false);
 }
 
 void
@@ -63,7 +60,6 @@ DThreadViewer::set_opt(const Opt & o){
   obj->stop_drawing(true);
   auto lk = obj->get_lock();
   SimpleViewer::set_opt(o);
-  obj->stop_drawing(false);
 }
 
 
@@ -81,8 +77,6 @@ DThreadViewer::updater(){
     if (!tiles_todo.empty()){
 
       iPoint key = *tiles_todo.begin();
-
-      obj->stop_drawing(false);
       updater_mutex->unlock();
 
       CairoWrapper crw;
@@ -125,12 +119,15 @@ DThreadViewer::updater(){
       crw.get_surface()->flush();
 
       updater_mutex->lock();
-      if (!obj->is_stopped()){
+      if (!obj->is_stopped()) {
         if (tiles_cache.count(key)>0) tiles_cache.erase(key);
         tiles_cache.insert(std::make_pair(key, crw));
         tiles_done.push(key);
         tiles_todo.erase(key);
         done_signal.emit();
+      }
+      else {
+        obj->stop_drawing(false);
       }
     }
     updater_mutex->unlock();

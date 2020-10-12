@@ -40,7 +40,6 @@ An object which know how to draw itself using Cairo::Context.
   - run stop_drawing(true)
   - get lock object with `get_lock`
   - modify data
-  - run stop_drawing(false)
   - emit signal_redraw_me()
   for set_cnv/set_opt methods this should be done by caller.
 */
