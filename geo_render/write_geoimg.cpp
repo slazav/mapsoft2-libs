@@ -4,6 +4,7 @@
 #include "geo_data/conv_geo.h"
 #include "write_geoimg.h"
 #include "image/image_t.h"       // ImageT::make_url
+#include "image/image_colors.h"
 #include "geo_mkref/geo_mkref.h" // for tiled maps
 #include "geom/poly_tools.h"     // for rect_in_polygon
 #include "geo_tiles/geo_tiles.h"
@@ -21,6 +22,9 @@ ms2opt_add_geoimg(GetOptSet & opts){
   opts.add("out_fmt", 1,0,g,
     "Explicitely set image output format: pdf, ps, svg, png, jpeg, tiff, gif. "
     "By default format is determined from the output file extension.");
+  opts.add("add", 0,0,g,
+    "If image file exists, read it and use as the background. "
+    "The image should have same dimensions.");
   opts.add("bgcolor", 1,0,g,
     "Image background color (default 0xFFFFFFFF).");
   opts.add("map", 1,'m',g,
@@ -63,24 +67,21 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
       ConvMap cnv0(ref); // conversion original map->wgs
       brd = cnv0.frw_acc(ref.border); // -> wgs
     }
-
-    // update border from optons
-    geo_mkref_brd(opts, brd);
-
     GeoTiles tcalc;  // tile calculator
 
     // Build new options for write_geoimg. We do not need "tmap", "map",
-    // "skip_image" options, only "fmt" my be useful.
+    // "skip_image", "border_*" options.
     Opt o(opts);
     o.erase("tmap");
     o.erase("map");
     o.erase("skip_image");
     o.erase("tmap_scale");
+    o.erase("border_wgs");
+    o.erase("border_file");
 
     // for each zoom level
     for (int z = zmax; z>=zmin; --z){
       iRect tiles = tcalc.range_to_gtiles(obj.bbox(),z); // tile range
-
 
       // render tiles
       for (int y = tiles.y; y < tiles.y + tiles.h; y++){
@@ -117,8 +118,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
             for (int t=0; t<4; t++){
               iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
               std::string src_f = ImageT::make_url(fname, src_tile);
-              struct stat info;
-              if (stat(src_f.c_str(), &info ) != 0 ) continue;
+              if (!file_exists(src_f)) continue;
 
               ImageR src_img = image_load(src_f);
               if (src_img.width() != w || src_img.height()!=w)
@@ -149,7 +149,6 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     return;
   }
 
-
   std::string fmt;
   if      (file_ext_check(fname, ".pdf"))  fmt="pdf";
   else if (file_ext_check(fname, ".ps"))   fmt="ps";
@@ -162,7 +161,6 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   else if (file_ext_check(fname, ".gif"))  fmt="gif";
 
   if (opts.get("out_fmt","") != "") fmt = opts.get("out_fmt", "");
-
 
   // write map file
   if (opts.exists("map")){
@@ -186,31 +184,49 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   CairoWrapper cr;
   ImageR img;
   int w=box.brc().x, h=box.brc().y;
-  if      (fmt == "pdf") cr.set_surface_pdf(fname.c_str(), w,h);
-  else if (fmt == "ps")  cr.set_surface_ps(fname.c_str(), w,h);
-  else if (fmt == "svg") cr.set_surface_svg(fname.c_str(), w,h);
-  else if (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif"){
-    img = ImageR(w,h,IMAGE_32ARGB);
-    img.fill32(0);
+
+  // create background image
+  uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
+  bool raster = (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif");
+  if (raster) {
+    if (opts.exists("add") && file_exists(fname)){
+      Opt o;
+      o.put("img_in_fmt", fmt);
+      img = image_to_argb(image_load(fname, 1, o));
+      if (img.height()!=h || img.width()!=w)
+        throw Err() << "Wrong image dimensions: " << fname << ": " << img;
+    }
+    else {
+      img = ImageR(w,h,IMAGE_32ARGB);
+      img.fill32(bg);
+    }
     cr.set_surface_img(img);
   }
-  else
-    throw Err(-2) << "Can't determine output format for file: " << fname;
+  else if (fmt == "pdf") cr.set_surface_pdf(fname.c_str(), w,h);
+  else if (fmt == "ps")  cr.set_surface_ps(fname.c_str(), w,h);
+  else if (fmt == "svg") cr.set_surface_svg(fname.c_str(), w,h);
+  else throw Err(-2) << "Can't determine output format for file: " << fname;
 
-  // fill the image with bgcolor
-  cr->set_color_a(opts.get<int>("bgcolor", 0xFFFFFFFF));
-  cr->paint();
+  if (!raster){
+    cr->set_color_a(bg);
+    cr->paint();
+  }
+
+  // clip to border
   if (ref.border.size()) {
     cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
     cr->mkpath_smline(ref.border, true, 0);
     cr->clip();
   }
 
-  // draw tracks and waypoints
+  // Draw data
+  // Save context (objects may want to have their own clip regions)
+  cr->save();
   obj.draw(cr, box);
+  cr->restore();
 
   // write raster formats
-  if (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif"){
+  if (raster) {
     Opt o(opts);
     o.put("img_out_fmt", fmt);
     image_save(img, fname, o);
