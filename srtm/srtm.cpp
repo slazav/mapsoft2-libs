@@ -141,7 +141,6 @@ SRTM::set_opt(const Opt & opt){
     srtm_dir = dir;
     size0 = 6380e3 * M_PI/srtm_width/180;
     area0 = pow(6380e3 * M_PI/srtm_width/180, 2);
-    auto lk = get_lock();
     srtm_cache.clear();
   }
 
