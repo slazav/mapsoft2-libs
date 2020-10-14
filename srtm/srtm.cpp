@@ -131,7 +131,7 @@ SRTM::set_opt(const Opt & opt){
   // Data width. Read a number from
   // srtm_width.txt file. Default 1201.
   size_t width = 1201;
-  std::ifstream ws(srtm_dir + "/srtm_width.txt");
+  std::ifstream ws(dir + "/srtm_width.txt");
   ws >> width;
   if (width<=0) width = 1201;
 
