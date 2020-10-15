@@ -213,7 +213,7 @@ SRTM::get_val(const int x, const int y, const bool interp){
   iPoint key, crd;
   get_crd(x, srtm_width, key.x, crd.x);
   get_crd(y, srtm_width, key.y, crd.y);
-  crd.y = srtm_width-crd.y-1;
+  crd.y = srtm_width-crd.y-2;
 
   int h;
   {
@@ -336,7 +336,7 @@ SRTM::set_val(const int x, const int y, const short h){
   iPoint key, crd;
   get_crd(x, srtm_width, key.x, crd.x);
   get_crd(y, srtm_width, key.y, crd.y);
-  crd.y = srtm_width-crd.y-1;
+  crd.y = srtm_width-crd.y-2;
 
   if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
   auto & im = srtm_cache.get(key);
