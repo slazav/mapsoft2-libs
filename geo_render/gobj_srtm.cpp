@@ -33,7 +33,7 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
   opts.add("srtm_holes_w",1,0,g,
     " Linewidth of hole contours, default - 1.");
   opts.add("srtm_peaks",1,0,g,
-    " Draw summits (0|1, default - 1).");
+    " Draw summits (0|1, default - 0).");
   opts.add("srtm_peaks_col",1,0,g,
     " Summit's color, default - 0xFF000000.");
   opts.add("srtm_peaks_w",1,0,g,
@@ -75,7 +75,7 @@ GObjSRTM::get_def_opt(){
   o.put("srtm_holes_w",   0.5);
 
   // peaks parameters
-  o.put("srtm_peaks",      1);
+  o.put("srtm_peaks",      0);
   o.put("srtm_peaks_col",  0xFF000000);
   o.put("srtm_peaks_",     3);
   o.put("srtm_peaks_dh",   20);
@@ -113,7 +113,7 @@ GObjSRTM::set_opt(const Opt & o){
   holes_w      = o.get<double>("srtm_holes_w",  0.5);
 
   // peaks parameters
-  peaks        = o.get<bool>("srtm_peaks",      1);
+  peaks        = o.get<bool>("srtm_peaks",      0);
   peaks_color  = o.get<int>("srtm_peaks_col",  0xFF000000);
   peaks_w      = o.get<double>("srtm_peaks_w",  3);
   peaks_dh     = o.get<int>("srtm_peaks_dh",   20);
