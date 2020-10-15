@@ -18,7 +18,7 @@ Original data can be downloaded from ftp://e0mss21u.ecs.nasa.gov/srtm/
 Fixed data can be downloaded from http://www.viewfinderpanoramas.org/dem3.html
 
 SRTM data is stored in [SN][0-9][0-9][EF][0-1][0-9][0-9].hgt
-or .hgt.gz files. Each one contains 1x1 degree area.
+or .hgt.gz, or .tif files. Each one contains 1x1 degree area.
 
 Default data directory is DIR=$HOME/.srtm_data
 

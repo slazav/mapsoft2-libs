@@ -4,7 +4,9 @@
 #include <queue>
 #include "srtm.h"
 #include "geom/point_int.h"
+#include "filename/filename.h"
 #include <zlib.h>
+#include <tiffio.h>
 
 
 // load srtm data from *.hgt file
@@ -47,6 +49,87 @@ read_zfile(const std::string & file, const size_t srtm_width){
   return im;
 }
 
+// load srtm data from *.tif file
+ImageR
+read_tfile(const std::string & file, const size_t srtm_width){
+
+  // open Tiff file, get width and height
+  if (!file_exists(file)) return ImageR();
+  TIFF* tif = TIFFOpen(file.c_str(), "rb");
+  if (!tif) throw Err() << "can't open tiff file: " << file;
+
+  int tiff_w, tiff_h;
+  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_w);
+  TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &tiff_h);
+
+  int scan = TIFFScanlineSize(tif);
+  int bpp = scan/tiff_w;
+  uint8 *cbuf = (uint8 *)_TIFFmalloc(scan);
+
+  ImageR im(srtm_width, srtm_width, IMAGE_16);
+
+  try {
+
+    // check format: should be 16bpp greyscale
+    int photometric=0;
+    TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
+    if (photometric != PHOTOMETRIC_MINISBLACK)
+      throw Err() << "unsupported photometric type: " << photometric;
+    if (bpp != 2)
+      throw Err() << "not a 2 byte-per-pixel tiff";
+
+    // check size: for srtm width w it should be one of
+    // (w)x(w), (w-1)x(w-1), ((w-1)/2+1)x(w), ((w-1)/2)x(w-1)
+    bool packed, addpixel;
+    if (tiff_h == srtm_width-1) {
+      addpixel = true;
+      if (tiff_w == srtm_width-1) packed = false;
+      else if (tiff_w == (srtm_width-1)/2) packed = true;
+      else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
+    }
+    else if (tiff_h == srtm_width) {
+      addpixel = false;
+      if (tiff_w == srtm_width) packed = false;
+      else if (tiff_w == (srtm_width-1)/2+1) packed = true;
+      else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
+    }
+    else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
+
+    // read image
+    for (int y = 0; y<tiff_h; y++){
+      TIFFReadScanline(tif, cbuf, y);
+      for (int x = 0; x<tiff_w; x++){
+        uint16_t v = (cbuf[2*x+1]<<8) + cbuf[2*x];
+
+        if (packed){
+          im.set16(2*x,  y,v);
+          if (2*x+1<srtm_width) im.set16(2*x+1,y,v);
+        }
+        else {
+          im.set16(x,y,v);
+        }
+      }
+      if (addpixel){
+        im.set16(srtm_width-1,y, im.get16(0,y));
+      }
+    }
+    if (addpixel){
+      for (int x = 0; x<srtm_width; x++)
+        im.set16(x, srtm_width-1, im.get16(x,0));
+    }
+  }
+  catch (Err & e) {
+    _TIFFfree(cbuf);
+    TIFFClose(tif);
+    throw Err() << "srtm: " << file << ": " << e.str();
+  }
+
+  _TIFFfree(cbuf);
+  TIFFClose(tif);
+  return im;
+}
+
+
 bool
 SRTM::load(const iPoint & key){
   if ((key.x < -180) || (key.x >= 180) ||
@@ -58,14 +141,21 @@ SRTM::load(const iPoint & key){
   // create filename
   std::ostringstream file;
   file << NS << std::setfill('0') << std::setw(2) << abs(key.y)
-       << EW << std::setw(3) << abs(key.x) << ".hgt";
+       << EW << std::setw(3) << abs(key.x);
 
   // try <name>.hgt.gz
-  ImageR im = read_zfile(srtm_dir + "/" + file.str() + ".gz", srtm_width);
+  ImageR im = read_zfile(srtm_dir + "/" + file.str() + ".hgt.gz", srtm_width);
 
   // try <name>.hgt
   if (im.is_empty())
-    im = read_file(srtm_dir + "/" + file.str(), srtm_width);
+    im = read_file(srtm_dir + "/" + file.str() + ".hgt", srtm_width);
+
+  // try <name>.tif
+  if (im.is_empty())
+    im = read_tfile(srtm_dir + "/" + file.str() + ".tif", srtm_width);
+
+  if (im.is_empty())
+    im = read_tfile(srtm_dir + "/" + file.str() + ".tiff", srtm_width);
 
   if (im.is_empty())
     std::cerr << "SRTM: can't find file: " << file.str() << "\n";
