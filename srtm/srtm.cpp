@@ -16,10 +16,9 @@ read_file(const std::string & file, const size_t srtm_width){
   ImageR im(srtm_width,srtm_width, IMAGE_16);
   size_t length = srtm_width*srtm_width*sizeof(short);
 
-  if (length != fread(im.data(), 1, length, F)){
+  if (length != fread(im.data(), 1, length, F))
     throw Err() << "SRTM: bad .hgt file: " << file;
-    return ImageR();
-  }
+
   for (size_t i=0; i<length/2; i++){ // swap bytes
     uint16_t tmp = ((uint16_t*)im.data())[i];
     ((uint16_t*)im.data())[i] = (tmp >> 8) + (tmp << 8);
@@ -37,10 +36,9 @@ read_zfile(const std::string & file, const size_t srtm_width){
   ImageR im(srtm_width, srtm_width, IMAGE_16);
   int length = srtm_width*srtm_width*sizeof(short);
 
-  if (length != gzread(F, im.data(), length)){
+  if (length != gzread(F, im.data(), length))
     throw Err() << "SRTM: bad .hgt.gz file: " << file;
-    return ImageR();
-  }
+
   for (int i=0; i<length/2; i++){ // swap bytes
     uint16_t tmp=((uint16_t*)im.data())[i];
     ((uint16_t*)im.data())[i] = (tmp >> 8) + (tmp << 8);
