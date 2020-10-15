@@ -51,7 +51,7 @@ GObjTrk::set_opt(const Opt & opt){
   // color from track is always non-transparent.
   // set transparency (0..1)
   double tr = opt.get<double>("trk_draw_transp", 0);
-  color = color & ((int)rint((1-tr)*255)<<24);
+  color = color | ((int)rint((1-tr)*255)<<24);
 
   // track drawing mode (normal, speed, height)
   string trk_mode = opt.get<string>("trk_draw_mode", "normal");
@@ -72,7 +72,6 @@ GObjTrk::set_opt(const Opt & opt){
                  opt.get<double>("trk_draw_hmax", 8000),
                  opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
-
 
   // set segment colors
   for (size_t i=0; i<trk.size(); i++){
