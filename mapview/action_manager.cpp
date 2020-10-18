@@ -69,6 +69,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(HidePanels,      "View")
     ADD_ACT(ShowPt,          "View")
 
+    ADD_ACT(AMTrkAdd,        "Trks")
     ADD_ACT(AMTrkOpt,        "Trks")
 
     ADD_ACT(AddMapyCZ,       "Maps")

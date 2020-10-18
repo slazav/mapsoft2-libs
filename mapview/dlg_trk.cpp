@@ -35,7 +35,7 @@ DlgTrk::DlgTrk() {
   table->attach(*width,   1, 2, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
   table->attach(*l_fg,    2, 3, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
   table->attach(*fg,      3, 4, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  table->attach(*info,    1, 4, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  table->attach(*info,    0, 4, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
   table->attach(*hint,    0, 4, 4, 5, Gtk::FILL, Gtk::SHRINK, 3, 3);
 
   get_vbox()->add(*table);
@@ -49,9 +49,9 @@ DlgTrk::dlg2trk(GeoTrk * trk) const{
   trk->opts.put("thickness", (int)width->get_value());
   Gdk::Color c = fg->get_color();
   uint32_t color=
-    (((unsigned)c.get_red()   & 0xFF00) >> 8) +
+    (((unsigned)c.get_red()   & 0xFF00) << 8) +
      ((unsigned)c.get_green() & 0xFF00) +
-    (((unsigned)c.get_blue()  & 0xFF00) << 8);
+    (((unsigned)c.get_blue()  & 0xFF00) >> 8);
   trk->opts.put("color", color);
 }
 void
@@ -61,9 +61,9 @@ DlgTrk::trk2dlg(const GeoTrk * trk){
   width->set_value(trk->opts.get("thickness", 1));
   int col = trk->opts.get("color", 0xFF0000FF);
   Gdk::Color c;
-  c.set_rgb((col & 0xFF)<<8,
+  c.set_rgb((col & 0xFF0000)>>8,
             (col & 0xFF00),
-            (col & 0xFF0000)>>8);
+            (col & 0xFF)<<8);
   fg->set_color(c);
   set_info(trk);
 }

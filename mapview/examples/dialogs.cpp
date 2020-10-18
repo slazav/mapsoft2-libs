@@ -134,6 +134,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     pano.set_transient_for(*this);
 
     // Edit track dialog
+    trk.set_hint("Some text\nwith <b>HTML</b><i> markup</i>");
     auto b_trk = manage(new Gtk::Button("DlgTrk"));
     b_trk->signal_clicked().connect(
       sigc::mem_fun(trk, &DlgTrk::show_all));

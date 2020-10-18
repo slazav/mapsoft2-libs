@@ -45,5 +45,91 @@ private:
     Opt o;
 };
 
+/**********************************************************/
+// add track
+
+#include "dlg_trk.h"
+
+class AMTrkAdd : public ActionMode {
+    GeoTrk trk;
+    DlgTrk dlg;
+
+    void on_result(int r){
+      if (r == Gtk::RESPONSE_OK){
+        dlg.dlg2trk(&trk);
+        std::shared_ptr<GeoTrk> track(new GeoTrk(trk));
+        mapview->panel_trks->add(track);
+      }
+      abort();
+    }
+  public:
+
+    AMTrkAdd (Mapview * mapview) : ActionMode(mapview) {
+      dlg.set_transient_for(*mapview);
+      dlg.signal_response().connect(
+        sigc::mem_fun (this, &AMTrkAdd::on_result));
+      dlg.set_title(get_name());
+    }
+
+    std::string get_name() { return "Add Track"; }
+    Gtk::StockID get_stockid() { return Gtk::Stock::ADD; }
+
+    void activate() { abort(); }
+
+    void abort() {
+      trk.clear();
+      trk.comm="";
+      mapview->rubber.clear();
+      dlg.hide();
+    }
+
+    void handle_click(iPoint p, const Gdk::ModifierType & state) {
+
+         if (trk.size() == 0){
+           dlg.trk2dlg(&trk);
+           dlg.set_hint("<b>Use mouse buttons to draw track:</b>\n"
+                        "* <b>1.</b> Add point.\n"
+                        "* <b>Ctrl-1.</b> Remove last point.\n"
+                        "* <b>Shift-1.</b> Start new segment.\n"
+                        "* <b>2.</b> Scroll map.\n"
+                        "* <b>3.</b> Abort drawing.");
+           dlg.show_all();
+         }
+
+        if (state&Gdk::CONTROL_MASK){ // remove point
+          if (trk.size()>0) trk.pop_back();
+          if (mapview->rubber.size()>0){
+            mapview->rubber.pop();
+          }
+          if (mapview->rubber.size()>0){
+            RubberSegment s = mapview->rubber.pop();
+            s.flags |= RUBBFL_MOUSE_P2;
+            s.p2=iPoint(0,0);
+            mapview->rubber.add(s);
+          }
+        }
+        else{ // add point
+
+          GeoTpt pt;
+          pt.dPoint::operator=(p);
+          mapview->viewer.get_cnv().frw(pt);
+          pt.start = (state&Gdk::SHIFT_MASK) || (trk.size()==0);
+//          pt.z = mapview->srtm.get_val_int4(pt);
+          trk.push_back(pt);
+
+          if (mapview->rubber.size()>0){
+            RubberSegment s = mapview->rubber.pop();
+            s.flags &= ~RUBBFL_MOUSE;
+            s.p2 = pt.start ? s.p1 : dPoint(p);
+            mapview->rubber.add(s);
+          }
+          mapview->rubber.add_line(p);
+        }
+
+        dlg.set_info(&trk);
+    }
+};
+
+
 #endif
 
