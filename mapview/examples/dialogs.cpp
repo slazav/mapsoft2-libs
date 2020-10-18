@@ -138,6 +138,8 @@ class MyWindow : public Gtk::ApplicationWindow {
     auto b_trk = manage(new Gtk::Button("DlgTrk"));
     b_trk->signal_clicked().connect(
       sigc::mem_fun(trk, &DlgTrk::show_all));
+    trk.signal_response().connect(
+      sigc::hide(sigc::mem_fun(&trk, &DlgTrk::hide)));
 
     /***********************************/
     // Main vbox

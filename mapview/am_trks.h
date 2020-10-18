@@ -53,8 +53,17 @@ private:
 class AMTrkAdd : public ActionMode {
     GeoTrk trk;
     DlgTrk dlg;
+    bool start;
 
     void on_result(int r){
+      // new segment
+      if (r == Gtk::RESPONSE_APPLY){
+        start = true;
+        if (mapview->rubber.size()>0) mapview->rubber.pop();
+        return;
+      }
+
+      // OK button
       if (r == Gtk::RESPONSE_OK){
         dlg.dlg2trk(&trk);
         std::shared_ptr<GeoTrk> track(new GeoTrk(trk));
@@ -64,7 +73,7 @@ class AMTrkAdd : public ActionMode {
     }
   public:
 
-    AMTrkAdd (Mapview * mapview) : ActionMode(mapview) {
+    AMTrkAdd (Mapview * mapview) : ActionMode(mapview), start(true) {
       dlg.set_transient_for(*mapview);
       dlg.signal_response().connect(
         sigc::mem_fun (this, &AMTrkAdd::on_result));
@@ -96,7 +105,8 @@ class AMTrkAdd : public ActionMode {
            dlg.show_all();
          }
 
-        if (state&Gdk::CONTROL_MASK){ // remove point
+        // remove point
+        if (state&Gdk::CONTROL_MASK){
           if (trk.size()>0) trk.pop_back();
           if (mapview->rubber.size()>0){
             mapview->rubber.pop();
@@ -108,22 +118,23 @@ class AMTrkAdd : public ActionMode {
             mapview->rubber.add(s);
           }
         }
-        else{ // add point
-
+        // add point
+        else{
           GeoTpt pt;
           pt.dPoint::operator=(p);
           mapview->viewer.get_cnv().frw(pt);
-          pt.start = (state&Gdk::SHIFT_MASK) || (trk.size()==0);
+          pt.start = (state&Gdk::SHIFT_MASK) || start;
 //          pt.z = mapview->srtm.get_val_int4(pt);
           trk.push_back(pt);
 
-          if (mapview->rubber.size()>0){
+          if (mapview->rubber.size()>0 && !start){
             RubberSegment s = mapview->rubber.pop();
             s.flags &= ~RUBBFL_MOUSE;
             s.p2 = pt.start ? s.p1 : dPoint(p);
             mapview->rubber.add(s);
           }
           mapview->rubber.add_line(p);
+          start=false;
         }
 
         dlg.set_info(&trk);
