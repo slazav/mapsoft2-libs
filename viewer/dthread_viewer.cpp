@@ -119,7 +119,7 @@ DThreadViewer::updater(){
       crw.get_surface()->flush();
 
       updater_mutex->lock();
-      if (!obj->is_stopped()) {
+      if (!obj || !obj->is_stopped()) {
         if (tiles_cache.count(key)>0) tiles_cache.erase(key);
         tiles_cache.insert(std::make_pair(key, crw));
         tiles_done.push(key);
@@ -127,7 +127,7 @@ DThreadViewer::updater(){
         done_signal.emit();
       }
       else {
-        obj->stop_drawing(false);
+        if (obj) obj->stop_drawing(false);
       }
     }
     updater_mutex->unlock();
