@@ -33,6 +33,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "Do not write image file (can be used if only the map file is needed). "
     "Option -o <file> should be provided anyway, the filename "
     "will be written to the map-file.");
+  opts.add("title", 1,0,g, "write text in the top-left corner.");
   opts.add("tmap", 0,0,g,
     "Write tiled map. In this case `fname` parameter should contain a template "
     "with {x}, {y}, {z} fields. Output of map file is not supported at "
@@ -229,6 +230,14 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   cr->save();
   obj.draw(cr, box);
   cr->restore();
+
+  // Draw title
+  cr->reset_clip();
+  if (opts.exists("title")){
+    double fs = 12.0;
+    cr->set_fc_font(0xFF000000, "sans:bold", fs);
+    cr->text(opts.get("title").c_str(), dPoint(5.0, 5.0+fs), 0);
+  }
 
   // write raster formats
   if (raster) {
