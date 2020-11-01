@@ -17,4 +17,8 @@ void ms2opt_add_geoimg(GetOptSet & opts);
 // Interface is similar to `write_geo` in modules/geo_data
 void write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts);
 
+// This function is normally called from write_geoimg.
+// ref parameter is used only for border setting
+void write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts);
+
 #endif
