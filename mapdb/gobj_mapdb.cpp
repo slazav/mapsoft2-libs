@@ -236,6 +236,15 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         continue;
       }
 
+      // obj_scale
+      if (vs[0] == "obj_scale") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: obj_scale <value>";
+        obj_scale = str_to_type<double>(vs[1]);
+        continue;
+      }
+
 
 
       /**********************************************************/
