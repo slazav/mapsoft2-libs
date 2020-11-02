@@ -50,7 +50,7 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
   std::map<uint32_t, uint32_t> obj_map; // vmap type -> mapdb type
   std::map<uint32_t, uint32_t> lbl_map; // vmap type -> mapdb type
 
-  // If configuration file does not exist we will
+  // If configuration file name is empty we will
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
@@ -61,14 +61,15 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
 
   // Read configuration file.
   if (cfg_file != ""){
-
     int line_num[2] = {0,0};
     ifstream ff(cfg_file);
+
     try {
       while (1){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
 
+        // unknown_types setting: what to do with unknown types
         if (vs[0] == "unknown_types"){
           if (vs.size()!=2) throw Err() << "unknown_types: one argument expected";
           if      (vs[1] == "skip")    unknown_types = UNKNOWN_TYPES_SKIP;
@@ -112,7 +113,7 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
             throw Err() << "can't convert line or area to point: "
                            << vs[0] << " -> " << vs[1];
 
-           obj_map.insert(make_pair(src_type, dst_type));
+          obj_map.insert(make_pair(src_type, dst_type));
           if (vs.size() == 3){
             uint32_t lbl_type = MapDBObj::make_type(vs[2]);
             if ((lbl_type>>24) != MAPDB_TEXT)
@@ -253,7 +254,7 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
   // type conversion tables (point, line, polygon)
   std::map<uint32_t, uint32_t> obj_map; // mapdb type -> vmap type
 
-  // If configuration file does not exist we will
+  // If configuration file name is empty we will
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
@@ -264,7 +265,6 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
 
   // Read configuration file.
   if (cfg_file != ""){
-
     ifstream ff(cfg_file);
     int line_num[2] = {0,0};
 
@@ -354,7 +354,6 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
     else {
       type = obj_map.find(type)->second;
     }
-
 
     // convert type to vmap format
     switch (type>>24){

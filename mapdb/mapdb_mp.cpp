@@ -17,24 +17,8 @@ using namespace std;
 void
 ms2opt_add_mapdb_mp_imp(GetOptSet & opts){
   const char *g = "MAPDB_MP_IMP";
-  opts.add("config", 1,'c',g,
-    "Configuration file for MP->MapDB conversion");
-
-  opts.add("cnv_points", 1,0,g,
-    "Type conversion rules for point objects: "
-    "[[<type_in>, <type_out>], [<type_in>, <type_out>], ...] "
-    "type_in==0 matches all types; type_out==0 sets output type "
-    "same as input one. Default value: [[0,0]].");
-
-  opts.add("cnv_lines", 1,0,g,
-    "Type conversion rules for line objects. Same notation as in cnv_point.");
-
-  opts.add("cnv_areas", 1,0,g,
-    "Type conversion rules for area objects. Same notation as in cnv_point.");
-
-  opts.add("data_level", 1,0,g,
-    "Read data from a specified MP data level");
-
+  opts.add("config", 1,'c',g,   "Configuration file for MP->MapDB conversion");
+  opts.add("data_level", 1,0,g, "Read data from a specified MP data level");
 }
 
 /**********************************************************/
@@ -43,19 +27,6 @@ ms2opt_add_mapdb_mp_exp(GetOptSet & opts){
   const char *g = "MAPDB_MP_EXP";
   opts.add("config", 1,'c',g,
     "Configuration file for MapDB->MP conversion");
-
-  opts.add("cnv_points", 1,0,g,
-    "Type conversion rules for point objects: "
-    "[[<type_in>, <type_out>], [<type_in>, <type_out>], ...] "
-    "type_in==0 matches all types; type_out==0 sets output type "
-    "same as input one. Default value: [[0,0]].");
-
-  opts.add("cnv_lines", 1,0,g,
-    "Type conversion rules for line objects. Same notation as in cnv_point.");
-
-  opts.add("cnv_areas", 1,0,g,
-    "Type conversion rules for area objects. Same notation as in cnv_point.");
-
   opts.add("codepage", 1,0,g, "set MP codepage");
   opts.add("name",     1,0,g, "set MP map name");
   opts.add("id",       1,0,g, "ser MP map ID");
@@ -63,77 +34,107 @@ ms2opt_add_mapdb_mp_exp(GetOptSet & opts){
 }
 
 /**********************************************************/
+// what can be done with unknown types
+enum unknown_types_t {
+  UNKNOWN_TYPES_SKIP,
+  UNKNOWN_TYPES_WARN,
+  UNKNOWN_TYPES_CNV,
+  UNKNOWN_TYPES_ERR
+};
+
+/**********************************************************/
 void
 MapDB::import_mp(const string & mp_file, const Opt & opts){
 
-  // type conversion tables (point, line, polygon)
-  vector<iLine> cnvs;
-  cnvs.resize(3);
-  // default configuration 0->0
-  for (int i=0; i<3; i++)
-    cnvs[i].push_back(iPoint(0,0));
+  // type conversion table
+  std::map<uint32_t, uint32_t> obj_map; // mp type -> mapdb type
+
+  // If configuration file name is empty we will
+  // use some default conversion.
+  std::string cfg_file = opts.get<string>("config", "");
+
+  // What do we want to do with objects wich are not listed explicetely in
+  // the configuration file?
+  unknown_types_t unknown_types = UNKNOWN_TYPES_CNV;
+  std::set<uint32_t> unknowns;
 
   // data level
   int level = 0;
 
   // Read configuration file.
-  if (opts.exists("config")){
+  if (cfg_file != ""){
     int line_num[2] = {0,0};
+    ifstream ff(cfg_file);
 
-    // reset default configuration:
-    for (int i=0; i<3; i++) cnvs[i] = iLine();
-
-    ifstream ff(opts.get<string>("config"));
     try {
       while (1){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
 
-        if (vs[0]=="point"){
-          if (vs.size()!=2 && vs.size()!=3)
-            throw Err() << "point: two or three arguments expected: "
-                           "<type_in> [<type_out>]";
-          cnvs[0].push_back(iPoint(
-            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
+        // unknown_types setting: what to do with unknown types
+        // default: "convert"
+        if (vs[0] == "unknown_types"){
+          if (vs.size()!=2) throw Err() << "unknown_types: one argument expected";
+          if      (vs[1] == "skip")    unknown_types = UNKNOWN_TYPES_SKIP;
+          else if (vs[1] == "warning") unknown_types = UNKNOWN_TYPES_WARN;
+          else if (vs[1] == "convert") unknown_types = UNKNOWN_TYPES_CNV;
+          else if (vs[1] == "error")   unknown_types = UNKNOWN_TYPES_ERR;
+          else throw Err() << "unknown_types: skip, warning, error or convert expected";
           continue;
         }
 
-        if (vs[0]=="line"){
-          if (vs.size()!=2 && vs.size()!=3)
-            throw Err() << "line: two or three arguments expected: "
-                           "<type_in> [<type_out>]";
-          cnvs[1].push_back(iPoint(
-            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
-          continue;
-        }
-
-        if (vs[0]=="area"){
-          if (vs.size()!=2 && vs.size()!=3)
-            throw Err() << "area: two or three arguments expected: "
-                           "<type_in> [<type_out>]";
-          cnvs[2].push_back(iPoint(
-            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
-          continue;
-        }
-
-        if (vs[0]=="level"){
-          if (vs.size()!=2) throw Err() << "level: one argument expected";
+        // data_level setting: which MP data level use
+        // default: 0
+        if (vs[0] == "data_level"){
+          if (vs.size()!=2) throw Err() << "data_level: one argument expected";
           level = str_to_type<int>(vs[1]);
           continue;
         }
 
+        // add other configuration commands here...
+
+        // object conversion (src, dst, [label])
+        if (vs.size() == 2) {
+          uint32_t src_type = MapDBObj::make_type(vs[0]);
+          uint32_t dst_type = (vs[1] == "-")? src_type : MapDBObj::make_type(vs[1]);
+          MapDBObjClass scl = (MapDBObjClass)(src_type>>24);
+          MapDBObjClass dcl = (MapDBObjClass)(dst_type>>24);
+
+          if (scl != MAPDB_POINT &&
+              scl != MAPDB_LINE  &&
+              scl != MAPDB_POLYGON )
+            throw Err() << "point, line, or area object type expected"
+                           " in the first column: " << vs[0];
+
+          if (dcl != MAPDB_POINT &&
+              dcl != MAPDB_LINE  &&
+              dcl != MAPDB_POLYGON )
+            throw Err() << "point, line, or area object type expected"
+                           " in the second column: " << vs[1];
+
+          if ((scl == MAPDB_POINT) &&
+              (dcl == MAPDB_LINE  ||
+               dcl == MAPDB_POLYGON) )
+            throw Err() << "can't convert point to line or area: "
+                           << vs[0] << " -> " << vs[1];
+
+          if ((dcl == MAPDB_POINT) &&
+              (scl == MAPDB_LINE  ||
+               scl == MAPDB_POLYGON) )
+            throw Err() << "can't convert line or area to point: "
+                           << vs[0] << " -> " << vs[1];
+
+          obj_map.insert(make_pair(src_type, dst_type));
+          continue;
+        }
         throw Err() << "unknown command: " << vs[0];
       }
     } catch (Err & e){
         throw Err() << "MapDB::import_mp: bad configuration file at line "
                     << line_num[0] << ": " << e.str();
     }
-
   }
 
-  if (opts.exists("cnv_points"))  cnvs[0] = opts.get<dLine>("cnv_points");
-  if (opts.exists("cnv_lines"))   cnvs[1] = opts.get<dLine>("cnv_lines");
-  if (opts.exists("cnv_areas"))   cnvs[2] = opts.get<dLine>("cnv_areas");
   if (opts.exists("data_level")) level   = opts.get<int>("data_level");
 
   // read MP file
@@ -151,21 +152,28 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
       default:
         throw Err() << "wrong MP class: "<< o.Class;
     }
+    uint16_t tnum = o.Type & 0xFFFF;
+    uint32_t type = (cl<<24) + tnum;
 
     // convert type
-    uint16_t tnum=0;
-    for (auto const & cnv: cnvs[cl]){
-      if (cnv.x == 0 || cnv.x == o.Type) {
-        tnum = cnv.y? cnv.y : o.Type;
+    if (obj_map.count(type)==0){
+      switch (unknown_types) {
+      case UNKNOWN_TYPES_SKIP:
+        continue;
+      case UNKNOWN_TYPES_WARN:
+        unknowns.insert(type);
+        continue;
+      case UNKNOWN_TYPES_ERR:
+        throw Err() << "unknown type: " << MapDBObj::print_type(type);
+      case UNKNOWN_TYPES_CNV:
         break;
       }
     }
+    else {
+      type = obj_map.find(type)->second;
+    }
 
-    // skip unknown types
-    if (tnum==0) continue;
-
-    MapDBObj o1(cl, tnum);
-
+    MapDBObj o1(type);
 
     // name, comments
     o1.name = o.Label;
@@ -198,55 +206,30 @@ MapDB::import_mp(const string & mp_file, const Opt & opts){
 void
 MapDB::export_mp(const string & mp_file, const Opt & opts){
 
-  // type conversion tables (point, line, polygon)
-  vector<iLine> cnvs;
-  // default configuration 0->0
-  cnvs.resize(3);
-  for (int i=0; i<3; i++)
-    cnvs[i].push_back(iPoint(0,0));
+  // type conversion table
+  std::map<uint32_t, uint32_t> obj_map; // mapdb type -> mp type
+
+  // If configuration file name is empty we will
+  // use some default conversion.
+  std::string cfg_file = opts.get<string>("config", "");
+
+
+  // What do we want to do with objects wich are not listed explicetely in
+  // the configuration file?
+  unknown_types_t unknown_types = UNKNOWN_TYPES_CNV;
+  std::set<uint32_t> unknowns;
 
   MP mp_data;
 
   // Read configuration file.
-  if (opts.exists("config")){
-
-    // reset default configuration:
-    for (int i=0; i<3; i++) cnvs[i] = iLine();
-
+  if (cfg_file != ""){
+    ifstream ff(cfg_file);
     int line_num[2] = {0,0};
-    ifstream ff(opts.get<string>("config"));
 
     try {
       while (1){
         vector<string> vs = read_words(ff, line_num, true);
         if (vs.size()<1) break;
-
-        if (vs[0]=="point"){
-          if (vs.size()!=2 && vs.size()!=3)
-            throw Err() << "point: two or three arguments expected: "
-                           "<type_in> [<type_out>]";
-          cnvs[0].push_back(iPoint(
-            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
-          continue;
-        }
-
-        if (vs[0]=="line"){
-          if (vs.size()!=2 && vs.size()!=3)
-            throw Err() << "line: two or three arguments expected: "
-                           "<type_in> [<type_out>]";
-          cnvs[1].push_back(iPoint(
-            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
-          continue;
-        }
-
-        if (vs[0]=="area"){
-          if (vs.size()!=2 && vs.size()!=3)
-            throw Err() << "area: two or three arguments expected: "
-                           "<type_in> [<type_out>]";
-          cnvs[2].push_back(iPoint(
-            str_to_type<int>(vs[1]), vs.size()<3? 0:str_to_type<uint16_t>(vs[2])));
-          continue;
-        }
 
         if (vs[0]=="codepage"){
           if (vs.size()!=2) throw Err() << "codepage: one argument expected";
@@ -266,6 +249,38 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
           continue;
         }
 
+        // add other configuration commands here...
+
+        // object conversion (src, dst)
+        if (vs.size() == 2) {
+          uint32_t src_type = MapDBObj::make_type(vs[0]);
+          uint32_t dst_type = (vs[1] == "-")? src_type : MapDBObj::make_type(vs[1]);
+          MapDBObjClass scl = (MapDBObjClass)(src_type>>24);
+          MapDBObjClass dcl = (MapDBObjClass)(dst_type>>24);
+
+          if (scl != MAPDB_POINT   && scl != MAPDB_LINE &&
+              scl != MAPDB_POLYGON && scl != MAPDB_TEXT)
+            throw Err() << "point, line, area, or text object type expected"
+                           " in the first column: " << vs[0];
+
+          if (dcl != MAPDB_POINT   && dcl != MAPDB_LINE &&
+              dcl != MAPDB_POLYGON)
+            throw Err() << "point, line, area object type expected"
+                           " in the second column: " << vs[1];
+
+          if ((scl == MAPDB_POINT || scl == MAPDB_TEXT) &&
+              (dcl == MAPDB_LINE  || dcl == MAPDB_POLYGON) )
+            throw Err() << "can't convert point or text to line or area: "
+                           << vs[0] << " -> " << vs[1];
+
+          if ((dcl == MAPDB_POINT || dcl == MAPDB_TEXT) &&
+              (scl == MAPDB_LINE  || scl == MAPDB_POLYGON) )
+            throw Err() << "can't convert line or area to point or text: "
+                           << vs[0] << " -> " << vs[1];
+
+          obj_map.insert(make_pair(src_type, dst_type));
+          continue;
+        }
         throw Err() << "unknown command: " << vs[0];
       }
     } catch (Err & e){
@@ -274,15 +289,9 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
     }
   }
 
-
-  if (opts.exists("cnv_points")) cnvs[0] = opts.get<dLine>("cnv_points");
-  if (opts.exists("cnv_lines"))  cnvs[1] = opts.get<dLine>("cnv_lines");
-  if (opts.exists("cnv_areas")) cnvs[2] = opts.get<dLine>("cnv_areas");
   if (opts.exists("codepage"))   mp_data.Codepage = opts.get("codepage");
   if (opts.exists("name"))       mp_data.Name = opts.get("name");
   if (opts.exists("id"))         mp_data.ID = opts.get("id", 0);
-
-
 
   uint32_t key = 0;
   std::string str = objects.get_first(key);
@@ -293,40 +302,48 @@ MapDB::export_mp(const string & mp_file, const Opt & opts){
     MPObj o1;
 
     // convert type
-    uint16_t tnum = o.get_tnum();
-    uint16_t cl = o.get_class();
-    if (cl>2) throw Err() << "bad object class: " << cl;
-    for (auto const & cnv: cnvs[cl]){
-      if (cnv.x == 0 || cnv.x == tnum) {
-        o1.Type = cnv.y? cnv.y : tnum;
+    uint32_t type = o.type;
+
+    // convert type
+    if (obj_map.count(type)==0){
+      switch (unknown_types) {
+      case UNKNOWN_TYPES_SKIP:
+        goto end;
+      case UNKNOWN_TYPES_WARN:
+        unknowns.insert(type);
+        goto end;
+      case UNKNOWN_TYPES_ERR:
+        throw Err() << "unknown type: " << MapDBObj::print_type(type);
+      case UNKNOWN_TYPES_CNV:
         break;
       }
     }
+    else {
+      type = obj_map.find(type)->second;
+    }
 
-    switch (cl){
+    // convert type to mp format
+    switch (type>>24){
       case MAPDB_POINT:   o1.Class = MP_POINT; break;
       case MAPDB_LINE:    o1.Class = MP_LINE; break;
       case MAPDB_POLYGON: o1.Class = MP_POLYGON; break;
-      default:
-        throw Err() << "wrong MapDB object class: "<< cl;
+      default: goto end;
     }
+    o1.Type = type & 0xFFFF;
 
-    // skip unknown types
-    if (o1.Type!=-1){
+    // name, comments
+    o1.Label = o.name;
+    o1.Comment = o.comm;
 
-      // name, comments
-      o1.Label = o.name;
-      o1.Comment = o.comm;
+    // source
+    if (o.tags.size()>0) o1.Opts.put("Source", *o.tags.begin());
 
-      // source
-      if (o.tags.size()>0) o1.Opts.put("Source", *o.tags.begin());
+    // points
+    o1.Data.push_back(o);
 
-      // points
-      o1.Data.push_back(o);
+    if (o1.Data.size()) mp_data.push_back(o1);
 
-      if (o1.Data.size()) mp_data.push_back(o1);
-    }
-
+    end:
     str = objects.get_next(key);
   }
   ofstream out(mp_file);
