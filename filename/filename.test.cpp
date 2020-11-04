@@ -4,6 +4,7 @@
 #include <iostream>
 #include "filename.h"
 #include "err/assert_err.h"
+#include <unistd.h>
 
 using namespace std;
 
@@ -57,10 +58,21 @@ int main() {
     assert_eq(file_get_prefix("/abc/./aaa.ccc"), "/abc/./");
     assert_eq(file_get_prefix("abc/.aaa.ccc"), "abc/");
 
+    // file exists
     assert_eq(file_exists("filename.test.cpp"), 1);
     assert_eq(file_exists("missing.txt"), 0);
     assert_eq(file_exists("."), 1);
     assert_eq(file_exists("missing/../filename.test.cpp"), 0);
+
+    // file_rel_path
+    assert_eq(file_rel_path("a.png",       "b.map"),        "a.png");
+    assert_eq(file_rel_path("d1/d2/a.png", "d1/d2/b.map"),  "a.png");
+    assert_eq(file_rel_path("d1/d2/a.png", "d1/b.map"),     "d2/a.png");
+    assert_eq(file_rel_path("d1/a.png",    "d2/b.map"),     "../d1/a.png");
+    assert_eq(file_rel_path("d1/a.png",    "d1/d2/b.map"),  "../a.png");
+    assert_eq(file_rel_path("/d1/a.png",   "/d1/b.map"),   "/d1/a.png");
+    assert_eq(file_rel_path("a.png",       "/d1/b.map"),    std::string(getcwd(0,0)) + "/a.png");
+    assert_eq(file_rel_path("a.png",       "a/b/c/d/b.map"),  "../../../../a.png");
 }
 
 ///\endcond

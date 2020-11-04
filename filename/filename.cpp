@@ -1,6 +1,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include "err/err.h"
 
 bool
 file_ext_check(const std::string &fname, const char *ext){
@@ -37,6 +38,37 @@ file_get_dirs(const std::string &fname){
   };
   return ret;
 }
+
+#include <unistd.h>
+std::string
+file_rel_path(const std::string &fname, const std::string &ref_name){
+  // if filename is empty, or has absolute path, return it:
+  if (fname.size()==0 || fname[0]=='/') return fname;
+
+  // if reference is empty or contains absolute path, return absolute path for fname:
+  if (ref_name.size()==0 || ref_name[0]=='/'){
+     char * cwd = getcwd(NULL, 0);
+     if (!cwd) throw Err() << "can't get cwd: " << strerror(errno);
+     return std::string(cwd) + "/" + fname;
+  }
+
+  // reference dirs
+  auto dirs = file_get_dirs(ref_name);
+
+  size_t i;
+  for (i = 0; i < dirs.size(); ++i){
+    auto d = fname.substr(0, dirs[i].size()+1);
+    if (d == dirs[i] + "/") break;
+  }
+
+  std::string ret;
+  for (size_t j = 0; j<i; ++j) ret += "../";
+  if (i<dirs.size()) return ret += fname.substr(dirs[i].size()+1);
+  else ret += fname;
+
+  return ret;
+}
+
 
 std::string
 file_get_prefix(const std::string &fname){

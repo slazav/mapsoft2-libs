@@ -21,6 +21,21 @@ std::string file_ext_repl(const std::string &fname, const char *ext);
 */
 std::vector<std::string> file_get_dirs(const std::string &fname);
 
+
+/*
+Calculate path, relative to ref_name (e.g. to put image name into .map or .fig file)
+Examples (one makes a.map and a.png; what should be written in a.map?):
+  a.png        b.map        -> a.png
+  d1/d2/a.png  d1/d2/b.map  -> a.png
+  d1/d2/a.png  d1/b.map     -> d2/a.png
+  d1/a.png     d2/b.map     -> ../d1/a.png
+  d1/a.png     d1/d2/b.map  -> ../a.png
+  /d1/a.png    <anything>   -> /d1/a.png
+  a.png        /d1/b.map    -> $(cwd)/a.png
+*/
+std::string file_rel_path(const std::string &fname, const std::string &ref_name);
+
+
 /* Extract directory prefix from a filename */
 std::string file_get_prefix(const std::string &fname);
 

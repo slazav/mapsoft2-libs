@@ -21,8 +21,12 @@ std::string file_ext_repl(const std::string &fname, const char *ext);
 ```c++
 std::vector<std::string> file_get_dirs(const std::string &fname);
 ```
-
 Example: d1/d2/d3/../d4/f -> d1/d2/d3/../d4, d1/d2/d3, d1/d2, d1
+
+* Calculate path, relative to ref_name (e.g. to put image name into .map or .fig file)
+```c++
+std::string file_rel_path(const std::string &fname, const std::string &ref_name);
+```
 
 * Extract directory prefix from a filename:
 ```c++
