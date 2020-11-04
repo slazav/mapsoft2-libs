@@ -172,8 +172,9 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   // write map file
   if (opts.exists("map")){
     GeoMap r(ref);
-    r.image = fname;
-    write_ozi_map(opts.get("map","").c_str(), r, opts);
+    auto mapfile = opts.get("map","");
+    r.image = file_rel_path(fname, mapfile);
+    write_ozi_map(mapfile, r, opts);
   }
 
   // exit if --skip_image option exists
