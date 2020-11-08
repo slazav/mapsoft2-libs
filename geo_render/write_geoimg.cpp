@@ -8,7 +8,7 @@
 #include "geo_mkref/geo_mkref.h" // for tiled maps
 #include "geom/poly_tools.h"     // for rect_in_polygon
 #include "geo_tiles/geo_tiles.h"
-
+#include <fstream>
 
 void
 ms2opt_add_geoimg(GetOptSet & opts){
@@ -27,8 +27,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "The image should have same dimensions.");
   opts.add("bgcolor", 1,0,g,
     "Image background color (default 0xFFFFFFFF).");
-  opts.add("map", 1,'m',g,
-    "Write map file in OziExprorer format (by default it is not written).");
+  opts.add("map", 1,'m',g, "Write OziExplorer map file for the image.");
   opts.add("skip_image", 0,0,g,
     "Do not write image file (can be used if only the map file is needed). "
     "Option -o <file> should be provided anyway, the filename "
@@ -188,6 +187,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   dRect box = dRect(dPoint(), (dPoint)ref.image_size);
   if (box.is_zsize()) box = ref.border.bbox();
   if (box.is_zsize()) throw Err() << "write_img: can't get map dimensions";
+
   // setup cairo context
   CairoWrapper cr;
   ImageR img;
@@ -249,4 +249,47 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   }
 
 }
+
+
+void
+write_html_map(const std::string & htmfile, const std::string & imgfile,
+   const GeoMap & ref, const std::list<GeoMapList> & maps){
+
+  // find image dimensions (same as in write_img)
+  dRect box = dRect(dPoint(), (dPoint)ref.image_size);
+  if (box.is_zsize()) box = ref.border.bbox();
+  if (box.is_zsize()) throw Err() << "write_html_map: can't get map dimensions";
+
+  if (htmfile == "") return;
+  auto ff = file_rel_path(imgfile, htmfile);
+  std::ofstream f(htmfile);
+  f << "<html><body>\n"
+    << "<img border=\"0\" "
+    <<      "src=\""    << ff << "\" "
+    <<      "width=\""  << box.brc().x << "\" "
+    <<      "height=\"" << box.brc().y << "\" "
+    <<      "usemap=\"#map:" << ff << "\">\n"
+    << "<map name=\"map:" << ff << "\">\n";
+    for (const auto & ml: maps) {
+      for (const auto & m: ml) {
+        ConvMap c1(m), c2(ref);
+
+        // for each border segment
+        for (const auto & b: m.border) {
+          dLine bc = c2.bck_acc(c1.frw_acc(b));
+          f << "<area shape=\"poly\" "
+            <<       "href=\""   << m.image << "\" "
+            <<       "alt=\""    << m.comm << "\" "
+            <<       "title=\""  << m.comm << "\" "
+            <<       "coords=\"";
+          for (size_t i=0; i<bc.size(); i++)
+            f << (i>0?",":"") << bc[i].x << "," << bc[i].y;
+          f << "\">\n";
+        }
+      }
+    }
+    f << "</map>\n"
+      << "</body></html>";
+    f.close();
+  }
 

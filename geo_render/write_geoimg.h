@@ -21,4 +21,8 @@ void write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, con
 // ref parameter is used only for border setting
 void write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts);
 
+// write html map with image and links to all maps
+void write_html_map(const std::string & htmfile, const std::string & imgfile,
+   const GeoMap & ref, const std::list<GeoMapList> & maps);
+
 #endif
