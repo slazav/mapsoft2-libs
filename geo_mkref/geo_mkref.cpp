@@ -343,6 +343,24 @@ GeoMap geo_mkref(const GeoData & data, const Opt & o){
   if (data.maps.size()>0 && data.maps.begin()->size()>0){
     GeoMap map = *(data.maps.begin()->begin());
     map.update_size();
+
+    // apply --mag option
+    if (o.exists("mag")) map*=o.get("mag", 1.0);
+
+    // join borders of all maps:
+    map.border = dMultiLine();
+    for (auto const & ml:data.maps){
+      for (auto const & m:ml){
+        ConvMap cnv(m);
+        auto b = cnv.frw_acc(m.border);
+        map.border.insert(map.border.end(), b.begin(), b.end());
+      }
+    }
+    ConvMap cnv(map);
+    map.border = cnv.bck_acc(map.border);
+
+    // use border_* options to modify the border
+    geo_mkref_brd(o, map.border);
     return map;
   }
 
