@@ -620,7 +620,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   double exp_dist = 0;
 
   if (action == STEP_DRAW_TEXT){
-    exp_dist = mapdb_gobj->max_text_size;
+    exp_dist = mapdb_gobj->max_text_size*osc;
   }
   else {
     // expand by line width
