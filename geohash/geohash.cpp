@@ -161,7 +161,6 @@ GEOHASH_encode4(const dRect & r, size_t maxlen) {
     std::string h2 = GEOHASH_encode(r.trc(), maxlen);
     std::string h3 = GEOHASH_encode(r.blc(), maxlen);
     std::string h4 = GEOHASH_encode(r.brc(), maxlen);
-    std::string h1s, h2s, h3s, h4s;
 
     assert(h1.size() == h2.size());
     assert(h1.size() == h3.size());
@@ -171,10 +170,10 @@ GEOHASH_encode4(const dRect & r, size_t maxlen) {
     size_t i;
     for (i=0; i<maxlen; i++){
      // check if 4 sub-hashes are adjacent (or same)
-     h1s = h1.substr(0,i+1);
-     h2s = h2.substr(0,i+1);
-     h3s = h3.substr(0,i+1);
-     h4s = h4.substr(0,i+1);
+     auto h1s = h1.substr(0,i+1);
+     auto h2s = h2.substr(0,i+1);
+     auto h3s = h3.substr(0,i+1);
+     auto h4s = h4.substr(0,i+1);
      // 3 4
      // 1 2
      if ((h1s == h2s || GEOHASH_adjacent(h1s,2)==h2s) &&
@@ -183,19 +182,12 @@ GEOHASH_encode4(const dRect & r, size_t maxlen) {
          (h2s == h4s || GEOHASH_adjacent(h2s,0)==h4s)) continue;
      break;
     }
-    h1s = h1.substr(0,i);
-    h2s = h2.substr(0,i);
-    h3s = h3.substr(0,i);
-    h4s = h4.substr(0,i);
     // find unique hashes:
     std::set<std::string> ret;
-    ret.insert(h1s);
-    if (h2s!=h1s)
-      ret.insert(h2s);
-    if (h3s!=h1s && h3s!=h2s)
-      ret.insert(h3s);
-    if (h4s!=h1s && h4s!=h2s && h4s!=h3s)
-      ret.insert(h4s);
+    ret.insert(h1.substr(0,i));
+    ret.insert(h2.substr(0,i));
+    ret.insert(h3.substr(0,i));
+    ret.insert(h4.substr(0,i));
     return ret;
 }
 
