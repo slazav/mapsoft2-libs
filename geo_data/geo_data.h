@@ -146,14 +146,18 @@ struct GeoMap{
   /// TODO: maybe it is better not to shift image_bbox.
   /// now there is no reason to add/subtract points.
   GeoMap & operator+= (const dPoint & p) {
-    for (auto i:ref) i.second+=p;
+    std::map<dPoint,dPoint> ref1;
+    for (auto i:ref) ref1.emplace(i.first+p, i.second);
+    ref.swap(ref1);
     border+=p;
     return *this;
   }
 
   /// Multiply image coordinates by k (scale the map)
   GeoMap & operator*= (const double k) {
-    for (auto i:ref) i.second*=k;
+    std::map<dPoint,dPoint> ref1;
+    for (auto i:ref) ref1.emplace(i.first*k, i.second);
+    ref.swap(ref1);
     border*=k;
     image_size*=k;
     return *this;
