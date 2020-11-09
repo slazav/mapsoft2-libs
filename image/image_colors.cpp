@@ -42,8 +42,7 @@ void ms2opt_add_image_cmap(GetOptSet & opts){
     "maximum dimension, maximum number of pixels or colors in it. "
     "Values: maxdim (default), maxpix, maxcol.");
   opts.add("cmap_save", 1,0, g, "Save colormap to PNG file.");
-  opts.add("cmap_load", 1,0, g, "Load colormap from PNG file "
-    "(make in from the image");
+  opts.add("cmap_load", 1,0, g, "Load colormap from PNG file.");
   opts.add("cmap_add", 1,0, g, "Add a color to colormap "
     "(useful to add transparent color to non-transparent colormap) "
     "TODO: allow multiple colors.");
