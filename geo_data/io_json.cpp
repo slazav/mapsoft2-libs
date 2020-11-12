@@ -132,6 +132,92 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
     json_array_append_new(features, j_wptl);
   }
 
+
+  // map lists -- FeatureCollection with ms2maps array
+  for (auto const & mapl: data.maps) {
+    if (v) cerr << "  Writing map list: " << mapl.name
+           << " (" << mapl.size() << " maps)" << endl;
+
+    // maps
+    json_t *j_maps = json_array();
+    for (auto const & m: mapl ) {
+
+      json_t *j_map = json_object();
+
+      // reference points (skip z coord)
+      json_t *j_ref = json_array();
+      for (auto const & r: m.ref) {
+        json_t *j_pt = json_array();
+        json_array_append_new(j_pt, json_real(r.first.x));
+        json_array_append_new(j_pt, json_real(r.first.y));
+        json_array_append_new(j_pt, json_real(r.second.x));
+        json_array_append_new(j_pt, json_real(r.second.y));
+        json_array_append_new(j_ref, j_pt);
+      }
+      if (json_array_size(j_ref)) json_object_set_new(j_map, "ref", j_ref);
+      else json_decref(j_ref);
+
+      // border (multi-segment line, skip z coord)
+      json_t *j_brd = json_array();
+      for (auto const & seg: m.border) {
+        json_t *j_seg = json_array();
+        for (auto const & p: seg) {
+          json_t *j_pt = json_array();
+          json_array_append_new(j_pt, json_real(p.x));
+          json_array_append_new(j_pt, json_real(p.y));
+          json_array_append_new(j_seg, j_pt);
+        }
+        if (json_array_size(j_seg)) json_array_append_new(j_brd, j_seg);
+        else json_decref(j_seg);
+      }
+      if (json_array_size(j_brd)) json_object_set_new(j_map, "brd", j_brd);
+      else json_decref(j_brd);
+
+      // image_size (skip z coord)
+      if (m.image_size.x!=0 && m.image_size.y!=0){
+        json_t *j_pt = json_array();
+        json_array_append_new(j_pt, json_real(m.image_size.x));
+        json_array_append_new(j_pt, json_real(m.image_size.y));
+        json_object_set_new(j_map, "image_size", j_pt);
+      }
+
+      // other fields (skip defaults)
+      GeoMap mdef;
+      if (m.proj != "") json_object_set_new(j_map, "proj",  json_string(m.proj.c_str()));
+      if (m.name != "") json_object_set_new(j_map, "name",  json_string(m.name.c_str()));
+      if (m.comm != "") json_object_set_new(j_map, "comm",  json_string(m.comm.c_str()));
+      if (m.image != "") json_object_set_new(j_map, "image", json_string(m.image.c_str()));
+
+      if (m.image_dpi!=mdef.image_dpi)   json_object_set_new(j_map, "image_dpi",  json_real(m.image_dpi));
+      if (m.tile_size!=mdef.tile_size)   json_object_set_new(j_map, "tile_size",  json_integer(m.tile_size));
+      if (m.tile_swapy!=mdef.tile_swapy) json_object_set_new(j_map, "tile_swapw", json_integer(m.tile_swapy));
+      if (m.is_tiled!=mdef.is_tiled)     json_object_set_new(j_map, "is_tiled",   json_integer(m.is_tiled));
+      if (m.tile_minz!=mdef.tile_minz)   json_object_set_new(j_map, "tile_minz",  json_integer(m.tile_minz));
+      if (m.tile_maxz!=mdef.tile_maxz)   json_object_set_new(j_map, "tile_maxz",  json_integer(m.tile_maxz));
+      if (m.min_scale!=mdef.min_scale)   json_object_set_new(j_map, "min_scale",  json_real(m.min_scale));
+      if (m.max_scale!=mdef.max_scale)   json_object_set_new(j_map, "max_scale",  json_real(m.max_scale));
+      if (m.def_color!=mdef.def_color)   json_object_set_new(j_map, "def_color",  json_integer(m.def_color));
+
+      json_array_append_new(j_maps, j_map);
+    }
+
+    json_t *j_mapl = json_object();
+    json_object_set_new(j_mapl, "type", json_string("FeatureCollection"));
+    if (mapl.name != "") json_object_set_new(j_mapl, "ms2maps_name",  json_string(mapl.name.c_str()));
+    if (mapl.comm != "") json_object_set_new(j_mapl, "ms2maps_comm",  json_string(mapl.comm.c_str()));
+
+    // properties
+    json_t *j_prop = json_object();
+    for (auto const & o:mapl.opts)
+      json_object_set_new(j_prop, o.first.c_str(), json_string(o.second.c_str()));
+    if (json_object_size(j_prop)) json_object_set_new(j_mapl, "ms2maps_properties", j_prop);
+    else json_decref(j_prop);
+
+    json_object_set_new(j_mapl, "ms2maps", j_maps);
+    json_array_append_new(features, j_mapl);
+  }
+
+
   json_t *J0 = json_object();
   json_object_set_new(J0, "type", json_string("FeatureCollection"));
   json_object_set(J0, "features", features);
@@ -151,6 +237,86 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
   if (!f.good()) throw Err() << "Can't write to file " << fname;
 }
 
+/**************************************************************************/
+std::string read_json_text_field(json_t *jobj, const char * key){
+  json_t *j = json_object_get(jobj, key);
+  if (!j || json_is_null(j)) return std::string();
+  if (!json_is_string(j)) throw Err() << key << ": JSON string expected";
+  return json_string_value(j);
+}
+
+// get real value
+double read_json_real(json_t *j, const char * name){
+  if (j && json_is_number(j))
+    return json_number_value(j);
+  else if (j && json_is_string(j))
+    return str_to_type<double>(json_string_value(j));
+  else throw Err() << name << ": JSON number expected";
+}
+
+void read_json_real_field(json_t *jobj, const char * key, double * val){
+  json_t *j = json_object_get(jobj, key);
+  if (!j || json_is_null(j)) return;
+  *val = read_json_real(jobj, key);
+}
+
+// get integer value
+template <typename T>
+T read_json_int(json_t *j, const char * name){
+  if (j && json_is_integer(j))
+    return json_integer_value(j);
+  if (j && json_is_string(j))
+    return str_to_type<T>(json_string_value(j));
+  throw Err() << name << ": JSON integer expected";
+}
+
+template <typename T>
+void read_json_int_field(json_t *jobj, const char * key, T * val){
+  json_t *j = json_object_get(jobj, key);
+  if (!j || json_is_null(j)) return;
+  *val = read_json_int<T>(jobj, key);
+}
+
+// get bool value
+bool read_json_bool(json_t *j, const char * name){
+  if (j && json_is_integer(j))
+    return json_integer_value(j);
+  if (j && json_is_string(j))
+    return str_to_type<bool>(json_string_value(j));
+  if (j && json_is_true(j))
+    return true;
+  if (j && json_is_false(j))
+    return false;
+  throw Err() << name << ": JSON integer expected";
+}
+
+void read_json_bool_field(json_t *jobj, const char * key, bool * val){
+  json_t *j = json_object_get(jobj, key);
+  if (!j || json_is_null(j)) return;
+  *val = read_json_bool(jobj, key);
+}
+
+// get options
+Opt read_json_opt_field(json_t *jobj, const char * key){
+  json_t *j = json_object_get(jobj, key);
+  Opt ret;
+  if (!j || json_is_null(j)) return ret;
+  if (!json_is_object(j)) throw Err() << key << ": JSON object expected";
+  const char *k;
+  json_t *v;
+  json_object_foreach(j, k, v) {
+    if (json_is_string(v))
+      ret.put(k, string(json_string_value(v)));
+    else if (json_is_integer(v))
+      ret.put(k, json_integer_value(v));
+    else if (json_is_real(v))
+      ret.put(k, json_real_value(v));
+    else if (json_is_boolean(v))
+      ret.put(k, json_is_true(v));
+    else throw Err() << key << ": unsupported JSON type for " << k;
+  }
+  return ret;
+}
 
 /**************************************************************************/
 // read a single point (x,y,t,z) from a JSON array
@@ -251,6 +417,80 @@ GeoWptList read_geojson_wptl(json_t *prop){
   return ret;
 }
 
+// construct map list from GeoJSON
+GeoMap read_geojson_map(json_t *json){
+  if (!json_is_object(json))
+     throw Err() << "ms2maps: object expected";
+  GeoMap ret;
+
+  ret.name  = read_json_text_field(json, "name");
+  ret.comm  = read_json_text_field(json, "comm");
+  ret.proj  = read_json_text_field(json, "proj");
+  ret.image = read_json_text_field(json, "image");
+
+  read_json_real_field(json, "image_dpi",   &ret.image_dpi);
+  read_json_int_field(json,  "tile_size",   &ret.tile_size);
+  read_json_bool_field(json, "tile_swapw",  &ret.tile_swapy);
+  read_json_bool_field(json, "is_tiled",    &ret.is_tiled);
+  read_json_int_field(json,  "tile_minz",   &ret.tile_minz);
+  read_json_int_field(json,  "tile_maxz",   &ret.tile_maxz);
+  read_json_real_field(json, "min_scale",   &ret.min_scale);
+  read_json_real_field(json, "max_scale",   &ret.max_scale);
+  read_json_int_field(json,  "def_color",   &ret.def_color);
+
+  // ref
+  json_t *j;
+  j = json_object_get(json, "ref");
+  if (j && !json_is_null(j)){
+    if (!json_is_array(j)) throw Err() << "ref: JSON array expected";
+    size_t pti;
+    json_t *pt;
+    json_array_foreach(j, pti, pt) {
+      if (!json_is_array(pt) || json_array_size(pt)<4)
+        throw Err() << "ref point: array with at least 4 numbers expected";
+      double xr = read_json_real(json_array_get(pt,0), "ref point");
+      double yr = read_json_real(json_array_get(pt,1), "ref point");
+      double xg = read_json_real(json_array_get(pt,2), "ref point");
+      double yg = read_json_real(json_array_get(pt,3), "ref point");
+      ret.ref.emplace(dPoint(xr,yr), dPoint(xg,yg));
+    }
+  }
+
+  // image_size
+  j = json_object_get(json, "image_size");
+  if (j && !json_is_null(j)){
+    if (!json_is_array(j) || json_array_size(j)<2)
+       throw Err() << "image_size: array with at least 2 values expected";
+    ret.image_size.x = read_json_real(json_array_get(j,0), "image_size.x");
+    ret.image_size.y = read_json_real(json_array_get(j,1), "image_size.y");
+  }
+
+  // border
+  j = json_object_get(json, "brd");
+  if (j && !json_is_null(j)){
+    if (!json_is_array(j)) throw Err() << "brd: JSON array of border segments expected";
+    size_t segi;
+    json_t *seg;
+    json_array_foreach(j, segi, seg) {
+      if (!json_is_array(seg)) throw Err() << "brd segment: JSON array of points expected";
+      dLine brd_seg;
+      size_t pti;
+      json_t *pt;
+      json_array_foreach(seg, pti, pt) {
+        if (!json_is_array(pt) || json_array_size(pt)<2)
+          throw Err() << "brd point: array with at least 2 numbers expected";
+        dPoint p;
+        p.x = read_json_real(json_array_get(pt,0), "brd point");
+        p.y = read_json_real(json_array_get(pt,1), "brd point");
+        brd_seg.push_back(p);
+      }
+      ret.border.push_back(brd_seg);
+    }
+  }
+
+  return ret;
+}
+
 
 // read GeoJSON Feature of FeatureCollection (recursively)
 void
@@ -264,28 +504,52 @@ read_geojson_feature(json_t *feature, GeoData & data,
     string type = json_string_value(j_type);
 
     if (type == "FeatureCollection"){
-      json_t *sub_features = json_object_get(feature, "features");
 
       // always construct a new waypoint list for a FeatureCollection
       json_t * j_prop = json_object_get(feature, "properties"); // maybe NULL
       GeoWptList wptl1 = read_geojson_wptl(j_prop);
 
       // read sub-features (if any)
+      json_t *sub_features = json_object_get(feature, "features");
       if (sub_features) {
         if (!json_is_array(sub_features))
-          throw Err() << "features array expected in a FeatureCollection";
-
+          throw Err() << "features: array expected";
         size_t i;
         json_t *sub_feature;
         json_array_foreach(sub_features, i, sub_feature) {
           read_geojson_feature(sub_feature, data, wptl1, v);
         }
-
       }
+
+      // read map list (if any)
+      json_t *mapl = json_object_get(feature, "ms2maps");
+      if (mapl) {
+        if (!json_is_array(mapl))
+          throw Err() << "ms2maps: array expected";
+        GeoMapList ret;
+
+        // read name and comm
+        ret.name = read_json_text_field(feature, "ms2maps_name");
+        ret.comm = read_json_text_field(feature, "ms2maps_comm");
+
+        // read ms2maps_properties
+        ret.opts = read_json_opt_field(feature, "ms2maps_properties");
+
+        // read maps
+        size_t i;
+        json_t *map;
+        json_array_foreach(mapl, i, map) 
+          ret.push_back(read_geojson_map(map));
+
+        data.maps.push_back(ret);
+      }
+
       // Add waypoint list if it is not empty.
-      // Add empty waypoint list if FeatureCollection is missing or
-      // fully empty (to tracks, no other FeatureCollections)
-      if (wptl1.size()>0 || json_array_size(sub_features) == 0){
+      // Add empty waypoint list if "features" and "ms2maps" objects are missing or
+      // fully empty (to tracks, no maps, no other FeatureCollections)
+      if (wptl1.size()>0 || (
+          json_array_size(sub_features) == 0 &&
+          json_array_size(mapl) == 0)) {
         if (v) cerr << "  Reading waypoints: " << wptl1.name
                     << " (" << wptl1.size() << " points)" << endl;
         data.wpts.push_back(wptl1);
