@@ -35,6 +35,23 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
     if (v) cerr << "  Writing track: " << trk.name
            << " (" << trk.size() << " points)" << endl;
 
+    json_t *j_trk = json_object();
+    json_object_set_new(j_trk, "type", json_string("Feature"));
+
+    // name, comment
+    if (trk.name != "")
+      json_object_set_new(j_trk, "name", json_string(trk.name.c_str()));
+    if (trk.comm != "")
+      json_object_set_new(j_trk, "comm", json_string(trk.comm.c_str()));
+
+    // properties
+    json_t *j_prop = json_object();
+    for (auto const & o:trk.opts)
+      json_object_set_new(j_prop, o.first.c_str(), json_string(o.second.c_str()));
+    if (json_object_size(j_prop))
+      json_object_set_new(j_trk, "properties", j_prop);
+    else json_decref(j_prop);
+
     // coordinates
     json_t *j_crd = json_array();
     json_t *j_seg = json_array();
@@ -54,36 +71,43 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
     }
     if (json_array_size(j_seg)) json_array_append_new(j_crd, j_seg);
 
-    // geometry
     json_t *j_geom = json_object();
     json_object_set_new(j_geom, "type", json_string("MultiLineString"));
     json_object_set_new(j_geom, "coordinates", j_crd);
-
-    // properties
-    json_t *j_prop = json_object();
-    if (trk.name != "") json_object_set_new(
-                          j_prop, "name", json_string(trk.name.c_str()));
-    if (trk.comm != "") json_object_set_new(
-                          j_prop, "cmt",  json_string(trk.comm.c_str()));
-    for (auto const & o:trk.opts)
-      json_object_set_new(j_prop, o.first.c_str(), json_string(o.second.c_str()));
-
-    // track
-    json_t *j_trk = json_object();
-    json_object_set_new(j_trk, "type", json_string("Feature"));
     json_object_set_new(j_trk, "geometry", j_geom);
-    if (json_object_size(j_prop)) json_object_set_new(j_trk, "properties", j_prop);
-    else json_decref(j_prop);
+
     json_array_append_new(features, j_trk);
   }
 
-  // waypoints
+  // waypoint lists
   for (auto const & wpl: data.wpts) {
     if (v) cerr << "  Writing waypoints: " << wpl.name
            << " (" << wpl.size() << " points)" << endl;
 
+    json_t *j_wptl = json_object();
+    json_object_set_new(j_wptl, "type", json_string("FeatureCollection"));
+
+    // name, comment
+    if (wpl.name != "")
+      json_object_set_new(j_wptl, "name", json_string(wpl.name.c_str()));
+    if (wpl.comm != "")
+      json_object_set_new(j_wptl, "comm", json_string(wpl.comm.c_str()));
+
+    // properties
+    json_t *j_prop = json_object();
+    for (auto const & o:wpl.opts)
+      json_object_set_new(j_prop, o.first.c_str(), json_string(o.second.c_str()));
+    if (json_object_size(j_prop))
+      json_object_set_new(j_wptl, "properties", j_prop);
+    else json_decref(j_prop);
+
+    // waypoints
     json_t *j_wpts = json_array();
     for (auto const & wp: wpl ) {
+
+      // waypoint
+      json_t *j_wpt = json_object();
+      json_object_set_new(j_wpt, "type", json_string("Feature"));
 
       // coordinate array
       json_t *j_pt = json_array();
@@ -98,37 +122,26 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
       json_t *j_geom = json_object();
       json_object_set_new(j_geom, "type", json_string("Point"));
       json_object_set_new(j_geom, "coordinates", j_pt);
+      json_object_set_new(j_wpt, "geometry", j_geom);
+
+      // name, comment
+      if (wp.name != "")
+        json_object_set_new(j_wpt, "name", json_string(wp.name.c_str()));
+      if (wp.comm != "")
+        json_object_set_new(j_wpt, "comm", json_string(wp.comm.c_str()));
 
       // properties
       json_t *j_prop = json_object();
-      if (wp.name != "") json_object_set_new(j_prop, "name", json_string(wp.name.c_str()));
-      if (wp.comm != "") json_object_set_new(j_prop, "cmt",  json_string(wp.comm.c_str()));
       for (auto o:wp.opts)
         json_object_set_new(j_prop, o.first.c_str(), json_string(o.second.c_str()));
-
-      // waypoint
-      json_t *j_wpt = json_object();
-      json_object_set_new(j_wpt, "type", json_string("Feature"));
-      json_object_set_new(j_wpt, "geometry", j_geom);
-      if (json_object_size(j_prop)) json_object_set_new(j_wpt, "properties", j_prop);
+      if (json_object_size(j_prop))
+        json_object_set_new(j_wpt, "properties", j_prop);
       else json_decref(j_prop);
+
       json_array_append_new(j_wpts, j_wpt);
     }
-
-    // properties
-    json_t *j_prop = json_object();
-    if (wpl.name != "") json_object_set_new(
-                          j_prop, "name", json_string(wpl.name.c_str()));
-    if (wpl.comm != "") json_object_set_new(
-                          j_prop, "cmt", json_string(wpl.comm.c_str()));
-    for (auto const & o:wpl.opts)
-      json_object_set_new(j_prop, o.first.c_str(), json_string(o.second.c_str()));
-
-    json_t *j_wptl = json_object();
-    json_object_set_new(j_wptl, "type", json_string("FeatureCollection"));
-    if (json_object_size(j_prop)) json_object_set_new(j_wptl, "properties", j_prop);
-    else json_decref(j_prop);
     json_object_set_new(j_wptl, "features", j_wpts);
+
     json_array_append_new(features, j_wptl);
   }
 
@@ -263,8 +276,17 @@ double read_json_real(json_t *j, const char * name){
 void read_json_real_field(json_t *jobj, const char * key, double * val){
   json_t *j = json_object_get(jobj, key);
   if (!j || json_is_null(j)) return;
-  *val = read_json_real(jobj, key);
+  *val = read_json_real(j, key);
 }
+
+// Get double value from array element.
+// Do nothing is element is missing.
+void read_json_real_arr(json_t *jarr, size_t i, double * val){
+  json_t *j = json_array_get(jarr, i);
+  if (!j || json_is_null(j)) return;
+  *val = read_json_real(j, "");
+}
+
 
 // Get integer value from json (multiple integer types are supported).
 template <typename T>
@@ -282,8 +304,18 @@ template <typename T>
 void read_json_int_field(json_t *jobj, const char * key, T * val){
   json_t *j = json_object_get(jobj, key);
   if (!j || json_is_null(j)) return;
-  *val = read_json_int<T>(jobj, key);
+  *val = read_json_int<T>(j, key);
 }
+
+// Get integer value from array element.
+// Do nothing is element is missing.
+template <typename T>
+void read_json_int_arr(json_t *jarr, size_t i, T * val){
+  json_t *j = json_array_get(jarr, i);
+  if (!j || json_is_null(j)) return;
+  *val = read_json_real(j, "");
+}
+
 
 // get bool value
 bool read_json_bool(json_t *j, const char * name){
@@ -301,7 +333,7 @@ bool read_json_bool(json_t *j, const char * name){
 void read_json_bool_field(json_t *jobj, const char * key, bool * val){
   json_t *j = json_object_get(jobj, key);
   if (!j || json_is_null(j)) return;
-  *val = read_json_bool(jobj, key);
+  *val = read_json_bool(j, key);
 }
 
 // Get options from object element.
@@ -330,49 +362,12 @@ Opt read_json_opt_field(json_t *jobj, const char * key){
 // read a single point (x,y,t,z) from a JSON array
 template <typename T>
 void read_geojson_pt(json_t *coord, T & pt){
-  json_t *val;
-  if (json_array_size(coord)>0 &&
-     (val = json_array_get(coord, 0))){
-    if (json_is_number(val)) pt.x = json_number_value(val);
-    else if (!json_is_null(val))
-      throw Err() << "number expected in GeoJSON coordinates";
-  }
-  if (json_array_size(coord)>1 &&
-     (val = json_array_get(coord, 1))){
-    if (json_is_number(val)) pt.y = json_number_value(val);
-    else if (!json_is_null(val))
-      throw Err() << "number expected in GeoJSON coordinates";
-  }
-  if (json_array_size(coord)>2 &&
-     (val = json_array_get(coord, 2))){
-    if (json_is_number(val)) pt.z = json_number_value(val);
-    else if (!json_is_null(val))
-      throw Err() << "number expected in GeoJSON coordinates";
-  }
-  if (json_array_size(coord)>3 &&
-     (val = json_array_get(coord, 3))){
-    if (json_is_number(val)) pt.t = json_integer_value(val);
-    else if (!json_is_null(val))
-      throw Err() << "number expected in GeoJSON coordinates";
-  }
+  read_json_real_arr(coord, 0, &pt.x);
+  read_json_real_arr(coord, 1, &pt.y);
+  read_json_real_arr(coord, 2, &pt.z);
+  read_json_int_arr(coord,  3, &pt.t);
 }
 
-// construct a waypoint from GeoJSON coordinates and properties
-GeoWpt read_geojson_wpt(json_t *coord, json_t *prop){
-  GeoWpt ret;
-  // set properties
-  const char *key;
-  json_t *val;
-  json_object_foreach(prop, key, val) {
-    if (!json_is_string(val)) continue;
-    else if (strcasecmp(key, "name")==0) ret.name = json_string_value(val);
-    else if (strcasecmp(key, "cmt")==0) ret.comm = json_string_value(val);
-    else ret.opts.put(key, string(json_string_value(val)));
-  }
-  // set coordinates
-  read_geojson_pt(coord, ret);
-  return ret;
-}
 
 // construct a track from GeoJSON coordinates and properties
 GeoTrk read_geojson_trk(json_t *coord, json_t *prop, const bool multi){
@@ -410,20 +405,6 @@ GeoTrk read_geojson_trk(json_t *coord, json_t *prop, const bool multi){
   return ret;
 }
 
-// construct a waypoint list from GeoJSON properties
-GeoWptList read_geojson_wptl(json_t *prop){
-  GeoWptList ret;
-  // set properties
-  const char *key;
-  json_t *val;
-  json_object_foreach(prop, key, val) {
-    if (!json_is_string(val)) continue;
-    else if (strcasecmp(key, "name")==0) ret.name = json_string_value(val);
-    else if (strcasecmp(key, "cmt")==0) ret.comm = json_string_value(val);
-    else ret.opts.put(key, string(json_string_value(val)));
-  }
-  return ret;
-}
 
 // construct map list from GeoJSON
 GeoMap read_geojson_map(json_t *json){
@@ -456,11 +437,12 @@ GeoMap read_geojson_map(json_t *json){
     json_array_foreach(j, pti, pt) {
       if (!json_is_array(pt) || json_array_size(pt)<4)
         throw Err() << "ref point: array with at least 4 numbers expected";
-      double xr = read_json_real(json_array_get(pt,0), "ref point");
-      double yr = read_json_real(json_array_get(pt,1), "ref point");
-      double xg = read_json_real(json_array_get(pt,2), "ref point");
-      double yg = read_json_real(json_array_get(pt,3), "ref point");
-      ret.ref.emplace(dPoint(xr,yr), dPoint(xg,yg));
+      dPoint pr, pg;
+      read_json_real_arr(pt, 0, &pr.x);
+      read_json_real_arr(pt, 1, &pr.y);
+      read_json_real_arr(pt, 2, &pg.x);
+      read_json_real_arr(pt, 3, &pg.y);
+      ret.ref.emplace(pr,pg);
     }
   }
 
@@ -469,8 +451,8 @@ GeoMap read_geojson_map(json_t *json){
   if (j && !json_is_null(j)){
     if (!json_is_array(j) || json_array_size(j)<2)
        throw Err() << "image_size: array with at least 2 values expected";
-    ret.image_size.x = read_json_real(json_array_get(j,0), "image_size.x");
-    ret.image_size.y = read_json_real(json_array_get(j,1), "image_size.y");
+    read_json_int_arr(j, 0, &ret.image_size.x);
+    read_json_int_arr(j, 1, &ret.image_size.y);
   }
 
   // border
@@ -488,8 +470,8 @@ GeoMap read_geojson_map(json_t *json){
         if (!json_is_array(pt) || json_array_size(pt)<2)
           throw Err() << "brd point: array with at least 2 numbers expected";
         dPoint p;
-        p.x = read_json_real(json_array_get(pt,0), "brd point");
-        p.y = read_json_real(json_array_get(pt,1), "brd point");
+        read_json_real_arr(pt, 0, &p.x);
+        read_json_real_arr(pt, 1, &p.y);
         brd_seg.push_back(p);
       }
       ret.border.push_back(brd_seg);
@@ -514,8 +496,12 @@ read_geojson_feature(json_t *feature, GeoData & data,
     if (type == "FeatureCollection"){
 
       // always construct a new waypoint list for a FeatureCollection
-      json_t * j_prop = json_object_get(feature, "properties"); // maybe NULL
-      GeoWptList wptl1 = read_geojson_wptl(j_prop);
+      GeoWptList wptl1;
+      // name and comm
+      wptl1.name = read_json_text_field(feature, "name");
+      wptl1.comm = read_json_text_field(feature, "comm");
+      // properties
+      wptl1.opts = read_json_opt_field(feature, "properties");
 
       // read sub-features (if any)
       json_t *sub_features = json_object_get(feature, "features");
@@ -539,7 +525,6 @@ read_geojson_feature(json_t *feature, GeoData & data,
         // read name and comm
         ret.name = read_json_text_field(feature, "ms2maps_name");
         ret.comm = read_json_text_field(feature, "ms2maps_comm");
-
         // read ms2maps_properties
         ret.opts = read_json_opt_field(feature, "ms2maps_properties");
 
@@ -584,12 +569,46 @@ read_geojson_feature(json_t *feature, GeoData & data,
 
       // Waypoint
       if (geom_type == "Point") {
-        wptl.push_back(read_geojson_wpt(j_geom_coord, j_prop));
+        GeoWpt wpt;
+        // name, comm, opts
+        wpt.name = read_json_text_field(feature, "name");
+        wpt.comm = read_json_text_field(feature, "comm");
+        wpt.opts = read_json_opt_field(feature, "properties");
+
+        // coordinates
+        read_geojson_pt(j_geom_coord, wpt);
+        wptl.push_back(wpt);
       }
+
       // Track
       else if (geom_type == "MultiLineString" || geom_type == "LineString") {
-        GeoTrk trk = read_geojson_trk(
-            j_geom_coord, j_prop, geom_type == "MultiLineString");
+        GeoTrk trk;
+        // name, comm, opts
+        trk.name = read_json_text_field(feature, "name");
+        trk.comm = read_json_text_field(feature, "comm");
+        trk.opts = read_json_opt_field(feature, "properties");
+
+        // coordinates
+        size_t i;
+        json_t *c1;
+        json_array_foreach(j_geom_coord, i, c1) {
+          if (geom_type == "MultiLineString"){
+            size_t j;
+            json_t *c2;
+            json_array_foreach(c1, j, c2) {
+              GeoTpt pt;
+              if (j==0) pt.start=1;
+              read_geojson_pt(c2, pt);
+              trk.push_back(pt);
+            }
+          }
+          else {
+            GeoTpt pt;
+            if (i==0) pt.start=1;
+            read_geojson_pt(c1, pt);
+            trk.push_back(pt);
+          }
+        }
         if (v) cerr << "  Reading track: " << trk.name
                     << " (" << trk.size() << " points)" << endl;
         data.trks.push_back(trk);
