@@ -238,6 +238,10 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
 }
 
 /**************************************************************************/
+// Some useful functions. Extract string/double/int from json or
+// from json object element. Throw error if needed
+
+// Get text value from from object element.
 std::string read_json_text_field(json_t *jobj, const char * key){
   json_t *j = json_object_get(jobj, key);
   if (!j || json_is_null(j)) return std::string();
@@ -245,7 +249,7 @@ std::string read_json_text_field(json_t *jobj, const char * key){
   return json_string_value(j);
 }
 
-// get real value
+// Get real value from json (any number or string is supported)
 double read_json_real(json_t *j, const char * name){
   if (j && json_is_number(j))
     return json_number_value(j);
@@ -254,13 +258,15 @@ double read_json_real(json_t *j, const char * name){
   else throw Err() << name << ": JSON number expected";
 }
 
+// Get double value from object element.
+// Do nothing is element is missing.
 void read_json_real_field(json_t *jobj, const char * key, double * val){
   json_t *j = json_object_get(jobj, key);
   if (!j || json_is_null(j)) return;
   *val = read_json_real(jobj, key);
 }
 
-// get integer value
+// Get integer value from json (multiple integer types are supported).
 template <typename T>
 T read_json_int(json_t *j, const char * name){
   if (j && json_is_integer(j))
@@ -270,6 +276,8 @@ T read_json_int(json_t *j, const char * name){
   throw Err() << name << ": JSON integer expected";
 }
 
+// Get integer value from object element.
+// Do nothing is element is missing.
 template <typename T>
 void read_json_int_field(json_t *jobj, const char * key, T * val){
   json_t *j = json_object_get(jobj, key);
@@ -296,7 +304,7 @@ void read_json_bool_field(json_t *jobj, const char * key, bool * val){
   *val = read_json_bool(jobj, key);
 }
 
-// get options
+// Get options from object element.
 Opt read_json_opt_field(json_t *jobj, const char * key){
   json_t *j = json_object_get(jobj, key);
   Opt ret;
@@ -378,7 +386,7 @@ GeoTrk read_geojson_trk(json_t *coord, json_t *prop, const bool multi){
     else if (strcasecmp(key, "cmt")==0) ret.comm = json_string_value(val);
     else ret.opts.put(key, string(json_string_value(val)));
   }
-  // set coordinates
+  // coordinates
   size_t i;
   json_t *c1;
   json_array_foreach(coord, i, c1) {
