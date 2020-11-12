@@ -129,7 +129,6 @@ struct GeoMap{
   bool tile_swapy;             ///< are image tiles swapped in y (for tiled maps)
   bool is_tiled;               ///< is it a tiled map?
   int  tile_minz, tile_maxz;   ///<
-  int  tile_defz;              ///< default zoom value (how to open the map by default)
 
   double min_scale, max_scale; ///< do not show the map outside the scale range
   uint32_t def_color;          ///< outside the min_scale/max_scale range map is shown by this color.
