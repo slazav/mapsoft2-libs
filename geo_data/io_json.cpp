@@ -265,22 +265,26 @@ read_geojson_feature(json_t *feature, GeoData & data,
 
     if (type == "FeatureCollection"){
       json_t *sub_features = json_object_get(feature, "features");
-      if (!json_is_array(sub_features))
-        throw Err() << "features array expected in a FeatureCollection";
 
       // always construct a new waypoint list for a FeatureCollection
       json_t * j_prop = json_object_get(feature, "properties"); // maybe NULL
       GeoWptList wptl1 = read_geojson_wptl(j_prop);
 
-      // read sub-features
-      size_t i;
-      json_t *sub_feature;
-      json_array_foreach(sub_features, i, sub_feature) {
-        read_geojson_feature(sub_feature, data, wptl1, v);
-      }
+      // read sub-features (if any)
+      if (sub_features) {
+        if (!json_is_array(sub_features))
+          throw Err() << "features array expected in a FeatureCollection";
 
-      // add waypoint list if it is not empty
-      // add empty waypoint list if FeatureCollection is empty
+        size_t i;
+        json_t *sub_feature;
+        json_array_foreach(sub_features, i, sub_feature) {
+          read_geojson_feature(sub_feature, data, wptl1, v);
+        }
+
+      }
+      // Add waypoint list if it is not empty.
+      // Add empty waypoint list if FeatureCollection is missing or
+      // fully empty (to tracks, no other FeatureCollections)
       if (wptl1.size()>0 || json_array_size(sub_features) == 0){
         if (v) cerr << "  Reading waypoints: " << wptl1.name
                     << " (" << wptl1.size() << " points)" << endl;
