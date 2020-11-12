@@ -179,19 +179,34 @@ Output options:
 ----------
 ## GeoJSON format
 
-Mapsoft2 supports reading and writing GeoJSON files (tracks and
-waypoints). All data fields of Mapsoft structures are supported (should
-be no data loss).
+Mapsoft2 supports reading and writing GeoJSON files.
+All data fields of Mapsoft structures are supported (should
+be no data loss). Maps are written as a GeoJSON extension.
 
-Waypoint lists are written in separate FeatureCollections. When reading
-a FeatureCollection (including the topmost one) is converted to a waypoint
-list in two cases: if it contains at least one waypoint inside; if it does not
-contain any features, in this case empty waypoint list is created. In GeoJSON
-FeatureCollections can contain tracks or other FeatureCollections. Mapsoft
-converts this to a "flat" stucture with waypoint lists and tracks.
+Waypoint lists are written in separate FeatureCollections. When reading a
+FeatureCollection (including the topmost one) is converted to a waypoint
+list in two cases: if it contains at least one waypoint inside; if it
+does not contain any features or maps, in this case empty waypoint list
+is created. FeatureCollections can contain tracks or other
+FeatureCollections (as it is described in GeoJson standard) and list of
+maps (mapsoft2 extension). This is converted to a "flat" mapsoft stucture
+with waypoint lists, tracks, and map lists.
 
 Track is always written as a Feature with MultiLineString coordinates
 (even if it contains one segment), but can be read also from a LineString.
+
+MapList is written as a FeatureCollection with non-standard fields:
+`"ms2maps"` for array of maps, `"ms2maps_name"` and `"ms2maps_comm"` for
+name and comment fields, `"ms2maps_properties"` for optional parameters.
+This extension is compatable with GeoJSON standard which forbids declaration
+of new types, but allows other fields in GeoJSON objects. It is
+possible to read a few tracks, one map list and one waypoint list from
+a single FeatureCollection, without collisions of name/comm field.
+
+Each element of `"ms2maps"` array contains a JSON object with following fields:
+"name", "comm", "proj", "image", "ref", "brd", "image_size", "image_dpi",
+"tile_size", "tile_swapy", "is_tiled", "tile_minz", "tile_maxz", "min_scale",
+"max_scale", "def_color".
 
 Coordinates of each waypoint or track point are written in array `[lon,
 lat, alt, time]`. (GeoJSON format requires only `lat` and `lon` fields
