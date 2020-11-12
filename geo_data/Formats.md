@@ -137,7 +137,7 @@ track points.
 Waypoint lists are written as KML `<Folder>` tag with all mandatory
 fields supported (`name` and `comm`). When reading only Folders with at
 least one waypoint are kept as waypoint lists. Empty waypoint list can
-not be read from KML (same as in GeoJSON format).
+not be read from KML.
 
 TODO: map support?
 
@@ -181,13 +181,14 @@ Output options:
 
 Mapsoft2 supports reading and writing GeoJSON files (tracks and
 waypoints). All data fields of Mapsoft structures are supported (should
-be no data loss except skipping empty waypoint lists).
+be no data loss).
 
 Waypoint lists are written in separate FeatureCollections. When reading
 a FeatureCollection (including the topmost one) is converted to a waypoint
-list only if there is at least one waypoint inside. In GeoJSON
+list in two cases: if it contains at least one waypoint inside; if it does not
+contain any features, in this case empty waypoint list is created. In GeoJSON
 FeatureCollections can contain tracks or other FeatureCollections. Mapsoft
-converts this to a "flat" stucture with non-empty waypoint lists and tracks.
+converts this to a "flat" stucture with waypoint lists and tracks.
 
 Track is always written as a Feature with MultiLineString coordinates
 (even if it contains one segment), but can be read also from a LineString.

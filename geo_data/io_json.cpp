@@ -280,7 +280,8 @@ read_geojson_feature(json_t *feature, GeoData & data,
       }
 
       // add waypoint list if it is not empty
-      if (wptl1.size()){
+      // add empty waypoint list if FeatureCollection is empty
+      if (wptl1.size()>0 || json_array_size(sub_features) == 0){
         if (v) cerr << "  Reading waypoints: " << wptl1.name
                     << " (" << wptl1.size() << " points)" << endl;
         data.wpts.push_back(wptl1);
