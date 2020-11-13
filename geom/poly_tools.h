@@ -13,18 +13,13 @@ class PolyTester{
   std::vector<Point<T> > sb,se; // segment beginning, ending
   std::vector<double> ss; // segment slope
   bool horiz; // test direction
-  bool borders; // include borders
 public:
 
   // Constructor, build the tester class for a given polygon.
   // Parameters:
   //  - L -- polygon (represented by Line object)
   //  - horiz -- set test direction
-  //  - borders -- include borders?
-  PolyTester(const Line<T> & L,
-             const bool horiz_ = true,
-             const bool borders_=true
-            ): horiz(horiz_), borders(borders_){
+  PolyTester(const Line<T> & L, const bool horiz_ = true): horiz(horiz_){
 
     // Collect line sides info: start and end points, slopes
     int pts = L.size();
@@ -36,7 +31,9 @@ public:
         e.y = L[(i+1)%pts].x;
         e.x = L[(i+1)%pts].y;
       }
-      if (b.y==e.y) continue; // skip horizontal segments
+
+      // skip horizontal segments
+      if (b.y==e.y) continue;
 
       // side slope
       double s = double(e.x-b.x)/double(e.y-b.y);
@@ -46,47 +43,72 @@ public:
     }
   }
 
-  /// get sorted coordinates of the polygon crossings with
-  /// y=const (or x=const if horiz=false) line
-  std::vector<double> get_cr(T y){
-    std::vector<double> cr;
+  // Get sorted coordinates of the polygon crossings with
+  // y=const (or x=const if horiz=false) line.
+  // Returns sorted dPoint array where first point coordinates
+  // are crossing positions, second are "crossing lengths" (normally
+  // zero, non-zero if segment coinsides with y=const line.
+  // Length is calculated to the left of the point.
+  std::vector<dPoint> get_cr(T y){
+    std::vector<dPoint> cr;
     for (size_t k = 0; k < sb.size(); k++){
-      if ((sb[k].y > y)&&(se[k].y > y)) continue; // segment is above the row
-      if ((sb[k].y < y)&&(se[k].y < y)) continue; // segment is below the row
 
-      // if two segments are crossing the row in the same point
-      // it could be 0, 1, or 2 actual crossings.
+      // Skip segments which are fully above or below the line
+      if ((sb[k].y > y)&&(se[k].y > y)) continue;
+      if ((sb[k].y < y)&&(se[k].y < y)) continue;
+
+      // If segment touches the line with its first or last point
+      // it could be 1 or 2 actual crossings. Use only the first
+      // point to avoid duplications (adjecent segment also has this crossings).
       if (sb[k].y == y){
+        // index if the previous segment
         int kp = k>0? k-1:sb.size()-1;
+
+        // It could be that x coordinates are different (horizontal
+        // segment was skipped). Then length of the crossing is not zero.
+        double x = std::max(sb[k].x, se[kp].x);
+        double l = fabs(sb[k].x - se[kp].x);
+
+        // Segments on both sides of the line - one crossing.
         if ((sb[kp].y < y && se[k].y > y) ||
-            (sb[kp].y > y && se[k].y < y))
-          cr.push_back(sb[k].x);
-        else if (borders){
-          cr.push_back(sb[k].x);
-          cr.push_back(se[kp].x);
+            (sb[kp].y > y && se[k].y < y)){
+          cr.push_back(dPoint(x,l));
+        }
+        // Segments on one side of the line -- two crossings
+        else {
+          cr.push_back(dPoint(x,l));
+          cr.push_back(dPoint(x-l,0));
         }
         continue;
       }
 
+      // Skip crossing at the end point.
       if (se[k].y == y){
         continue;
       }
 
-      // segment is crossing the row
-      cr.push_back((ss[k] * double(y - sb[k].y)) + sb[k].x);
-
+      // Crossing in some other point of the segment.
+      cr.push_back(dPoint((ss[k] * double(y - sb[k].y)) + sb[k].x, 0));
 
     }
+
+    // Sort crossings.
     sort(cr.begin(), cr.end());
     return cr;
   }
 
-  /// Is coord x inside the polygon at cr line
-  bool test_cr(const std::vector<double> & cr, T x) const{
-    // number of crossings on the ray (x,y) - (inf,y)
-    auto i = lower_bound(cr.begin(), cr.end(), x);
+  // Use the crossing array to check if a point is inside the polygon
+  // by calculating number of crossings on the ray (x,y) - (inf,y)
+  static bool test_cr(const std::vector<dPoint> & cr, T x, bool borders = true) {
+
+    // first crossing on the right of the point
+    auto i = lower_bound(cr.begin(), cr.end(), dPoint(x,0));
+
     if (i == cr.end()) return false;
-    if (*i==x) return borders;
+
+    // point is in the crossing
+    if (i->x == x || i->x-i->y <= x) return borders;
+
     int k=0;
     while (i!=cr.end()) { i++; k++; }
     return k%2==1;
@@ -102,68 +124,84 @@ typedef PolyTester<int>    iPolyTester;
 template <typename T>
 bool
 point_in_polygon(const Point<T> & P, const Line<T> & L, const bool borders = true){
-  PolyTester<T> lt(L, true, borders);
+  PolyTester<T> lt(L, true);
   auto cr = lt.get_cr(P.y);
-  return lt.test_cr(cr, P.x);
+  return PolyTester<T>::test_cr(cr, P.x, borders);
 }
+
+// Same for multi-segment polygon
+template <typename T>
+bool
+point_in_polygon(const Point<T> & P, const MultiLine<T> & L, const bool borders = true){
+  // merge and sort crossings for all multiline segments:
+  std::vector<dPoint> cr;
+  for (const auto seg:L) {
+    PolyTester<T> lt(seg, true);
+    auto c = lt.get_cr(P.y);
+    cr.insert(cr.end(), c.begin(), c.end());
+  }
+  sort(cr.begin(), cr.end());
+  return PolyTester<T>::test_cr(cr, P.x, borders);
+}
+
 
 /// Check if one-segment polygon l covers (maybe partially) rectangle r.
 /// Return:
 ///  0 - polygon and rectange are not crossing
-///  1 - border of the polygon is crossing rectangle boundary,
+///  1 - border of the polygon is crossing/touching rectangle boundary,
 ///  2 - rectangle is fully inside the polygon,
 ///  3 - polygon is fully inside the rectangle
 template <typename T>
 int
-rect_in_polygon(const Rect<T> & R, const Line<T> & L, const bool borders = true){
+rect_in_polygon(const Rect<T> & R, const Line<T> & L){
 
   if (!R) return 0;
 
-  std::vector<double> cr;
-  PolyTester<T> lth(L, true, borders), ltv(L,false, borders);
+  std::vector<dPoint> cr;
+  PolyTester<T> lth(L, true), ltv(L,false);
 
-  // check if there is any crossing at any rectangle side
+  // Check is there any crossing at any rectangle side.
+  // (segments (R.x,R,x+R.w) and (x, x-l) are crossing)
   cr = lth.get_cr(R.y);
-  for (auto const & x0:cr){
-    if (R.x < x0 && x0 <R.x+R.w ) return 1;
-    if (borders && (R.x==x0 || x0==R.x+R.w)) return 1;
+  for (auto const & c:cr){
+    auto x1 = c.x,  x2 = x1 - c.y;
+    if ((x1 >= R.x || x2 >= R.x) && (x1 <= R.x+R.w || x2 <= R.x+R.w)) return 1;
   }
   cr = lth.get_cr(R.y+R.h);
-  for (auto const & x0:cr){
-    if (R.x < x0 && x0 <R.x+R.w ) return 1;
-    if (borders && (R.x==x0 || x0==R.x+R.w)) return 1;
+  for (auto const & c:cr){
+    auto x1 = c.x,  x2 = x1 - c.y;
+    if ((x1 >= R.x || x2 >= R.x) && (x1 <= R.x+R.w || x2 <= R.x+R.w)) return 1;
   }
 
   cr = ltv.get_cr(R.x);
-  for (auto const & y0:cr){
-    if (R.y < y0 && y0 <R.y+R.h ) return 1;
-    if (borders && (R.y==y0 || y0==R.y+R.h)) return 1;
+  for (auto const & c:cr){
+    auto y1 = c.x,  y2 = y1 - c.y;
+    if ((y1 >= R.y || y2 >= R.y) && (y1 <= R.y+R.h || y2 <= R.y+R.h)) return 1;
   }
   cr = ltv.get_cr(R.x+R.w);
-  for (auto const & y0:cr){
-    if (R.y < y0 && y0 <R.y+R.h ) return 1;
-    if (borders && (R.y==y0 || y0==R.y+R.h)) return 1;
+  for (auto const & c:cr){
+    auto y1 = c.x,  y2 = y1 - c.y;
+    if ((y1 >= R.y || y2 >= R.y) && (y1 <= R.y+R.h || y2 <= R.y+R.h)) return 1;
   }
 
   // one rectangle corner is inside polygon
-  if (ltv.test_cr(cr, R.y)) return 2;
+  if (PolyTester<T>::test_cr(cr, R.y, false)) return 2;
 
   // one of polygon points is inside the rectangle
-  if (L.size() && borders && R.contains_u(L[0])) return 3;
-  if (L.size() && !borders && R.contains_l(L[0])) return 3;
+  if (L.size() && R.contains_l(L[0])) return 3;
   return 0;
 }
 
 
-/// Same for multi-segment polygons. 
+/// Same for multi-segment polygons.
 template <typename T>
 int
-rect_in_polygon(const Rect<T> & R, const MultiLine<T> & L, const bool borders = true){
+rect_in_polygon(const Rect<T> & R, const MultiLine<T> & L){
 
   if (!R) return 0;
   int loops = 0;
   for (auto const & l: L) {
-    int r = rect_in_polygon(R, l, borders);
+    int r = rect_in_polygon(R, l);
     if (r == 1) return 1; // there is a crossing
     if (r == 2) loops++;  // rectangle is fully in a loop
     if (r == 3 && loops==0) return 3; //

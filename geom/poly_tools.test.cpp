@@ -38,35 +38,12 @@ main(){
       assert_eq(point_in_polygon(iPoint("[5,10]"),L,1), true);
     }
 
-    // rect_in_polygon (int)
-    for (int b=0; b<2; b++){
-      iLine L("[[0,0],[8,0],[4,8]]");
-      assert_eq(rect_in_polygon(iRect("[-2,-2,1,1]"),L,b), 0);
-      assert_eq(rect_in_polygon(iRect("[7,3,1,1]"),L,b), 0);
-      assert_eq(rect_in_polygon(iRect(),L,b), 0);
-      assert_eq(rect_in_polygon(iRect("[1,1,0,0]"),L,b), 2);
-      assert_eq(rect_in_polygon(iRect("[0,0,1,1]"),L,b), 1);
-      assert_eq(rect_in_polygon(iRect("[4,1,1,1]"),L,b), 2);
-      assert_eq(rect_in_polygon(iRect("[-1,-1,10,10]"),L,b), 3);
-
-      // borders
-      assert_eq(rect_in_polygon(iRect("[0,0,0,0]"),L,b), b);
-      assert_eq(rect_in_polygon(iRect("[-1,-1,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(iRect("[8,0,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(iRect("[6,1,1,1]"),L,b), 2-b);
-      assert_eq(rect_in_polygon(iRect("[4,-1,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(iRect("[4,8,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(iRect("[0,2,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(iRect("[7,2,1,1]"),L,b), b);
-    }
-
     // point_in_polygon (double)
     for (int b=0; b<2; b++){
       dLine L("[[0,0],[8,0],[4,8]]");
       assert_eq(point_in_polygon(dPoint("[-1,-1]"),L,b), false);
       assert_eq(point_in_polygon(dPoint("[7,3]"),L,b), false);
       assert_eq(point_in_polygon(dPoint("[1,1]"),L,b), true);
-
       // borders
       assert_eq(point_in_polygon(dPoint("[0,0]"),L,b), b);
       assert_eq(point_in_polygon(dPoint("[8,0]"),L,b), b);
@@ -74,46 +51,129 @@ main(){
       assert_eq(point_in_polygon(dPoint("[4,8]"),L,b), b);
       assert_eq(point_in_polygon(dPoint("[1,2]"),L,b), b);
       assert_eq(point_in_polygon(dPoint("[7,2]"),L,b), b);
+
     }
 
-    // rect_in_polygon (double)
+    // point_in_polygon (double, multiline)
     for (int b=0; b<2; b++){
-      dLine L("[[0,0],[8,0],[4,8]]");
-      assert_eq(rect_in_polygon(dRect("[-2,-2,1,1]"),L,b), 0);
-      assert_eq(rect_in_polygon(dRect("[7,3,1,1]"),L,b), 0);
-      assert_eq(rect_in_polygon(dRect(),L,b), 0);
-      assert_eq(rect_in_polygon(dRect("[1,1,0,0]"),L,b), 2);
-      assert_eq(rect_in_polygon(dRect("[0,0,1,1]"),L,b), 1);
-      assert_eq(rect_in_polygon(dRect("[4,1,1,1]"),L,b), 2);
-      assert_eq(rect_in_polygon(dRect("[-1,-1,10,10]"),L,b), 3);
+      dMultiLine L("[[[0,0],[6,0],[6,4],[4,4],[4,8],[6,8],[6,12],[4,12],[4,16],[0,12]], "
+                    "[[3,4],[2,4],[2,8],[3,8],[3,10],[1,10],[1,2],[3,2],[3,4]], "
+                    "[[8,4],[10,4],[10,2],[12,2],[12,8],[8,8]]]");
+
+      assert_eq(point_in_polygon(dPoint("[-1,-1]"),L,b), false);
+      assert_eq(point_in_polygon(dPoint("[1,-1]"),L,b), false);
+      assert_eq(point_in_polygon(dPoint("[1,1]"),L,b), true);
+      assert_eq(point_in_polygon(dPoint("[2,3]"),L,b), false);
+      assert_eq(point_in_polygon(dPoint("[1,15]"),L,b), false);
+      assert_eq(point_in_polygon(dPoint("[0.5,4]"),L,b), true);
+      assert_eq(point_in_polygon(dPoint("[7,4]"),L,b), false);
+      assert_eq(point_in_polygon(dPoint("[9,5]"),L,b), true);
+
 
       // borders
-      assert_eq(rect_in_polygon(dRect("[0,0,0,0]"),L,b), b);
-      assert_eq(rect_in_polygon(dRect("[-1,-1,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(dRect("[6,1,1,1]"),L,b), 2-b);
-      assert_eq(rect_in_polygon(dRect("[8,0,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(dRect("[4,-1,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(dRect("[4,8,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(dRect("[0,2,1,1]"),L,b), b);
-      assert_eq(rect_in_polygon(dRect("[7,2,1,1]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[3,0]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[3,3]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[2,6]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[5,4]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[4,7]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[4,13]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[2,14]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[6,0]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[4,4]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[4,8]"),L,b), b);
+      assert_eq(point_in_polygon(dPoint("[8,4]"),L,b), b);
+    }
+
+    // same, integer
+    for (int b=0; b<2; b++){
+      iMultiLine L("[[[0,0],[6,0],[6,4],[4,4],[4,8],[6,8],[6,12],[4,12],[4,16],[0,12]], "
+                    "[[3,4],[2,4],[2,8],[3,8],[3,10],[1,10],[1,2],[3,2],[3,4]], "
+                    "[[8,4],[10,4],[10,2],[12,2],[12,8],[8,8]]]");
+
+      assert_eq(point_in_polygon(iPoint("[-1,-1]"),L,b), false);
+      assert_eq(point_in_polygon(iPoint("[1,-1]"),L,b), false);
+      assert_eq(point_in_polygon(iPoint("[1,1]"),L,b), true);
+      assert_eq(point_in_polygon(iPoint("[2,3]"),L,b), false);
+      assert_eq(point_in_polygon(iPoint("[1,15]"),L,b), false);
+      assert_eq(point_in_polygon(iPoint("[7,4]"),L,b), false);
+      assert_eq(point_in_polygon(iPoint("[9,5]"),L,b), true);
+
+
+      // borders
+      assert_eq(point_in_polygon(iPoint("[3,0]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[3,3]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[2,6]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[5,4]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[4,7]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[4,13]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[2,14]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[6,0]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[4,4]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[4,8]"),L,b), b);
+      assert_eq(point_in_polygon(iPoint("[8,4]"),L,b), b);
+    }
+
+    /*****************************************************/
+
+    // rect_in_polygon (int)
+    {
+      iLine L("[[0,0],[8,0],[4,8]]");
+      assert_eq(rect_in_polygon(iRect("[-2,-2,1,1]"),L), 0);
+      assert_eq(rect_in_polygon(iRect("[7,3,1,1]"),L), 0);
+      assert_eq(rect_in_polygon(iRect(),L), 0);
+      assert_eq(rect_in_polygon(iRect("[1,1,0,0]"),L), 2);
+      assert_eq(rect_in_polygon(iRect("[0,0,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[4,1,1,1]"),L), 2);
+      assert_eq(rect_in_polygon(iRect("[-1,-1,10,10]"),L), 3);
+      // borders
+      assert_eq(rect_in_polygon(iRect("[0,0,0,0]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[-1,-1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[8,0,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[6,1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[4,-1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[4,8,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[0,2,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(iRect("[7,2,1,1]"),L), 1);
+    }
+
+
+    // rect_in_polygon (double)
+    {
+      dLine L("[[0,0],[8,0],[4,8]]");
+      assert_eq(rect_in_polygon(dRect("[-2,-2,1,1]"),L), 0);
+      assert_eq(rect_in_polygon(dRect("[7,3,1,1]"),L), 0);
+      assert_eq(rect_in_polygon(dRect(),L), 0);
+      assert_eq(rect_in_polygon(dRect("[1,1,0,0]"),L), 2);
+      assert_eq(rect_in_polygon(dRect("[0,0,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[4,1,1,1]"),L), 2);
+      assert_eq(rect_in_polygon(dRect("[-1,-1,10,10]"),L), 3);
+
+      // borders
+      assert_eq(rect_in_polygon(dRect("[0,0,0,0]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[-1,-1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[6,1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[8,0,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[4,-1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[4,8,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[0,2,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[7,2,1,1]"),L), 1);
     }
 
     // rect_in_polygon (double, MultiLine)
     for (int b=0; b<2; b++){
       dMultiLine L("[ [[0,0],[8,0],[4,8]], [[3,1],[2,3],[4,7],[6,3],[5,1]]]");
-      assert_eq(rect_in_polygon(dRect("[-2,-2,1,1]"),L,b), 0);
-      assert_eq(rect_in_polygon(dRect("[7,3,1,1]"),L,b), 0);
-      assert_eq(rect_in_polygon(dRect("[3,3,1,1]"),L,b), 0); // in the hole
-      assert_eq(rect_in_polygon(dRect(),L,b), 0);
-      assert_eq(rect_in_polygon(dRect("[1,1,0,0]"),L,b), 2);
-      assert_eq(rect_in_polygon(dRect("[0,0,1,1]"),L,b), 1);
-      assert_eq(rect_in_polygon(dRect("[2,1,1,1]"),L,b), 1);
-      assert_eq(rect_in_polygon(dRect("[2,4,1,1]"),L,b), 1);
-      assert_eq(rect_in_polygon(dRect("[6,0.5,1,1]"),L,b), 2);
-      assert_eq(rect_in_polygon(dRect("[-1,-1,10,10]"),L,b), 3);
-      assert_eq(rect_in_polygon(dRect("[-1,0.1,10,10]"),L,b), 1);
+      assert_eq(rect_in_polygon(dRect("[-2,-2,1,1]"),L), 0);
+      assert_eq(rect_in_polygon(dRect("[7,3,1,1]"),L), 0);
+      assert_eq(rect_in_polygon(dRect("[3,3,1,1]"),L), 0); // in the hole
+      assert_eq(rect_in_polygon(dRect(),L), 0);
+      assert_eq(rect_in_polygon(dRect("[1,1,0,0]"),L), 2);
+      assert_eq(rect_in_polygon(dRect("[0,0,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[2,1,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[2,4,1,1]"),L), 1);
+      assert_eq(rect_in_polygon(dRect("[6,0.5,1,1]"),L), 2);
+      assert_eq(rect_in_polygon(dRect("[-1,-1,10,10]"),L), 3);
+      assert_eq(rect_in_polygon(dRect("[-1,0.1,10,10]"),L), 1);
     }
-
 
 
     // join_polygons, remove_holes
