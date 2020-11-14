@@ -15,6 +15,8 @@ ms2opt_add_geoflt(GetOptSet & opts){
                                "T - tracks, M - maps, t - time, z - altitude, "
                                "b - map borders." );
   opts.add("join",    0, 0, g, "Join all waypoint lists, tracks, map lists.");
+  opts.add("name",    1, 0, g, "Set name in the first waypoint lists, track, or map list.");
+  opts.add("comm",    1, 0, g, "Set comment in the first waypoint list, track, map list.");
   opts.add("nom_brd", 0, 0, g, "Set map border for a Soviet nomenclature map "
                                "(the map should have a valid name)");
 }
@@ -29,6 +31,12 @@ geo_filters(GeoData & data, const Opt & opt){
 
   if (opt.exists("join"))
     filter_join(data, opt);
+
+  if (opt.exists("name"))
+    filter_name(data, opt);
+
+  if (opt.exists("comm"))
+    filter_comm(data, opt);
 
   if (opt.exists("nom_brd"))
     filter_nom_brd(data, opt);
@@ -112,6 +120,31 @@ filter_join(GeoData & data, const Opt & opt){
     t0->name = "JOIN";
   }
 }
+
+/********************************************************************/
+
+void
+filter_name(GeoData & data, const Opt & opt){
+  if (opt.exists("verbose"))
+      cerr << "filter_name: set data name" << endl;
+
+  string n = opt.get("name", "");
+  if (data.maps.size()>1){ data.maps.begin()->name = n; }
+  if (data.wpts.size()>1){ data.wpts.begin()->name = n; }
+  if (data.trks.size()>1){ data.trks.begin()->name = n; }
+}
+
+void
+filter_comm(GeoData & data, const Opt & opt){
+  if (opt.exists("verbose"))
+      cerr << "filter_comm: set data comm" << endl;
+
+  string n = opt.get("comm", "");
+  if (data.maps.size()>1){ data.maps.begin()->comm = n; }
+  if (data.wpts.size()>1){ data.wpts.begin()->comm = n; }
+  if (data.trks.size()>1){ data.trks.begin()->comm = n; }
+}
+
 
 /********************************************************************/
 
