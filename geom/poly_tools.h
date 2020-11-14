@@ -11,7 +11,8 @@
 template <typename T>
 class PolyTester{
   std::vector<Point<T> > sb,se; // segment beginning, ending
-  std::vector<double> ss; // segment slope
+  std::vector<double>    ss; // segment slope
+  std::vector<PolyTester> mtesters; // for MultiLine tester
   bool horiz; // test direction
 public:
 
@@ -20,7 +21,6 @@ public:
   //  - L -- polygon (represented by Line object)
   //  - horiz -- set test direction
   PolyTester(const Line<T> & L, const bool horiz_ = true): horiz(horiz_){
-
     // Collect line sides info: start and end points, slopes
     int pts = L.size();
     for (int i = 0; i < pts; i++){
@@ -43,14 +43,33 @@ public:
     }
   }
 
+  // PolyTester for multiline: keep testers for all segments
+  PolyTester(const MultiLine<T> & L, const bool horiz_ = true): horiz(horiz_){
+    for (const auto & seg:L)
+      mtesters.push_back(PolyTester(seg, horiz));
+  }
+
+
   // Get sorted coordinates of the polygon crossings with
   // y=const (or x=const if horiz=false) line.
   // Returns sorted dPoint array where first point coordinates
   // are crossing positions, second are "crossing lengths" (normally
   // zero, non-zero if segment coinsides with y=const line.
   // Length is calculated to the left of the point.
-  std::vector<dPoint> get_cr(T y){
+  std::vector<dPoint> get_cr(T y) const{
     std::vector<dPoint> cr;
+
+    // multiline: merge and sort crossings for all multiline segments:
+    if (mtesters.size()>0){
+      for (auto const & tst: mtesters){
+        auto c = tst.get_cr(y);
+        cr.insert(cr.end(), c.begin(), c.end());
+      }
+      sort(cr.begin(), cr.end());
+      return cr;
+    }
+
+    // single-line tester
     for (size_t k = 0; k < sb.size(); k++){
 
       // Skip segments which are fully above or below the line
@@ -133,14 +152,8 @@ point_in_polygon(const Point<T> & P, const Line<T> & L, const bool borders = tru
 template <typename T>
 bool
 point_in_polygon(const Point<T> & P, const MultiLine<T> & L, const bool borders = true){
-  // merge and sort crossings for all multiline segments:
-  std::vector<dPoint> cr;
-  for (const auto seg:L) {
-    PolyTester<T> lt(seg, true);
-    auto c = lt.get_cr(P.y);
-    cr.insert(cr.end(), c.begin(), c.end());
-  }
-  sort(cr.begin(), cr.end());
+  PolyTester<T> lt(L, true);
+  auto cr = lt.get_cr(P.y);
   return PolyTester<T>::test_cr(cr, P.x, borders);
 }
 
