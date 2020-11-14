@@ -130,8 +130,11 @@ GObjMaps::render_tile(const dRect & draw_range) {
     Image * image_src = &imageR_src;
     imageR_src.set_bgcolor(d.src->def_color); // default color
 
-    bool draw_map = d.scale*pow(2,d.zoom) >= d.src->min_scale &&
-                    d.scale*pow(2,d.zoom) <= d.src->max_scale;
+    double minsc = (d.src->min_scale > 0) ? d.src->min_scale : 0.1;
+    double maxsc = (d.src->min_scale > 0) ? d.src->max_scale : 10;
+
+    bool draw_map = d.scale*pow(2,d.zoom) >= minsc &&
+                    d.scale*pow(2,d.zoom) <= maxsc;
 
     // tiled map
     if (d.src->is_tiled && draw_map)

@@ -136,7 +136,7 @@ struct GeoMap{
   /// Constructor: create empty map, set defaults
   GeoMap(): image_dpi(300), tile_size(256), tile_swapy(false), is_tiled(false),
             tile_minz(0), tile_maxz(18),
-            min_scale(0.249), max_scale(8.1), def_color(0x80FF0000) {}
+            min_scale(0), max_scale(0), def_color(0x80FF0000) {}
 
   /******************************************************************/
   // operators +,-,/,*
