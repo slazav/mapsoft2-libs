@@ -203,7 +203,7 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
 
       if (m.image_dpi!=mdef.image_dpi)   json_object_set_new(j_map, "image_dpi",  json_real(m.image_dpi));
       if (m.tile_size!=mdef.tile_size)   json_object_set_new(j_map, "tile_size",  json_integer(m.tile_size));
-      if (m.tile_swapy!=mdef.tile_swapy) json_object_set_new(j_map, "tile_swapw", json_integer(m.tile_swapy));
+      if (m.tile_swapy!=mdef.tile_swapy) json_object_set_new(j_map, "tile_swapy", json_integer(m.tile_swapy));
       if (m.is_tiled!=mdef.is_tiled)     json_object_set_new(j_map, "is_tiled",   json_integer(m.is_tiled));
       if (m.tile_minz!=mdef.tile_minz)   json_object_set_new(j_map, "tile_minz",  json_integer(m.tile_minz));
       if (m.tile_maxz!=mdef.tile_maxz)   json_object_set_new(j_map, "tile_maxz",  json_integer(m.tile_maxz));
@@ -419,7 +419,7 @@ GeoMap read_geojson_map(json_t *json){
 
   read_json_real_field(json, "image_dpi",   &ret.image_dpi);
   read_json_int_field(json,  "tile_size",   &ret.tile_size);
-  read_json_bool_field(json, "tile_swapw",  &ret.tile_swapy);
+  read_json_bool_field(json, "tile_swapy",  &ret.tile_swapy);
   read_json_bool_field(json, "is_tiled",    &ret.is_tiled);
   read_json_int_field(json,  "tile_minz",   &ret.tile_minz);
   read_json_int_field(json,  "tile_maxz",   &ret.tile_maxz);
