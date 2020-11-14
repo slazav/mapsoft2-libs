@@ -79,8 +79,10 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     range.expand(d.bbox);
 
     // calculate map scale (map pixels per viewer pixel)
-    // at the viewer's origin
-    dPoint sc = d.cnv.scales(dRect(0,0,1,1));
+    // at the map's origin
+    dRect r(0,0,1,1);
+    r = d.cnv.bck_acc(r); // map->viewer
+    dPoint sc = d.cnv.scales(r);
     double k = std::max(sc.x, sc.y);
 
     // update map scale
