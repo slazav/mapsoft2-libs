@@ -36,7 +36,7 @@ class LoadFile : public ActionMode, public Gtk::FileChooserDialog{
       fg->add_pattern("*.plt");
       fg->add_pattern("*.wpt");
       fg->add_pattern("*.map");
-      fg->add_pattern("*.js");
+      fg->add_pattern("*.json");
       fg->add_pattern("*.zip");
       fg->set_name("Geodata");
       add_filter(fg);
