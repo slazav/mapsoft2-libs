@@ -5,6 +5,7 @@
 #include "conv/conv_multi.h"
 #include "conv/conv_base.h"
 #include "geo_data/geo_data.h"
+#include "geom/poly_tools.h"
 #include "cache/cache.h"
 #include "image/image_cache.h"
 #include "image/image_t.h"
@@ -38,8 +39,10 @@ private:
     const GeoMap * src;           // pointer to the map
     std::unique_ptr<ImageT> timg; // normal maps use a single img_cache for data storage;
                     // tiled maps have one ImageT object per map.
+    dPolyTester test_brd; // test if point is inside map border (viewer coords)
 
-    MapData(const GeoMap & m): load_sc(1.0), zoom(0), src_bbox(m.bbox()), src(&m){
+    MapData(const GeoMap & m): load_sc(1.0), zoom(0), src_bbox(m.bbox()),
+                               src(&m), test_brd(brd) {
       if (m.is_tiled) timg =
         std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
     }
@@ -81,7 +84,7 @@ private:
   int  draw_refs;// draw map reference points (color)
   uint32_t fade; // map fade color
 
-  bool render_tile(const MapData & d, const dRect & range_dst);
+  bool render_tile(const dRect & range_dst);
 
 public:
   // constructor

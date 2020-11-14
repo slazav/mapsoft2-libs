@@ -63,6 +63,9 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     // border in viewer coordinates
     d.brd = d.cnv.bck_acc(close(d.src->border));
 
+    // update border tester
+    d.test_brd = dPolyTester(d.brd);
+
     // reference points in viewer coordinates
     d.refs = dLine();
     for (auto const & r:d.src->ref)
@@ -108,50 +111,62 @@ GObjMaps::GObjMaps(GeoMapList & maps):
 }
 
 bool
-GObjMaps::render_tile(const MapData & d, const dRect & range_dst) {
-  if (tiles.contains(range_dst)) return true;
+GObjMaps::render_tile(const dRect & draw_range) {
 
-  ImageR image_dst = ImageR(range_dst.w, range_dst.h, IMAGE_32ARGB);
+  ImageR image_dst = ImageR(draw_range.w, draw_range.h, IMAGE_32ARGB);
+  image_dst.fill32(0);
 
-  // prepare Image source.
-  // For normal maps it's a ImageR, from ImageCache
-  // For tiled maps it is ImageT object from MapData.
+  for (auto const & d:data){
 
-  ImageR imageR_src; // keep ImageR data (to be moved to ImageCache?)
-  Image * image_src = &imageR_src;
-  imageR_src.set_bgcolor(d.src->def_color); // default color
+    if (intersect(draw_range, d.bbox).is_zsize()) continue;
 
-  bool draw_map = d.scale*pow(2,d.zoom) >= d.src->min_scale &&
-                  d.scale*pow(2,d.zoom) <= d.src->max_scale;
+    // prepare Image source.
+    // For normal maps it's a ImageR, from ImageCache
+    // For tiled maps it is ImageT object from MapData.
 
-  // tiled map
-  if (d.src->is_tiled && draw_map)
-    image_src = d.timg.get();
+    ImageR imageR_src; // keep ImageR data (to be moved to ImageCache?)
+    Image * image_src = &imageR_src;
+    imageR_src.set_bgcolor(d.src->def_color); // default color
 
-  // non-tiled maps
-  if (!d.src->is_tiled && draw_map)
-    imageR_src = img_cache.get(d.src->image, d.load_sc);
+    bool draw_map = d.scale*pow(2,d.zoom) >= d.src->min_scale &&
+                    d.scale*pow(2,d.zoom) <= d.src->max_scale;
 
-  double avr = d.scale/d.load_sc;
-  // render image
-  for (size_t yd=0; yd<image_dst.height(); ++yd){
-    if (is_stopped()) return false;
-    for (size_t xd=0; xd<image_dst.width(); ++xd){
-      dPoint p(xd,yd);
-      p += range_dst.tlc();
-      d.cnv.frw(p);
-      int color;
-      if (smooth){
-        if (avr<1) color = image_src->get_color_int4(p);
-        else       color = image_src->get_color_avrg(p, avr);
+    // tiled map
+    if (d.src->is_tiled && draw_map)
+      image_src = d.timg.get();
+
+    // non-tiled maps
+    if (!d.src->is_tiled && draw_map)
+      imageR_src = img_cache.get(d.src->image, d.load_sc);
+
+    double avr = d.scale/d.load_sc;
+
+    // render image
+    for (size_t yd=0; yd<image_dst.height(); ++yd){
+      if (is_stopped()) return false;
+      auto cr = d.test_brd.get_cr(yd + draw_range.y);
+      if (d.brd.size() && cr.size()==0) continue;
+      for (size_t xd=0; xd<image_dst.width(); ++xd){
+
+        dPoint p(xd + draw_range.x, yd + draw_range.y);
+        if (d.brd.size() && !dPolyTester::test_cr(cr, p.x)) continue;
+
+        d.cnv.frw(p); // convert to source image coordinates
+        image_src->check_crd(p.x, p.y);
+
+        int color;
+        if (smooth){
+          if (avr<1) color = image_src->get_color_int4(p);
+          else       color = image_src->get_color_avrg(p, avr);
+        }
+        else {
+          color = image_src->get_color(p);
+        }
+        image_dst.set32(xd, yd, color);
       }
-      else {
-        color = image_src->get_color(p);
-      }
-      image_dst.set32(xd, yd, color);
     }
   }
-  tiles.add(range_dst, image_dst);
+  tiles.add(draw_range, image_dst);
   return true;
 }
 
@@ -170,55 +185,41 @@ GObj::ret_t
 GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (is_stopped()) return GObj::FILL_NONE;
-
   if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
 
-  for (auto const & d:data){
+  // render tile, put to tile cache if needed
+  if (!tiles.contains(draw_range)) render_tile(draw_range);
 
-    if (is_stopped()) return GObj::FILL_NONE;
+  // render image
+  cr->set_source(image_to_surface(tiles.get(draw_range)),
+    draw_range.x, draw_range.y);
+  cr->paint();
 
-    dRect range_dst = intersect(draw_range, d.bbox);
-    if (range_dst.is_zsize()) continue;
-
-    range_dst.to_ceil();
-
-    // render image and put it into tiles cache
-    if (!render_tile(d, range_dst)) continue;
-
-    // border
-    if (clip_brd){
-      cr->reset_clip();
-      if (!d.brd.is_empty()){
-        cr->mkpath(d.brd);
-        cr->clip();
-      }
-    }
-
-    cr->set_source(image_to_surface(tiles.get(range_dst)),
-      range_dst.x, range_dst.y);
-    cr->paint();
-
-    if (fade){
-      cr->set_color_a(fade);
-      cr->paint();
-    }
-
-    if (draw_brd){
-      cr->reset_clip();
+  // draw map borders
+  if (draw_brd){
+    for (auto const & d:data){
       cr->set_color_a(draw_brd);
       cr->mkpath(d.brd);
       cr->stroke();
     }
+  }
 
-    if (draw_refs){
-      cr->reset_clip();
+  // draw map ref points
+  if (draw_refs){
+    for (auto const & d:data){
       cr->set_color_a(draw_refs);
       for (auto const & p:d.refs)
         cr->circle(p, 2);
       cr->stroke();
     }
-
   }
+
+  // fade the layer
+  if (fade){
+    cr->set_color_a(fade);
+    cr->paint();
+  }
+
   return GObj::FILL_PART;
 }
 
