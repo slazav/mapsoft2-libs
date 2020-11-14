@@ -82,7 +82,10 @@ public:
   std::vector<size_t> find_segments(const dPoint & pt, const double r = 3.0);
 
   // select/unselect track
-  void select(bool v=true) {selected = v; redraw_me();}
+  void select(bool v=true) {
+    if (selected ==v ) return;
+    selected = v; redraw_me();
+  }
 
 };
 
