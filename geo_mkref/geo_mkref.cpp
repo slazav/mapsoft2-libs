@@ -347,17 +347,25 @@ GeoMap geo_mkref(const GeoData & data, const Opt & o){
     // apply --mag option
     if (o.exists("mag")) map*=o.get("mag", 1.0);
 
-    // join borders of all maps:
+    // join borders and bboxes of all maps (in wgs coords):
     map.border = dMultiLine();
+    dRect bbox;
     for (auto const & ml:data.maps){
       for (auto const & m:ml){
         ConvMap cnv(m);
         auto b = cnv.frw_acc(m.border);
         map.border.insert(map.border.end(), b.begin(), b.end());
+        bbox.expand(cnv.frw_acc(m.bbox()));
       }
     }
+    // convert to the map reference
     ConvMap cnv(map);
     map.border = cnv.bck_acc(map.border);
+    bbox = cnv.bck_acc(bbox);
+
+    // shift map reference to include bbox, set image size
+    map -= bbox.tlc();
+    map.image_size = bbox.brc()-bbox.tlc();
 
     // use border_* options to modify the border
     geo_mkref_brd(o, map.border);
