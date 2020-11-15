@@ -338,25 +338,26 @@ Mapview::set_cnv_map(const GeoMap & m, const bool force){
 // Load accelerator map
 void
 Mapview::load_acc(){
-  std::string home = getenv("HOME");
-  std::string acc_loc = home + "/." + DATADIR + "/" + ACCEL_FILE;
-  Gtk::AccelMap::load(acc_loc);
+  if (getenv("HOME")){
+    std::string home = getenv("HOME");
+    std::string acc_loc = home + "/." + DATADIR + "/" + ACCEL_FILE;
+    Gtk::AccelMap::load(acc_loc);
+  }
 }
 
 // Save accelerator map
 void
 Mapview::save_acc(){
-  std::string home = getenv("HOME");
-  std::string acc_loc = home + "/." + DATADIR + "/" + ACCEL_FILE;
-  Gtk::AccelMap::save(acc_loc);
+  if (getenv("HOME")){
+    std::string home = getenv("HOME");
+    std::string acc_loc = home + "/." + DATADIR + "/" + ACCEL_FILE;
+    Gtk::AccelMap::save(acc_loc);
+  }
 }
 
 // CSS styles
 void
 Mapview::load_css(){
-  std::string home = getenv("HOME");
-  std::string css_glo = std::string() + "/usr/share/" + DATADIR + "/" + CSS_FILE;
-  std::string css_loc = home + "/." + DATADIR + "/" + CSS_FILE;
 
   // load css files
   auto css_provider = Gtk::CssProvider::create();
@@ -366,6 +367,7 @@ Mapview::load_css(){
   if (!style_context) throw Err() << "Mapview: can't get Gtk::StyleContext";
 
   try{
+    std::string css_glo = std::string("/usr/share/") + DATADIR + "/" + CSS_FILE;
     if (file_exists(css_glo) &&
       css_provider->load_from_path(css_glo)){
       auto screen = get_screen();
@@ -375,13 +377,17 @@ Mapview::load_css(){
          GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
-    if (file_exists(css_loc) &&
-      css_provider->load_from_path(css_loc)){
-      auto screen = get_screen();
-      if (!screen) throw Err() << "Mapview: can't get screen";
-      style_context->add_provider_for_screen(
-         screen, css_provider,
-         GTK_STYLE_PROVIDER_PRIORITY_USER);
+    if (getenv("HOME")){
+      std::string home = getenv("HOME");
+      std::string css_loc = home + "/." + DATADIR + "/" + CSS_FILE;
+      if (file_exists(css_loc) &&
+        css_provider->load_from_path(css_loc)){
+        auto screen = get_screen();
+        if (!screen) throw Err() << "Mapview: can't get screen";
+        style_context->add_provider_for_screen(
+           screen, css_provider,
+           GTK_STYLE_PROVIDER_PRIORITY_USER);
+      }
     }
   }
 

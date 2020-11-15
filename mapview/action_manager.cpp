@@ -73,9 +73,11 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(AMTrkOpt,        "Trks")
 
     AddMaps("Maps", std::string("/usr/share/") + DATADIR + "/" + MAPS_MENU_FILE);
-    AddSep("Maps");
-    std::string home = getenv("HOME");
-    AddMaps("Maps", home + "/." + DATADIR + "/" + MAPS_MENU_FILE);
+
+    if (getenv("HOME")) {
+      AddSep("Maps");
+      AddMaps("Maps", std::string(getenv("HOME")) + "/." + DATADIR + "/" + MAPS_MENU_FILE);
+    }
 
     ADD_ACT(OpenMapDB,       "MapDB")
     ADD_ACT(CloseMapDB,      "MapDB")
