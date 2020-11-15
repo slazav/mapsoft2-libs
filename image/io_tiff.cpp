@@ -4,16 +4,26 @@
 #include <fstream>
 #include "io_tiff.h"
 #include "image_colors.h"
+#include <setjmp.h>
 
 /**********************************************************/
-// custom error handler
+// Custom error handler.
+// We are using longjmp + global vars instead of throwing
+// an exception from the callback.
+// See notes in io_jpeg.cpp.
+
+Err tiff_err; // error to be thrown
+jmp_buf tiff_jmp_buf;
+
 #include <cstdarg>
 void
 my_error_exit (const char* module, const char* fmt, va_list args) {
   char buf[1024];
   vsnprintf(buf, 1024, fmt, args);
-  throw Err() << module << " error: " << buf;
+  tiff_err = Err() << module << " error: " << buf;
+  longjmp(tiff_jmp_buf, 0);
 }
+
 /**********************************************************/
 // Open libtiff handler for reading from std::istream
 
@@ -109,6 +119,7 @@ iPoint image_size_tiff(std::istream & str){
 
   try {
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+    if (setjmp(tiff_jmp_buf)) throw tiff_err;
 
     tif = TIFFStreamROpen(str);
     if (!tif) throw Err() << "image_size_tiff: can't open TIFF";
@@ -136,8 +147,9 @@ image_load_tiff(std::istream & str, const double scale){
   ImageR img;
 
   try {
-
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+    if (setjmp(tiff_jmp_buf)) throw tiff_err;
+
     tif = TIFFStreamROpen(str);
     if (!tif) throw Err() << "image_load_tiff: can't load tiff";
 
