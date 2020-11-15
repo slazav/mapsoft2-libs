@@ -130,13 +130,9 @@ struct GeoMap{
   bool is_tiled;               ///< is it a tiled map?
   int  tile_minz, tile_maxz;   ///<
 
-  double min_scale, max_scale; ///< do not show the map outside the scale range
-  uint32_t def_color;          ///< outside the min_scale/max_scale range map is shown by this color.
-
   /// Constructor: create empty map, set defaults
   GeoMap(): image_dpi(300), tile_size(256), tile_swapy(false), is_tiled(false),
-            tile_minz(0), tile_maxz(18),
-            min_scale(0), max_scale(0), def_color(0x80FF0000) {}
+            tile_minz(0), tile_maxz(18) {}
 
   /******************************************************************/
   // operators +,-,/,*

@@ -83,6 +83,8 @@ private:
   int  draw_brd; // draw map border (color)
   int  draw_refs;// draw map reference points (color)
   uint32_t fade; // map fade color
+  double minsc, maxsc; // scale range (<map pix>/<image pix>) where map should be drawn
+  uint32_t def_col; // color to paint the map outside minsc/maxsc
 
   bool render_tile(const dRect & range_dst);
 

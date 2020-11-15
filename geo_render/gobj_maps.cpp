@@ -27,6 +27,13 @@ ms2opt_add_drawmap(GetOptSet & opts){
     "Draw map border (ARGB color, default 0).");
   opts.add("map_fade", 1,0,g,
     "Color to fade the map (default is 0, no fading).");
+  opts.add("map_min_sc", 1,0,g,
+    "Min scale (<map pixels>/<image pixels>) (default is 0.1).");
+  opts.add("map_max_sc", 1,0,g,
+    "Max scale (<map pixels>/<image pixels>) (default is 10).");
+  opts.add("map_def_col", 1,0,g,
+    "Color to paint the map outside min_sc/max_sc  (default is 0x80FF0000).");
+
 }
 
 Opt
@@ -37,6 +44,9 @@ GObjMaps::get_def_opt() {
   o.put("map_draw_refs", 0);
   o.put("map_draw_brd",  0);
   o.put("map_fade",      0);
+  o.put("map_min_sc",  0.1);
+  o.put("map_max_sc",  10.0);
+  o.put("map_def_col", "0x80FF0000");
   return o;
 }
 
@@ -46,7 +56,10 @@ GObjMaps::set_opt(const Opt & opt) {
   clip_brd  = opt.get("map_clip_brd", true);
   draw_refs = opt.get("map_draw_refs", 0);
   draw_brd  = opt.get("map_draw_brd",  0);
-  fade      = opt.get("map_fade",     0);
+  fade      = opt.get("map_fade",      0);
+  minsc     = opt.get("map_min_sc",   0.1);
+  maxsc     = opt.get("map_max_sc",   10);
+  def_col   = opt.get("map_def_col",  0x80FF0000);
   redraw_me();
 }
 
@@ -138,10 +151,7 @@ GObjMaps::render_tile(const dRect & draw_range) {
 
     ImageR imageR_src; // keep ImageR data (to be moved to ImageCache?)
     Image * image_src = &imageR_src;
-    imageR_src.set_bgcolor(d.src->def_color); // default color
-
-    double minsc = (d.src->min_scale > 0) ? d.src->min_scale : 0.1;
-    double maxsc = (d.src->min_scale > 0) ? d.src->max_scale : 10;
+    imageR_src.set_bgcolor(def_col); // default color
 
     bool draw_map = d.scale*pow(2,d.zoom) >= minsc &&
                     d.scale*pow(2,d.zoom) <= maxsc;

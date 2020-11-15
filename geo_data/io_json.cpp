@@ -207,9 +207,6 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
       if (m.is_tiled!=mdef.is_tiled)     json_object_set_new(j_map, "is_tiled",   json_integer(m.is_tiled));
       if (m.tile_minz!=mdef.tile_minz)   json_object_set_new(j_map, "tile_minz",  json_integer(m.tile_minz));
       if (m.tile_maxz!=mdef.tile_maxz)   json_object_set_new(j_map, "tile_maxz",  json_integer(m.tile_maxz));
-      if (m.min_scale!=mdef.min_scale)   json_object_set_new(j_map, "min_scale",  json_real(m.min_scale));
-      if (m.max_scale!=mdef.max_scale)   json_object_set_new(j_map, "max_scale",  json_real(m.max_scale));
-      if (m.def_color!=mdef.def_color)   json_object_set_new(j_map, "def_color",  json_integer(m.def_color));
 
       json_array_append_new(j_maps, j_map);
     }
@@ -423,9 +420,6 @@ GeoMap read_geojson_map(json_t *json){
   read_json_bool_field(json, "is_tiled",    &ret.is_tiled);
   read_json_int_field(json,  "tile_minz",   &ret.tile_minz);
   read_json_int_field(json,  "tile_maxz",   &ret.tile_maxz);
-  read_json_real_field(json, "min_scale",   &ret.min_scale);
-  read_json_real_field(json, "max_scale",   &ret.max_scale);
-  read_json_int_field(json,  "def_color",   &ret.def_color);
 
   // ref
   json_t *j;
