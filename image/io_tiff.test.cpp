@@ -33,6 +33,10 @@ main(){
       }
     }
 
+    assert_err(image_save_tiff(img32, "./non-existing/file", Opt()),
+      "Can't open file: ./non-existing/file");
+
+
     // * Create all types of images (32ARGB, 24RGB, 16, 8, 1, PAL).
     // * Save them with different image_save_tiff() options.
     // * Read saved file and check result.

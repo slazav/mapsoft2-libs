@@ -358,6 +358,10 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
       im8 = image_remap(im, colors);
     }
 
+    // set error callback
+    TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
+    if (setjmp(tiff_jmp_buf)) throw tiff_err;
+
     // open file
     tif = TIFFStreamWOpen(str);
 
