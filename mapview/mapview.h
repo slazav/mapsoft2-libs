@@ -26,6 +26,7 @@
 #define DATADIR    "mapsoft2"
 #define ACCEL_FILE "mapsoft2.acc"
 #define CSS_FILE   "mapsoft2.css"
+#define MAPS_MENU_FILE "maps_menu.json"
 
 // Same order as in mapview constructor where pages are added
 // to the Gtk::Notebook:

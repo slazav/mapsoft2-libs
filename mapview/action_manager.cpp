@@ -72,13 +72,10 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(AMTrkAdd,        "Trks")
     ADD_ACT(AMTrkOpt,        "Trks")
 
-    ADD_ACT(AddMapyCZ,       "Maps")
-    ADD_ACT(AddOSM,          "Maps")
-    ADD_ACT(AddESRI,         "Maps")
-    ADD_ACT(AddYandexSat,    "Maps")
-    ADD_ACT(AddGoogleSat,    "Maps")
-    ADD_ACT(AddBingSat,      "Maps")
-    ADD_ACT(AddPodmMap,      "Maps")
+    AddMaps("Maps", std::string("/usr/share/") + DATADIR + "/" + MAPS_MENU_FILE);
+    AddSep("Maps");
+    std::string home = getenv("HOME");
+    AddMaps("Maps", home + "/." + DATADIR + "/" + MAPS_MENU_FILE);
 
     ADD_ACT(OpenMapDB,       "MapDB")
     ADD_ACT(CloseMapDB,      "MapDB")
@@ -240,6 +237,20 @@ ActionManager::AddAction(ActionMode *action,
       "  </menubar>"
       "</ui>"
     );
+  }
+}
+
+void
+ActionManager::AddMaps(const std::string & menu, const std::string & file){
+  GeoData d;
+  try { read_geo(file, d, Opt()); }
+  catch (Err & e) {}
+
+  int n = 0;
+  for (auto const & m:d.maps){
+    AddAction(new AddMap(mapview, m),\
+    std::string("ModeMap:") + file + ":" + type_to_str(n), menu);
+    n++;
   }
 }
 

@@ -45,6 +45,9 @@ private:
   Mapview * mapview;
   std::vector<std::shared_ptr<ActionMode> > modes;
   int current_mode;
+
+  // add maps from json file to the menu
+  void AddMaps(const std::string & menu, const std::string & file);
 };
 
 #endif
