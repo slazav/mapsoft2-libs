@@ -6,8 +6,6 @@
 #include <cstring>
 #include <setjmp.h>
 
-std::string jpeg_error_message;
-
 /**********************************************************/
 
 /*
