@@ -55,6 +55,17 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   range = dRect();
   for (auto & d:data){
 
+    // We want to calculate some map parameters in viewer projection:
+    // bbox, map scale (<map pixels>/<viewer pixels>), map border etc.
+    // A few cases should be considered:
+    // 1. Viewer projection is set for a tiled map covering the
+    //    whole Earth, Map projection is Transverse Mercator
+    //    which works only near its central meridian.
+    // 2. Opposit case: viewer is in Transverse Mercator, map is
+    //    in Mercator covering the while world (except poles).
+    // 3. Map and viewer are in Transverse Mercator but with
+    //    very different central meridians...
+
     // conversion viewer->map
     d.cnv.reset();
     if (cnv) d.cnv.push_back(*cnv, true); // viewer -> WGS
@@ -73,15 +84,18 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     d.cnv.bck(d.refs);
 
     // map bbox in viewer coordinates
-    // Not good for large map in wrong projection,
-    // Distorsions can be really large!
     d.bbox = d.cnv.bck_acc(d.src_bbox);
     range.expand(d.bbox);
 
-    // calculate map scale (map pixels per viewer pixel)
-    // at the map's origin
-    dRect r(0,0,1,1);
-    r = d.cnv.bck_acc(r); // map->viewer
+    // Calculate map scale (map pixels per viewer pixel).
+    // To have reasonable accuracy in different cases we
+    // use map center if it is inside viewer coords (small map in
+    // "large" viewer) or use viewer origin (in opposite case)
+    // Find this point in viewer coords:
+    dPoint p0 = d.refs.bbox().cnt(); // map center in viewer coords
+    if (p0.x < 0 && p0.y < 0) p0 = dPoint(0,0); // use viewer origin
+
+    dRect r(p0, p0+dPoint(1,1));
     dPoint sc = d.cnv.scales(r);
     double k = std::max(sc.x, sc.y);
 
