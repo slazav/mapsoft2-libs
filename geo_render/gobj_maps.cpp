@@ -102,10 +102,6 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     // update map scale
     d.set_scale(k, smooth);
 
-    // Simplify the conversion if possible.
-    // Use 0.5pt accuracy in source coordinates (viewer).
-    d.cnv.simplify(d.bbox, 5, 0.5);
-
     // for tiled maps clear downloader's queue
     if (d.timg) d.timg->clear_queue();
 
@@ -160,6 +156,12 @@ GObjMaps::render_tile(const dRect & draw_range) {
 
     double avr = d.scale/d.load_sc;
 
+    // Simplify map-to-map conversion if possible.
+    // Use 5x5 calculation grid and 0.5pt accuracy
+    // in source (viewer) coordinates.
+    ConvMulti cnv(d.cnv);
+    cnv.simplify(draw_range, 5, 0.5);
+
     // render image
     for (size_t yd=0; yd<image_dst.height(); ++yd){
       if (is_stopped()) return false;
@@ -170,7 +172,7 @@ GObjMaps::render_tile(const dRect & draw_range) {
         dPoint p(xd + draw_range.x, yd + draw_range.y);
         if (d.brd.size() && !dPolyTester::test_cr(cr, p.x)) continue;
 
-        d.cnv.frw(p); // convert to source image coordinates
+        cnv.frw(p); // convert to source image coordinates
         image_src->check_crd(p.x, p.y);
 
         int color;
