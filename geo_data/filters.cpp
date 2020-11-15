@@ -19,6 +19,8 @@ ms2opt_add_geoflt(GetOptSet & opts){
   opts.add("comm",    1, 0, g, "Set comment in the first waypoint list, track, map list.");
   opts.add("nom_brd", 0, 0, g, "Set map border for a Soviet nomenclature map "
                                "(the map should have a valid name)");
+  opts.add("rescale_maps", 1, 0, g, "Rescale image part of map references by some factor.");
+  opts.add("shift_maps",   1, 0, g, "Shift image part of map references by some (x,y) vector.");
 }
 
 /********************************************************************/
@@ -40,6 +42,21 @@ geo_filters(GeoData & data, const Opt & opt){
 
   if (opt.exists("nom_brd"))
     filter_nom_brd(data, opt);
+
+  if (opt.exists("rescale_maps")){
+    double sc = opt.get("rescale_maps", 1.0);
+    for (auto & ml:data.maps){
+      for (auto & m:ml) m*=sc;
+    }
+  }
+
+  if (opt.exists("shift_maps")){
+    dPoint sh = opt.get("shift_maps", dPoint());
+    for (auto & ml:data.maps){
+      for (auto & m:ml) m+=sh;
+    }
+  }
+
 }
 
 
