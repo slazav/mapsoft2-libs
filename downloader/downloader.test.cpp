@@ -16,7 +16,7 @@ main(){
 //    char cwd[1024];
 //    getcwd(cwd, sizeof(cwd));
     std::string pref("file://");
-    pref += getenv("PWD");
+    if (getenv("PWD")) pref += getenv("PWD");
 
     Downloader D;
 
