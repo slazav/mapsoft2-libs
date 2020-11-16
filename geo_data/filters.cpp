@@ -146,9 +146,9 @@ filter_name(GeoData & data, const Opt & opt){
       cerr << "filter_name: set data name" << endl;
 
   string n = opt.get("name", "");
-  if (data.maps.size()>1){ data.maps.begin()->name = n; }
-  if (data.wpts.size()>1){ data.wpts.begin()->name = n; }
-  if (data.trks.size()>1){ data.trks.begin()->name = n; }
+  if (data.maps.size()>0){ data.maps.begin()->name = n; }
+  if (data.wpts.size()>0){ data.wpts.begin()->name = n; }
+  if (data.trks.size()>0){ data.trks.begin()->name = n; }
 }
 
 void
@@ -157,9 +157,9 @@ filter_comm(GeoData & data, const Opt & opt){
       cerr << "filter_comm: set data comm" << endl;
 
   string n = opt.get("comm", "");
-  if (data.maps.size()>1){ data.maps.begin()->comm = n; }
-  if (data.wpts.size()>1){ data.wpts.begin()->comm = n; }
-  if (data.trks.size()>1){ data.trks.begin()->comm = n; }
+  if (data.maps.size()>0){ data.maps.begin()->comm = n; }
+  if (data.wpts.size()>0){ data.wpts.begin()->comm = n; }
+  if (data.trks.size()>0){ data.trks.begin()->comm = n; }
 }
 
 
