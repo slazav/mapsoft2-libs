@@ -71,3 +71,13 @@ PanelTrks::upd_name(GObjTrk * sel_gobj, bool dir){
   if (ret) signal_data_changed().emit();
   return ret;
 }
+
+void
+PanelTrks::on_select(const Gtk::TreeModel::Path& path,
+                     Gtk::TreeViewColumn* col){
+  std::cerr << "TRK select\n";
+  for (auto const & row:store->children()){
+    std::shared_ptr<GObjTrk> gobj = row[columns.gobj];
+    gobj->select(store->get_iter(path) == row);
+  }
+}

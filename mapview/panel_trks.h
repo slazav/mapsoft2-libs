@@ -32,6 +32,8 @@ public:
 
     bool upd_name(GObjTrk * sel_gobj=NULL, bool dir=true);
 
+    void on_select(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* col) override;
+
 };
 
 #endif

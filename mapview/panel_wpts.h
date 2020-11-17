@@ -29,6 +29,9 @@ public:
     std::map<GObjWpts*, std::vector<int> > find_wpts(const iRect & r) const;
 */
     bool upd_name(GObjWpts * sel_gobj=NULL, bool dir=true);
+
+    void on_select(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* col) override;
+
 };
 
 #endif

@@ -64,3 +64,13 @@ PanelWpts::upd_name(GObjWpts * sel_gobj, bool dir){
   if (ret) signal_data_changed().emit();
   return ret;
 }
+
+void
+PanelWpts::on_select(const Gtk::TreeModel::Path& path,
+                     Gtk::TreeViewColumn* col){
+  std::cerr << "WPT select\n";
+  for (auto const & row:store->children()){
+    std::shared_ptr<GObjWpts> gobj = row[columns.gobj];
+    gobj->select(store->get_iter(path) == row);
+  }
+}

@@ -70,6 +70,9 @@ public:
     treeview->signal_button_press_event().connect(
       sigc::mem_fun (this, &Panel::on_button_press), false);
 
+//    treeview->signal_row_activated().connect(
+//      sigc::mem_fun (this, &Panel::on_select), false);
+
   }
 
   // Add data
@@ -222,6 +225,10 @@ public:
     if (popup_menu) popup_menu->popup(event->button, event->time);
     return true;
   }
+
+  // call when object is selected
+  virtual void on_select(const Gtk::TreeModel::Path& path,
+                               Gtk::TreeViewColumn* col) {};
 
 
   // update names in data (no need to redraw)
