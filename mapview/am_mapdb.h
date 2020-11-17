@@ -2,7 +2,7 @@
 #define AM_MAPDB_H
 
 /* Action modes for MapDB menu */
-#include "action_mode.h"
+#include "am.h"
 //#include "geo_data/conv_geo.h"
 
 /**********************************************************/

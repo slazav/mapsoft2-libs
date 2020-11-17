@@ -2,7 +2,7 @@
 #define AM_FILE_H
 
 /* Action modes for File menu */
-#include "action_mode.h"
+#include "am.h"
 
 /**********************************************************/
 // Start new project

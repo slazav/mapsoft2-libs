@@ -1,5 +1,5 @@
-#ifndef ACTION_MODE_H
-#define ACTION_MODE_H
+#ifndef AM_H
+#define AM_H
 
 #include "geom/point.h"
 #include "geom/rect.h"
@@ -35,13 +35,5 @@ public:
     // Sends user click. Coordinates are in workplane's discrete system.
     virtual void handle_click(iPoint p, const Gdk::ModifierType & state) { }
 };
-
-
-class ActionModeNone : public ActionMode {
-public:
-    ActionModeNone (Mapview * mapview) : ActionMode(mapview) { }
-    virtual std::string get_name() override { return "None"; }
-};
-
 
 #endif

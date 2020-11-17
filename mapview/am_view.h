@@ -2,7 +2,7 @@
 #define AM_VIEW_H
 
 /* Action modes for View menu */
-#include "action_mode.h"
+#include "am.h"
 
 /**********************************************************/
 // Toggle fullscreen mode

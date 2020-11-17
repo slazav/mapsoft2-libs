@@ -2,7 +2,7 @@
 #define AM_MAPS_H
 
 /* Action modes for Maps menu */
-#include "action_mode.h"
+#include "am.h"
 #include "geo_data/geo_io.h"
 
 /**********************************************************/

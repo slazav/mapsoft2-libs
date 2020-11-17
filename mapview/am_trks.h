@@ -2,7 +2,7 @@
 #define AM_TRKS_H
 
 /* Action modes for Tracks menu */
-#include "action_mode.h"
+#include "am.h"
 #include "dlg_trk_opt.h"
 
 /**********************************************************/

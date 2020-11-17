@@ -5,7 +5,7 @@ MOD_HEADERS := mapview.h css.h\
                panel_status.h panel.h\
                panel_wpts.h panel_trks.h panel_maps.h\
                panel_mapdb.h\
-               action_manager.h action_mode.h\
+               action_manager.h am.h am_default.h\
                am_file.h am_view.h am_panel.h am_trks.h am_maps.h am_mapdb.h am_srtm.h\
                w_rainbow.h w_simple_combo.h w_comboboxes.h w_coord_box.h\
                w_nom_box.h w_page_box.h

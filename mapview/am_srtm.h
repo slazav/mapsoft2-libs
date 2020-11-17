@@ -2,7 +2,7 @@
 #define AM_SRTM_H
 
 /* Action modes for DEM/SRTM menu */
-#include "action_mode.h"
+#include "am.h"
 
 /**********************************************************/
 // Show/Hide SRTM layer

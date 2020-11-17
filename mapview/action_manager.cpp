@@ -8,8 +8,8 @@
 
 /**** ActionModes *****/
 
-#include "action_mode.h"
-
+#include "am.h"
+#include "am_default.h"
 #include "am_file.h"
 #include "am_view.h"
 #include "am_trks.h"
@@ -52,8 +52,8 @@ ActionManager::ActionManager (Mapview * mapview_):
     ui_manager->insert_action_group(actions);
     mapview->add_accel_group(ui_manager->get_accel_group());
 
-    // empty mode in the begining
-    modes.push_back(std::shared_ptr<ActionMode>(new ActionModeNone(mapview)));
+    // Default mode in the begining
+    modes.push_back(std::shared_ptr<ActionMode>(new ActionModeDefault(mapview)));
 
     /***************************************/
     // Add actions to menus
@@ -148,11 +148,6 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(PanelDelAll,      "PopupMAPs")
 
 
-/*
-
-    // SRTM panel menu
-    ADD_ACT(SrtmOpt,          "PopupSRTM")
-*/
     /***************************************/
 
     /* Cleate menus */

@@ -1,7 +1,7 @@
 #ifndef AM_PANEL_H
 #define AM_PANEL_H
 
-#include "action_mode.h"
+#include "am.h"
 #include "geo_data/geo_io.h"
 
 class PanelDelSel : public ActionMode{
