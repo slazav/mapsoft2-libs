@@ -69,11 +69,13 @@ GObjWpts::set_opt(const Opt & opt){
 
   // Update point sizes. We need a Cairo::context to
   // measure size of text.
-  CairoWrapper cr;
-  cr.set_surface_img(1,1);
-  cr->set_fc_font(color, text_font.c_str(), text_size);
+  if (text_size>0){
+    CairoWrapper cr;
+    cr.set_surface_img(1,1);
+    cr->set_fc_font(color, text_font.c_str(), text_size);
+    for (auto & wt:tmpls) update_pt_name(cr, wt); // update name
+  }
 
-  for (auto & wt:tmpls) update_pt_name(cr, wt); // update name
   redraw_me();
 }
 
@@ -118,16 +120,18 @@ GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
       if (is_stopped()) return GObj::FILL_NONE;
       if (intersect(draw_range, wt.bbox).is_zsize()) continue;
 
-      // flag sticks
-      cr->move_to(wt);
-      cr->line_to(wt.text_pt);
-      // dots
-      cr->circle(wt, size);
-      // flags
-      if (wt.style == Skip) continue;
-      if (wt.style == Multi)
-        cr->rectangle(wt.text_pt+wt.text_box+dPoint(2,2));
-      cr->rectangle(wt.text_pt+wt.text_box);
+      if (text_size > 0) {
+        // flag sticks
+        cr->move_to(wt);
+        cr->line_to(wt.text_pt);
+        // dots
+        cr->circle(wt, size);
+        // flags
+        if (wt.style == Skip) continue;
+        if (wt.style == Multi)
+          cr->rectangle(wt.text_pt+wt.text_box+dPoint(2,2));
+        cr->rectangle(wt.text_pt+wt.text_box);
+      }
     }
     cr->set_line_width(linewidth + 2*sel_w);
     cr->set_color(sel_col);
@@ -140,12 +144,14 @@ GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
   cr->set_color(color);
 
   // first pass: flag sticks
-  for (auto const & wt:tmpls){
-    if (is_stopped()) return GObj::FILL_NONE;
-    if (intersect(draw_range, wt.bbox).is_zsize()) continue;
-    cr->move_to(wt);
-    cr->line_to(wt.text_pt);
-    cr->stroke();
+  if (text_size > 0) {
+    for (auto const & wt:tmpls){
+      if (is_stopped()) return GObj::FILL_NONE;
+      if (intersect(draw_range, wt.bbox).is_zsize()) continue;
+      cr->move_to(wt);
+      cr->line_to(wt.text_pt);
+      cr->stroke();
+    }
   }
 
   // second pass: dots
@@ -161,31 +167,33 @@ GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
   }
 
   // third pass: flags
-  for (auto const & wt:tmpls){
-    if (is_stopped()) return GObj::FILL_NONE;
-    if (intersect(draw_range, wt.bbox).is_zsize()) continue;
-    if (wt.style == Skip) continue;
+  if (text_size > 0) {
+    for (auto const & wt:tmpls){
+      if (is_stopped()) return GObj::FILL_NONE;
+      if (intersect(draw_range, wt.bbox).is_zsize()) continue;
+      if (wt.style == Skip) continue;
 
-    if (wt.style == Multi){
-      cr->rectangle(wt.text_pt+wt.text_box+dPoint(2,2));
+      if (wt.style == Multi){
+        cr->rectangle(wt.text_pt+wt.text_box+dPoint(2,2));
+        cr->set_color(color);
+        cr->stroke();
+      }
+      cr->rectangle(wt.text_pt+wt.text_box);
+      cr->set_color(bgcolor);
+      cr->fill_preserve();
       cr->set_color(color);
       cr->stroke();
+
+      // text
+      cr->move_to(wt.text_pt);
+      cr->set_fc_font(color, text_font.c_str(), text_size);
+      cr->show_text(wt.name);
+
+      // debugging: draw waypoint bbox
+      //cr->set_color(0xFFFF0000);
+      //cr->rectangle(wt.bbox);
+      //cr->stroke();
     }
-    cr->rectangle(wt.text_pt+wt.text_box);
-    cr->set_color(bgcolor);
-    cr->fill_preserve();
-    cr->set_color(color);
-    cr->stroke();
-
-    // text
-    cr->move_to(wt.text_pt);
-    cr->set_fc_font(color, text_font.c_str(), text_size);
-    cr->show_text(wt.name);
-
-    // debugging: draw waypoint bbox
-    //cr->set_color(0xFFFF0000);
-    //cr->rectangle(wt.bbox);
-    //cr->stroke();
   }
 
   return GObj::FILL_PART;
@@ -199,7 +207,9 @@ GObjWpts::update_pt_crd(WptDrawTmpl & wt, const std::shared_ptr<ConvBase> cnv){
   if (cnv) cnv->bck(pt);
   wt.x = pt.x; wt.y = pt.y;
   wt.text_pt = (dPoint)wt;
-  wt.text_pt.y -= text_size + text_pad + stick_len;
+  if (text_size>0){
+    wt.text_pt.y -= text_size + text_pad + stick_len;
+  }
   update_pt_bbox(wt);
 }
 
@@ -207,7 +217,7 @@ void
 GObjWpts::update_pt_bbox(WptDrawTmpl & wt){
   wt.bbox = dRect(dPoint(wt), dPoint(wt));
   wt.bbox.expand(size + linewidth);
-  if (!wt.text_box.is_empty())
+  if (wt.text_box)
     wt.bbox.expand(wt.text_pt + wt.text_box);
   wt.bbox.expand(sel_w);
   wt.bbox.to_ceil();
@@ -230,6 +240,8 @@ GObjWpts::update_range(){
 
 void
 GObjWpts::adjust_text_pos() {
+  if (text_size <= 0) return;
+
   // create geohash storage
   GeoHashStorage db;
   db.set_bbox(range);
@@ -305,6 +317,7 @@ GObjWpts::adjust_text_pos() {
 
 void
 GObjWpts::adjust_text_brd(const dRect & rng){
+  if (text_size <= 0) return;
   for (auto & wt:tmpls){
 
     if (!rng.contains(wt)) continue;
