@@ -71,7 +71,7 @@ public:
 
   // Find track points near pt within radius r.
   // Return point numbers, sorted by distance.
-  std::vector<size_t> find_points (const dPoint & pt, const double r = 3.0);
+  std::vector<size_t> find_points (const dPoint & pt);
 
   // Find all track points within rectangle r.
   // Return point numbers.
@@ -79,7 +79,7 @@ public:
 
   // Find segments near pt within radius r.
   // Return numbers of starting points.
-  std::vector<size_t> find_segments(const dPoint & pt, const double r = 3.0);
+  std::vector<size_t> find_segments(const dPoint & pt);
 
   // select/unselect track
   void select(bool v=true) {

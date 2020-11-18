@@ -15,20 +15,29 @@ main(){
     trk.emplace_back(3,0,0,0,0);
     trk.emplace_back(1,0,0,0,0);
 
-    GObjTrk trk_obj(trk);
+    // find_* functions use line_width and dot_w parameters
+    trk.opts.put("thickness", 0.5);
 
-    auto v1 = trk_obj.find_segments(dPoint(1.1,1.1), 0.5);
+    GObjTrk trk_obj(trk);
+    Opt o;
+    o.put("dot_w", 0.0);
+    trk_obj.set_opt(o);
+
+    auto v1 = trk_obj.find_segments(dPoint(1.1,1.1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 2);
     assert_eq(v1[0], 1);
     assert_eq(v1[1], 0);
 
-    v1 = trk_obj.find_segments(dPoint(3,1), 0.5);
+    v1 = trk_obj.find_segments(dPoint(3,1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 1);
     assert_eq(v1[0], 3);
 
-    v1 = trk_obj.find_segments(dPoint(0,0), 1.5);
+    trk.opts.put("thickness", 1.5);
+    trk_obj.set_opt(o);
+
+    v1 = trk_obj.find_segments(dPoint(0,0));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 3);
     assert_eq(v1[0], 0);
@@ -36,17 +45,23 @@ main(){
     assert_eq(v1[2], 1);
 
 
-    v1 = trk_obj.find_points(dPoint(1.1,1.1), 0.5);
+    trk.opts.put("thickness", 0.5);
+    trk_obj.set_opt(o);
+
+    v1 = trk_obj.find_points(dPoint(1.1,1.1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 1);
     assert_eq(v1[0], 1);
 
-    v1 = trk_obj.find_points(dPoint(3,1), 0.5);
+    v1 = trk_obj.find_points(dPoint(3,1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 1);
     assert_eq(v1[0], 3);
 
-    v1 = trk_obj.find_points(dPoint(0,0), 1.5);
+    trk.opts.put("thickness", 1.0);
+    trk_obj.set_opt(o);
+
+    v1 = trk_obj.find_points(dPoint(0,0));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 3);
     assert_eq(v1[0], 0);

@@ -117,6 +117,7 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   for (size_t i=0; i<trk.size(); i++){
     dPoint pt(trk[i]);
     if (cnv) cnv->bck(pt);
+    pt.z = 0;
     segments[i].p1 = pt;
     segments[i>0? i-1: trk.size()-1].p2 = pt;
   }
@@ -206,11 +207,12 @@ GObjTrk::update_range(){
 /********************************************************************/
 
 std::vector<size_t>
-GObjTrk::find_points(const dPoint & pt, double r){
+GObjTrk::find_points(const dPoint & pt){
+  double R = (dot_w+1)*linewidth;
   std::map<double, size_t> m;
   for (size_t i = 0; i < segments.size(); ++i){
     double d = dist(segments[i].p1, pt);
-    if (d<r) m.emplace(d,i);
+    if (d<R) m.emplace(d,i);
   }
   std::vector<size_t> ret;
   for (const auto & x:m) ret.push_back(x.second);
@@ -226,31 +228,31 @@ GObjTrk::find_points(const dRect & r){
 }
 
 std::vector<size_t>
-GObjTrk::find_segments(const dPoint & pt, const double r){
+GObjTrk::find_segments(const dPoint & pt){
+  double R = linewidth; // search distance
   std::map<double, size_t> m;
   std::vector<size_t> ret;
 
-  size_t s = segments.size();
-  if (s<1)
-    return ret;
 
-  if (s==1){
-    double d = dist(segments[0].p1,pt);
-    if (d<r)  ret.push_back(0);
-    return ret;
-  }
+  if (segments.size() == 0) return ret;
 
-  for (size_t i=0; i<s; ++i) {
+  for (size_t i=0; i<segments.size(); ++i) {
     if (segments[i].hide) continue;
     auto p1 = segments[i].p1;
     auto p2 = segments[i].p2;
+
     double d12 = dist(p2,p1);
+    if (d12 == 0) {
+      double d = dist(segments[i].p1,pt);
+      if (d<R) ret.push_back(i);
+      continue;
+    }
 
     // for point projection to the segment
     // calculate length of p1->proj(pt)
     double vn = pscal(pt-p1, p2-p1)/d12;
 
-    if (vn < -r || vn > d12 + r)
+    if (vn < -R || vn > d12 + R)
       continue;
 
     double d;
@@ -261,7 +263,7 @@ GObjTrk::find_segments(const dPoint & pt, const double r){
     else {
       d = dist(pt-p1, norm(p2-p1) * vn);
     }
-    if (d < r) m.emplace(d,i);
+    if (d < R) m.emplace(d,i);
   }
   for (const auto & x:m) ret.push_back(x.second);
   return ret;
