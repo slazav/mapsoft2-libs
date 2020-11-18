@@ -29,10 +29,10 @@ private:
   std::string text_font;
   bool selected;
 
-  int skip_dist;      // skip point if its label has to be drawn
-                      // too far (distance in points).
-  int stick_len;      // default flag stick length
-  int text_pad;
+  double skip_dist;      // skip point if its label has to be drawn
+                         // too far (distance in points).
+  double stick_len;      // default flag stick length
+  double text_pad;
   bool do_adj_pos;    // adjust text positions to avoid collisions
   bool do_adj_brd;    // adjust text positions fit into picture
 

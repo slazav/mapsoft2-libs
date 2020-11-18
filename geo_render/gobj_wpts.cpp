@@ -56,16 +56,16 @@ GObjWpts::get_def_opt() {
 void
 GObjWpts::set_opt(const Opt & opt){
   text_font = opt.get("wpt_text_font",  "serif");
-  text_size = opt.get("wpt_text_size",  10);
-  text_pad  = opt.get("wpt_text_pad",   2);
-  size      = opt.get("wpt_draw_size",  3);
-  linewidth = opt.get("wpt_line_width", 1);
-  stick_len = opt.get("wpt_stick_len",  10);
+  text_size = opt.get("wpt_text_size",  10.0);
+  text_pad  = opt.get("wpt_text_pad",   2.0);
+  size      = opt.get("wpt_draw_size",  3.0);
+  linewidth = opt.get("wpt_line_width", 1.0);
+  stick_len = opt.get("wpt_stick_len",  10.0);
   color     = opt.get("wpt_color",      0xFF000000);
   bgcolor   = opt.get("wpt_bgcolor",    0xFFFFFFFF);
   do_adj_pos = opt.get("wpt_adj", 1);
   do_adj_brd = opt.get("wpt_adj_brd", 0);
-  skip_dist = opt.get("wpt_skip_dist", stick_len*10);
+  skip_dist = opt.get("wpt_skip_dist", stick_len*10.0);
 
   // Update point sizes. We need a Cairo::context to
   // measure size of text.
