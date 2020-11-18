@@ -16,23 +16,31 @@ main(){
     wpts.emplace_back(1,0,0);
 
     GObjWpts wpts_obj(wpts);
+    Opt o;
+    o.put("wpt_draw_size", 0.5);
+    o.put("wpt_text_size", 0);
+    wpts_obj.set_opt(o);
 
-    auto v1 = wpts_obj.find_points(dPoint(1.1,1.1), 0.5);
+    auto v1 = wpts_obj.find_points(dPoint(1.1,1.1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 1);
     assert_eq(v1[0], 1);
 
-    v1 = wpts_obj.find_points(dPoint(3,1), 0.5);
+    v1 = wpts_obj.find_points(dPoint(3,1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 1);
     assert_eq(v1[0], 3);
 
-    v1 = wpts_obj.find_points(dPoint(0,0), 1.5);
+    o.put("wpt_draw_size", 1.5);
+    o.put("wpt_text_size", 0);
+    wpts_obj.set_opt(o);
+
+    v1 = wpts_obj.find_points(dPoint(0,0));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";
     assert_eq(v1.size(), 3);
     assert_eq(v1[0], 0);
-    assert_eq(v1[1], 5);
-    assert_eq(v1[2], 1);
+    assert_eq(v1[1], 1);
+    assert_eq(v1[2], 5);
 
     v1 = wpts_obj.find_points(dRect(1.5,0.5,2,1));
     // for (const auto & n: v1) std::cerr << "> " << n << "\n";

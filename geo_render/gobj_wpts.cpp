@@ -339,14 +339,13 @@ GObjWpts::adjust_text_brd(const dRect & rng){
 /**********************************************************/
 
 std::vector<size_t>
-GObjWpts::find_points(const dPoint & pt, double r){
-  std::map<double, size_t> m;
+GObjWpts::find_points(const dPoint & pt){
+  std::vector<size_t> ret;
   for (size_t i = 0; i < tmpls.size(); ++i){
     double d = dist(tmpls[i], pt);
-    if (d<r) m.emplace(d,i);
+    if ((tmpls[i].text_box && contains(tmpls[i].text_box + tmpls[i].text_pt, pt)) ||
+        d<size) ret.push_back(i);
   }
-  std::vector<size_t> ret;
-  for (const auto & x:m) ret.push_back(x.second);
   return ret;
 }
 
