@@ -13,21 +13,14 @@ public:
     void add(const std::shared_ptr<GeoWptList> & wpts) override;
 
 
-/*
-    // find waypoint in all gobjs
-    int find_wpt(const iPoint & p, GObjWpts ** gobj, int radius = 3) const;
+    // Find waypoints in a rectangular area
+    std::map<GObjWpts*, std::vector<size_t> > find_points(const iRect & r) const;
 
-    // ???
-    dPoint get_sel_point(){
-      GObjWpts * O = find_selected();
-      if (!O || !O->get_data()->size())
-        return dPoint(nan(""), nan(""));
-      return (*O->get_data())[0];
-    }
+    // Find waypoints (point is in the waypoint circle or waypoint label).
+    // Return point numbers, sorted by distance.
+    std::map<GObjWpts*, std::vector<size_t> > find_points(const dPoint & pt) const;
 
-    // find waypoints in a rectangular area
-    std::map<GObjWpts*, std::vector<int> > find_wpts(const iRect & r) const;
-*/
+
     bool upd_name(GObjWpts * sel_gobj=NULL, bool dir=true);
 
     void on_select(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* col) override;

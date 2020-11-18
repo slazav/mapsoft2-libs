@@ -16,33 +16,31 @@ PanelWpts::add(const std::shared_ptr<GeoWptList> & wpts) {
   row[columns.gobj]    = gobj;
 }
 
-/*
-int
-PanelWpts::find_wpt(const iPoint & p, GObjWpts ** gobj, int radius) const {
-  for (auto const & row:store->children()){
-    if (!row[columns.checked]) continue;
-    std::shared_ptr<GObjWpts> current_gobj = row[columns.gobj];
-    *gobj = current_gobj.get();
-    int d = current_gobj->find_waypoint(p, radius);
-    if (d >= 0) return d;
-  }
-  *gobj = NULL;
-  return -1;
-}
-
-std::map<GObjWpts*, std::vector<int> >
-PanelWpts::find_wpts(const iRect & r) const {
-  std::map<GObjWpts*, std::vector<int> > ret;
-  for (auto const & row:store->children()){
-    if (!row[columns.checked]) continue;
-    std::shared_ptr<GObjWpts> gobj = row[columns.gobj];
-    std::vector<int> pts = gobj->find_waypoints(r);
-    if (pts.size()>0)
-      ret.insert(pair<GObjWpts*, std::vector<int> >(gobj.get(), pts));
+// Find waypoints in a rectangular area
+std::map<GObjWpts*, std::vector<size_t> >
+PanelWpts::find_points(const iRect & r) const{
+  std::map<GObjWpts*, std::vector<size_t> > ret;
+  for (const auto & c: store->children()){
+    if (!c[columns.checked]) continue;
+    std::shared_ptr<GObjWpts> gobj = c[columns.gobj];
+    auto pts = gobj->find_points(r);
+    if (pts.size()>0) ret.emplace(gobj.get(), pts);
   }
   return ret;
 }
-*/
+
+// Find waypoints
+std::map<GObjWpts*, std::vector<size_t> >
+PanelWpts::find_points(const dPoint & pt) const{
+  std::map<GObjWpts*, std::vector<size_t> > ret;
+  for (const auto & c: store->children()){
+    if (!c[columns.checked]) continue;
+    std::shared_ptr<GObjWpts> gobj = c[columns.gobj];
+    auto pts = gobj->find_points(pt);
+    if (pts.size()>0) ret.emplace(gobj.get(), pts);
+  }
+  return ret;
+}
 
 bool
 PanelWpts::upd_name(GObjWpts * sel_gobj, bool dir){

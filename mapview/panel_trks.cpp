@@ -16,40 +16,44 @@ PanelTrks::add(const std::shared_ptr<GeoTrk> & trk) {
   row[columns.gobj]    = gobj;
 }
 
-/*
-std::map<GObjTrk*, std::vector<int> >
-PanelTrks::find_tpts(const iRect & r) const {
-  std::map<GObjTrk*, std::vector<int> > ret;
-  Gtk::TreeNodeChildren::const_iterator i;
-  for (i  = store->children().begin();
-       i != store->children().end(); i++){
-    if (!(*i)[columns.checked]) continue;
-    std::shared_ptr<GObjTrk> gobj = (*i)[columns.gobj];
-    std::vector<int> pts = gobj->find_trackpoints(r);
-    if (pts.size()>0)
-      ret.insert(pair<GObjTrk*, std::vector<int> >(gobj.get(), pts));
+// Find track points in a rectangular area
+std::map<GObjTrk*, std::vector<size_t> >
+PanelTrks::find_points(const iRect & r) const{
+  std::map<GObjTrk*, std::vector<size_t> > ret;
+  for (const auto & c: store->children()){
+    if (!c[columns.checked]) continue;
+    std::shared_ptr<GObjTrk> gobj = c[columns.gobj];
+    auto pts = gobj->find_points(r);
+    if (pts.size()>0) ret.emplace(gobj.get(), pts);
   }
   return ret;
 }
 
-int
-PanelTrks::find_tpt(const iPoint & p, GObjTrk ** gobj,
-             const bool segment, int radius) const{
-  Gtk::TreeNodeChildren::const_iterator i;
-  for (i  = store->children().begin();
-       i != store->children().end(); i++){
-    if (!(*i)[columns.checked]) continue;
-    std::shared_ptr<GObjTrk> current_gobj = (*i)[columns.gobj];
-    *gobj = current_gobj.get();
-    int d;
-    if (segment) d = current_gobj->find_track(p, radius);
-    else d = current_gobj->find_trackpoint(p, radius);
-    if (d >= 0) return d;
+// Find track points near pt.
+std::map<GObjTrk*, std::vector<size_t> >
+PanelTrks::find_points(const dPoint & pt) const{
+  std::map<GObjTrk*, std::vector<size_t> > ret;
+  for (const auto & c: store->children()){
+    if (!c[columns.checked]) continue;
+    std::shared_ptr<GObjTrk> gobj = c[columns.gobj];
+    auto pts = gobj->find_points(pt);
+    if (pts.size()>0) ret.emplace(gobj.get(), pts);
   }
-  *gobj = NULL;
-  return -1;
+  return ret;
 }
-*/
+
+// Find segments near pt.
+std::map<GObjTrk*, std::vector<size_t> >
+PanelTrks::find_segments(const dPoint & pt) const{
+  std::map<GObjTrk*, std::vector<size_t> > ret;
+  for (const auto & c: store->children()){
+    if (!c[columns.checked]) continue;
+    std::shared_ptr<GObjTrk> gobj = c[columns.gobj];
+    auto pts = gobj->find_segments(pt);
+    if (pts.size()>0) ret.emplace(gobj.get(), pts);
+  }
+  return ret;
+}
 
 bool
 PanelTrks::upd_name(GObjTrk * sel_gobj, bool dir){
