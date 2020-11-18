@@ -35,7 +35,7 @@ private:
   const double sel_w = 1.5; // pixels
   const uint32_t sel_col = 0x80FFFF00;
 
-  int linewidth;
+  double linewidth;
   bool draw_dots;
   bool selected;
 
