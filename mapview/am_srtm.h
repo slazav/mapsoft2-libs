@@ -42,7 +42,6 @@ public:
     }
 
     std::string get_name() { return "SRTM drawing options"; }
-    Gtk::StockID get_stockid() { return Gtk::Stock::PROPERTIES; }
 
     bool is_radio() { return false; }
 
@@ -99,7 +98,6 @@ public:
     }
 
     std::string get_name() override { return "Panoramic view"; }
-//    Gtk::StockID get_stockid() { return Gtk::Stock::INFO; }
 
     void abort() override {
       state=0;

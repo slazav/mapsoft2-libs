@@ -198,22 +198,23 @@ ActionManager::AddAction(ActionMode *action,
                          const std::string & id, const std::string & menu){
   modes.push_back(std::shared_ptr<ActionMode>(action));
   int m = modes.size()-1;
-  std::string  name = action->get_name();
-  std::string  icon = action->get_icon();
-  std::string  desc = action->get_desc();
-  Gtk::AccelKey acckey = action->get_acckey();
 
   if (!actions->get_action(id)){
+
+    auto name = action->get_name();
+    auto desc = action->get_desc();
+    auto acckey = action->get_acckey();
+
+    auto gtk_action = Gtk::Action::create(menu + ":" + id, name, desc);
+    auto slot = sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m, menu);
+    gtk_action->set_icon_name(action->get_icon());
+
     // I do not know how to create empty editable AccelKey. So i use
     // these stupid ifs...
     if (acckey.is_null())
-      actions->add(
-        Gtk::Action::create_with_icon_name(menu + ":" + id, icon, name, desc),
-        sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m, menu));
+      actions->add( gtk_action, slot);
     else
-      actions->add(
-        Gtk::Action::create_with_icon_name(menu + ":" + id, icon, name, desc), acckey,
-        sigc::bind (sigc::mem_fun(this, &ActionManager::set_mode), m, menu));
+      actions->add( gtk_action, acckey, slot);
   }
 
   if (menu.substr(0,5) == "Popup"){

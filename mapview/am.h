@@ -16,7 +16,7 @@ public:
     Mapview * mapview;
     ActionMode(Mapview * mapview_) : mapview(mapview_) { }
 
-    // Returns name, stock id, accel key, tooltip for the mode.
+    // Returns name, icon, accel key, tooltip for the mode.
     virtual std::string get_name() = 0;
     virtual std::string get_icon() { return ""; }
     virtual std::string get_desc() { return ""; }
