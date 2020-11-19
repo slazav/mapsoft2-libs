@@ -21,6 +21,9 @@ private:
   // Original data. It may be edited through the GObj interface.
   GeoWptList & wpts;
 
+  // coordinate conversion, viewer->wgs84
+  std::shared_ptr<ConvBase> cnv;
+
   const double sel_w = 1.5; // pixels
   const uint32_t sel_col = 0x80FFFF00;
 
@@ -106,8 +109,15 @@ public:
   // Return point numbers.
   std::vector<size_t> find_points(const dRect & r);
 
+  // get viewer coordinates of point with index idx
+  dPoint get_point_crd(const size_t idx) const;
+
+  // set viewer coordinates of point with index idx
+  void set_point_crd(const size_t idx, const dPoint & pt);
+
   // select/unselect waypoints
   void select(bool v=true) {selected = v; redraw_me();}
+
 
 };
 

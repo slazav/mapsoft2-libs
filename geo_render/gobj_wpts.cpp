@@ -81,7 +81,8 @@ GObjWpts::set_opt(const Opt & opt){
 
 
 void
-GObjWpts::set_cnv(const std::shared_ptr<ConvBase> cnv) {
+GObjWpts::set_cnv(const std::shared_ptr<ConvBase> c) {
+  cnv = c;
   // recalculate coordinates, update range
   if (wpts.size()!=tmpls.size())
     throw Err() << "GObjWpts: templates are not syncronized with data";
@@ -356,3 +357,25 @@ GObjWpts::find_points(const dRect & r){
     if (r.contains(tmpls[i])) ret.push_back(i);
   return ret;
 }
+
+dPoint
+GObjWpts::get_point_crd(const size_t idx) const {
+  if (idx>=tmpls.size()) return dPoint();
+  return tmpls[idx];
+}
+
+void
+GObjWpts::set_point_crd(const size_t idx, const dPoint & pt) {
+  if (idx>=tmpls.size()) return;
+  // keep altitude, time and other parameters
+  auto z = wpts[idx].z;
+  tmpls[idx].x = wpts[idx].x = pt.x;
+  tmpls[idx].y = wpts[idx].y = pt.y;
+  cnv->frw(wpts[idx]);
+  wpts[idx].z = z;
+  update_pt_crd(tmpls[idx], cnv);
+  update_range();
+  redraw_me();
+}
+
+
