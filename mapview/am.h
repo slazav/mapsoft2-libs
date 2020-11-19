@@ -36,4 +36,10 @@ public:
     virtual void handle_click(iPoint p, const Gdk::ModifierType & state) { }
 };
 
+class ActionModeNone : public ActionMode {
+public:
+    ActionModeNone (Mapview * mapview) : ActionMode(mapview) { }
+    virtual std::string get_name() override { return ""; }
+};
+
 #endif
