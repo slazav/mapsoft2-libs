@@ -13,9 +13,14 @@ public:
   AMEditData (Mapview * mapview) :
     ActionMode(mapview), mystate(0), trk(NULL), wpts(NULL) { }
 
-  std::string get_name() override { return "Edit tracks and waypoints"; }
+  std::string get_name() { return "Edit tracks and waypoints"; }
 
-  void handle_click(iPoint p, const Gdk::ModifierType & state) {
+  void handle_click(const iPoint p, const int button,
+                    const Gdk::ModifierType & state){
+    if (button == 3) {
+      abort();
+      return;
+    }
     switch (mystate){
       case 0: find_object(p, state); break;
       case 1: move_wpt(p, state); break;
@@ -24,7 +29,10 @@ public:
     }
   }
 
-  void abort() {mystate = 0;}
+  void abort() override{
+    mapview->rubber.clear();
+    mystate = 0;
+  }
 
 
   void find_object(iPoint p, const Gdk::ModifierType & state){

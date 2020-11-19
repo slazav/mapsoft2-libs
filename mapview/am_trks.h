@@ -92,7 +92,13 @@ class AMTrkAdd : public ActionMode {
       dlg.hide();
     }
 
-    void handle_click(iPoint p, const Gdk::ModifierType & state) {
+    void handle_click(const iPoint p, const int button,
+                      const Gdk::ModifierType & state) {
+
+         if (button == 3) {
+           abort();
+           return;
+         }
 
          if (trk.size() == 0){
            dlg.trk2dlg(&trk);

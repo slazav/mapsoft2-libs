@@ -69,10 +69,14 @@ public:
       hide();
     }
 
-    void handle_click(iPoint p, const Gdk::ModifierType & state) {
+    void handle_click(const iPoint p, const int button,
+                      const Gdk::ModifierType & state) {
+      if (button == 3) {
+        abort();
+        return;
+      }
       mapview->rubber.clear();
       mapview->rubber.add_cr_mark(p, false);
-
       dPoint pt(p);
       mapview->viewer.get_cnv().frw(pt);
       call(pt, 0 /* mapview->panel_misc.srtm.geth4(pt) */);

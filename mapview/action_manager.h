@@ -17,10 +17,9 @@ public:
   // do clear_state, activate a new mode, put mode name to the statusbar
   void set_mode (int new_mode, const std::string & menu = std::string());
 
-  void click (iPoint p, int button, const Gdk::ModifierType & state) {
-    if (button == 3) clear_state();
-    else modes[current_mode]->handle_click(p, state);
-  }
+  void click (const iPoint p, const int button,
+              const Gdk::ModifierType & state) {
+    modes[current_mode]->handle_click(p, button, state); }
 
   // get main menu widget
   Gtk::Widget * get_main_menu() {

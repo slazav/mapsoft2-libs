@@ -33,7 +33,8 @@ public:
     virtual void abort() { }
 
     // Sends user click. Coordinates are in workplane's discrete system.
-    virtual void handle_click(iPoint p, const Gdk::ModifierType & state) { }
+    virtual void handle_click(const iPoint p, const int button,
+                              const Gdk::ModifierType & state) { }
 };
 
 class ActionModeNone : public ActionMode {

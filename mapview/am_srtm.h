@@ -107,7 +107,14 @@ public:
       mapview->rubber.clear();
     }
 
-    void handle_click(iPoint p, const Gdk::ModifierType & mod) {
+    void handle_click(const iPoint p, const int button,
+                      const Gdk::ModifierType & mod) {
+
+      if (button == 3) {
+        abort();
+        return;
+      }
+
       if (state==0 || mod&Gdk::CONTROL_MASK){ // first click
         state=1; p0=p;
         mapview->viewer.get_cnv().frw(p0);
