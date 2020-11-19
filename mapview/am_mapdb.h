@@ -22,12 +22,12 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
       set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
     }
 
-    std::string get_name() { return "Open MapDB"; }
-    std::string get_icon() { return "open"; }
-//    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
-    bool is_radio() { return false; }
+    std::string get_name() override { return "Open MapDB"; }
+    std::string get_icon() override { return "open"; }
+//    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>f"); }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       set_current_folder(folder);
       if (run() == GTK_RESPONSE_ACCEPT){
         folder = get_current_folder();
@@ -44,12 +44,12 @@ class CloseMapDB : public ActionMode{
   public:
     CloseMapDB (Mapview * mapview): ActionMode(mapview) { }
 
-    std::string get_name() { return "Close MapDB"; }
-    std::string get_icon() { return "close"; }
-//    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
-    bool is_radio() { return false; }
+    std::string get_name() override { return "Close MapDB"; }
+    std::string get_icon() override { return "close"; }
+//    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>f"); }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       mapview->close_mapdb();
     }
 };

@@ -98,17 +98,17 @@ public:
 
     }
 
-    std::string get_name() { return "Panoramic view"; }
+    std::string get_name() override { return "Panoramic view"; }
 //    Gtk::StockID get_stockid() { return Gtk::Stock::INFO; }
 
-    void abort() {
+    void abort() override {
       state=0;
       dlg.hide();
       mapview->rubber.clear();
     }
 
     void handle_click(const iPoint p, const int button,
-                      const Gdk::ModifierType & mod) {
+                      const Gdk::ModifierType & mod) override {
 
       if (button == 3) {
         abort();
@@ -135,6 +135,7 @@ public:
       }
     }
 
+private:
     void on_point(dPoint p){
       dPoint p0i(p0);
       mapview->viewer.get_cnv().bck(p);
@@ -154,7 +155,6 @@ public:
 
     void on_reconf(){ dlg.redraw(); }
 
-private:
     DlgPano dlg;
     int state; // first/next click;
     dPoint p0;

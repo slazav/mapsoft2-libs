@@ -7,10 +7,10 @@
 class PanelDelSel : public ActionMode{
 public:
     PanelDelSel (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "_Delete selected"; }
-    std::string get_icon() { return "edit-delete"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "_Delete selected"; }
+    std::string get_icon() override { return "edit-delete"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       if      (menu == "PopupWPTs") mapview->panel_wpts->remove_selected();
       else if (menu == "PopupTRKs") mapview->panel_trks->remove_selected();
       else if (menu == "PopupMAPs") mapview->panel_maps->remove_selected();
@@ -20,10 +20,10 @@ public:
 class PanelDelAll : public ActionMode{
 public:
     PanelDelAll (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Delete all"; }
-    std::string get_icon() { return "edit-delete"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Delete all"; }
+    std::string get_icon() override { return "edit-delete"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       if      (menu == "PopupWPTs") mapview->panel_wpts->remove_all();
       else if (menu == "PopupTRKs") mapview->panel_trks->remove_all();
       else if (menu == "PopupMAPs") mapview->panel_maps->remove_all();
@@ -33,10 +33,10 @@ public:
 class PanelMoveUp : public ActionMode{
 public:
     PanelMoveUp (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move _up"; }
-    std::string get_icon() { return "go-up"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Move _up"; }
+    std::string get_icon() override { return "go-up"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       if      (menu == "PopupWPTs") mapview->panel_wpts->move(true,false);
       else if (menu == "PopupTRKs") mapview->panel_trks->move(true,false);
       else if (menu == "PopupMAPs") mapview->panel_maps->move(true,false);
@@ -46,10 +46,10 @@ public:
 class PanelMoveDown : public ActionMode{
 public:
     PanelMoveDown (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move _down"; }
-    std::string get_icon() { return "go-down"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Move _down"; }
+    std::string get_icon() override { return "go-down"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       if      (menu == "PopupWPTs") mapview->panel_wpts->move(false,false);
       else if (menu == "PopupTRKs") mapview->panel_trks->move(false,false);
       else if (menu == "PopupMAPs") mapview->panel_maps->move(false,false);
@@ -59,10 +59,10 @@ public:
 class PanelMoveTop : public ActionMode{
 public:
     PanelMoveTop (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move to _top"; }
-    std::string get_icon() { return "go-top"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Move to _top"; }
+    std::string get_icon() override { return "go-top"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       if      (menu == "PopupWPTs") mapview->panel_wpts->move(true,true);
       else if (menu == "PopupTRKs") mapview->panel_trks->move(true,true);
       else if (menu == "PopupMAPs") mapview->panel_maps->move(true,true);
@@ -72,10 +72,10 @@ public:
 class PanelMoveBottom : public ActionMode{
 public:
     PanelMoveBottom (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Move to _bottom"; }
-    std::string get_icon() { return "go-buttom"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Move to _bottom"; }
+    std::string get_icon() override { return "go-buttom"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       if      (menu == "PopupWPTs") mapview->panel_wpts->move(false,true);
       else if (menu == "PopupTRKs") mapview->panel_trks->move(false,true);
       else if (menu == "PopupMAPs") mapview->panel_maps->move(false,true);
@@ -85,10 +85,10 @@ public:
 class PanelHideAll : public ActionMode{
 public:
     PanelHideAll (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Hide All"; }
-    std::string get_icon() { return "list-remove"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Hide All"; }
+    std::string get_icon() override { return "list-remove"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
 //      mapview->viewer.start_waiting();
       if      (menu == "PopupWPTs") mapview->panel_wpts->show_all(false);
       else if (menu == "PopupTRKs") mapview->panel_trks->show_all(false);
@@ -100,10 +100,10 @@ public:
 class PanelShowAll : public ActionMode{
 public:
     PanelShowAll (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Show All"; }
-    std::string get_icon() { return "list-add"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Show All"; }
+    std::string get_icon() override { return "list-add"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
 //      mapview->viewer.start_waiting();
       if      (menu == "PopupWPTs") mapview->panel_wpts->show_all();
       else if (menu == "PopupTRKs") mapview->panel_trks->show_all();
@@ -115,10 +115,10 @@ public:
 class PanelInvert : public ActionMode{
 public:
     PanelInvert (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "_Invert visibility"; }
-    std::string get_icon() { return "view-refresh"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "_Invert visibility"; }
+    std::string get_icon() override { return "view-refresh"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
 //      mapview->viewer.start_waiting();
       if      (menu == "PopupWPTs") mapview->panel_wpts->invert_all();
       else if (menu == "PopupTRKs") mapview->panel_trks->invert_all();
@@ -130,9 +130,9 @@ public:
 class PanelJoinVis : public ActionMode{
 public:
     PanelJoinVis (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "_Join visible"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "_Join visible"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
 //      mapview->viewer.start_waiting();
       if      (menu == "PopupWPTs") mapview->panel_wpts->join(true);
       else if (menu == "PopupTRKs") mapview->panel_trks->join(true);
@@ -144,9 +144,9 @@ public:
 class PanelJoinAll : public ActionMode{
 public:
     PanelJoinAll (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Join all"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Join all"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
 //      mapview->viewer.start_waiting();
       if      (menu == "PopupWPTs") mapview->panel_wpts->join(false);
       else if (menu == "PopupTRKs") mapview->panel_trks->join(false);
@@ -158,10 +158,10 @@ public:
 class PanelGoto : public ActionMode{
 public:
     PanelGoto (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "_Goto"; }
-    std::string get_icon() { return "go-jump"; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "_Goto"; }
+    std::string get_icon() override { return "go-jump"; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       dRect r;
       if      (menu == "PopupWPTs") r=mapview->panel_wpts->get_range();
       else if (menu == "PopupTRKs") r=mapview->panel_trks->get_range();
@@ -204,11 +204,11 @@ public:
       set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
     }
 
-    std::string get_name() { return "_Save selected"; }
-    std::string get_icon() { return "document-save-as"; }
-    bool is_radio() { return false; }
+    std::string get_name() override { return "_Save selected"; }
+    std::string get_icon() override { return "document-save-as"; }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       set_current_folder(folder);
       if (run() == GTK_RESPONSE_ACCEPT){
 
@@ -229,10 +229,10 @@ public:
 class PanelMapRef : public ActionMode{
 public:
     PanelMapRef (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "Use map reference"; }
-    std::string get_icon() { return ""; }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Use map reference"; }
+    std::string get_icon() override { return ""; }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       auto * ml = mapview->panel_maps->get_data();
       if (ml == NULL || ml->size()<1) return;
       mapview->set_cnv_map(ml->front(), true);

@@ -16,12 +16,12 @@ class AddMap : public ActionMode{
        ActionMode(mapview), state(0), name(m.name){
       d.maps.push_back(m);
     }
-    std::string get_name() { return name; }
-    std::string get_icon() { return "add"; }
-//    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
-    bool is_radio() { return false; }
+    std::string get_name() override { return name; }
+    std::string get_icon() override { return "add"; }
+//    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>f"); }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       mapview->add_data(d, false);
     }
 };

@@ -11,12 +11,12 @@ class FullScreen : public ActionMode{
     int state;
   public:
     FullScreen (Mapview * mapview) : ActionMode(mapview), state(0){ }
-    std::string get_name() { return "Fullscreen mode"; }
-    std::string get_icon() { return "view-fullscreen"; }
-    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>f"); }
-    bool is_radio() { return false; }
+    std::string get_name() override { return "Fullscreen mode"; }
+    std::string get_icon() override { return "view-fullscreen"; }
+    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>f"); }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       state = (state+1)%2;
       if (state==0) mapview->unfullscreen();
       else mapview->fullscreen();
@@ -30,10 +30,10 @@ class HidePanels : public ActionMode{
     int state;
   public:
     HidePanels (Mapview * mapview) : ActionMode(mapview), state(0){ }
-    std::string get_name() { return "Hide/Show Panels"; }
-    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>h"); }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) {
+    std::string get_name() override { return "Hide/Show Panels"; }
+    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>h"); }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override {
       state = (state+1)%2;
       if (state==0){
         mapview->spanel.show();
@@ -61,16 +61,16 @@ public:
       set_title(get_name());
     }
 
-    std::string get_name() { return "Show point information"; }
+    std::string get_name() override { return "Show point information"; }
     Gtk::StockID get_stockid() { return Gtk::Stock::INFO; }
 
-    void abort() {
+    void abort() override {
       mapview->rubber.clear();
       hide();
     }
 
     void handle_click(const iPoint p, const int button,
-                      const Gdk::ModifierType & state) {
+                      const Gdk::ModifierType & state) override {
       if (button == 3) {
         abort();
         return;

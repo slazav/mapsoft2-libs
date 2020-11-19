@@ -20,12 +20,12 @@ public:
       o = mapview->opts;
     }
 
-    std::string get_name() { return "Track drawing Opt"; }
+    std::string get_name() override { return "Track drawing Opt"; }
     Gtk::StockID get_stockid() { return Gtk::Stock::PROPERTIES; }
 
-    bool is_radio() { return false; }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       dlg.set_opt(o);
       dlg.show_all();
     }
@@ -71,6 +71,7 @@ class AMTrkAdd : public ActionMode {
       }
       abort();
     }
+
   public:
 
     AMTrkAdd (Mapview * mapview) : ActionMode(mapview), start(true) {
@@ -80,12 +81,12 @@ class AMTrkAdd : public ActionMode {
       dlg.set_title(get_name());
     }
 
-    std::string get_name() { return "Add Track"; }
+    std::string get_name() override { return "Add Track"; }
     Gtk::StockID get_stockid() { return Gtk::Stock::ADD; }
 
-    void activate() { abort(); }
+    void activate(const std::string & menu) override { abort(); }
 
-    void abort() {
+    void abort() override {
       trk.clear();
       trk.comm="";
       mapview->rubber.clear();
@@ -93,7 +94,7 @@ class AMTrkAdd : public ActionMode {
     }
 
     void handle_click(const iPoint p, const int button,
-                      const Gdk::ModifierType & state) {
+                      const Gdk::ModifierType & state) override {
 
          if (button == 3) {
            abort();

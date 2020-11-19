@@ -10,11 +10,11 @@
 class New : public ActionMode{
   public:
     New (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "_New"; }
-    std::string get_icon() { return "document-new"; }
-    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>n"); }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) { mapview->new_project(); }
+    std::string get_name() override { return "_New"; }
+    std::string get_icon() override { return "document-new"; }
+    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>n"); }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override { mapview->new_project(); }
 };
 
 /**********************************************************/
@@ -54,12 +54,12 @@ class LoadFile : public ActionMode, public Gtk::FileChooserDialog{
       set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
     }
 
-    std::string get_name() { return "_Load File"; }
-    std::string get_icon() { return "document-open"; }
-    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>l"); }
-    bool is_radio() { return false; }
+    std::string get_name() override { return "_Load File"; }
+    std::string get_icon() override { return "document-open"; }
+    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>l"); }
+    bool is_radio() override { return false; }
 
-    void activate(const std::string & menu) {
+    void activate(const std::string & menu) override {
       set_current_folder(folder);
       if (run() == GTK_RESPONSE_ACCEPT){
          mapview->add_files(get_filenames());
@@ -75,11 +75,11 @@ class LoadFile : public ActionMode, public Gtk::FileChooserDialog{
 class Quit : public ActionMode{
 public:
     Quit (Mapview * mapview) : ActionMode(mapview){ }
-    std::string get_name() { return "_Quit"; }
-    std::string get_icon() { return "application-exit"; }
-    Gtk::AccelKey get_acckey() { return Gtk::AccelKey("<control>q"); }
-    bool is_radio() { return false; }
-    void activate(const std::string & menu) { mapview->exit(); }
+    std::string get_name() override { return "_Quit"; }
+    std::string get_icon() override { return "application-exit"; }
+    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>q"); }
+    bool is_radio() override { return false; }
+    void activate(const std::string & menu) override { mapview->exit(); }
 };
 
 #endif
