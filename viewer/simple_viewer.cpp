@@ -215,11 +215,9 @@ SimpleViewer::on_draw (const Cairo::RefPtr<Cairo::Context> & cr){
 
 bool
 SimpleViewer::on_button_press_event (GdkEventButton * event) {
-  if ((event->button == 1) || (event->button == 2)){
-    drag_pos = get_origin() + iPoint((int)event->x, (int)event->y);
-    drag_start = get_origin();
-    on_drag=true;
-  }
+  drag_pos = get_origin() + iPoint((int)event->x, (int)event->y);
+  drag_start = get_origin();
+  if ((event->button == 1) || (event->button == 2)) on_drag=true;
   return false;
 }
 
