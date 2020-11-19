@@ -31,28 +31,40 @@ private:
   GeoTrk & trk;
   dRect range; // data range
 
+  // drawing options
+  Opt opt;
+  // coordinate conversion, viewer->wgs84
+  std::shared_ptr<ConvBase> cnv;
+
+
+  // Drawing parameters.
   const double dot_w = 0.5; // multiple of linewidth
   const double sel_w = 1.5; // pixels
   const uint32_t sel_col = 0x80FFFF00;
-
   double linewidth;
   bool draw_dots;
   bool selected;
 
+  // Data for drawing track segments.
+  // Must be updated when options, data, or cnv are changing.
   struct segment_t{
     dPoint p1, p2;
-    uint32_t color;
     bool hide;
+    uint32_t color;
   };
-
   std::vector<segment_t> segments;
+
+  void update_crd(); // update segment coordinates (when cnv changed)
+  void update_opt(); // update segment colors (when options changed)
+  void update_data(); // update segment colors (when data changed)
 
 public:
   // constructor
-  GObjTrk(GeoTrk & trk);
-
-  // recalculate range (after changing coordinates)
-  void update_range();
+  GObjTrk(GeoTrk & trk_): trk(trk_),
+      linewidth(1), draw_dots(true), selected(false),
+      cnv(new ConvBase) {
+    update_data();
+  }
 
 
   /************************************************/
@@ -65,7 +77,10 @@ public:
 
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
-  dRect bbox() const override {return range;}
+  // range with linewidths included
+  dRect bbox() const override {
+    return expand(range, (dot_w+1)*linewidth + sel_w); }
+
 
   /************************************************/
 
@@ -80,6 +95,17 @@ public:
   // Find segments near pt within radius r.
   // Return numbers of starting points.
   std::vector<size_t> find_segments(const dPoint & pt);
+
+  // Get viewer coordinates of point with index idx,
+  // coordinates of next and/or previous point if
+  // segments are visible.
+  std::vector<dPoint> get_point_crd(const size_t idx) const;
+
+  // set viewer coordinates of point with index idx
+  void set_point_crd(const size_t idx, const dPoint & pt);
+
+  // add new point with viewer coordinates pt after index idx
+  void add_point_crd(const size_t idx, const dPoint & pt);
 
   // select/unselect track
   void select(bool v=true) {

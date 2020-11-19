@@ -43,9 +43,52 @@ GObjTrk::get_def_opt(){
 }
 
 void
-GObjTrk::set_opt(const Opt & opt){
-  linewidth = trk.opts.get<double>("thickness", 1);
+GObjTrk::set_opt(const Opt & o){
+  opt = o;
+  update_opt();
+  redraw_me();
+}
+
+
+void
+GObjTrk::set_cnv(const std::shared_ptr<ConvBase> c) {
+  cnv = c;
+  update_crd();
+  redraw_me();
+}
+
+void
+GObjTrk::update_crd(){
+  if (trk.size() != segments.size())
+    throw Err() << "GObjTrk: segments are not syncronized with track";
+
   bool closed = trk.opts.get<double>("closed", false);
+
+  for (size_t i=0; i<trk.size(); i++){
+    dPoint pt(trk[i]);
+    if (cnv) cnv->bck(pt);
+    pt.z = 0;
+    segments[i].p1 = pt;
+    segments[i>0? i-1: trk.size()-1].p2 = pt;
+    segments[i].hide = false;
+    // if the point has start flag, then previous segment is transparent.
+    if (i>0 && trk[i].start) segments[i-1].hide = true;
+  }
+
+  // if track is not closed, the last segment should be transparent
+  if (!closed) segments[trk.size()-1].hide = true;
+
+  // update range
+  range = dRect();
+  for (auto const & s:segments) range.expand(s.p1);
+}
+
+void
+GObjTrk::update_opt(){
+  if (trk.size() != segments.size())
+    throw Err() << "GObjTrk: segments are not syncronized with track";
+
+  linewidth = trk.opts.get<double>("thickness", 1);
   int  color  = trk.opts.get<int>("color", 0xFFFF000) | (0xFF << 24);
 
   // color from track is always non-transparent.
@@ -97,48 +140,25 @@ GObjTrk::set_opt(const Opt & opt){
     }
     else throw Err() << "GObjTrk: unknown track drawing mode" << trk_mode;
 
-    segments[i].hide = false;
-    // if the point has start flag, then previous segment is
-    // transparent.
-    if (i>0 && trk[i].start) segments[i-1].hide = true;
   }
-
-  // if track is not closed, the last segment should be transparent
-  if (!closed) segments[trk.size()-1].hide = true;
-  redraw_me();
 }
-
 
 void
-GObjTrk::set_cnv(const std::shared_ptr<ConvBase> cnv) {
-  if (trk.size() != segments.size())
-    throw Err() << "GObjTrk: segments are not syncronized with track";
-
-  for (size_t i=0; i<trk.size(); i++){
-    dPoint pt(trk[i]);
-    if (cnv) cnv->bck(pt);
-    pt.z = 0;
-    segments[i].p1 = pt;
-    segments[i>0? i-1: trk.size()-1].p2 = pt;
-  }
-  update_range();
+GObjTrk::update_data(){
+  segments.resize(trk.size());
+  update_opt();
+  update_crd();
   redraw_me();
 }
 
-/********************************************************************/
 
-GObjTrk::GObjTrk(GeoTrk & trk_): trk(trk_),
-    linewidth(0), draw_dots(true), selected(false) {
-  segments.resize(trk.size());
-  set_cnv(NULL);
-  set_opt(Opt());
-}
+/********************************************************************/
 
 GObj::ret_t
 GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
   if (is_stopped()) return GObj::FILL_NONE;
-  if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
+  if (intersect(draw_range, bbox()).is_zsize()) return GObj::FILL_NONE;
 
   // draw selection
   if (selected) {
@@ -195,14 +215,6 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
   return GObj::FILL_PART;
 }
 
-void
-GObjTrk::update_range(){
-  range = dRect();
-  for (auto const & s:segments)
-    range.expand(s.p1);
-  // linewidth + sel_w + dot_w
-  range.expand((dot_w+1)*linewidth + sel_w);
-}
 
 /********************************************************************/
 
@@ -269,4 +281,44 @@ GObjTrk::find_segments(const dPoint & pt){
   return ret;
 }
 
+std::vector<dPoint>
+GObjTrk::get_point_crd(const size_t idx) const {
+  std::vector<dPoint> ret;
+  if (idx>=segments.size()) return ret;
+
+  ret.push_back(segments[idx].p1);
+
+  // next point
+  if (!segments[idx].hide)
+    ret.push_back(segments[idx].p2);
+
+  // previous point
+  size_t idxp = idx>0 ? idx-1: segments.size()-1;
+  if (!segments[idxp].hide)
+    ret.push_back(segments[idxp].p1);
+
+  return ret;
+}
+
+void
+GObjTrk::set_point_crd(const size_t idx, const dPoint & pt) {
+  if (idx>=trk.size()) return;
+  // keep altitude and time
+  auto z = trk[idx].z;
+  trk[idx].dPoint::operator=(pt);
+  cnv->frw(trk[idx]);
+  trk[idx].z = z;
+  update_crd();
+  redraw_me();
+}
+
+void
+GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
+  if (idx>=trk.size()) return;
+  GeoTpt p(pt);
+  cnv->frw(p);
+  trk.insert(trk.begin()+idx+1, p);
+  update_data();
+  redraw_me();
+}
 
