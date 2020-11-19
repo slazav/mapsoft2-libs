@@ -9,7 +9,7 @@
 /**** ActionModes *****/
 
 #include "am.h"
-#include "am_default.h"
+#include "am_edit.h"
 #include "am_file.h"
 #include "am_view.h"
 #include "am_trks.h"
@@ -53,7 +53,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     mapview->add_accel_group(ui_manager->get_accel_group());
 
     // Default mode in the begining
-    modes.push_back(std::shared_ptr<ActionMode>(new ActionModeDefault(mapview)));
+    modes.push_back(std::shared_ptr<ActionMode>(new ActionModeNone(mapview)));
 
     /***************************************/
     // Add actions to menus
@@ -68,9 +68,10 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(FullScreen,      "View")
     ADD_ACT(HidePanels,      "View")
     ADD_ACT(ShowPt,          "View")
+    ADD_ACT(AMTrkOpt,        "View")
 
-    ADD_ACT(AMTrkAdd,        "Trks")
-    ADD_ACT(AMTrkOpt,        "Trks")
+    ADD_ACT(AMTrkAdd,        "Edit")
+    ADD_ACT(AMEditData,      "Edit")
 
     AddMaps("Maps", std::string("/usr/share/") + DATADIR + "/" + MAPS_MENU_FILE);
 
@@ -153,7 +154,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     /* Cleate menus */
     actions->add(Gtk::Action::create("MenuFile",  "_File"));
     actions->add(Gtk::Action::create("MenuView",  "_View"));
-    actions->add(Gtk::Action::create("MenuTrks",  "_Tracks"));
+    actions->add(Gtk::Action::create("MenuEdit",  "_Edit"));
     actions->add(Gtk::Action::create("MenuMaps",  "_Maps"));
     actions->add(Gtk::Action::create("MenuMapDB", "Map_DB"));
     actions->add(Gtk::Action::create("MenuSRTM",  "_SRTM"));

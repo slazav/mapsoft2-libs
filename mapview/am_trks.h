@@ -69,8 +69,7 @@ class AMTrkAdd : public ActionMode {
         std::shared_ptr<GeoTrk> track(new GeoTrk(trk));
         mapview->panel_trks->add(track);
       }
-      // switch do default mode
-      mapview->amanager.set_mode(0);
+      abort();
     }
   public:
 
