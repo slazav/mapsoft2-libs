@@ -56,13 +56,12 @@ private:
 
   void update_crd(); // update segment coordinates (when cnv changed)
   void update_opt(); // update segment colors (when options changed)
-  void update_data(); // update segment colors (when data changed)
+  void update_data(); // update segments (when data changed)
 
 public:
   // constructor
-  GObjTrk(GeoTrk & trk_): trk(trk_),
-      linewidth(1), draw_dots(true), selected(false),
-      cnv(new ConvBase) {
+  GObjTrk(GeoTrk & trk_): trk(trk_), cnv(new ConvBase),
+      linewidth(1), draw_dots(true), selected(false) {
     update_data();
   }
 
@@ -106,6 +105,15 @@ public:
 
   // add new point with viewer coordinates pt after index idx
   void add_point_crd(const size_t idx, const dPoint & pt);
+
+  // delete track point with index idx
+  void del_point(const size_t idx);
+
+  // split track after point idx
+  void split_trk(const size_t idx);
+
+  // delete track segment which contains point with given index
+  void del_seg(const size_t idx);
 
   // select/unselect track
   void select(bool v=true) {

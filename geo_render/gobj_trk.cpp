@@ -322,3 +322,31 @@ GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
   redraw_me();
 }
 
+void
+GObjTrk::del_point(const size_t idx){
+  if (idx>=trk.size()) return;
+  trk.erase(trk.begin()+idx);
+  update_data();
+  redraw_me();
+}
+
+void
+GObjTrk::split_trk(const size_t idx){
+  if (idx>=trk.size()-1) return;
+  trk[idx+1].start = 1;
+  update_data();
+  redraw_me();
+}
+
+void
+GObjTrk::del_seg(const size_t idx){
+  if (idx>=trk.size()) return;
+  size_t i1=0, i2=trk.size();
+  for (size_t i=0; i<trk.size(); ++i) {
+    if (i<=idx && trk[i].start) {i1 = i;}
+    if (i>idx  && trk[i].start) {i2 = i; break; }
+  }
+  trk.erase(trk.begin()+i1, trk.begin()+i2);
+  update_data();
+  redraw_me();
+}
