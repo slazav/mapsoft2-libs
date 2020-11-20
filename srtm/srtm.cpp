@@ -81,16 +81,16 @@ read_tfile(const std::string & file, const size_t srtm_width){
     // check size: for srtm width w it should be one of
     // (w)x(w), (w-1)x(w-1), ((w-1)/2+1)x(w), ((w-1)/2)x(w-1)
     bool packed, addpixel;
-    if (tiff_h == srtm_width-1) {
+    if (tiff_h == (int)srtm_width-1) {
       addpixel = true;
-      if (tiff_w == srtm_width-1) packed = false;
-      else if (tiff_w == (srtm_width-1)/2) packed = true;
+      if (tiff_w == (int)srtm_width-1) packed = false;
+      else if (tiff_w == ((int)srtm_width-1)/2) packed = true;
       else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
     }
-    else if (tiff_h == srtm_width) {
+    else if (tiff_h == (int)srtm_width) {
       addpixel = false;
-      if (tiff_w == srtm_width) packed = false;
-      else if (tiff_w == (srtm_width-1)/2+1) packed = true;
+      if (tiff_w == (int)srtm_width) packed = false;
+      else if (tiff_w == ((int)srtm_width-1)/2+1) packed = true;
       else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
     }
     else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
@@ -103,7 +103,7 @@ read_tfile(const std::string & file, const size_t srtm_width){
 
         if (packed){
           im.set16(2*x,  y,v);
-          if (2*x+1<srtm_width) im.set16(2*x+1,y,v);
+          if (2*x+1<(int)srtm_width) im.set16(2*x+1,y,v);
         }
         else {
           im.set16(x,y,v);
@@ -114,7 +114,7 @@ read_tfile(const std::string & file, const size_t srtm_width){
       }
     }
     if (addpixel){
-      for (int x = 0; x<srtm_width; x++)
+      for (int x = 0; x<(int)srtm_width; x++)
         im.set16(x, srtm_width-1, im.get16(x,0));
     }
   }
