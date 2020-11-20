@@ -123,6 +123,6 @@ std::vector<std::string> read_words(
     throw;
   }
 
-  if (str!="" | qq) ret.push_back(str);
+  if ((str!="") | qq) ret.push_back(str);
   return ret;
 }
