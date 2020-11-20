@@ -66,16 +66,7 @@ GObjWpts::set_opt(const Opt & opt){
   do_adj_pos = opt.get("wpt_adj", 1);
   do_adj_brd = opt.get("wpt_adj_brd", 0);
   skip_dist = opt.get("wpt_skip_dist", stick_len*10.0);
-
-  // Update point sizes. We need a Cairo::context to
-  // measure size of text.
-  if (text_size>0){
-    CairoWrapper cr;
-    cr.set_surface_img(1,1);
-    cr->set_fc_font(color, text_font.c_str(), text_size);
-    for (auto & wt:tmpls) update_pt_name(cr, wt); // update name
-  }
-
+  update_data();
   redraw_me();
 }
 
@@ -83,27 +74,57 @@ GObjWpts::set_opt(const Opt & opt){
 void
 GObjWpts::set_cnv(const std::shared_ptr<ConvBase> c) {
   cnv = c;
-  // recalculate coordinates, update range
-  if (wpts.size()!=tmpls.size())
-    throw Err() << "GObjWpts: templates are not syncronized with data";
-
-  for (auto & wt:tmpls) update_pt_crd(wt, cnv);
-  if (do_adj_pos) adjust_text_pos();
-  update_range();
+  update_data();
   redraw_me();
 }
 
-/********************************************************************/
+void
+GObjWpts::update_data(){
 
-GObjWpts::GObjWpts(GeoWptList & wpts): wpts(wpts), selected(false) {
-  set_opt(Opt());
-  for (auto & w:wpts){
-    WptDrawTmpl wt;
-    wt.src = &w;
-    update_pt_crd(wt, NULL);
-    tmpls.push_back(wt);
+  tmpls.resize(wpts.size());
+  for (size_t i=0; i!=wpts.size(); ++i){
+    tmpls[i].src = & wpts[i];
+    tmpls[i].name = wpts[i].name;
+    tmpls[i].text_box = dRect();
   }
+
+  // Update text label sizes. We need a Cairo::context to
+  // measure size of text.
+  if (text_size>0){
+    CairoWrapper cr;
+    cr.set_surface_img(1,1);
+    cr->set_fc_font(color, text_font.c_str(), text_size);
+    for (auto & wt:tmpls){
+      cr->move_to(0,0);
+      wt.text_box = cr->get_text_extents(std::string());
+      wt.text_box = cr->get_text_extents(wt.name);
+      wt.text_box.expand(text_pad);
+    }
+  }
+
+  // update all other coordinates
+  for (auto & wt:tmpls){
+    dPoint pt(*wt.src);
+    if (cnv) cnv->bck(pt);
+    wt.x = pt.x; wt.y = pt.y;
+    wt.text_pt = (dPoint)wt;
+    if (text_size>0){
+      wt.text_pt.y -= text_size + text_pad + stick_len;
+    }
+    update_pt_bbox(wt);
+  }
+
+  if (do_adj_pos) adjust_text_pos();
+
+  // update range
+  range = dRect();
+  for (auto & wt:tmpls) range.expand(wt.bbox);
+  range.to_ceil();
+
 }
+
+
+/********************************************************************/
 
 GObj::ret_t
 GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
@@ -203,18 +224,6 @@ GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
 /**********************************************************/
 
 void
-GObjWpts::update_pt_crd(WptDrawTmpl & wt, const std::shared_ptr<ConvBase> cnv){
-  dPoint pt(*wt.src);
-  if (cnv) cnv->bck(pt);
-  wt.x = pt.x; wt.y = pt.y;
-  wt.text_pt = (dPoint)wt;
-  if (text_size>0){
-    wt.text_pt.y -= text_size + text_pad + stick_len;
-  }
-  update_pt_bbox(wt);
-}
-
-void
 GObjWpts::update_pt_bbox(WptDrawTmpl & wt){
   wt.bbox = dRect(dPoint(wt), dPoint(wt));
   wt.bbox.expand(size + linewidth);
@@ -222,21 +231,6 @@ GObjWpts::update_pt_bbox(WptDrawTmpl & wt){
     wt.bbox.expand(wt.text_pt + wt.text_box);
   wt.bbox.expand(sel_w);
   wt.bbox.to_ceil();
-}
-
-void
-GObjWpts::update_pt_name(const CairoWrapper & cr, WptDrawTmpl & wt){
-  wt.name = wt.src->name;
-  cr->move_to(0,0);
-  wt.text_box = cr->get_text_extents(wt.name);
-  wt.text_box.expand(text_pad);
-}
-
-void
-GObjWpts::update_range(){
-  range = dRect();
-  for (auto & wt:tmpls) range.expand(wt.bbox);
-  range.to_ceil();
 }
 
 void
@@ -373,9 +367,14 @@ GObjWpts::set_point_crd(const size_t idx, const dPoint & pt) {
   tmpls[idx].y = wpts[idx].y = pt.y;
   cnv->frw(wpts[idx]);
   wpts[idx].z = z;
-  update_pt_crd(tmpls[idx], cnv);
-  update_range();
+  update_data();
   redraw_me();
 }
 
-
+void
+GObjWpts::del_point(const size_t idx){
+  if (idx>=wpts.size()) return;
+  wpts.erase(wpts.begin()+idx);
+  update_data();
+  redraw_me();
+}

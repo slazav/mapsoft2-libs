@@ -52,40 +52,33 @@ private:
     DrawStyleType style;
     WptDrawTmpl(): src(NULL), style(Normal) {};
   };
-
   // Templates. Should be syncronized with the data.
   std::vector<WptDrawTmpl> tmpls;
 
   dRect range; // data range
-
-public:
-  // constructor
-  GObjWpts(GeoWptList & wpts);
 
   /************************************************/
   // These functions modify drawing templates, but
   // do not have any locking. They should be called
   // only from locked functions (on_set_opt, on_set_cnv, on_rescale)
 
-  // Update template coordinates for a waypoint template (including bbox!).
-  void update_pt_crd(WptDrawTmpl & t, const std::shared_ptr<ConvBase> cnv);
+   // update templates (when data changed)
+  void update_data();
 
   // Update bbox for a waypoint template (after changing coordinates)
   void update_pt_bbox(WptDrawTmpl & t);
-
-  // Update name and flag dimensions for a waypoint template.
-  void update_pt_name(const CairoWrapper & cr, WptDrawTmpl & t);
-
-  // Update range
-  // Should be done after update_pt_crd() and update_pt_name()
-  // and before adjust_text_pos() or any drawing.
-  void update_range();
 
   // Adjust text positions to prevent collisions between points
   void adjust_text_pos();
 
   // Adjust text positions to fit into rng
   void adjust_text_brd(const dRect & rng);
+
+public:
+  // constructor
+  GObjWpts(GeoWptList & wpts): wpts(wpts), cnv(new ConvBase), selected(false) {
+    set_opt(get_def_opt()); // init all parameters
+  }
 
   /************************************************/
 
@@ -114,6 +107,9 @@ public:
 
   // set viewer coordinates of point with index idx
   void set_point_crd(const size_t idx, const dPoint & pt);
+
+  // delete point with index idx
+  void del_point(const size_t idx);
 
   // select/unselect waypoints
   void select(bool v=true) {selected = v; redraw_me();}
