@@ -5,8 +5,8 @@
 
 class AMEditData : public ActionMode {
 int mystate;
-GObjTrk  * trk;
-GObjWpts * wpts;
+PanelTrks::ptr_t trk;
+PanelWpts::ptr_t wpts;
 size_t   idx;
 
 Glib::RefPtr<Gtk::ActionGroup> actions;
@@ -199,9 +199,9 @@ private:
     mystate=0;
   }
 
-  void del_tpt() { trk->del_point(idx); }
-  void del_wpt() { wpts->del_point(idx); }
-  void split_trk() { trk->split_trk(idx); }
+  void del_tpt()    { trk->del_point(idx); }
+  void del_wpt()    { wpts->del_point(idx); }
+  void split_trk()  { trk->split_trk(idx); }
   void del_trkseg() { trk->del_seg(idx); }
 
 };

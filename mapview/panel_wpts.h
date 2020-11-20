@@ -14,14 +14,14 @@ public:
 
 
     // Find waypoints in a rectangular area
-    std::map<GObjWpts*, std::vector<size_t> > find_points(const iRect & r) const;
+    std::map<ptr_t, std::vector<size_t> > find_points(const iRect & r) const;
 
     // Find waypoints (point is in the waypoint circle or waypoint label).
     // Return point numbers, sorted by distance.
-    std::map<GObjWpts*, std::vector<size_t> > find_points(const dPoint & pt) const;
+    std::map<ptr_t, std::vector<size_t> > find_points(const dPoint & pt) const;
 
 
-    bool upd_name(GObjWpts * sel_gobj=NULL, bool dir=true);
+    bool upd_name(ptr_t sel_gobj = NULL, bool dir=true);
 
     void on_select(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* col) override;
 

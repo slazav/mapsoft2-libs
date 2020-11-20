@@ -39,13 +39,13 @@ PanelMaps::find_map(const iPoint & p, GObjMaps ** gobj) const{
 }
 */
 bool
-PanelMaps::upd_name(GObjMaps * sel_gobj, bool dir){
+PanelMaps::upd_name(ptr_t sel_gobj, bool dir){
   bool ret=false;
   for (auto const row:store->children()){
     std::shared_ptr<GObjMaps> gobj = row[columns.gobj];
     if (!gobj) continue;
     // select gobj if sel_gobj!=NULL
-    if (sel_gobj && sel_gobj!=gobj.get()) continue;
+    if (sel_gobj && sel_gobj!=gobj) continue;
     // update names
     std::string name = row[columns.name];
     std::shared_ptr<GeoMapList> maps = row[columns.data];

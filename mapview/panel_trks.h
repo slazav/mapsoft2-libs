@@ -14,19 +14,17 @@ public:
     void add(const std::shared_ptr<GeoTrk> & trk) override;
 
 
-
     // Find track points in a rectangular area
-    std::map<GObjTrk*, std::vector<size_t> > find_points(const iRect & r) const;
+    std::map<ptr_t, std::vector<size_t> > find_points(const iRect & r) const;
 
     // Find track points near pt.
-    std::map<GObjTrk*, std::vector<size_t> > find_points(const dPoint & pt) const;
+    std::map<ptr_t, std::vector<size_t> > find_points(const dPoint & pt) const;
 
     // Find segments near pt.
-    std::map<GObjTrk*, std::vector<size_t> > find_segments(const dPoint & pt) const;
+    std::map<ptr_t, std::vector<size_t> > find_segments(const dPoint & pt) const;
 
 
-
-    bool upd_name(GObjTrk * sel_gobj=NULL, bool dir=true);
+    bool upd_name(ptr_t sel_gobj=NULL, bool dir=true);
 
     void on_select(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* col) override;
 

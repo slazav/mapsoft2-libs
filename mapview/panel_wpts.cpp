@@ -3,7 +3,7 @@
 void
 PanelWpts::add(const std::shared_ptr<GeoWptList> & wpts) {
   // depth is set to 0 to evoke refresh!
-  std::shared_ptr<GObjWpts> gobj(new GObjWpts(*wpts.get()));
+  ptr_t gobj(new GObjWpts(*wpts.get()));
   GObjMulti::add(0, gobj);
 
   Gtk::TreeModel::iterator it = store->append();
@@ -17,40 +17,40 @@ PanelWpts::add(const std::shared_ptr<GeoWptList> & wpts) {
 }
 
 // Find waypoints in a rectangular area
-std::map<GObjWpts*, std::vector<size_t> >
+std::map<PanelWpts::ptr_t, std::vector<size_t> >
 PanelWpts::find_points(const iRect & r) const{
-  std::map<GObjWpts*, std::vector<size_t> > ret;
+  std::map<ptr_t, std::vector<size_t> > ret;
   for (const auto & c: store->children()){
     if (!c[columns.checked]) continue;
-    std::shared_ptr<GObjWpts> gobj = c[columns.gobj];
+    ptr_t gobj = c[columns.gobj];
     auto pts = gobj->find_points(r);
-    if (pts.size()>0) ret.emplace(gobj.get(), pts);
+    if (pts.size()>0) ret.emplace(gobj, pts);
   }
   return ret;
 }
 
 // Find waypoints
-std::map<GObjWpts*, std::vector<size_t> >
+std::map<PanelWpts::ptr_t, std::vector<size_t> >
 PanelWpts::find_points(const dPoint & pt) const{
-  std::map<GObjWpts*, std::vector<size_t> > ret;
+  std::map<ptr_t, std::vector<size_t> > ret;
   for (const auto & c: store->children()){
     if (!c[columns.checked]) continue;
-    std::shared_ptr<GObjWpts> gobj = c[columns.gobj];
+    ptr_t gobj = c[columns.gobj];
     auto pts = gobj->find_points(pt);
-    if (pts.size()>0) ret.emplace(gobj.get(), pts);
+    if (pts.size()>0) ret.emplace(gobj, pts);
   }
   return ret;
 }
 
 bool
-PanelWpts::upd_name(GObjWpts * sel_gobj, bool dir){
+PanelWpts::upd_name(ptr_t sel_gobj, bool dir){
   bool ret=false;
   for (auto const & row:store->children()){
     std::string name = row[columns.name];
-    std::shared_ptr<GObjWpts> gobj = row[columns.gobj];
+    ptr_t gobj = row[columns.gobj];
     if (!gobj) continue;
     // select gobj if sel_gobj!=NULL
-    if (sel_gobj && sel_gobj!=gobj.get()) continue;
+    if (sel_gobj && sel_gobj!=gobj) continue;
 
     std::shared_ptr<GeoWptList> wpts = row[columns.data];
     if (name!=wpts->name){
@@ -68,7 +68,7 @@ PanelWpts::on_select(const Gtk::TreeModel::Path& path,
                      Gtk::TreeViewColumn* col){
   std::cerr << "WPT select\n";
   for (auto const & row:store->children()){
-    std::shared_ptr<GObjWpts> gobj = row[columns.gobj];
+    ptr_t gobj = row[columns.gobj];
     gobj->select(store->get_iter(path) == row);
   }
 }

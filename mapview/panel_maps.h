@@ -23,7 +23,7 @@ public:
 /*
   int find_map(const iPoint & p, GObjMaps ** gobj) const;
 */
-  bool upd_name(GObjMaps * sel_gobj=NULL, bool dir=true);
+  bool upd_name(ptr_t sel_gobj=NULL, bool dir=true);
 };
 
 #endif

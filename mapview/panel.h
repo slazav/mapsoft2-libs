@@ -9,6 +9,7 @@
 template <typename Tl, typename Td>
 class PanelRecord : public Gtk::TreeModelColumnRecord {
 public:
+
     Gtk::TreeModelColumn<bool> checked;
     Gtk::TreeModelColumn<std::string> name;
     Gtk::TreeModelColumn<Pango::Weight> weight;
@@ -30,6 +31,10 @@ class Panel : public Gtk::ScrolledWindow, public GObjMulti {
   Gtk::TreeView *treeview;
 
 public:
+
+  typedef std::shared_ptr<Tl> ptr_t;
+  typedef std::map<ptr_t, std::vector<int> > search_t;
+
   Gtk::Menu *popup_menu; // access from ActionManager
 
   // This signal is emitted when data is changed
@@ -47,7 +52,7 @@ public:
     store = Gtk::ListStore::create(columns);
     treeview->set_model(store);
     treeview->append_column_editable("V", columns.checked);
-    int name_cell_n = treeview->append_column_editable("V", columns.name);
+    int name_cell_n = treeview->append_column("V", columns.name);
 
     Gtk::TreeViewColumn* name_column = treeview->get_column(name_cell_n - 1);
     Gtk::CellRendererText* name_cell =
@@ -62,6 +67,7 @@ public:
     treeview->set_enable_search(false);
     treeview->set_headers_visible(false);
     treeview->set_reorderable(false);
+    treeview->set_activate_on_single_click(true);
 
     set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     Gtk::ScrolledWindow::add(*treeview);
@@ -93,7 +99,7 @@ public:
   }
 
   // Remove object
-  void remove(const std::shared_ptr<Tl> & obj){
+  void remove(const ptr_t & obj){
     for (auto i = store->children().begin();
          i != store->children().end(); i++){
       if (i->get_value(columns.gobj) != obj) continue;
@@ -153,14 +159,14 @@ public:
   }
 
   // Find selected object
-  std::shared_ptr<Tl> find_selected() {
+  ptr_t find_selected() {
     auto const it = treeview->get_selection()->get_selected();
     if (!it) return NULL;
     return it->get_value(columns.gobj);
   }
 
   // Find first visible object
-  std::shared_ptr<Tl> find_first() const {
+  ptr_t find_first() const {
     for (auto row:store->children()) {
       if (row[columns.checked])
         return row[columns.gobj];
@@ -189,7 +195,7 @@ public:
   dRect get_range(){
     auto i = treeview->get_selection()->get_selected();
     if (!i) return dRect();
-    std::shared_ptr<Tl> gobj = (*i)[columns.gobj];
+    ptr_t gobj = (*i)[columns.gobj];
     return gobj->bbox();
   }
 
@@ -232,7 +238,7 @@ public:
 
 
   // update names in data (no need to redraw)
-  virtual bool upd_name(Tl * sel_gobj = NULL, bool dir=true) = 0;
+  virtual bool upd_name(ptr_t sel_gobj = NULL, bool dir=true) = 0;
 
   // update gobj depth and visibility in GObjMulti
   // according to TreeView
