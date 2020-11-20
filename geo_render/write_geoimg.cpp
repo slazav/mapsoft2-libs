@@ -191,7 +191,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   // setup cairo context
   CairoWrapper cr;
   ImageR img;
-  int w=box.brc().x, h=box.brc().y;
+  size_t w=box.brc().x, h=box.brc().y;
 
   // create background image
   uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
