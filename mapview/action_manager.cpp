@@ -71,6 +71,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(AMTrkOpt,        "View")
 
     ADD_ACT(AMTrkAdd,        "Edit")
+    ADD_ACT(AMTrkDel,        "Edit")
     ADD_ACT(AMEditData,      "Edit")
 
     AddMaps("Maps", std::string("/usr/share/") + DATADIR + "/" + MAPS_MENU_FILE);

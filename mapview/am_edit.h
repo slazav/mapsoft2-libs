@@ -45,6 +45,9 @@ public:
     actions->add(
       Gtk::Action::create("EditData:tseg:del", "Delete segment", ""),
       sigc::mem_fun(this, &AMEditData::del_trkseg));
+    actions->add(
+      Gtk::Action::create("EditData:deltrk", "Delete track", ""),
+      sigc::mem_fun(this, &AMEditData::del_trk));
 
 
     ui_manager->add_ui_from_string(
@@ -57,11 +60,13 @@ public:
       "    <menuitem action='EditData:tpt:move'/>"
       "    <menuitem action='EditData:tpt:del'/>"
       "    <menuitem action='EditData:tseg:del'/>"
+      "    <menuitem action='EditData:deltrk'/>"
       "  </popup>"
       "  <popup name='EditData:tseg'>"
       "    <menuitem action='EditData:tseg:add'/>"
       "    <menuitem action='EditData:tseg:split'/>"
       "    <menuitem action='EditData:tseg:del'/>"
+      "    <menuitem action='EditData:deltrk'/>"
       "  </popup>"
       "</ui>"
       );
@@ -203,8 +208,8 @@ private:
   void del_wpt()    { wpts->del_point(idx); }
   void split_trk()  { trk->split_trk(idx); }
   void del_trkseg() { trk->del_seg(idx); }
+  void del_trk()    { mapview->panel_trks->remove(trk); }
 
 };
-
 
 #endif

@@ -148,6 +148,27 @@ class AMTrkAdd : public ActionMode {
     }
 };
 
+/**********************************************************/
+// set track drawing options
+class AMTrkDel : public ActionMode{
+public:
+    AMTrkDel (Mapview * mapview) : ActionMode(mapview) {}
+    std::string get_name() override { return "Delete track"; }
+
+    void handle_click(const iPoint p, const int button,
+                      const Gdk::ModifierType & state) override{
+      if (button != 1) return;
+
+      auto res1 = mapview->panel_trks->find_points(p);
+      if (res1.size()>0)
+        mapview->panel_trks->remove(res1.begin()->first);
+
+      auto res2 = mapview->panel_trks->find_segments(p);
+      if (res2.size()>0)
+        mapview->panel_trks->remove(res2.begin()->first);
+
+   }
+};
 
 #endif
 
