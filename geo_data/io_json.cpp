@@ -559,8 +559,6 @@ read_geojson_feature(json_t *feature, GeoData & data,
       if (!json_is_array(j_geom_coord))
         throw Err() << "Wrong/missing coordinades in a GeoJSON geometry";
 
-      json_t * j_prop = json_object_get(feature, "properties"); // maybe NULL
-
       // Waypoint
       if (geom_type == "Point") {
         GeoWpt wpt;
