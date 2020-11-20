@@ -48,7 +48,7 @@ class Err: public std::exception {
 
   public:
     /// Constructor with optional error code.
-    Err(int c_ = -1): c(c_), s(std::ostringstream::ate) {}
+    Err(int c_ = -1): s(std::ostringstream::ate), c(c_) {}
 
     /// Copy constructor.
     Err(const Err & o): s(std::ostringstream::ate) {
