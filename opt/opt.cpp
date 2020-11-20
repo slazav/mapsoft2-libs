@@ -24,11 +24,11 @@ T str_to_type_hex(const std::string & s){
 }
 
 // parse IP4, e.g. 127.0.0.1
-int32_t
+uint32_t
 str_to_type_ip4(const std::string & s){
   std::istringstream ss(s);
   char sep;
-  int32_t ret = 0;
+  uint32_t ret = 0;
 
   ss >> std::noskipws >> std::ws;
   for (int i=0; i<4; ++i){

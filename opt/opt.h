@@ -31,7 +31,7 @@ template<>
 int str_to_type<int>(const std::string & s);
 
 // parsing ip
-int32_t str_to_type_ip4(const std::string & s);
+uint32_t str_to_type_ip4(const std::string & s);
 
 /// Convert any type to std::string (similar to boost::lexical_cast).
 /// \relates Opt
