@@ -80,6 +80,9 @@ public:
     actions->add(
       Gtk::Action::create("EditData:addseg", "Add new segment", ""),
       sigc::mem_fun(this, &AMEditData::add_trkseg_start));
+    actions->add(
+      Gtk::Action::create("EditData:contseg", "Continue segment", ""),
+      sigc::mem_fun(this, &AMEditData::cont_trkseg_start));
 
 
     ui_manager->add_ui_from_string(
@@ -91,6 +94,7 @@ public:
       "  <popup name='EditData:tpt'>"
       "    <menuitem action='EditData:tpt:move'/>"
       "    <menuitem action='EditData:tpt:del'/>"
+      "    <menuitem action='EditData:contseg'/>"
       "    <menuitem action='EditData:addseg'/>"
       "    <menuitem action='EditData:delseg'/>"
       "    <menuitem action='EditData:deltrk'/>"
@@ -98,6 +102,7 @@ public:
       "  <popup name='EditData:tseg'>"
       "    <menuitem action='EditData:tseg:addpt'/>"
       "    <menuitem action='EditData:tseg:split'/>"
+      "    <menuitem action='EditData:contseg'/>"
       "    <menuitem action='EditData:addseg'/>"
       "    <menuitem action='EditData:delseg'/>"
       "    <menuitem action='EditData:deltrk'/>"
@@ -118,7 +123,9 @@ public:
       case 1: move_wpt_finish(p, button); break;
       case 2: move_tpt_finish(p, button); break;
       case 3: add_tpt_finish(p, button); break;
-      case 4: add_trkseg_finish(p, button, state); break;
+      case 4:
+      case 5:
+      case 6: add_trkseg_finish(p, button, state); break;
     }
   }
 
@@ -246,12 +253,27 @@ private:
       "(left click: add point, ctrl-left: remove last point, right: finish, ctrl-right: abort)");
   }
 
+  void cont_trkseg_start() {
+    pts.clear();
+    mystate = 5;
+    mapview->spanel.message("Add points to the track "
+      "(left click: add point, ctrl-left: remove last point, right: finish, ctrl-right: abort)");
+    idx = trk->get_nearest_segment_end(idx);
+    auto pts = trk->get_point_crd(idx);
+    if (pts.size()<1) {abort(); return;}
+    mapview->rubber.add_line(pts[0]);
+  }
+
   void add_trkseg_finish(const iPoint p, const int button,
                          const Gdk::ModifierType & state) {
 
     if (button == 3) {
-       if (! (state&Gdk::CONTROL_MASK)) trk->add_segment_crd(pts);
-       if (pts.size()==0) {
+       if (! (state&Gdk::CONTROL_MASK)){
+         if (mystate == 4) trk->add_segment_crd(pts);
+         if (mystate == 5) trk->add_points_crd(idx, pts);
+       }
+
+       if (pts.size()==0 || mystate == 5) {
          mystate = 0;
          mapview->spanel.message(get_name());
        }
@@ -262,7 +284,8 @@ private:
 
     // remove point
     if (button == 1 && state&Gdk::CONTROL_MASK){
-      if (pts.size()>0) pts.pop_back();
+      if (pts.size()==0) return;
+      pts.pop_back();
       if (mapview->rubber.size()>0){
         mapview->rubber.pop();
       }
