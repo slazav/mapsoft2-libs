@@ -325,6 +325,11 @@ GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
 void
 GObjTrk::del_point(const size_t idx){
   if (idx>=trk.size()) return;
+
+  // move start flag if needed
+  if (idx < trk.size()-1 && trk[idx].start)
+    trk[idx+1].start = true;
+
   trk.erase(trk.begin()+idx);
   update_data();
   redraw_me();
