@@ -106,6 +106,9 @@ public:
   // add new point with viewer coordinates pt after index idx
   void add_point_crd(const size_t idx, const dPoint & pt);
 
+  // add new segment using viewer coordinates
+  void add_segment_crd(const dLine & pts);
+
   // delete track point with index idx
   void del_point(const size_t idx);
 

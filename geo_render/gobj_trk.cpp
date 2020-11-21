@@ -323,6 +323,18 @@ GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
 }
 
 void
+GObjTrk::add_segment_crd(const dLine & pts) {
+  for (size_t i=0; i<pts.size(); ++i) {
+    GeoTpt tpt(pts[i]);
+    cnv->frw(tpt);
+    tpt.start = (i==0);
+    trk.insert(trk.end(), tpt);
+  }
+  update_data();
+  redraw_me();
+}
+
+void
 GObjTrk::del_point(const size_t idx){
   if (idx>=trk.size()) return;
 
