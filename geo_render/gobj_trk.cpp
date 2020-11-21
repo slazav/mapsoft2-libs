@@ -334,6 +334,47 @@ GObjTrk::add_segment_crd(const dLine & pts) {
   redraw_me();
 }
 
+size_t
+GObjTrk::get_nearest_segment_end(const size_t idx) {
+  if (trk.size()==0) return 0;
+  if (idx>=trk.size()) return trk.size()-1;
+  // find segment which contains idx (0 <= idx1 <= idx <= idx2 < trk.size())
+  size_t idx1 = 0, idx2 = trk.size()-1;
+  for (size_t i=0; i<trk.size(); ++i) {
+    if (trk[i].start && i<=idx) idx1=i;
+    if (trk[i].start && i>idx)  {idx2=i-1; break;}
+  }
+  // find which end is closer to idx:
+  bool start = (idx-idx1 < idx2-idx);
+  return start? idx1:idx2;
+}
+
+void
+GObjTrk::add_points_crd(const size_t idx, const dLine & pts){
+  if (idx>=trk.size()) return;
+  // idx coresponds to beginning of a segment: add points before idx
+  bool start = trk[idx].start;
+
+  if (start) {
+    trk[idx].start = false;
+    for (auto const & p: pts) {
+      GeoTpt tpt(p);
+      cnv->frw(tpt);
+      trk.insert(trk.begin() + (start?idx:idx+1), tpt);
+    }
+    trk[idx].start = true;
+  }
+  else {
+    for (auto p = pts.rbegin(); p!= pts.rend(); p++) {
+      GeoTpt tpt(*p);
+      cnv->frw(tpt);
+      trk.insert(trk.begin() + (start?idx:idx+1), tpt);
+    }
+  }
+  update_data();
+  redraw_me();
+}
+
 void
 GObjTrk::del_point(const size_t idx){
   if (idx>=trk.size()) return;

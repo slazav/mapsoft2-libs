@@ -109,6 +109,12 @@ public:
   // add new segment using viewer coordinates
   void add_segment_crd(const dLine & pts);
 
+  // get index of the nearest segment end
+  size_t get_nearest_segment_end(const size_t idx);
+
+  // continue segment by adding points at index idx
+  void add_points_crd(const size_t idx, const dLine & pts);
+
   // delete track point with index idx
   void del_point(const size_t idx);
 
