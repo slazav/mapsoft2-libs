@@ -11,7 +11,7 @@ public:
 
     PanelTrks () { set_name("TRKS"); }
 
-    void add(const std::shared_ptr<GeoTrk> & trk) override;
+    ptr_t add(const std::shared_ptr<GeoTrk> & trk) override;
 
 
     // Find track points in a rectangular area

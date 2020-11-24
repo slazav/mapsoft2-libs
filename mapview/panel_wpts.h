@@ -10,8 +10,7 @@ class PanelWpts : public Panel<GObjWpts, GeoWptList> {
 public:
     PanelWpts() { set_name("WPTS"); }
 
-    void add(const std::shared_ptr<GeoWptList> & wpts) override;
-
+    ptr_t add(const std::shared_ptr<GeoWptList> & wpts) override;
 
     // Find waypoints in a rectangular area
     std::map<ptr_t, std::vector<size_t> > find_points(const iRect & r) const;

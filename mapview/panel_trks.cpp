@@ -1,6 +1,6 @@
 #include "panel_trks.h"
 
-void
+PanelTrks::ptr_t
 PanelTrks::add(const std::shared_ptr<GeoTrk> & trk) {
   // depth is set to 0 to evoke refresh!
   ptr_t gobj(new GObjTrk(*trk.get()));
@@ -14,6 +14,7 @@ PanelTrks::add(const std::shared_ptr<GeoTrk> & trk) {
   row[columns.weight]  = Pango::WEIGHT_NORMAL;
   row[columns.data]    = trk;
   row[columns.gobj]    = gobj;
+  return gobj;
 }
 
 // Find track points in a rectangular area

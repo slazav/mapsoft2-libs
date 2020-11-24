@@ -1,9 +1,9 @@
 #include "panel_maps.h"
 
-void
+PanelMaps::ptr_t
 PanelMaps::add(const std::shared_ptr<GeoMapList> & maps) {
   // depth is set to 0 to evoke refresh!
-  std::shared_ptr<GObjMaps> gobj(new GObjMaps(*maps.get()));
+  ptr_t gobj(new GObjMaps(*maps.get()));
   GObjMulti::add(0, gobj);
 
   // find name
@@ -21,6 +21,7 @@ PanelMaps::add(const std::shared_ptr<GeoMapList> & maps) {
   row[columns.name]    = name;
   row[columns.weight]  = weight;
   row[columns.gobj]    = gobj;
+  return gobj;
 }
 /*
 int

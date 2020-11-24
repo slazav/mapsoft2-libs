@@ -10,7 +10,7 @@ class PanelMaps : public Panel<GObjMaps, GeoMapList> {
 public:
   PanelMaps(){ set_name("MAPS"); }
 
-  void add(const std::shared_ptr<GeoMapList> & maps) override;
+  ptr_t add(const std::shared_ptr<GeoMapList> & maps) override;
 
 //  dPoint get_sel_point(){
 //    GObjMaps * O = find_selected();

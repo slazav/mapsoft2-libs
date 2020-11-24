@@ -82,7 +82,7 @@ public:
   }
 
   // Add data
-  virtual void add(const std::shared_ptr<Td> & data) = 0;
+  virtual ptr_t add(const std::shared_ptr<Td> & data) = 0;
 
   // Remove all data
   void remove_all() {

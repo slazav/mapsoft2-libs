@@ -1,6 +1,6 @@
 #include "panel_wpts.h"
 
-void
+PanelWpts::ptr_t
 PanelWpts::add(const std::shared_ptr<GeoWptList> & wpts) {
   // depth is set to 0 to evoke refresh!
   ptr_t gobj(new GObjWpts(*wpts.get()));
@@ -14,6 +14,7 @@ PanelWpts::add(const std::shared_ptr<GeoWptList> & wpts) {
   row[columns.weight]  = Pango::WEIGHT_NORMAL;
   row[columns.data]    = wpts;
   row[columns.gobj]    = gobj;
+  return gobj;
 }
 
 // Find waypoints in a rectangular area
