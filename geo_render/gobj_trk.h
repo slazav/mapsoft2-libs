@@ -124,6 +124,9 @@ public:
   // delete track segment which contains point with given index
   void del_seg(const size_t idx);
 
+  // Delete all points within rectangle r.
+  void del_points(const dRect & r);
+
   // select/unselect track
   void select(bool v=true) {
     if (selected ==v ) return;

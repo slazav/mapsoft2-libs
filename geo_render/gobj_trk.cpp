@@ -408,3 +408,11 @@ GObjTrk::del_seg(const size_t idx){
   update_data();
   redraw_me();
 }
+
+void
+GObjTrk::del_points(const dRect & r){
+  for (ssize_t i = segments.size()-1; i >= 0; --i)
+    if (r.contains(segments[i].p1)) trk.erase(trk.begin()+i);
+  update_data();
+  redraw_me();
+}

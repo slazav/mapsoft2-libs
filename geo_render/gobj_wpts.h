@@ -114,6 +114,9 @@ public:
   // select/unselect waypoints
   void select(bool v=true) {selected = v; redraw_me();}
 
+  // Delete all waypoints within rectangle r.
+  void del_points(const dRect & r);
+
 
 };
 

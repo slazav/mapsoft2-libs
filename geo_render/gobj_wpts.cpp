@@ -378,3 +378,11 @@ GObjWpts::del_point(const size_t idx){
   update_data();
   redraw_me();
 }
+
+void
+GObjWpts::del_points(const dRect & r){
+  for (ssize_t i = tmpls.size()-1; i >= 0; --i)
+    if (r.contains(tmpls[i])) wpts.erase(wpts.begin()+i);
+  update_data();
+  redraw_me();
+}

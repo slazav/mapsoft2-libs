@@ -55,6 +55,17 @@ PanelTrks::find_segments(const dPoint & pt) const{
   return ret;
 }
 
+void
+PanelTrks::del_points(const iRect & r, const ptr_t & obj){
+  if (obj) obj->del_points(r);
+  else {
+    for (auto const & row:store->children()){
+      ptr_t o = row[columns.gobj];
+      o->del_points(r);
+    }
+  }
+}
+
 bool
 PanelTrks::upd_name(ptr_t sel_gobj, bool dir){
   bool ret=false;

@@ -83,6 +83,9 @@ public:
     actions->add(
       Gtk::Action::create("EditData:contseg", "Continue segment", ""),
       sigc::mem_fun(this, &AMEditData::cont_trkseg_start));
+    actions->add(
+      Gtk::Action::create("EditData:delpts", "Delete points", ""),
+      sigc::mem_fun(this, &AMEditData::del_pts_start));
 
 
     ui_manager->add_ui_from_string(
@@ -90,6 +93,7 @@ public:
       "  <popup name='EditData:wpt'>"
       "    <menuitem action='EditData:wpt:move'/>"
       "    <menuitem action='EditData:wpt:del'/>"
+      "    <menuitem action='EditData:delpts'/>"
       "  </popup>"
       "  <popup name='EditData:tpt'>"
       "    <menuitem action='EditData:tpt:move'/>"
@@ -98,6 +102,7 @@ public:
       "    <menuitem action='EditData:addseg'/>"
       "    <menuitem action='EditData:delseg'/>"
       "    <menuitem action='EditData:deltrk'/>"
+      "    <menuitem action='EditData:delpts'/>"
       "  </popup>"
       "  <popup name='EditData:tseg'>"
       "    <menuitem action='EditData:tseg:addpt'/>"
@@ -106,6 +111,7 @@ public:
       "    <menuitem action='EditData:addseg'/>"
       "    <menuitem action='EditData:delseg'/>"
       "    <menuitem action='EditData:deltrk'/>"
+      "    <menuitem action='EditData:delpts'/>"
       "  </popup>"
       "</ui>"
       );
@@ -126,6 +132,7 @@ public:
       case 4:
       case 5:
       case 6: add_trkseg_finish(p, button, state); break;
+      case 7: del_pts_finish(p, button, state); break;
     }
   }
 
@@ -136,8 +143,14 @@ public:
 
 
 private:
+
+  /**************************/
+
   void find_object(const iPoint p, const int button,
                    const Gdk::ModifierType & state){
+
+    wpts.reset();
+    trk.reset();
 
     // find waypoints
     auto res1 = mapview->panel_wpts->find_points(p);
@@ -186,6 +199,8 @@ private:
 
   }
 
+  /**************************/
+
   void move_wpt_start() {
     dPoint pt = wpts->get_point_crd(idx);
     mapview->rubber.add_cr_mark(pt, false, 3);
@@ -198,6 +213,8 @@ private:
     if (button != 3) wpts->set_point_crd(idx, p);
     abort();
   }
+
+  /**************************/
 
   void move_tpt_start() {
     auto pts = trk->get_point_crd(idx);
@@ -223,6 +240,8 @@ private:
     abort();
   }
 
+  /**************************/
+
   void add_tpt_start() {
     // find_segments returns only visible segments.
     // pts should contain 2 or 3 points: start and end of the segment
@@ -245,6 +264,8 @@ private:
   void split_trk()  { trk->split_trk(idx); }
   void del_trkseg() { trk->del_seg(idx); }
   void del_trk()    { mapview->panel_trks->remove(trk); }
+
+  /**************************/
 
   void add_trkseg_start() {
     pts.clear();
@@ -312,6 +333,43 @@ private:
       return;
     }
   }
+
+  /**************************/
+  void del_pts_start() {
+    mystate = 7;
+    pts.clear();
+    std::string obj = trk? "track":"waypoint list";
+    mapview->spanel.message(std::string("Delete points in the ") + obj +
+      " (left click: draw rectangular area to delete, right click: abort)");
+  }
+
+  void del_pts_finish(const iPoint p, const int button,
+                      const Gdk::ModifierType & state) {
+    // button 3 - cancel
+    if (button == 3) {
+      pts.clear();
+      mapview->spanel.message(get_name());
+      abort();
+      return;
+    }
+    // ctrl + button 1 - draw rectangle
+    if (button == 1){
+      if (pts.size() == 0){
+        pts.push_back(p);
+        mapview->rubber.add_rect(p);
+      }
+      else {
+        dRect rect(pts[0], p);
+        mapview->rubber.clear();
+        pts.clear();
+        if (trk)  mapview->panel_trks->del_points(rect, trk);
+        if (wpts) mapview->panel_wpts->del_points(rect, wpts);
+      }
+      return;
+    }
+  }
+
+  /**************************/
 
 };
 

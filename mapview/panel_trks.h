@@ -23,6 +23,8 @@ public:
     // Find segments near pt.
     std::map<ptr_t, std::vector<size_t> > find_segments(const dPoint & pt) const;
 
+    // Delete points in a rectangular area
+    void del_points(const iRect & r, const ptr_t & obj);
 
     bool upd_name(ptr_t sel_gobj=NULL, bool dir=true);
 
