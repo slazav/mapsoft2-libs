@@ -2,6 +2,7 @@
 #define AM_EDIT_H
 
 #include "am.h"
+#include "dlg_trk.h"
 
 /* Edit Geodata mode.
 
@@ -36,6 +37,9 @@ PanelTrks::ptr_t trk;
 PanelWpts::ptr_t wpts;
 size_t   idx;
 dLine pts; // points for adding track parts
+
+DlgTrk dlg_trk;
+Opt o;
 
 Glib::RefPtr<Gtk::ActionGroup> actions;
 Glib::RefPtr<Gtk::UIManager> ui_manager;
@@ -86,6 +90,9 @@ public:
     actions->add(
       Gtk::Action::create("EditData:delpts", "Delete points", ""),
       sigc::mem_fun(this, &AMEditData::del_pts_start));
+    actions->add(
+      Gtk::Action::create("EditData:edittrk", "Edit track parameters", ""),
+      sigc::mem_fun(this, &AMEditData::edit_trk));
 
 
     ui_manager->add_ui_from_string(
@@ -96,6 +103,7 @@ public:
       "    <menuitem action='EditData:delpts'/>"
       "  </popup>"
       "  <popup name='EditData:tpt'>"
+      "    <menuitem action='EditData:edittrk'/>"
       "    <menuitem action='EditData:tpt:move'/>"
       "    <menuitem action='EditData:tpt:del'/>"
       "    <menuitem action='EditData:contseg'/>"
@@ -105,6 +113,7 @@ public:
       "    <menuitem action='EditData:delpts'/>"
       "  </popup>"
       "  <popup name='EditData:tseg'>"
+      "    <menuitem action='EditData:edittrk'/>"
       "    <menuitem action='EditData:tseg:addpt'/>"
       "    <menuitem action='EditData:tseg:split'/>"
       "    <menuitem action='EditData:contseg'/>"
@@ -118,6 +127,13 @@ public:
     popup_menu_wpt  = (Gtk::Menu *)ui_manager->get_widget("/EditData:wpt");
     popup_menu_tpt  = (Gtk::Menu *)ui_manager->get_widget("/EditData:tpt");
     popup_menu_tseg = (Gtk::Menu *)ui_manager->get_widget("/EditData:tseg");
+
+
+    dlg_trk.set_transient_for(*mapview);
+    dlg_trk.signal_response().connect(
+      sigc::mem_fun (this, &AMEditData::dlg_trk_res));
+    dlg_trk.set_title(get_name());
+
   }
 
   std::string get_name() override { return "Edit tracks and waypoints"; }
@@ -370,6 +386,25 @@ private:
   }
 
   /**************************/
+
+  void dlg_trk_res(int r){
+    if (r==Gtk::RESPONSE_OK){
+      if (!trk) return;
+      auto lk = trk->get_lock();
+      dlg_trk.dlg2trk(&(trk->get_data()));
+      trk->update_opt();
+      trk->redraw_me();
+    }
+    dlg_trk.hide();
+  }
+
+  void edit_trk() {
+    if (!trk) return;
+    auto lk = trk->get_lock();
+    dlg_trk.trk2dlg(&(trk->get_data()));
+    dlg_trk.set_info(&(trk->get_data()));
+    dlg_trk.show_all();
+  }
 
 };
 
