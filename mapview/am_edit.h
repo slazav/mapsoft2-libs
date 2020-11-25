@@ -3,6 +3,7 @@
 
 #include "am.h"
 #include "dlg_trk.h"
+#include "dlg_wpt.h"
 
 /* Edit Geodata mode.
 
@@ -39,6 +40,7 @@ size_t   idx;
 dLine pts; // points for adding track parts
 
 DlgTrk dlg_trk;
+DlgWpt dlg_wpt;
 Opt o;
 
 Glib::RefPtr<Gtk::ActionGroup> actions;
@@ -60,6 +62,9 @@ public:
     actions->add(
       Gtk::Action::create("EditData:tpt:del", "Delete track point", ""),
       sigc::mem_fun(this, &AMEditData::del_tpt));
+    actions->add(
+      Gtk::Action::create("EditData:wpt:edit", "Edit waypoint parameters", ""),
+      sigc::mem_fun(this, &AMEditData::edit_wpt));
 
     actions->add(
       Gtk::Action::create("EditData:wpt:move", "Move waypoint", ""),
@@ -98,6 +103,7 @@ public:
     ui_manager->add_ui_from_string(
       "<ui>"
       "  <popup name='EditData:wpt'>"
+      "    <menuitem action='EditData:wpt:edit'/>"
       "    <menuitem action='EditData:wpt:move'/>"
       "    <menuitem action='EditData:wpt:del'/>"
       "    <menuitem action='EditData:delpts'/>"
@@ -133,6 +139,13 @@ public:
     dlg_trk.signal_response().connect(
       sigc::mem_fun (this, &AMEditData::dlg_trk_res));
     dlg_trk.set_title(get_name());
+
+    dlg_wpt.set_transient_for(*mapview);
+    dlg_wpt.signal_response().connect(
+      sigc::mem_fun (this, &AMEditData::dlg_wpt_res));
+    dlg_wpt.set_title(get_name());
+    dlg_wpt.signal_jump().connect(
+          sigc::mem_fun (this, &AMEditData::on_jump));
 
   }
 
@@ -397,6 +410,7 @@ private:
       trk->redraw_me();
     }
     dlg_trk.hide();
+    abort();
   }
 
   void edit_trk() {
@@ -405,6 +419,40 @@ private:
     dlg_trk.trk2dlg(&(trk->get_data()));
     dlg_trk.set_info(&(trk->get_data()));
     dlg_trk.show_all();
+  }
+
+  /**************************/
+
+  void dlg_wpt_res(int r){
+    if (r==Gtk::RESPONSE_OK){
+      if (!wpts) return;
+      auto lk = wpts->get_lock();
+      auto & w = wpts->get_data();
+      if (idx < w.size()) {
+        dlg_wpt.dlg2wpt(w[idx]);
+        wpts->update_data();
+        wpts->redraw_me();
+      }
+    }
+    dlg_wpt.hide();
+    abort();
+  }
+
+  void edit_wpt() {
+    if (!wpts) return;
+    auto lk = wpts->get_lock();
+    auto & w = wpts->get_data();
+    if (idx < w.size())
+      dlg_wpt.wpt2dlg(w[idx]);
+    dlg_wpt.show_all();
+  }
+
+  void on_jump(dPoint p){
+    mapview->rubber.clear();
+    mapview->viewer.get_cnv().bck(p);
+    mapview->viewer.set_center(p,false);
+    mapview->rubber.add_cr_mark(p, false);
+    mapview->rubber.add_cr_mark(p, true);
   }
 
 };

@@ -11,6 +11,7 @@
 #include "mapview/dlg_srtm_opts.h"
 #include "mapview/dlg_pano.h"
 #include "mapview/dlg_trk.h"
+#include "mapview/dlg_wpt.h"
 
 class MyWindow : public Gtk::ApplicationWindow {
 
@@ -70,6 +71,9 @@ class MyWindow : public Gtk::ApplicationWindow {
 
   // Edit track dialog
   DlgTrk trk;
+
+  // Edit waypoint dialog
+  DlgWpt wpt;
 
   public:
 
@@ -141,6 +145,13 @@ class MyWindow : public Gtk::ApplicationWindow {
     trk.signal_response().connect(
       sigc::hide(sigc::mem_fun(&trk, &DlgTrk::hide)));
 
+    // Edit waypoint dialog
+    auto b_wpt = manage(new Gtk::Button("DlgWpt"));
+    b_wpt->signal_clicked().connect(
+      sigc::mem_fun(wpt, &DlgWpt::show_all));
+    wpt.signal_response().connect(
+      sigc::hide(sigc::mem_fun(&wpt, &DlgWpt::hide)));
+
     /***********************************/
     // Main vbox
     Gtk::VBox * vbox = manage(new Gtk::VBox);
@@ -151,6 +162,7 @@ class MyWindow : public Gtk::ApplicationWindow {
     vbox->pack_start(*b_srtmopt, false, true, 5);
     vbox->pack_start(*b_pano,    false, true, 5);
     vbox->pack_start(*b_trk,     false, true, 5);
+    vbox->pack_start(*b_wpt,     false, true, 5);
 
     add (*vbox);
     load_css("./widgets.css", *this);
