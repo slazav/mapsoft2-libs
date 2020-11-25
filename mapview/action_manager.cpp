@@ -264,7 +264,9 @@ void
 ActionManager::set_mode (int mode, const std::string & menu){
   if (modes[mode]->is_radio()){
     clear_state();
-    mapview->spanel.message(modes[mode]->get_name());
+    auto n = modes[mode]->get_name();
+    auto d = modes[mode]->get_desc();
+    mapview->spanel.message(n + (d==""?"": ": " + d ));
     current_mode = mode;
   }
   modes[mode]->activate(menu);
