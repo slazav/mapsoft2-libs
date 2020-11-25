@@ -79,6 +79,15 @@ class AMTrkAdd : public ActionMode {
       dlg.signal_response().connect(
         sigc::mem_fun (this, &AMTrkAdd::on_result));
       dlg.set_title(get_name());
+
+      dlg.add_button ("New Segment",      Gtk::RESPONSE_APPLY);
+      dlg.set_hint("<b>Use mouse buttons to draw track:</b>\n"
+                   "* <b>1.</b> Add point.\n"
+                   "* <b>Ctrl-1.</b> Remove last point.\n"
+                   "* <b>Shift-1.</b> Start new segment.\n"
+                   "* <b>2.</b> Scroll map.\n"
+                   "* <b>3.</b> Abort drawing.");
+
     }
 
     std::string get_name() override { return "Add Track"; }
@@ -103,12 +112,6 @@ class AMTrkAdd : public ActionMode {
 
          if (trk.size() == 0){
            dlg.trk2dlg(&trk);
-           dlg.set_hint("<b>Use mouse buttons to draw track:</b>\n"
-                        "* <b>1.</b> Add point.\n"
-                        "* <b>Ctrl-1.</b> Remove last point.\n"
-                        "* <b>Shift-1.</b> Start new segment.\n"
-                        "* <b>2.</b> Scroll map.\n"
-                        "* <b>3.</b> Abort drawing.");
            dlg.show_all();
          }
 

@@ -5,7 +5,6 @@
 DlgTrk::DlgTrk() {
   add_button (Gtk::Stock::OK,     Gtk::RESPONSE_OK);
   add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-  add_button ("New Segment",      Gtk::RESPONSE_APPLY);
 
   // Labels
   Gtk::Label *l_name  = manage(new Gtk::Label("Name:",       Gtk::ALIGN_END));
