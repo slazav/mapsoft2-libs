@@ -54,11 +54,14 @@ private:
   };
   std::vector<segment_t> segments;
 
+public:
+
   void update_crd(); // update segment coordinates (when cnv changed)
   void update_opt(); // update segment colors (when options changed)
   void update_data(); // update segments (when data changed)
 
-public:
+  GeoTrk & get_data() {return trk;} // use lock when modifying.
+
   // constructor
   GObjTrk(GeoTrk & trk_): trk(trk_), cnv(new ConvBase),
       linewidth(1), draw_dots(true), selected(false) {
@@ -79,7 +82,6 @@ public:
   // range with linewidths included
   dRect bbox() const override {
     return expand(range, (dot_w+1)*linewidth + sel_w); }
-
 
   /************************************************/
 
