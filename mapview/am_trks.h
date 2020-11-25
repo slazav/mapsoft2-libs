@@ -84,7 +84,8 @@ class AMTrkAdd : public ActionMode {
 
     std::string get_name() override { return "Add Track"; }
     std::string get_desc() override {
-      return "left click - add points; ctrl-left - remove last point; shift-left - new segment; right - abort"; }
+      return "left click - add points; ctrl-left - remove last point; "
+             "shift-left - new segment; right - finish; ctrl-right - abort"; }
 
     Gtk::StockID get_stockid() { return Gtk::Stock::ADD; }
 
@@ -101,9 +102,16 @@ class AMTrkAdd : public ActionMode {
                       const Gdk::ModifierType & state) override {
 
          if (button == 3) {
+           if (!(state&Gdk::CONTROL_MASK)){
+             dlg.dlg2trk(&trk);
+             std::shared_ptr<GeoTrk> track(new GeoTrk(trk));
+             mapview->panel_trks->add(track);
+           }
            abort();
            return;
          }
+
+         if (button != 1) return;
 
          if (trk.size() == 0){
            dlg.trk2dlg(&trk);
