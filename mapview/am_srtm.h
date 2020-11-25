@@ -98,6 +98,8 @@ public:
     }
 
     std::string get_name() override { return "Panoramic view"; }
+    std::string get_desc() override {
+      return "left click - set view point / set view direction; ctrl-left - change view point; right - close"; }
 
     void abort() override {
       state=0;

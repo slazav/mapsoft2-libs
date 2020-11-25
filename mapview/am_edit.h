@@ -137,6 +137,7 @@ public:
   }
 
   std::string get_name() override { return "Edit tracks and waypoints"; }
+  std::string get_desc() override { return "left click: move/add point; ctrl-left: delete point/split track; right: abort action/menu"; }
 
   void handle_click(const iPoint p, const int button,
                     const Gdk::ModifierType & state) override {
@@ -286,15 +287,15 @@ private:
   void add_trkseg_start() {
     pts.clear();
     mystate = 4;
-    mapview->spanel.message("Add new segment to the track "
-      "(left click: add point, ctrl-left: remove last point, right: finish, ctrl-right: abort)");
+    mapview->spanel.message("Add new segment to the track: "
+      "left click - add point; ctrl-left - remove last point; right - finish; ctrl-right - abort");
   }
 
   void cont_trkseg_start() {
     pts.clear();
     mystate = 5;
-    mapview->spanel.message("Add points to the track "
-      "(left click: add point, ctrl-left: remove last point, right: finish, ctrl-right: abort)");
+    mapview->spanel.message("Add points to the track: "
+      "left click - add point; ctrl-left - remove last point; right - finish; ctrl-right - abort");
     idx = trk->get_nearest_segment_end(idx);
     auto pts = trk->get_point_crd(idx);
     if (pts.size()<1) {abort(); return;}
@@ -356,7 +357,7 @@ private:
     pts.clear();
     std::string obj = trk? "track":"waypoint list";
     mapview->spanel.message(std::string("Delete points in the ") + obj +
-      " (left click: draw rectangular area to delete, right click: abort)");
+      ": left click - draw rectangular area to delete; right click - abort");
   }
 
   void del_pts_finish(const iPoint p, const int button,
