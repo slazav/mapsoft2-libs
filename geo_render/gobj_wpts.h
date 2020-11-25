@@ -62,8 +62,6 @@ private:
   // do not have any locking. They should be called
   // only from locked functions (on_set_opt, on_set_cnv, on_rescale)
 
-   // update templates (when data changed)
-  void update_data();
 
   // Update bbox for a waypoint template (after changing coordinates)
   void update_pt_bbox(WptDrawTmpl & t);
@@ -75,6 +73,12 @@ private:
   void adjust_text_brd(const dRect & rng);
 
 public:
+
+   // update templates (when data changed)
+  void update_data();
+  GeoWptList & get_data() {return wpts;} // use lock when modifying.
+
+
   // constructor
   GObjWpts(GeoWptList & wpts): wpts(wpts), cnv(new ConvBase), selected(false) {
     set_opt(get_def_opt()); // init all parameters
