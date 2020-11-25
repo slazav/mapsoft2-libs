@@ -302,6 +302,7 @@ GObjTrk::get_point_crd(const size_t idx) const {
 
 void
 GObjTrk::set_point_crd(const size_t idx, const dPoint & pt) {
+  auto lk = get_lock();
   if (idx>=trk.size()) return;
   // keep altitude and time
   auto z = trk[idx].z;
@@ -314,6 +315,7 @@ GObjTrk::set_point_crd(const size_t idx, const dPoint & pt) {
 
 void
 GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
+  auto lk = get_lock();
   if (idx>=trk.size()) return;
   GeoTpt p(pt);
   cnv->frw(p);
@@ -324,6 +326,7 @@ GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
 
 void
 GObjTrk::add_segment_crd(const dLine & pts) {
+  auto lk = get_lock();
   for (size_t i=0; i<pts.size(); ++i) {
     GeoTpt tpt(pts[i]);
     cnv->frw(tpt);
@@ -335,7 +338,7 @@ GObjTrk::add_segment_crd(const dLine & pts) {
 }
 
 size_t
-GObjTrk::get_nearest_segment_end(const size_t idx) {
+GObjTrk::get_nearest_segment_end(const size_t idx) const {
   if (trk.size()==0) return 0;
   if (idx>=trk.size()) return trk.size()-1;
   // find segment which contains idx (0 <= idx1 <= idx <= idx2 < trk.size())
@@ -351,6 +354,7 @@ GObjTrk::get_nearest_segment_end(const size_t idx) {
 
 void
 GObjTrk::add_points_crd(const size_t idx, const dLine & pts){
+  auto lk = get_lock();
   if (idx>=trk.size()) return;
   // idx coresponds to beginning of a segment: add points before idx
   bool start = trk[idx].start;
@@ -377,6 +381,7 @@ GObjTrk::add_points_crd(const size_t idx, const dLine & pts){
 
 void
 GObjTrk::del_point(const size_t idx){
+  auto lk = get_lock();
   if (idx>=trk.size()) return;
 
   // move start flag if needed
@@ -390,6 +395,7 @@ GObjTrk::del_point(const size_t idx){
 
 void
 GObjTrk::split_trk(const size_t idx){
+  auto lk = get_lock();
   if (idx>=trk.size()-1) return;
   trk[idx+1].start = 1;
   update_data();
@@ -398,6 +404,7 @@ GObjTrk::split_trk(const size_t idx){
 
 void
 GObjTrk::del_seg(const size_t idx){
+  auto lk = get_lock();
   if (idx>=trk.size()) return;
   size_t i1=0, i2=trk.size();
   for (size_t i=0; i<trk.size(); ++i) {
@@ -411,6 +418,7 @@ GObjTrk::del_seg(const size_t idx){
 
 void
 GObjTrk::del_points(const dRect & r){
+  auto lk = get_lock();
   for (ssize_t i = segments.size()-1; i >= 0; --i)
     if (r.contains(segments[i].p1)) trk.erase(trk.begin()+i);
   update_data();
