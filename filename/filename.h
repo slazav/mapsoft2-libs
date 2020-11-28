@@ -42,6 +42,9 @@ std::string file_get_prefix(const std::string &fname);
 /* Extract file name from path */
 std::string file_get_name(const std::string &fname);
 
+/* Extract file name without (known) extension from path */
+std::string file_get_basename(const std::string &fname, const std::string & ext);
+
 // check if the file exists
 bool file_exists(const std::string & fname);
 

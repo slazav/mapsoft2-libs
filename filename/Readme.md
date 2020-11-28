@@ -40,6 +40,11 @@ std::string file_get_name(const std::string &fname);
 ```
 Example: d1/d2/d3/../d4/f.ext -> f.ext
 
+* Extract file name without (known) extension from path:
+```c++
+std::string file_get_basename(const std::string &fname, const std::string & ext);
+``
+Example: ("d1/d2/d3/../d4/f.ext", ".ext") -> f
 
 * Check if file exists
 ```c++

@@ -82,6 +82,18 @@ file_get_name(const std::string &fname){
   return i<0? fname : std::string(fname.begin()+i+1, fname.end());
 }
 
+std::string
+file_get_basename(const std::string &fname, const std::string &ext){
+  // remove path:
+  auto ret = file_get_name(fname);
+
+  // remove extension
+  if (ret.size() >= ext.size() &&
+      ret.substr(ret.size()-ext.size()) == ext)
+    ret = ret.substr(0, ret.size()-ext.size());
+  return ret;
+}
+
 #include <sys/types.h>
 #include <sys/stat.h>
 bool
