@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <cstring>
 
+#include "filename/filename.h"
 #include "opt/opt.h"
 #include "err/err.h"
 #include "time_fmt/time_fmt.h"
@@ -128,7 +129,8 @@ https://github.com/wladich/nakarte/issues/386
 reading:
 - skip gpx attributes, <metadata> and all <extensions>
 - rte -- load as waypoint list, everything except extensions (TODO: test!)
-- wpt: everything except extensions
+- wpt: everything except extensions, waypoint list name is set to
+       filename without .gpx extension
 - trk: everything except extensions
 - - trkseg: everything except extensions
 - - - trkpt: only <lat> <lon> <ele> <time> tags
@@ -697,8 +699,11 @@ read_rte_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
 
 
 int
-read_gpx_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
+read_gpx_node(xmlTextReaderPtr reader, GeoData & data,
+              const Opt & opts, const string &fname){
+
   GeoWptList wptl;
+
   bool is_meta=false;
   while(1){
     int ret =xmlTextReaderRead(reader);
@@ -744,8 +749,9 @@ read_gpx_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
     }
   }
   if (wptl.size()){
+    wptl.name = file_get_basename(fname, ".gpx");
     if (opts.get("verbose", false))
-      cerr << "  Reading waypoints: " << wptl.name 
+      cerr << "  Reading waypoints: " << wptl.name
            << " (" << wptl.size() << " points)" << endl;
     data.wpts.push_back(wptl);
   }
@@ -776,7 +782,7 @@ read_gpx(const string &filename, GeoData & data, const Opt & opts) {
     const xmlChar *name = xmlTextReaderConstName(reader);
     int type = xmlTextReaderNodeType(reader);
     if (NAMECMP("gpx") && (type == TYPE_ELEM))
-      ret = read_gpx_node(reader, data, opts);
+      ret = read_gpx_node(reader, data, opts, filename);
     if (ret!=1) break;
   }
 
