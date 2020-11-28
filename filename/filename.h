@@ -36,8 +36,11 @@ Examples (one makes a.map and a.png; what should be written in a.map?):
 std::string file_rel_path(const std::string &fname, const std::string &ref_name);
 
 
-/* Extract directory prefix from a filename */
+/* Extract directory prefix from path */
 std::string file_get_prefix(const std::string &fname);
+
+/* Extract file name from path */
+std::string file_get_name(const std::string &fname);
 
 // check if the file exists
 bool file_exists(const std::string & fname);

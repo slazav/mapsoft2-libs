@@ -58,6 +58,15 @@ int main() {
     assert_eq(file_get_prefix("/abc/./aaa.ccc"), "/abc/./");
     assert_eq(file_get_prefix("abc/.aaa.ccc"), "abc/");
 
+    // file_get_name
+    assert_eq(file_get_name(""), "");
+    assert_eq(file_get_name("aaa"), "aaa");
+    assert_eq(file_get_name("/aaa"), "aaa");
+    assert_eq(file_get_name("/abc/def/aaa"), "aaa");
+    assert_eq(file_get_name("/abc//aaa.bbb"), "aaa.bbb");
+    assert_eq(file_get_name("/abc/./aaa.ccc"), "aaa.ccc");
+    assert_eq(file_get_name("abc/.aaa.ccc"), ".aaa.ccc");
+
     // file exists
     assert_eq(file_exists("filename.test.cpp"), 1);
     assert_eq(file_exists("missing.txt"), 0);

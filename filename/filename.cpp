@@ -76,6 +76,12 @@ file_get_prefix(const std::string &fname){
   return i<0? "" : std::string(fname.begin(), fname.begin()+i+1);
 }
 
+std::string
+file_get_name(const std::string &fname){
+  int i = fname.rfind('/');
+  return i<0? fname : std::string(fname.begin()+i+1, fname.end());
+}
+
 #include <sys/types.h>
 #include <sys/stat.h>
 bool

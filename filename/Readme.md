@@ -28,11 +28,18 @@ Example: d1/d2/d3/../d4/f -> d1/d2/d3/../d4, d1/d2/d3, d1/d2, d1
 std::string file_rel_path(const std::string &fname, const std::string &ref_name);
 ```
 
-* Extract directory prefix from a filename:
+* Extract directory prefix from path:
 ```c++
 std::string file_get_prefix(const std::string &fname);
 ```
 Example: d1/d2/d3/../d4/f.ext -> d1/d2/d3/../d4/
+
+* Extract file name from path:
+```c++
+std::string file_get_name(const std::string &fname);
+```
+Example: d1/d2/d3/../d4/f.ext -> f.ext
+
 
 * Check if file exists
 ```c++
