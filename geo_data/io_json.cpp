@@ -375,7 +375,7 @@ GeoTrk read_geojson_trk(json_t *coord, json_t *prop, const bool multi){
   json_object_foreach(prop, key, val) {
     if (!json_is_string(val)) continue;
     else if (strcasecmp(key, "name")==0) ret.name = json_string_value(val);
-    else if (strcasecmp(key, "cmt")==0) ret.comm = json_string_value(val);
+    else if (strcasecmp(key, "comm")==0) ret.comm = json_string_value(val);
     else ret.opts.put(key, string(json_string_value(val)));
   }
   // coordinates
