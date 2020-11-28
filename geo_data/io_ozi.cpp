@@ -217,6 +217,8 @@ void read_ozi (const string &fname, GeoData & data, const Opt & opts){
   //// WAYPOINTS
   if (s2 == "Waypoint"){
     GeoWptList wptl;
+    wptl.name = file_get_basename(fname, ".wpt");
+
     getline(f,s1);
     crop_nl(s1);
     if (s1 != "WGS 84") throw Err() << "Unsupported datum: " << s1;
