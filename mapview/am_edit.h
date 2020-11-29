@@ -457,4 +457,90 @@ private:
 
 };
 
+/********************************************************************/
+class AMWptAdd : public ActionMode {
+public:
+  AMWptAdd (Mapview * mapview) : ActionMode(mapview) {
+    dlg.set_transient_for(*mapview);
+    dlg.signal_jump().connect(
+        sigc::mem_fun (this, &AMWptAdd::on_jump));
+    dlg.signal_response().connect(
+      sigc::mem_fun (this, &AMWptAdd::on_result));
+    dlg.set_title(get_name());
+  }
+
+  std::string get_name() override { return "Add waypoint"; }
+  std::string get_desc() override { return "Select waypoint list to add points. "
+    "If nothing is selected a new list will be created"; }
+
+  void activate(const std::string & menu) override {
+    abort();
+    // Switch to waypoint panel, select first entry
+    // if nothing is selected.
+    mapview->open_panel(PAGE_WPTS);
+    auto obj = mapview->panel_wpts->find_selected();
+    if (!obj) {
+      obj = mapview->panel_wpts->find_first();
+      if (obj) mapview->panel_wpts->select(obj);
+    }
+  }
+
+  void abort() override  {
+    mapview->rubber.clear();
+    dlg.hide();
+  }
+
+  void handle_click(const iPoint p, const int button,
+                            const Gdk::ModifierType & state) override {
+    if (button == 3) { abort(); return; }
+
+    // Create new waypoint. Set coordinates,
+    // Show dialog with point parameters
+    wpt = GeoWpt();
+    wpt.dPoint::operator=(p);
+    mapview->viewer.get_cnv().frw(wpt);
+    dlg.wpt2dlg(wpt);
+    dlg.show_all();
+
+    mapview->rubber.clear();
+    mapview->rubber.add_cr_mark(p);
+  }
+
+private:
+  DlgWpt dlg;
+  GeoWpt wpt;
+
+  void on_result(int r){
+    if (r == Gtk::RESPONSE_OK){
+      dlg.dlg2wpt(wpt);
+
+      // get currently selected waypoint list
+      auto obj = mapview->panel_wpts->find_selected();
+
+      // if nothing is selected, create new waypoint list
+      if (!obj){
+        std::shared_ptr<GeoWptList> wptl(new GeoWptList);
+        wptl->name = "NEW";
+        obj = mapview->panel_wpts->add(wptl);
+        mapview->panel_wpts->select(obj);
+      }
+
+      // add waypoint
+      if (obj) obj->add_point(wpt);
+
+    }
+    abort();
+  }
+
+  void on_jump(dPoint p){
+    mapview->rubber.clear();
+    mapview->viewer.get_cnv().bck(p);
+    mapview->viewer.set_center(p,false);
+    mapview->rubber.add_cr_mark(p, false);
+    mapview->rubber.add_cr_mark(p, true);
+  }
+
+};
+
 #endif
+

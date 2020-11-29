@@ -70,6 +70,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(ShowPt,          "View")
     ADD_ACT(AMTrkOpt,        "View")
 
+    ADD_ACT(AMWptAdd,        "Edit")
     ADD_ACT(AMTrkAdd,        "Edit")
     ADD_ACT(AMTrkDel,        "Edit")
     ADD_ACT(AMEditData,      "Edit")
