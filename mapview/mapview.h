@@ -147,6 +147,9 @@ public:
     // Set geo reference
     void set_cnv_map(const GeoMap & m, const bool force = false);
 
+    // Open panel tab (PAGE_WPTS, PAGE_TRKS, etc.)
+    void open_panel(const int n) {panels->set_current_page(n);}
+
     /**********************************/
 
     // Load accelerator map from file $HOME/.mapsoft2/mapsoft2.acc
