@@ -21,6 +21,7 @@ PanelMaps::add(const std::shared_ptr<GeoMapList> & maps) {
   row[columns.name]    = name;
   row[columns.weight]  = weight;
   row[columns.gobj]    = gobj;
+  select(gobj);
   return gobj;
 }
 /*

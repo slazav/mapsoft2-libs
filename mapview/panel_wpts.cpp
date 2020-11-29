@@ -14,6 +14,7 @@ PanelWpts::add(const std::shared_ptr<GeoWptList> & wpts) {
   row[columns.weight]  = Pango::WEIGHT_NORMAL;
   row[columns.data]    = wpts;
   row[columns.gobj]    = gobj;
+  select(gobj);
   return gobj;
 }
 

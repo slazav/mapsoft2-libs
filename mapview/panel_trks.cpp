@@ -14,6 +14,7 @@ PanelTrks::add(const std::shared_ptr<GeoTrk> & trk) {
   row[columns.weight]  = Pango::WEIGHT_NORMAL;
   row[columns.data]    = trk;
   row[columns.gobj]    = gobj;
+  select(gobj);
   return gobj;
 }
 
