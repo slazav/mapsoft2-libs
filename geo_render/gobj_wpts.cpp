@@ -386,3 +386,11 @@ GObjWpts::del_points(const dRect & r){
   update_data();
   redraw_me();
 }
+
+void
+GObjWpts::add_point(const GeoWpt & p){
+  wpts.push_back(p);
+  update_data();
+  redraw_me();
+}
+

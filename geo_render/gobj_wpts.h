@@ -121,6 +121,8 @@ public:
   // Delete all waypoints within rectangle r.
   void del_points(const dRect & r);
 
+  // Add new waypoint
+  void add_point(const GeoWpt & p);
 
 };
 
