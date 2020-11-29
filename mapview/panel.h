@@ -166,6 +166,14 @@ public:
   }
 
   // Find first visible object
+  void select(const ptr_t & obj) const {
+    for (auto row:store->children()) {
+      if (obj != (ptr_t)row[columns.gobj]) continue;
+      treeview->get_selection()->select(row);
+    }
+  }
+
+  // Find first visible object
   ptr_t find_first() const {
     for (auto row:store->children()) {
       if (row[columns.checked])
