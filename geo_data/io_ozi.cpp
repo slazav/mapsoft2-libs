@@ -117,7 +117,7 @@ string convert_ozi2datum(const string & s){
   throw Err() << "io_ozi: unsupported Ozi datum: " << s;
 }
 
-string get_proj_par(const string & proj, const string & key){
+string get_proj_par(const string & proj, const string & key, const string & def = ""){
   string exp = expand_proj_aliases(proj);
 
   string kv = string("+") + key + "=";
@@ -125,7 +125,7 @@ string get_proj_par(const string & proj, const string & key){
 
   size_t n1 = exp.find(kv);
   size_t n2 = exp.find(" ", n1);
-  return n1!=string::npos ? exp.substr(n1+kl,n2-n1-kl) : "";
+  return n1!=string::npos ? exp.substr(n1+kl,n2-n1-kl) : def;
 }
 
 string convert_proj2ozi(const string & s){
@@ -341,8 +341,8 @@ void read_ozi (const string &fname, GeoData & data, const Opt & opts){
     if (v[1]!="" && atof(v[1].c_str())!=0) m.proj += " +lat_0=" + v[1];
     if (v[2]!="" && atof(v[2].c_str())!=0) m.proj += " +lon_0=" + v[2];
     if (v[3]!="" && atof(v[3].c_str())!=1) m.proj += " +k="     + v[3];
-    if (v[4]!="" && atof(v[4].c_str())!=1) m.proj += " +x_0="   + v[4];
-    if (v[5]!="" && atof(v[5].c_str())!=1) m.proj += " +y_0="   + v[5];
+    if (v[4]!="" && atof(v[4].c_str())!=0) m.proj += " +x_0="   + v[4];
+    if (v[5]!="" && atof(v[5].c_str())!=0) m.proj += " +y_0="   + v[5];
     if (v[6]!="" && atof(v[6].c_str())!=0) m.proj += " +lat_1=" + v[6];
     if (v[7]!="" && atof(v[7].c_str())!=0) m.proj += " +lat_2=" + v[7];
 
@@ -622,7 +622,7 @@ void write_ozi_map (const string &fname, const GeoMap & m, const Opt & opts){
   v.push_back("Projection Setup");
   v.push_back(get_proj_par(m.proj, "lat_0"));
   v.push_back(get_proj_par(m.proj, "lon_0"));
-  v.push_back(get_proj_par(m.proj, "k"));
+  v.push_back(get_proj_par(m.proj, "k", "1.0")); // if k is missing use 1
   v.push_back(get_proj_par(m.proj, "x_0"));
   v.push_back(get_proj_par(m.proj, "y_0"));
   v.push_back(get_proj_par(m.proj, "lat_1"));
