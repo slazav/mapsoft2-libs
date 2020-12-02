@@ -559,7 +559,7 @@ void write_ozi_map (const string &fname, const GeoMap & m, const Opt & opts){
     << cnv(m.name) << "\r\n"
     << m.image << "\r\n" // no charset conversion for file name!
       << "1 ,Map Code,\r\n"
-      << ozi_datum << ",,   0.0000,   0.0000,WGS 84\r\n"
+      << ozi_datum << ",WGS 84,   0.0000,   0.0000,WGS 84\r\n"
       << "Reserved 1\r\n"
       << "Reserved 2\r\n"
       << "Magnetic Variation,,,E\r\n"
