@@ -5,6 +5,7 @@
 #include <vector>
 #include "getopt.h"
 #include <cstring>
+#include "err/assert_err.h"
 
 using namespace std;
 
@@ -50,6 +51,18 @@ main(int argc, char *argv[]){
     options.add("cmn2",  0,'D', "MY_CMN", "common option w/o argument");
     options.add("out1",  1,'O', "MY_OUT", "output option with argument");
     options.add("out2",  0,'P', "MY_OUT", "output option w/o argument");
+
+    // adding duplicated options:
+    assert_err(
+      options.add("out2",  1,'Q', "MY_OUT", "output option w/o argument"),
+      "duplicated options: out2(Q): MY_OUT, output option w/o argument -- "
+                          "out2(P): MY_OUT, output option w/o argument"
+    );
+    assert_err(
+      options.add("out2-1", 1,'P', "MY_OUT", "output option w/o argument"),
+      "duplicated options: out2-1(P): MY_OUT, output option w/o argument -- "
+                          "out2(P): MY_OUT, output option w/o argument"
+    );
 
     // standard options: "STD", "OUT"
     ms2opt_add_std(options);

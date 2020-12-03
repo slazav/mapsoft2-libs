@@ -35,7 +35,13 @@ public:
            const int val,
            const std::string & group,
            const std::string & desc){
-    if (exists(name)) return;
+
+    // check that option does not exist
+    auto o = get(name);
+    if (!o) o = get(val);
+    if (o) throw Err() << "duplicated options: "
+         << name << "(" << (char)val << ")" << ": " << group << ", " << desc << " -- "
+         << o->name << "(" << (char)o->val << ")" << ": " << o->group << ", " << o->desc;
     push_back({name, has_arg, val, group, desc});
   }
 
@@ -53,12 +59,38 @@ public:
     push_back({name, has_arg, val, group, desc});
   }
 
+
+  // get option by name (or NULL)
+  GetOptEl * get(const std::string & name) {
+    for (auto & o:*this)
+      if (o.name == name) return &o;
+    return NULL;
+  }
+
+  // get option by value (or NULL)
+  GetOptEl * get(const int val) {
+    if (val == 0) return NULL;
+    for (auto & o:*this)
+      if (o.val == val) return &o;
+    return NULL;
+  }
+
+
   // check if the option exists
   bool exists(const std::string & name) const{
     for (auto const & o:*this)
       if (o.name == name) return true;
     return false;
   }
+
+  // check if the option value exists (or zero)
+  bool exists(const int val) const{
+    if (val == 0) return false;
+    for (auto const & o:*this)
+      if (o.val == val) return true;
+    return false;
+  }
+
 
   // remove option if it exists
   void remove(const std::string & name){
