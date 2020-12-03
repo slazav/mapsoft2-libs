@@ -620,11 +620,11 @@ void write_ozi_map (const string &fname, const GeoMap & m, const Opt & opts){
   // projection setup
   vector<string> v;
   v.push_back("Projection Setup");
-  v.push_back(get_proj_par(m.proj, "lat_0"));
-  v.push_back(get_proj_par(m.proj, "lon_0"));
-  v.push_back(get_proj_par(m.proj, "k", "1.0")); // if k is missing use 1
-  v.push_back(get_proj_par(m.proj, "x_0"));
-  v.push_back(get_proj_par(m.proj, "y_0"));
+  v.push_back(get_proj_par(m.proj, "lat_0", "0.0"));
+  v.push_back(get_proj_par(m.proj, "lon_0", "0.0"));
+  v.push_back(get_proj_par(m.proj, "k", "1.0"));
+  v.push_back(get_proj_par(m.proj, "x_0", "0.0"));
+  v.push_back(get_proj_par(m.proj, "y_0", "0.0"));
   v.push_back(get_proj_par(m.proj, "lat_1"));
   v.push_back(get_proj_par(m.proj, "lat_2"));
   f << pack_ozi_csv(v) << "\r\n";
