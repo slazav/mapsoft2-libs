@@ -36,12 +36,17 @@ public:
            const std::string & group,
            const std::string & desc){
 
-    // check that option does not exist
+    // Do nothing if option with same name or value was added in the
+    // same group (same option lists may be included from a few places).
+    // Throw error if options from different groups have same name or value.
     auto o = get(name);
     if (!o) o = get(val);
-    if (o) throw Err() << "duplicated options: "
+    if (o){
+      if (o->group == group) return;
+      throw Err() << "duplicated options: "
          << name << "(" << (char)val << ")" << ": " << group << ", " << desc << " -- "
          << o->name << "(" << (char)o->val << ")" << ": " << o->group << ", " << o->desc;
+    }
     push_back({name, has_arg, val, group, desc});
   }
 
