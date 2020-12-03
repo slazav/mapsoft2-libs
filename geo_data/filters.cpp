@@ -14,9 +14,7 @@ ms2opt_add_geoflt(GetOptSet & opts){
                                "which letters show what to skip: W - waypoints, "
                                "T - tracks, M - maps, t - time, z - altitude, "
                                "b - map borders." );
-  opts.add("join",    0, 0, g, "Join all waypoint lists, tracks, map lists.");
-  opts.add("name",    1, 0, g, "Set name in the first waypoint lists, track, or map list.");
-  opts.add("comm",    1, 0, g, "Set comment in the first waypoint list, track, map list.");
+  opts.add("join",    1, 0, g, "Join all waypoint lists, tracks, map lists. Use argument as a name.");
   opts.add("nom_brd", 0, 0, g, "Set map border for a Soviet nomenclature map "
                                "(the map should have a valid name)");
   opts.add("rescale_maps", 1, 0, g, "Rescale image part of map references by some factor.");
@@ -33,12 +31,6 @@ geo_filters(GeoData & data, const Opt & opt){
 
   if (opt.exists("join"))
     filter_join(data, opt);
-
-  if (opt.exists("name"))
-    filter_name(data, opt);
-
-  if (opt.exists("comm"))
-    filter_comm(data, opt);
 
   if (opt.exists("nom_brd"))
     filter_nom_brd(data, opt);
@@ -104,6 +96,8 @@ filter_join(GeoData & data, const Opt & opt){
   if (opt.exists("verbose")) cerr << "filter_join: "
     "join all tracks, all waypoint lists, all map lists" << endl;
 
+  auto name = opt.get("join");
+
   //join maps:
   if (data.maps.size()>1){
     auto m0 = data.maps.begin();
@@ -112,7 +106,7 @@ filter_join(GeoData & data, const Opt & opt){
       m0->insert(m0->begin(), m1->begin(), m1->end());
       m1=data.maps.erase(m1);
     }
-    m0->name = "JOIN";
+    m0->name = name;
   }
 
   //join wpts:
@@ -123,7 +117,7 @@ filter_join(GeoData & data, const Opt & opt){
       w0->insert(w0->begin(), w1->begin(), w1->end());
       w1=data.wpts.erase(w1);
     }
-    w0->name = "JOIN";
+    w0->name = name;
   }
 
   //join trks:
@@ -134,7 +128,7 @@ filter_join(GeoData & data, const Opt & opt){
       t0->insert(t0->begin(), t1->begin(), t1->end());
       t1=data.trks.erase(t1);
     }
-    t0->name = "JOIN";
+    t0->name = name;
   }
 }
 

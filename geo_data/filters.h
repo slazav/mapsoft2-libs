@@ -27,9 +27,6 @@ void filter_skip(GeoData & data, const Opt & opt);
 // join all tracks, all waypoint lists, all map lists
 void filter_join(GeoData & data, const Opt & opt);
 
-void filter_name(GeoData & data, const Opt & opt);
-void filter_comm(GeoData & data, const Opt & opt);
-
 // select_time
 // track_reduce
 // remove_zt
