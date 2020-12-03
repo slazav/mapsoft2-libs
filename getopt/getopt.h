@@ -44,8 +44,8 @@ public:
     if (o){
       if (o->group == group) return;
       throw Err() << "duplicated options: "
-         << name << "(" << (char)val << ")" << ": " << group << ", " << desc << " -- "
-         << o->name << "(" << (char)o->val << ")" << ": " << o->group << ", " << o->desc;
+         << name << "(" << (val>0? (char)val:' ') << ")" << ": " << group << ", " << desc << " -- "
+         << o->name << "(" << (o->val>0? (char)o->val:' ') << ")" << ": " << o->group << ", " << o->desc;
     }
     push_back({name, has_arg, val, group, desc});
   }
@@ -56,14 +56,10 @@ public:
            const int val,
            const std::string & group,
            const std::string & desc){
-    for (auto & o:*this){
-      if (o.name != name) continue;
-      o = {name, has_arg, val, group, desc};
-      return;
-    }
-    push_back({name, has_arg, val, group, desc});
+    auto o = get(name);
+    if (o) *o = {name, has_arg, val, group, desc};
+    else push_back({name, has_arg, val, group, desc});
   }
-
 
   // get option by name (or NULL)
   GetOptEl * get(const std::string & name) {
