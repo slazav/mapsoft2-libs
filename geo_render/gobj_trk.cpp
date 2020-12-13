@@ -89,7 +89,7 @@ GObjTrk::update_opt(){
     throw Err() << "GObjTrk: segments are not syncronized with track";
 
   linewidth = trk.opts.get<double>("thickness", 1);
-  int  color  = trk.opts.get<int>("color", 0xFFFF000) | (0xFF << 24);
+  int  color  = trk.opts.get<int>("color", 0x0000FF);
 
   // color from track is always non-transparent.
   // set transparency (0..1)
