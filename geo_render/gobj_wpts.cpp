@@ -253,16 +253,19 @@ GObjWpts::adjust_text_pos() {
       if (j>=i) continue;
       dRect bj = tmpls[j].text_box + tmpls[j].text_pt;
       if (!intersect(bi,bj)) continue;
-      else i0=j;
+      i0=j;
+      break;
     }
     if (i0==-1) continue;
 
     // delete old position from the db
     db.del(i, bi);
 
-    // new text position
+    // New text position: move current to the side of the previous one
+    // It's important that point i in the new position does not
+    // touch i0, otherwise infinite loop appear.
     dPoint new_pt = tmpls[i0].text_pt
-       + dPoint(5, tmpls[i0].text_box.h + 2);
+       + dPoint(5, tmpls[i].text_box.h + linewidth + 2);
 
     // distances between point and text
     double dist0 = dist2d(tmpls[i0], tmpls[i0].text_pt);
@@ -304,6 +307,14 @@ GObjWpts::adjust_text_pos() {
     tmpls[i].text_pt = new_pt;
     // update bbox
     update_pt_bbox(tmpls[i]);
+
+    // Check that new position of the point i does not
+    // touch i0. Avoid infinite loop.
+    if ( intersect(tmpls[i].text_box + tmpls[i].text_pt,
+                   tmpls[i0].text_box + tmpls[i0].text_pt)){
+      std::cerr << "Error in GObjWpts::adjust_text_pos: can't move point properly\n";
+      continue;
+    }
     // put new position in the database
     db.put(i, tmpls[i].text_box + tmpls[i].text_pt);
     i--;
