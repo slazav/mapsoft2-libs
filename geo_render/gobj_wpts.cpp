@@ -360,6 +360,7 @@ GObjWpts::get_point_crd(const size_t idx) const {
 
 void
 GObjWpts::set_point_crd(const size_t idx, const dPoint & pt) {
+  auto lk = get_lock();
   if (idx>=tmpls.size()) return;
   // keep altitude, time and other parameters
   auto z = wpts[idx].z;
@@ -373,6 +374,7 @@ GObjWpts::set_point_crd(const size_t idx, const dPoint & pt) {
 
 void
 GObjWpts::del_point(const size_t idx){
+  auto lk = get_lock();
   if (idx>=wpts.size()) return;
   wpts.erase(wpts.begin()+idx);
   update_data();
@@ -381,6 +383,7 @@ GObjWpts::del_point(const size_t idx){
 
 void
 GObjWpts::del_points(const dRect & r){
+  auto lk = get_lock();
   for (ssize_t i = tmpls.size()-1; i >= 0; --i)
     if (r.contains(tmpls[i])) wpts.erase(wpts.begin()+i);
   update_data();
@@ -389,6 +392,7 @@ GObjWpts::del_points(const dRect & r){
 
 void
 GObjWpts::add_point(const GeoWpt & p){
+  auto lk = get_lock();
   wpts.push_back(p);
   update_data();
   redraw_me();
