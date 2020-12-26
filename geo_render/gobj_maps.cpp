@@ -84,21 +84,38 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     if (cnv) d.cnv.push_back(*cnv, true); // viewer -> WGS
     d.cnv.push_back(ConvMap(*d.src), false); // WGS -> map
 
-    // border in viewer coordinates
-    d.brd = d.cnv.bck_acc(close(d.src->border));
-
-    // update border tester
+    // Try to calculate border in viewer coordinates
+    // and update border tester.
+    // If it is not possible ignore the border.
+    try {
+      d.brd = d.cnv.bck_acc(close(d.src->border));
+    }
+    catch (const Err & e) {
+      d.brd = dMultiLine();
+    }
     d.test_brd = dPolyTester(d.brd);
 
-    // reference points in viewer coordinates
-    d.refs = dLine();
-    for (auto const & r:d.src->ref)
-      d.refs.push_back(r.first);
-    d.cnv.bck(d.refs);
+    // Same with refpoints.
+    try {
+      d.refs = dLine();
+      for (auto const & r:d.src->ref){
+        d.refs.push_back(r.first);
+        d.cnv.bck(d.refs);
+      }
+    }
+    catch (const Err & e) {
+      d.refs = dLine();
+    }
 
-    // map bbox in viewer coordinates
-    d.bbox = d.cnv.bck_acc(d.src_bbox);
-    range.expand(d.bbox);
+    // Same with bbox.
+    try {
+      d.bbox = d.cnv.bck_acc(d.src_bbox);
+      range.expand(d.bbox);
+    }
+    catch (const Err & e) {
+      d.bbox = dRect(-HUGE_VAL, -HUGE_VAL, HUGE_VAL, HUGE_VAL);
+      range.expand(d.bbox);
+    }
 
     // Calculate map scale (map pixels per viewer pixel).
     // To have reasonable accuracy in different cases we
