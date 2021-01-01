@@ -17,8 +17,7 @@ main(){
     str.push_back("\\key2");
     str.push_back("\\key3=");
 
-    Opt o;
-    fig_get_opts(str, o);
+    Opt o = fig_get_opts(str);
     assert_eq(o.size(), 3);
     assert_eq(o.get<string>("key1"), "val1");
     assert_eq(o.get<string>("key2"), "1");

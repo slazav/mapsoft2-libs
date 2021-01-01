@@ -8,13 +8,13 @@
 #include "opt/opt.h"
 
 /// Extract options from vector<string>, add to opts.
-void fig_get_opts(const std::vector<std::string> & comment, Opt & opts);
+Opt fig_get_opts(const std::vector<std::string> & comment);
 
 /// Extract options from Fig.
-void fig_get_opts(const Fig & f, Opt & opts);
+Opt fig_get_opts(const Fig & f);
 
 /// Extract options from FigObj.
-void fig_get_opts(const FigObj & o, Opt & opts);
+Opt fig_get_opts(const FigObj & o);
 
 
 

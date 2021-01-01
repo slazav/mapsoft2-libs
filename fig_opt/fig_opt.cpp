@@ -8,7 +8,9 @@
 
 using namespace std;
 
-void fig_get_opts(const vector<string> & comment, Opt & opts){
+Opt
+fig_get_opts(const vector<string> & comment){
+  Opt opts;
   vector<string>::const_iterator i;
   for (i=comment.begin(); i!=comment.end(); i++){
     if (i->size()>0 && (*i)[0] == '\\'){
@@ -19,9 +21,18 @@ void fig_get_opts(const vector<string> & comment, Opt & opts){
       else opts.put(i->substr(p1,p2-p1), i->substr(p2+1,-1));
     }
   }
+  return opts;
 }
-void fig_get_opts(const Fig & f, Opt & opts) {fig_get_opts(f.comment, opts);}
-void fig_get_opts(const FigObj & o, Opt & opts) {fig_get_opts(o.comment, opts);}
+
+Opt
+fig_get_opts(const Fig & f) {
+  return fig_get_opts(f.comment);
+}
+
+Opt
+fig_get_opts(const FigObj & o) {
+  return fig_get_opts(o.comment);
+}
 
 void fig_del_opts(vector<string> & comment){
   Opt ret;
@@ -38,8 +49,7 @@ void fig_del_opts(Fig & f){ fig_del_opts(f.comment); }
 void fig_del_opts(FigObj & o){ fig_del_opts(o.comment); }
 
 void fig_add_opts(vector<string> & comm, const Opt & opts){
-  Opt o;
-  fig_get_opts(comm, o);
+  Opt o = fig_get_opts(comm);
   fig_del_opts(comm);
   o.put(opts);
   Opt::const_iterator i;
