@@ -606,7 +606,7 @@ read_geojson_feature(json_t *feature, GeoData & data,
         data.trks.push_back(trk);
       }
       else
-        throw Err() << "Unknown type in a GeoJSON feature: " << type;
+        throw Err() << "Unknown geometry type in a GeoJSON: " << geom_type;
     }
     else throw Err() << "Unknown type in a GeoJSON feature: " << type;
 }
