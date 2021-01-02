@@ -573,7 +573,9 @@ read_geojson_feature(json_t *feature, GeoData & data,
       }
 
       // Track
-      else if (geom_type == "MultiLineString" || geom_type == "LineString") {
+      else if (geom_type == "MultiLineString" || geom_type == "LineString" ||
+               geom_type == "MultiPolygon" || geom_type == "Polygon") {
+
         GeoTrk trk;
         // name, comm, opts
         trk.name = read_json_text_field(feature, "name");
@@ -584,7 +586,21 @@ read_geojson_feature(json_t *feature, GeoData & data,
         size_t i;
         json_t *c1;
         json_array_foreach(j_geom_coord, i, c1) {
-          if (geom_type == "MultiLineString"){
+          if (geom_type == "MultiPolygon"){
+            size_t j;
+            json_t *c2;
+            json_array_foreach(c1, j, c2) {
+              size_t k;
+              json_t *c3;
+              json_array_foreach(c2, k, c3) {
+                GeoTpt pt;
+                if (k==0) pt.start=1;
+                read_geojson_pt(c3, pt);
+                trk.push_back(pt);
+              }
+            }
+          }
+          else if (geom_type == "MultiLineString" || geom_type == "Polygon"){
             size_t j;
             json_t *c2;
             json_array_foreach(c1, j, c2) {
@@ -603,8 +619,11 @@ read_geojson_feature(json_t *feature, GeoData & data,
         }
         if (v) cerr << "  Reading track: " << trk.name
                     << " (" << trk.size() << " points)" << endl;
+        if (geom_type == "MultiPolygon" || geom_type == "Polygon")
+          trk.opts.put("type", "closed");
         data.trks.push_back(trk);
       }
+
       else
         throw Err() << "Unknown geometry type in a GeoJSON: " << geom_type;
     }
