@@ -61,14 +61,25 @@ void
 ImageT::load_key(const iPoint & key) {
   if (tiles.contains(key)) return;
   auto url = make_url(tmpl, key);
-  auto s = dmanager.get(url);
-  std::istringstream str(s);
-  ImageR img = image_load(str, 1);
-  if (img.width()!=tsize || img.height()!=tsize)
-    throw Err() << "ImageT: wrong image size "
+  try {
+    auto s = dmanager.get(url);
+    std::istringstream str(s);
+    ImageR img = image_load(str, 1);
+    if (img.width()!=tsize || img.height()!=tsize){
+      std::cerr << "ImageT: wrong image size "
                 << img.width() << "x" << img.height()
                 << ": " << url << "\n";
-  tiles.add(key, img);
+      tiles.add(key, ImageR());
+    }
+    else {
+      tiles.add(key, img);
+    }
+  }
+  catch (Err & e){
+    // No error messages. Turn on Downloader logging to
+    // See OK/Errors
+    tiles.add(key, ImageR());
+  }
 }
 
 ImageR
