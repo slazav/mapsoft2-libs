@@ -98,10 +98,9 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     // Same with refpoints.
     try {
       d.refs = dLine();
-      for (auto const & r:d.src->ref){
+      for (auto const & r:d.src->ref)
         d.refs.push_back(r.first);
-        d.cnv.bck(d.refs);
-      }
+      d.cnv.bck(d.refs);
     }
     catch (const Err & e) {
       d.refs = dLine();
