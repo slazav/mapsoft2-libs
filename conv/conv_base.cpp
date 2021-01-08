@@ -156,38 +156,3 @@ ConvBase::scales(const dRect & box) const{
   return dPoint(dist2d(p0,p1)/box.w, dist2d(p0,p2)/box.h);
 }
 
-/*
-
-dPoint
-ConvBase::bck_scales(dPoint p) const{
-  dPoint p1 = p + dPoint(1,0);
-  dPoint p2 = p + dPoint(0,1);
-  bck(p), bck(p1), bck(p2);
-  return dPoint(dist(p1,p), dist(p2,p));
-}
-
-int
-ConvBase::image_frw(const iImage & src_img, iImage & dst_img,
-                const iPoint & shift, const double scale) const{
-  for (int y=0; y<dst_img.h; y++){
-    for (int x=0; x<dst_img.w; x++){
-      dPoint p(x,y); p+=shift; bck(p); p*=scale;
-      int c = src_img.safe_get(int(p.x),int(p.y));
-      dst_img.set_a(x,y,c);
-    }
-  }
-}
-
-int
-ConvBase::image_bck(const iImage & src_img, iImage & dst_img,
-                const iPoint & shift, const double scale) const{
-  for (int y=0; y<dst_img.h; y++){
-    for (int x=0; x<dst_img.w; x++){
-      dPoint p(x,y); p+=shift; frw(p); p*=scale;
-      int c = src_img.safe_get(int(p.x),int(p.y));
-      dst_img.set_a(x,y,c);
-    }
-  }
-}
-
-*/
