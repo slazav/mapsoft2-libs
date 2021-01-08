@@ -25,8 +25,10 @@ Cairo::RefPtr<Cairo::SurfacePattern> image_to_pattern(
   const ImageR & img, double scx, double scy, double dx=0, double dy=0);
 
 // Load svg file to a pattern
+// Return scaled image dimensions in wret,href (if non-null)
 Cairo::RefPtr<Cairo::SurfacePattern> svg_to_pattern(
-  const std::string & fname, double scx, double scy, double dx, double dy);
+  const std::string & fname, double scx, double scy, double dx, double dy,
+  double *wret = NULL, double *hret = NULL);
 
 //////////////////////////////////////////////////////////////////
 /// This class contains functions

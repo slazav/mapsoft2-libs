@@ -36,7 +36,7 @@ image_to_pattern(const ImageR & img, double scx, double scy, double dx, double d
 }
 
 Cairo::RefPtr<Cairo::SurfacePattern>
-svg_to_pattern(const std::string & fname, double scx, double scy, double dx, double dy){
+svg_to_pattern(const std::string & fname, double scx, double scy, double dx, double dy, double *wret, double *hret){
   try{
     GError *err = NULL;
     auto svg = rsvg_handle_new_from_file(fname.c_str(), &err);
@@ -47,6 +47,8 @@ svg_to_pattern(const std::string & fname, double scx, double scy, double dx, dou
     rsvg_handle_get_dimensions(svg, &dim);
     int w = dim.width;
     int h = dim.height;
+    if (wret) *wret=w*scx;
+    if (hret) *hret=w*scy;
 
     auto surf = Cairo::ImageSurface::create (Cairo::FORMAT_ARGB32, w, h);
     auto cr = Cairo::Context::create(surf);
