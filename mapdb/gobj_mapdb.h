@@ -100,7 +100,8 @@ private:
   double max_text_size;  // for selecting text objects
   double obj_scale;      // object scale
   dMultiLine border;     // border (WGS84) from set_ref
-  bool clip_border;      // clip objects to the border (default: true unless brd drawing step is used)
+  bool clip_border;      // Clip objects to the border (default: true unless brd drawing step is used)
+  bool fit_patt_size;    // Adjust pattern size to fit image size (useful for tiles). Default: false.
   double ptsize0;        // 1pt size in meters for linewidths, font size etc.
                          // Set when a "natural" reference is set with set_ref configuration command.
                          // In the beginning it is 0, this means that objects are not
@@ -237,11 +238,12 @@ public:
         patt = image_to_pattern(img, 1.0, 1.0, dx, dy);
       }
     }
-    void draw_patt(const CairoWrapper & cr, const double sc, bool fill=true){
+    void draw_patt(const CairoWrapper & cr, const double scx, const double scy , bool fill=true){
       cr->save();
-      double s = sc*sc0;
-      if (s*w<2.0 || s*h<2.0) s = 2.0/std::min(w,h);
-      cr->scale(s, s);
+      double sx = scx*sc0, sy = scy*sc0;
+      if (sx*w<2.0) sx = 2.0/w;
+      if (sy*h<2.0) sy = 2.0/h;
+      cr->scale(sx, sy);
       cr->set_source(patt);
       if (fill) cr->fill_preserve();
       else cr->paint();

@@ -24,6 +24,8 @@ ms2opt_add_mapdb_render(GetOptSet & opts){
   opts.add("mapdb_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
            "reference). Below it the map is drawn by with color "
            "(see --mapdb_minsc_color option). Default is 0.01");
+  opts.add("fit_patt_size", 0,0,g, "Adjust pattern size to fit image size. "
+           "This option is useful for generating tiled images. Default: false.");
   opts.add("mapdb_minsc_color", 1,0,g, "Color to draw maps below minimum scale (see --mapdb_minsc). "
            "Default is 0xFFDB5A00).");
 }
@@ -73,6 +75,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
   obj_scale   = o.get<double>("obj_scale", 1.0);
   max_text_size = 1024;
   clip_border = true;
+  fit_patt_size = o.get<bool>("fit_patt_size", false);
 
   opt = o;
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
@@ -197,6 +200,15 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: max_text_size <number>";
         max_text_size = str_to_type<double>(vs[1]);
+        continue;
+      }
+
+      // max_text_size command
+      if (vs[0] == "fit_patt_size") {
+        st.reset(); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: fit_patt_size 0|1";
+        fit_patt_size = str_to_type<bool>(vs[1]);
         continue;
       }
 
@@ -888,7 +900,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Pattern feature
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-      data->draw_patt(cr,osc,true);
+      double scx = osc, scy = osc;
+      if (mapdb_gobj->fit_patt_size) {
+        double nx = range.w/data->w/data->sc0;
+        double ny = range.h/data->h/data->sc0;
+        scx = nx/rint(nx/osc);
+        scy = ny/rint(ny/osc);
+      }
+      data->draw_patt(cr,scx,scy,true);
     }
 
     // Fill feature
