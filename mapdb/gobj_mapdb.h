@@ -214,11 +214,11 @@ public:
   struct FeaturePatt : Feature {
     ImageR img; // actual data for raster images
     Cairo::RefPtr<Cairo::SurfacePattern> patt;
+    double sc0,w,h;
     FeaturePatt(const std::string & imgdir,
                 const std::vector<std::string> & vs){
       check_args(vs, {"<file>", "<scale>", "?<dx>", "?<dy>"});
-      double scx = str_to_type<double>(vs[1]);
-      double scy = scx;
+      sc0 = str_to_type<double>(vs[1]);
       double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
       double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
 
@@ -227,23 +227,21 @@ public:
       if (fn[0]!='/') fn = imgdir + fn;
 
       if (file_ext_check(vs[0], ".svg")){
-        patt = svg_to_pattern(fn, scx, scy, dx, dy);
+        patt = svg_to_pattern(fn, 1.0, 1.0, dx, dy, &w, &h);
       }
       else {
         img = image_load(fn);
         if (img.is_empty()) throw Err() << "empty image: " << vs[0];
-        if (img.type() != IMAGE_32ARGB)
-          img = image_to_argb(img);
-        // Images with too small scales are not drawn.
-         // Let's limit scale to have at least 1-pixel image size:
-        if (img.width()*scx  < 1.0) scx = 1.0/img.width();
-        if (img.height()*scy < 1.0) scy = 1.0/img.height();
-        patt = image_to_pattern(img, scx, scy, dx, dy);
+        if (img.type() != IMAGE_32ARGB) img = image_to_argb(img);
+        w = img.width(); h = img.height();
+        patt = image_to_pattern(img, 1.0, 1.0, dx, dy);
       }
     }
     void draw_patt(const CairoWrapper & cr, const double sc, bool fill=true){
       cr->save();
-      cr->scale(sc,sc);
+      double s = sc*sc0;
+      if (s*w<2.0 || s*h<2.0) s = 2.0/std::min(w,h);
+      cr->scale(s, s);
       cr->set_source(patt);
       if (fill) cr->fill_preserve();
       else cr->paint();
@@ -254,7 +252,9 @@ public:
       cr->save();
       cr->translate(p.x, p.y);
       cr->rotate(angle);
-      cr->scale(sc,sc);
+      double s = sc*sc0;
+      if (s*w<2.0 || s*h<2.0) s = 2.0/std::min(w,h);
+      cr->scale(s, s);
       cr->set_source(patt);
       cr->paint();
       cr->restore();
