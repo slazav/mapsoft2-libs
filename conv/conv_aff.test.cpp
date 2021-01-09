@@ -49,6 +49,48 @@ main(){
 
     }
 
+    // rotate_src (same tests as above)
+    {
+      ConvAff2D cnv2;
+      cnv2.rotate_src(a);
+
+      p=dPoint(2,8); cnv1.bck(p);
+      assert_deq(p, rotate2d(dPoint(2,8), pc, -a), 1e-8);
+      p=dPoint(2,8); cnv1.frw(p);
+      assert_deq(p, rotate2d(dPoint(2,8), pc,  a), 1e-8);
+
+      assert_feq(cnv2.frw_ang(dPoint(1,1), 0, 1),    +a, 1e-6 );
+      assert_feq(cnv2.bck_ang(dPoint(1,1), 0, 1),    -a, 1e-6 );
+      assert_feq(cnv2.frw_ang(dPoint(1,1), +a, 1),  2*a, 1e-6 );
+      assert_feq(cnv2.bck_ang(dPoint(1,1), -a, 1), -2*a, 1e-6 );
+
+      assert_feq(cnv2.frw_angd(dPoint(1,1), 0, 1),   +30, 1e-6 );
+      assert_feq(cnv2.bck_angd(dPoint(1,1), 0, 1),   -30, 1e-6 );
+      assert_feq(cnv2.frw_angd(dPoint(1,1), +30, 1), +60, 1e-6 );
+      assert_feq(cnv2.bck_angd(dPoint(1,1), -30, 1), -60, 1e-6 );
+    }
+
+    // rotate_dst (same tests as above)
+    {
+      ConvAff2D cnv2;
+      cnv2.rotate_dst(a);
+
+      p=dPoint(2,8); cnv1.bck(p);
+      assert_deq(p, rotate2d(dPoint(2,8), pc, -a), 1e-8);
+      p=dPoint(2,8); cnv1.frw(p);
+      assert_deq(p, rotate2d(dPoint(2,8), pc,  a), 1e-8);
+
+      assert_feq(cnv2.frw_ang(dPoint(1,1), 0, 1),    +a, 1e-6 );
+      assert_feq(cnv2.bck_ang(dPoint(1,1), 0, 1),    -a, 1e-6 );
+      assert_feq(cnv2.frw_ang(dPoint(1,1), +a, 1),  2*a, 1e-6 );
+      assert_feq(cnv2.bck_ang(dPoint(1,1), -a, 1), -2*a, 1e-6 );
+
+      assert_feq(cnv2.frw_angd(dPoint(1,1), 0, 1),   +30, 1e-6 );
+      assert_feq(cnv2.bck_angd(dPoint(1,1), 0, 1),   -30, 1e-6 );
+      assert_feq(cnv2.frw_angd(dPoint(1,1), +30, 1), +60, 1e-6 );
+      assert_feq(cnv2.bck_angd(dPoint(1,1), -30, 1), -60, 1e-6 );
+    }
+
     // rescale_src, rescale_dst, shift
     {
       // rescale(k)

@@ -20,6 +20,9 @@ public:
   /// constructor - trivial transformation
   ConvAff2D() {reset();}
 
+  /// constructor - rotation (rad, ccw)
+  ConvAff2D(const double & a) {reset(); rotate_src(a);}
+
   /// constructor - from a point-to-point reference
   ConvAff2D(const std::map<dPoint, dPoint> & ref) {reset(ref);}
 
@@ -56,6 +59,12 @@ public:
 
   /// shift after the transformation
   void shift_dst(const dPoint & p);
+
+  // rotate before the transformation (rad, ccw)
+  void rotate_src(const double & a);
+
+  // rotate after the transformation (rad, ccw)
+  void rotate_dst(const double & a);
 
 
   ////// rescaling

@@ -137,6 +137,32 @@ ConvAff2D::shift_dst(const dPoint & p){
 }
 
 void
+ConvAff2D::rotate_src(const double & a){
+  double S = sin(a), C = cos(a);
+  double k0 = k_frw[0]*C + k_frw[1]*S;
+  double k1 = k_frw[1]*C - k_frw[0]*S;
+  double k3 = k_frw[3]*C + k_frw[4]*S;
+  double k4 = k_frw[4]*C - k_frw[3]*S;
+  k_frw[0] = k0; k_frw[1] = k1;
+  k_frw[3] = k3; k_frw[4] = k4;
+  bck_recalc();
+}
+
+void
+ConvAff2D::rotate_dst(const double & a){
+  double S = sin(a), C = cos(a);
+  double k0 = k_frw[0]*C - k_frw[3]*S;
+  double k1 = k_frw[1]*C - k_frw[4]*S;
+  double k2 = k_frw[2]*C - k_frw[5]*S;
+  double k3 = k_frw[0]*S + k_frw[3]*C;
+  double k4 = k_frw[1]*S + k_frw[4]*C;
+  double k5 = k_frw[2]*S + k_frw[5]*C;
+  k_frw[0] = k0; k_frw[1] = k1; k_frw[2] = k2;
+  k_frw[3] = k3; k_frw[4] = k4; k_frw[5] = k5;
+  bck_recalc();
+}
+
+void
 ConvAff2D::set_scale_src(const dPoint & s){
   double kx = s.x/sc_src.x;
   double ky = s.y/sc_src.y;
