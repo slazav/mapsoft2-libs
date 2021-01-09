@@ -241,8 +241,8 @@ public:
     void draw_patt(const CairoWrapper & cr, const double scx, const double scy , bool fill=true){
       cr->save();
       double sx = scx*sc0, sy = scy*sc0;
-      if (sx*w<2.0) sx = 2.0/w;
-      if (sy*h<2.0) sy = 2.0/h;
+      if (sx*w<1.0) sx = 1.0/w;
+      if (sy*h<1.0) sy = 1.0/h;
       cr->scale(sx, sy);
       cr->set_source(patt);
       if (fill) cr->fill_preserve();
@@ -255,7 +255,7 @@ public:
       cr->translate(p.x, p.y);
       cr->rotate(angle);
       double s = sc*sc0;
-      if (s*w<2.0 || s*h<2.0) s = 2.0/std::min(w,h);
+      if (s*w<1.0 || s*h<1.0) s = 1.0/std::min(w,h);
       cr->scale(s, s);
       cr->set_source(patt);
       cr->paint();
