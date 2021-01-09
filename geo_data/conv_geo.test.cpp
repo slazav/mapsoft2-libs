@@ -42,6 +42,18 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
       "+ellps=krass +towgs84=+28,-130,-95 "
       "+proj=tmerc +lon_0=3 +x_0=1500000");
 
+    assert_eq(expand_proj_aliases("SU-3N"),
+      "+ellps=krass +towgs84=+28,-130,-95 "
+      "+proj=tmerc +lon_0=-3 +x_0=500000");
+
+    assert_eq(expand_proj_aliases("SU3N"),
+      "+ellps=krass +towgs84=+28,-130,-95 "
+      "+proj=tmerc +lon_0=3 +x_0=500000");
+
+    assert_eq(expand_proj_aliases("SU0N"),
+      "+ellps=krass +towgs84=+28,-130,-95 "
+      "+proj=tmerc +lon_0=3 +x_0=500000");
+
 
     std::string proj_wgs = "WGS";
     std::string proj_krass = "SU27";

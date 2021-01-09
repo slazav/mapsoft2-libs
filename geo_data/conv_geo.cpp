@@ -52,15 +52,17 @@ std::string expand_proj_aliases(const std::string & pars){
   if (pars == "SUZ")
     return "+ellps=krass +towgs84=+28,-130,-95 +proj=tmerc +lon_0=0 +x_0=500000";
 
-  // SU<N> -- Soviet coordinate system with central meridian N
+  // SU<N>  -- Soviet coordinate system with central meridian N.
+  // SU<N>N -- Same, but coordinates do not have zone prefix.
   if (pars.length()>2 &&
       pars.substr(0,2) == "SU"){
-    int lon = str_to_type<int>(pars.substr(2,pars.length()-2));
+    bool nopref = (pars[pars.length()-1] == 'N');
+    int lon = str_to_type<int>(pars.substr(2,pars.length() - 2 - (nopref?1:0)));
     int lon0 = lon2lon0(lon);
     int pref = (lon0<0 ? 60:0) + (lon0-3)/6 + 1;
     return "+ellps=krass +towgs84=+28,-130,-95 +proj=tmerc"
            " +lon_0=" + type_to_str(lon0) +
-           " +x_0=" + type_to_str(pref) + "500000";
+           " +x_0=" + (nopref?"":type_to_str(pref)) + "500000";
   }
 
 
