@@ -954,7 +954,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Pattern feature
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-      data->draw_patt(cr,osc,false);
+      double scx = osc, scy = osc;
+      if (mapdb_gobj->fit_patt_size) {
+        double nx = range.w/data->w/data->sc0;
+        double ny = range.h/data->h/data->sc0;
+        scx = nx/rint(nx/osc);
+        scy = ny/rint(ny/osc);
+      }
+      data->draw_patt(cr,scx,scy,false);
     }
   }
 
@@ -970,7 +977,14 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
       cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-      data->draw_patt(cr,osc,true);
+      double scx = osc, scy = osc;
+      if (mapdb_gobj->fit_patt_size) {
+        double nx = range.w/data->w/data->sc0;
+        double ny = range.h/data->h/data->sc0;
+        scx = nx/rint(nx/osc);
+        scy = ny/rint(ny/osc);
+      }
+      data->draw_patt(cr,scx,scy,true);
     }
 
     // Fill feature
