@@ -52,7 +52,7 @@ main(){
     // rotate_src (same tests as above)
     {
       ConvAff2D cnv2;
-      cnv2.rotate_src(a);
+      cnv2.rotate_src(pc, a);
 
       p=dPoint(2,8); cnv1.bck(p);
       assert_deq(p, rotate2d(dPoint(2,8), pc, -a), 1e-8);
@@ -73,7 +73,7 @@ main(){
     // rotate_dst (same tests as above)
     {
       ConvAff2D cnv2;
-      cnv2.rotate_dst(a);
+      cnv2.rotate_dst(pc, a);
 
       p=dPoint(2,8); cnv1.bck(p);
       assert_deq(p, rotate2d(dPoint(2,8), pc, -a), 1e-8);
@@ -90,6 +90,35 @@ main(){
       assert_feq(cnv2.frw_angd(dPoint(1,1), +30, 1), +60, 1e-6 );
       assert_feq(cnv2.bck_angd(dPoint(1,1), -30, 1), -60, 1e-6 );
     }
+
+    // one more rotation test
+    {
+      //
+      dPoint c1(3.14,2.18), c2(1.0,2.0);
+      double a = 0.1;
+      ConvAff2D cnv(c1, a);
+
+      //rotate around c1
+      dPoint p1(0,0);
+      assert_deq( rotate2d(p1, c1, a), cnv.frw_pts(p1), 1e-6);
+      assert_deq( rotate2d(p1, c1, -a), cnv.bck_pts(p1), 1e-6);
+
+      //rotate c1,c2
+      cnv.rotate_dst(c2,a);
+      assert_deq( rotate2d(rotate2d(p1, c1, a), c2,a), cnv.frw_pts(p1), 1e-6);
+      assert_deq( rotate2d(rotate2d(p1, c2, -a), c1,-a), cnv.bck_pts(p1), 1e-6);
+
+      // rotate c2,c1
+      cnv.reset();
+      cnv.rotate_src(c1,a);
+      cnv.rotate_src(c2,a);
+      assert_deq( rotate2d(rotate2d(p1, c2, a), c1,a), cnv.frw_pts(p1), 1e-6);
+      assert_deq( rotate2d(rotate2d(p1, c1, -a), c2,-a), cnv.bck_pts(p1), 1e-6);
+
+
+    }
+
+
 
     // rescale_src, rescale_dst, shift
     {

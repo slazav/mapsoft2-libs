@@ -41,6 +41,7 @@ void ConvAff2D::bck_recalc(){
   k_bck[5] = (- k_frw[0] * k_frw[5] + k_frw[3] * k_frw[2]) / D;
 }
 
+
 void
 ConvAff2D::reset(){
   k_frw.resize(6);
@@ -136,27 +137,43 @@ ConvAff2D::shift_dst(const dPoint & p){
   bck_recalc();
 }
 
+/*
+C(x-xc) - S (y-yc) + xc -> x
+S(x-xc) + C (y-yc) + yc -> y
+
+k0 x + k1 y + k2 -> x
+k3 x + k4 y + k5 -> y
+*/
 void
-ConvAff2D::rotate_src(const double & a){
+ConvAff2D::rotate_src(const dPoint & c, const double & a){
   double S = sin(a), C = cos(a);
   double k0 = k_frw[0]*C + k_frw[1]*S;
   double k1 = k_frw[1]*C - k_frw[0]*S;
+  double k2 = k_frw[2] + k_frw[0]*(c.x*(1-C)+c.y*S) + k_frw[1]*(c.y*(1-C)-c.x*S);
   double k3 = k_frw[3]*C + k_frw[4]*S;
   double k4 = k_frw[4]*C - k_frw[3]*S;
-  k_frw[0] = k0; k_frw[1] = k1;
-  k_frw[3] = k3; k_frw[4] = k4;
+  double k5 = k_frw[5] + k_frw[3]*(c.x*(1-C)+c.y*S) + k_frw[4]*(c.y*(1-C)-c.x*S);
+  k_frw[0] = k0; k_frw[1] = k1; k_frw[2] = k2;
+  k_frw[3] = k3; k_frw[4] = k4; k_frw[5] = k5;
   bck_recalc();
 }
 
+/*
+k0 x + k1 y + k2 -> x
+k3 x + k4 y + k5 -> y
+
+C(x-xc) - S (y-yc) + xc -> x
+S(x-xc) + C (y-yc) + yc -> y
+*/
 void
-ConvAff2D::rotate_dst(const double & a){
+ConvAff2D::rotate_dst(const dPoint & c, const double & a){
   double S = sin(a), C = cos(a);
   double k0 = k_frw[0]*C - k_frw[3]*S;
   double k1 = k_frw[1]*C - k_frw[4]*S;
-  double k2 = k_frw[2]*C - k_frw[5]*S;
+  double k2 = k_frw[2]*C - k_frw[5]*S + c.x*(1-C) + c.y*S;
   double k3 = k_frw[0]*S + k_frw[3]*C;
   double k4 = k_frw[1]*S + k_frw[4]*C;
-  double k5 = k_frw[2]*S + k_frw[5]*C;
+  double k5 = k_frw[2]*S + k_frw[5]*C + c.y*(1-C) - c.x*S;
   k_frw[0] = k0; k_frw[1] = k1; k_frw[2] = k2;
   k_frw[3] = k3; k_frw[4] = k4; k_frw[5] = k5;
   bck_recalc();

@@ -111,8 +111,8 @@ Methods (map is a std::map(dPoint,dPoint)):
  - `det()` -- forward conversion determinant,
  - `shift_src(p)` -- shift by vector `p` before the transformation,
  - `shift_dst(p)` -- shift by vector `p` after the transformation,
- - `rotate_src(p)` -- rotate before the transformation (rad, ccw),
- - `rotate_dst(p)` -- rotate after the transformation (rad, ccw),
+ - `rotate_src(cnt,p)` -- rotate before the transformation (rad, ccw),
+ - `rotate_dst(cnt,p)` -- rotate after the transformation (rad, ccw),
  - `rescale_src(kx,ky)` -- rescale `x` and `y` before thetransformation,
  - `rescale_dst(kx,ky)` -- rescale `x` and `y` after thetransformation,
  - `get_src_err()` -- get error in source coordinates
