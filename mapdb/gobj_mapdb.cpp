@@ -948,8 +948,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // MAP drawing step:
   if (action == STEP_DRAW_MAP) {
-    // Fill feature
-    if (features.count(FEATURE_FILL)) cr->paint();
 
     // Pattern feature
     if (features.count(FEATURE_PATT)){
@@ -963,6 +961,9 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       }
       data->draw_patt(cr,scx,scy,false);
     }
+
+    // Fill feature
+    if (features.count(FEATURE_FILL)) cr->paint();
   }
 
   // BRD drawing step:
