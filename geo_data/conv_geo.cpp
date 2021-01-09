@@ -57,8 +57,10 @@ std::string expand_proj_aliases(const std::string & pars){
   if (pars.length()>2 &&
       pars.substr(0,2) == "SU"){
     bool nopref = (pars[pars.length()-1] == 'N');
-    int lon = str_to_type<int>(pars.substr(2,pars.length() - 2 - (nopref?1:0)));
-    int lon0 = lon2lon0(lon);
+    int lon0 = str_to_type<int>(pars.substr(2,pars.length() - 2 - (nopref?1:0)));
+    if (lon2lon0(lon0) != lon0) throw Err()
+      << "Bad central meridian for " << pars << " system. Should have 3+n*6 form.";
+
     int pref = (lon0<0 ? 60:0) + (lon0-3)/6 + 1;
     return "+ellps=krass +towgs84=+28,-130,-95 +proj=tmerc"
            " +lon_0=" + type_to_str(lon0) +

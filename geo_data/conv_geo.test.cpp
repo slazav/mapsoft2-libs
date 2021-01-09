@@ -38,9 +38,8 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
       "+ellps=krass +towgs84=+28,-130,-95 "
       "+proj=tmerc +lon_0=3 +x_0=1500000");
 
-    assert_eq(expand_proj_aliases("SU0"),
-      "+ellps=krass +towgs84=+28,-130,-95 "
-      "+proj=tmerc +lon_0=3 +x_0=1500000");
+    assert_err(expand_proj_aliases("SU0"),
+      "Bad central meridian for SU0 system. Should have 3+n*6 form.");
 
     assert_eq(expand_proj_aliases("SU-3N"),
       "+ellps=krass +towgs84=+28,-130,-95 "
@@ -50,9 +49,8 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
       "+ellps=krass +towgs84=+28,-130,-95 "
       "+proj=tmerc +lon_0=3 +x_0=500000");
 
-    assert_eq(expand_proj_aliases("SU0N"),
-      "+ellps=krass +towgs84=+28,-130,-95 "
-      "+proj=tmerc +lon_0=3 +x_0=500000");
+    assert_err(expand_proj_aliases("SU0N"),
+      "Bad central meridian for SU0N system. Should have 3+n*6 form.");
 
 
     std::string proj_wgs = "WGS";
