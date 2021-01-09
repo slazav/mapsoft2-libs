@@ -244,6 +244,7 @@ public:
       if (sx*w<1.0) sx = 1.0/w;
       if (sy*h<1.0) sy = 1.0/h;
       cr->scale(sx, sy);
+      patt->set_extend(Cairo::EXTEND_REPEAT);
       cr->set_source(patt);
       if (fill) cr->fill_preserve();
       else cr->paint();

@@ -727,8 +727,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
-    data->patt->set_extend(Cairo::EXTEND_REPEAT);
-    cr->set_source(data->patt);
   }
 
   // Set up image feature (points and areas)
@@ -738,7 +736,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
       data->patt->set_filter(data_f->flt);
     }
-    cr->set_source(data->patt);
   }
 
   // set up smooth feature
