@@ -26,6 +26,8 @@ ms2opt_add_mkref(GetOptSet & opts){
     "Map resolution, pixels per inch (\"nom\" and \"proj\" maps)");
   opts.add("mag", 1,0,g,
     "Map magnification (\"nom\" maps)");
+  opts.add("north", 0,0,g,
+    "Orient map to north (\"nom\" maps)");
   opts.add("margins",  1,0,g,
     "Map margins, pixels (\"nom\" and \"proj\" maps).");
   opts.add("top_margin", 1,0,g,
@@ -99,7 +101,8 @@ geo_mkref(const Opt & o){
 
     string proj_pulk = "SU_LL";
     // conversion map_projection -> pulkovo
-    ConvGeo cnv1(map.proj, proj_pulk);
+    ConvMulti cnv1;
+    cnv1.push_back(ConvGeo(map.proj, proj_pulk));
     // conversion pulkovo -> wgs84
     ConvGeo cnv2(proj_pulk);
 
@@ -110,6 +113,12 @@ geo_mkref(const Opt & o){
     // factor (map coordinates (m))/(map point)
     double k = (int)sc/mag * 25.4e-3 /*m/in*/ / map.image_dpi;
     cnv1.rescale_src(k); // now cnv1: map points -> pulkovo
+
+    // Orient to north (R in LL coordinates)
+    if (o.exists("north")){
+      double a = cnv1.bck_ang(R.cnt(), 0, 0.1);
+      cnv1.push_front(ConvAff2D(R.cnt(), a));
+    }
 
     // Border in map points (1pt accuracy);
     // We convert a closed line, then removing the last point.
