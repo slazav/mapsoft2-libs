@@ -221,7 +221,12 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
         case 1: l1.align = MAPDB_ALIGN_S; break;
         case 2: l1.align = MAPDB_ALIGN_SE; break;
       }
-      // todo: l.fsize ?
+      // Convert scale:
+      // In vmap format label scale is written
+      // as a correction to font size: -1, 0, +1, etc.
+      // Convert it to scaling factor using some
+      // "natural" font size.
+      if (l.fsize) l1.scale = (8.0 + l.fsize)/8.0;
 
       // add label and put its ID to object's children:
       o1.children.insert(add(l1));
@@ -415,6 +420,14 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
           l1.dir = 2; break;
       }
       l1.fsize = 0; // todo: convert scale?
+
+      // Convert scale:
+      // In vmap format label scale is written
+      // as a correction to font size: -1, 0, +1, etc.
+      // Convert it to scaling factor using some
+      // "natural" font size.
+      if (l.scale!=1.0) l1.fsize = rint(8.0*(l.scale-1));
+
       o1.labels.push_back(l1);
     }
     vmap_data.push_back(o1);
