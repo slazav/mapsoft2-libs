@@ -611,6 +611,7 @@ GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const d
   cr->save();
   cr->translate(pt.x, pt.y);
   cr->rotate(O.angle);
+  cr->scale(O.scale, O.scale);
   cr->move_to(sh);
   if (path) cr->text_path(O.name);
   else      cr->show_text(O.name);
