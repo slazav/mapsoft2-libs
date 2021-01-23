@@ -1038,6 +1038,8 @@ GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
     cr->mkpath_smline(brd, true, 0);
     cr->clip();
   }
-
-  return GObjMulti::draw(cr, draw_range);
+  cr->save();
+  auto ret = GObjMulti::draw(cr, draw_range);
+  cr->restore();
+  return ret;
 }
