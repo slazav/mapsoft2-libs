@@ -263,7 +263,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
       /// Commands with features
 
       // draw an object (point, line, area)
-      if (vs.size() > 2 && vs[0].find(':')!=std::string::npos) {
+      if (vs.size() > 1 && vs[0].find(':')!=std::string::npos) {
         st.reset(new DrawingStep(this));
         st->etype = MapDBObj::make_type(vs[0]);
         switch (st->etype >> 24) {
@@ -280,7 +280,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
       }
 
       // draw on the whole map
-      else if (vs.size() > 2 && vs[0] == "map") {
+      else if (vs.size() > 1 && vs[0] == "map") {
         st.reset(new DrawingStep(this));
         st->action = STEP_DRAW_MAP;
         st->step_name = vs[0];
@@ -290,7 +290,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
       }
 
       // draw border
-      else if (vs.size() > 2 && vs[0] == "brd") {
+      else if (vs.size() > 1 && vs[0] == "brd") {
         st.reset(new DrawingStep(this));
         st->action = STEP_DRAW_BRD;
         st->step_name = vs[0];
