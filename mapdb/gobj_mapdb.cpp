@@ -66,7 +66,7 @@ GObjMapDB::set_brd(const dMultiLine & brd) {
 
 /**********************************************************/
 
-GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o) {
+GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o): GObjMulti(false) {
 
   ptsize0 = 0;
   sc = 1.0;
@@ -698,6 +698,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     auto data = (FeatureOp *)features.find(FEATURE_OP)->second.get();
     cr->set_operator(data->op);
   }
+  else
+    cr->set_operator(Cairo::OPERATOR_OVER);
 
   // pix_align feature
   bool pix_al = false;
@@ -763,6 +765,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       for (auto & d:vd) d*=osc;
       cr->set_dash(vd, 0);
     }
+    else
+      cr->unset_dash();
 
     // Setup line cap
     if (features.count(FEATURE_CAP)){
