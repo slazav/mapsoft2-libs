@@ -36,6 +36,7 @@ where possible features are:
 
     stroke <color> <width> -- Draw a point, a line or an area contour.
     fill <color> -- Fill an area or the map.
+    clip         -- After drawing set clipping region for the path (area, text, map, border).
     patt <image file> <scale> [<dx>] [<dy>] -- Fill an area with the pattern.
     img  <image file> <scale> [<dx>] [<dy>] -- Draw an image (point or area)
     img_filter <flt>  -- Set image filter fast|good|best|nearest|bilinear
@@ -131,6 +132,7 @@ public:
     FEATURE_STROKE,     // draw the contour with some thickness and color
     FEATURE_FILL,       // fill the area with some color
     FEATURE_PATT,       // fill the area with a pattern
+    FEATURE_CLIP,       // set clipping path
     FEATURE_IMG,        // draw an image
     FEATURE_IMG_FILTER, // set image filter
     FEATURE_SMOOTH,     // set line smoothing
@@ -208,6 +210,12 @@ public:
     FeatureFill(const std::vector<std::string> & vs){
       check_args(vs, {"<fill color>"});
       col = str_to_type<uint32_t>(vs[0]);
+    }
+  };
+
+  struct FeatureClip : Feature {
+    FeatureClip(const std::vector<std::string> & vs){
+      check_args(vs, {});
     }
   };
 

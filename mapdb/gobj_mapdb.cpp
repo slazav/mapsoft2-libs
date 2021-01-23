@@ -330,6 +330,15 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         continue;
       }
 
+      // clip
+      if (ftr == "clip"){
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_MAP |
+                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->features.emplace(FEATURE_CLIP,
+          std::shared_ptr<Feature>(new FeatureClip(vs)));
+        continue;
+      }
+
       // patt <file> <scale>
       if (ftr == "patt"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP |
@@ -803,7 +812,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
          action == STEP_DRAW_AREA) &&
         (features.count(FEATURE_STROKE) ||
          features.count(FEATURE_FILL) ||
-         features.count(FEATURE_PATT)) ){
+         features.count(FEATURE_PATT) )){
 
       // make path for Lines or Circles
       if (features.count(FEATURE_LINES) ||
@@ -895,6 +904,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (action == STEP_DRAW_TEXT &&
         (features.count(FEATURE_STROKE) ||
          features.count(FEATURE_FILL) ||
+         features.count(FEATURE_CLIP) ||
          features.count(FEATURE_PATT)) ){
       draw_text(O, cr, range, true, pix_al);
     }
@@ -951,9 +961,33 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     }
   }
 
+  // clip feature for areas: make a single path for all objects:
+  if ((action == STEP_DRAW_AREA) &&
+        features.count(FEATURE_CLIP)) {
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (!intersect(O.bbox(), sel_range)) continue;
+      convert_coords(O);
+      cr->begin_new_path();
+      cr->mkpath_smline(O, close, sm);
+    }
+    cr->clip();
+  }
+
+  // clip feature for text: make a single path for all objects:
+  if ((action == STEP_DRAW_TEXT) && features.count(FEATURE_CLIP)) {
+    for (auto const i: ids){
+      auto O = map->get(i);
+      if (!intersect(O.bbox(), sel_range)) continue;
+      convert_coords(O);
+      cr->begin_new_path();
+      draw_text(O, cr, range, true, pix_al);
+    }
+    cr->clip();
+  }
+
   // MAP drawing step:
   if (action == STEP_DRAW_MAP) {
-
     // Pattern feature
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
@@ -966,9 +1000,12 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       }
       data->draw_patt(cr,scx,scy,false);
     }
-
     // Fill feature
     if (features.count(FEATURE_FILL)) cr->paint();
+
+    // Clip feature
+    if (features.count(FEATURE_CLIP))
+      cr->reset_clip();
   }
 
   // BRD drawing step:
@@ -1010,7 +1047,12 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       cr->set_color_a(data->col);
       cr->stroke_preserve();
     }
+
+    // Clip feature
+    if (features.count(FEATURE_CLIP))
+      cr->clip();
   }
+
 
   return GObj::FILL_PART;
 }
