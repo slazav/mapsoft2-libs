@@ -151,7 +151,7 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
   for (auto const & p:data){
     if (!p.second.on) continue;
     if (is_stopped()) return GObj::FILL_NONE;
-    cr->save();
+    if (isolate) cr->save();
     auto o = p.second.obj;
     try {
       auto lk = o->get_lock();
@@ -160,7 +160,7 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
           res!=GObj::FILL_ALL) res=res1;
     }
     catch (std::exception & e) { process_error(e); }
-    cr->restore();
+    if (isolate) cr->restore();
   }
   return res;
 }

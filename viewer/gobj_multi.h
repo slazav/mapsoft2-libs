@@ -47,10 +47,15 @@ private:
   int redraw_counter; // counter used for ignoring sub-obj signals:
                       // -1 - emit signal, >=0 - only increase the counter.
 
+  // Isolate sub-objects from each other by calling
+  // save/restore on the Cairo::Context. Default: true.
+  bool isolate;
+
 public:
 
   // constructor
-  GObjMulti(): error_policy(GOBJ_MULTI_ERR_WARN), redraw_counter(-1) {}
+  GObjMulti(bool isolate=true):
+    error_policy(GOBJ_MULTI_ERR_WARN), redraw_counter(-1), isolate(isolate) {}
 
   // Add new object at some depth (larger depth - earlier the object is drawn)
   void add(int depth, std::shared_ptr<GObj> o);
