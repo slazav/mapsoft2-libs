@@ -117,8 +117,8 @@ geo_mkref_opts(const Opt & o){
     ConvGeo cnv2(proj_pulk);
 
     // map resolution
-    map.image_dpi = o.get("dpi",300);
-    double mag = o.get("mag",1);
+    map.image_dpi = o.get<double>("dpi",300.0);
+    double mag = o.get<double>("mag",1.0);
 
     // factor (map coordinates (m))/(map point)
     double k = (int)sc/mag * 25.4e-3 /*m/in*/ / map.image_dpi;
@@ -219,7 +219,7 @@ geo_mkref_opts(const Opt & o){
     map.proj = "WEB";
 
     // map magnification
-    double mag = o.get("mag",1);
+    double mag = o.get<double>("mag",1.0);
 
     // find coordinates of opposite corners:
     dPoint tlc = G ? tcalc.gtile_to_range(tile_range.blc(),z).blc():
@@ -365,7 +365,7 @@ GeoMap geo_mkref_data(const GeoData & data, const Opt & o){
     map.update_size();
 
     // apply --mag option
-    if (o.exists("mag")) map*=o.get("mag", 1.0);
+    if (o.exists("mag")) map*=o.get<double>("mag", 1.0);
 
     // join borders and bboxes of all maps (in wgs coords):
     map.border = dMultiLine();
