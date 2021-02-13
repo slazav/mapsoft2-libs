@@ -12,6 +12,8 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
     "draw SRTM color surface (default 1).");
   opts.add("srtm_maxsc", 1,0,g,
     "Do not draw srtm data out of this scale (default 15).");
+  opts.add("srtm_maxscv", 1,0,g,
+    "Do not draw srtm contours out of this scale (default 1.0).");
   opts.add("srtm_cnt",1,0,g,
     "Draw contours (0|1, default - 1).");
   opts.add("srtm_cnt_step",1,0,g,
@@ -57,8 +59,8 @@ GObjSRTM::get_def_opt(){
   Opt o =SRTM::get_def_opt();
 
   o.put("srtm_surf",    1);
-  o.put("srtm_maxsc",   15);
-  o.put("srtm_maxscv",  0.5);
+  o.put("srtm_maxsc",   15.0);
+  o.put("srtm_maxscv",  1.0);
 
   // contours parameters
   o.put("srtm_cnt",       1);
@@ -96,7 +98,7 @@ GObjSRTM::set_opt(const Opt & o){
   surf = o.get("srtm_surf", 1);
 
   maxsc    = o.get<double>("srtm_maxsc",   15);
-  maxscv   = o.get<double>("srtm_maxscv",  0.5);
+  maxscv   = o.get<double>("srtm_maxscv",  1);
 
   // contours parameters
   cnt          = o.get<bool>("srtm_cnt",      1);
@@ -152,6 +154,10 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
        }
       }
       cr->set_source(image_to_surface(image), draw_range.x, draw_range.y);
+      cr->paint();
+    }
+    else {
+      cr->set_color(srtm->get_bgcolor());
       cr->paint();
     }
   }
@@ -214,8 +220,13 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
         dPoint p0 = d.first;
         cnv->bck(p0);
         cr->move_to(p0 + dPoint(2,2));
-        cr->show_text(type_to_str(d.second));
+        cr->text_path(type_to_str(d.second));
       }
+      cr->set_line_width(2);
+      cr->set_color(0xFFFFFFFF);
+      cr->stroke_preserve();
+      cr->set_color(peaks_color);
+      cr->fill();
     }
   }
 
