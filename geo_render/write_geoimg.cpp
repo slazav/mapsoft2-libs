@@ -53,18 +53,11 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   int zmin = opts.get("zmin", 0);
   int zmax = opts.get("zmax", 0);
 
-  // For rendering tiles we do not need to use the user-supply reference.
-  // The problem is that we may want to have border, which is normally
-  // comes with the reference.
-
-  // There is a workaround: to process border options separately, in the
-  // same way as it is done in geo_mkref().
-
-  dMultiLine brd;
+  dMultiLine brd = ref.border;
   // if there is a reference:
-  if (ref.ref.size()) {
+  if (!ref.empty()) {
     ConvMap cnv0(ref); // conversion original map->wgs
-    brd = cnv0.frw_acc(ref.border); // -> wgs
+    brd = cnv0.frw_acc(brd); // -> wgs
   }
   GeoTiles tcalc;  // tile calculator
 
@@ -78,9 +71,16 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   o.erase("border_wgs");
   o.erase("border_file");
 
+  dRect bbox;
+  if (brd.size()) bbox = brd.bbox();
+  else bbox = obj.bbox();
+
+  if (bbox.is_empty()) throw Err() <<
+    "Error calculating tile range. Try to set non-empty boundary";
+
   // for each zoom level
   for (int z = zmax; z>=zmin; --z){
-    iRect tiles = tcalc.range_to_gtiles(obj.bbox(),z); // tile range
+    iRect tiles = tcalc.range_to_gtiles(bbox,z); // tile range
 
     // render tiles
     for (int y = tiles.y; y < tiles.y + tiles.h; y++){
