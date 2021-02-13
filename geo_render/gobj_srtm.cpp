@@ -202,8 +202,10 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw peaks
   if (peaks && sc < maxscv) {
+
     auto srtm_lock = srtm->get_lock();
-    auto p_data = srtm->find_peaks(wgs_range, peaks_dh, peaks_ps);
+    dRect p_range = cnv->frw_acc(expand(draw_range,peaks_text_size*4));
+    auto p_data = srtm->find_peaks(p_range, peaks_dh, peaks_ps);
     cr->set_color(peaks_color);
     cr->set_line_width(peaks_w);
     for (auto & d:p_data){
