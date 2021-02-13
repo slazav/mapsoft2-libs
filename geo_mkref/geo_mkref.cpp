@@ -396,8 +396,7 @@ GeoMap geo_mkref_data(const GeoData & data, const Opt & o){
   for (auto const & t:data.trks) bbox.expand(t.bbox());
   for (auto const & w:data.wpts) bbox.expand(w.bbox());
 
-  if (bbox.is_empty())
-    throw Err() << "Can't build map reference: use --mkref option";
+  if (bbox.is_empty()) return GeoMap();
 
   opts.put("coords_wgs", bbox);
   //opts.put("coords_wgs", data.bbox());

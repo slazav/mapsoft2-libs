@@ -155,6 +155,9 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     return;
   }
 
+  if (ref.empty()) throw Err() <<
+    "Can't build map reference: use --mkref option";
+
   std::string fmt;
   if      (file_ext_check(fname, ".pdf"))  fmt="pdf";
   else if (file_ext_check(fname, ".ps"))   fmt="ps";
