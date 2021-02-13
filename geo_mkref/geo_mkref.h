@@ -38,6 +38,7 @@ void ms2opt_add_mkref_data(GetOptSet & opts);
 GeoMap geo_mkref_opts(const Opt & o);
 
 // update map border from options
+// if reference is empty, use WGS84 coordinates
 void geo_mkref_brd(GeoMap & ref, const Opt & o);
 
 // make map reference from data

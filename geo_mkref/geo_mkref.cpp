@@ -326,29 +326,32 @@ geo_mkref_opts(const Opt & o){
 void
 geo_mkref_brd(GeoMap & ref, const Opt & o){
   o.check_conflict({"border_wgs", "border_file"});
-  dMultiLine brd;
 
   if (o.exists("border_wgs")){
-    brd = o.get<dMultiLine>("border_wgs");
+    ref.border = o.get<dMultiLine>("border_wgs");
+    if (!ref.empty()){
+      ConvMap cnv(ref);
+      ref.border = cnv.bck_acc(ref.border);
+    }
+    return;
   }
 
-  else if (o.exists("border_file")){
+  if (o.exists("border_file")){
     std::string name = o.get("border_file");
     GeoData d;
     read_geo(name, d);
     if (d.trks.size()<1) throw Err()
       << "mkref: can't read any track from border_file: " << name;
-    brd = *d.trks.begin();
-    brd.flatten(); // remove z component
+    ref.border = *d.trks.begin();
+    ref.border.flatten(); // remove z component
+    if (!ref.empty()){
+      ConvMap cnv(ref);
+      ref.border = cnv.bck_acc(ref.border);
+    }
+    return;
   }
 
-  else {return;}
-
-  if (brd.size()){
-    ConvMap cnv(ref);
-    ref.border = cnv.bck_acc(brd);
-  }
-
+  return;
 }
 
 // try to get some information from GeoData if there is
