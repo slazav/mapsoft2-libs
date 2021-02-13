@@ -15,8 +15,8 @@
 using namespace std;
 
 void
-ms2opt_add_mkref(GetOptSet & opts){
-  const char *g = "MKREF";
+ms2opt_add_mkref_opts(GetOptSet & opts){
+  const char *g = "MKREF_OPTS";
   opts.add("mkref", 1,0,g,
     "Choose map type (nom, google_tile, tms_tile, proj)");
   opts.add("name", 1,0,g,
@@ -55,11 +55,6 @@ ms2opt_add_mkref(GetOptSet & opts){
   opts.add("border", 1,0,g,
     "Map border in projection coordinates (For --mkref=\"proj\" maps), "
     "a line or a multi-segment line.");
-  opts.add("border_wgs", 1,0,g,
-    "Set map border in wgs84 coordinates "
-    "(argument is a line or a multi-segment line).");
-  opts.add("border_file", 1,0,g,
-    "Set map border from track in a file.");
   opts.add("proj", 1,0,g,
     "Projection setting, \"libproj\" parameter string "
     "(e.g. \"+datum=WGS84 +proj=lonlat\") "
@@ -71,17 +66,32 @@ ms2opt_add_mkref(GetOptSet & opts){
     "1000m/cm for metric projections.");
 }
 
+void
+ms2opt_add_mkref_brd(GetOptSet & opts){
+  const char *g = "MKREF_BRD";
+  opts.add("border_wgs", 1,0,g,
+    "Set map border in wgs84 coordinates "
+    "(argument is a line or a multi-segment line).");
+  opts.add("border_file", 1,0,g,
+    "Set map border from track in a file.");
+}
+
+void
+ms2opt_add_mkref_data(GetOptSet & opts){
+  const char *g = "MKREF_DATA";
+  opts.add("mag", 1,0,g,
+    "When using existing map as a reference source, rescale it.");
+}
+
 
 /********************************************************************/
 
 GeoMap
-geo_mkref(const Opt & o){
+geo_mkref_opts(const Opt & o){
   GeoMap map;
   GeoTiles tcalc;
 
-  if (!o.exists("mkref"))
-    throw Err() << "geo_mkref: reference type (option ref) should be set";
-
+  if (!o.exists("mkref")) return GeoMap();
   string reftype = o.get("mkref","");
 
   /***************************************/
@@ -308,28 +318,21 @@ geo_mkref(const Opt & o){
     throw Err() << "geo_mkref: unknown reference type: " << reftype;
   }
 
-  // Set border
-  dMultiLine brd;
-  geo_mkref_brd(o, brd);
-  if (brd.size()){
-    ConvMap cnv(map);
-    map.border = cnv.bck_acc(brd);
-  }
-
   return map;
 }
 
 
-// update border (WGS84) from options
+// update map border from options
 void
-geo_mkref_brd(const Opt & o, dMultiLine & brd){
+geo_mkref_brd(GeoMap & ref, const Opt & o){
   o.check_conflict({"border_wgs", "border_file"});
+  dMultiLine brd;
 
   if (o.exists("border_wgs")){
     brd = o.get<dMultiLine>("border_wgs");
   }
 
-  if (o.exists("border_file")){
+  else if (o.exists("border_file")){
     std::string name = o.get("border_file");
     GeoData d;
     read_geo(name, d);
@@ -338,14 +341,19 @@ geo_mkref_brd(const Opt & o, dMultiLine & brd){
     brd = *d.trks.begin();
     brd.flatten(); // remove z component
   }
+
+  else {return;}
+
+  if (brd.size()){
+    ConvMap cnv(ref);
+    ref.border = cnv.bck_acc(brd);
+  }
+
 }
 
 // try to get some information from GeoData if there is
 // no "mkref" option.
-GeoMap geo_mkref(const GeoData & data, const Opt & o){
-
-  // If "mkref" option exists build reference using options
-  if (o.exists("mkref")) return geo_mkref(o);
+GeoMap geo_mkref_data(const GeoData & data, const Opt & o){
 
   // If there is at list one map - use its reference.
   // This map will have the best quality.
@@ -375,9 +383,6 @@ GeoMap geo_mkref(const GeoData & data, const Opt & o){
     // shift map reference to include bbox, set image size
     map -= bbox.tlc();
     map.image_size = bbox.brc()-bbox.tlc();
-
-    // use border_* options to modify the border
-    geo_mkref_brd(o, map.border);
     return map;
   }
 
@@ -397,7 +402,7 @@ GeoMap geo_mkref(const GeoData & data, const Opt & o){
   opts.put("coords_wgs", bbox);
   //opts.put("coords_wgs", data.bbox());
 
-  return geo_mkref(opts);
+  return geo_mkref_opts(opts);
 }
 
 GeoMap

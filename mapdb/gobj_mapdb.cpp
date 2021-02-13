@@ -172,7 +172,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
           o.put("mkref", "nom");
           o.put("name", vs[2]);
           o.put("dpi", vs[3]);
-          set_ref( geo_mkref(o), true );
+          set_ref( geo_mkref_opts(o), true );
         }
         else throw Err() << "set_ref command: 'file' or 'nom' word is expected";
         continue;

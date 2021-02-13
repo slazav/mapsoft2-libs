@@ -14,24 +14,34 @@ Following map fields are set:
   map.image_size -- map image size (in pixels)
   map.border -- map border (in pixels)
   map.ref -- four reference points
+
+One can use following code to create map reference:
+  GeoMap ref = geo_mkref_opts(o);  // create map from --mkref options if possible
+  if (ref.empty())
+    ref = geo_mkref_data(data, o);
+  geo_mkref_brd(ref, o); // update border;
+
 */
 
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MKREF group of options
-void ms2opt_add_mkref(GetOptSet & opts);
+// add MKREF_OPTS, MKREF_BRD, MKREF_DATA group of options
+void ms2opt_add_mkref_opts(GetOptSet & opts);
+void ms2opt_add_mkref_brd(GetOptSet & opts);
+void ms2opt_add_mkref_data(GetOptSet & opts);
 
 /********************************************************************/
 
-GeoMap geo_mkref(const Opt & o);
+// Make map reference from --mkref options, return empty
+// map if --mkref does not exist.
+GeoMap geo_mkref_opts(const Opt & o);
 
-// try to get some information from GeoData if there is
-// no mkref option
-GeoMap geo_mkref(const GeoData & data, const Opt & o);
+// update map border from options
+void geo_mkref_brd(GeoMap & ref, const Opt & o);
 
-// update border (WGS84) from options
-void geo_mkref_brd(const Opt & o, dMultiLine & brd);
+// make map reference from data
+GeoMap geo_mkref_data(const GeoData & data, const Opt & o);
 
 // create default web-mercator projection (256x256 image)
 GeoMap geo_mkref_web();

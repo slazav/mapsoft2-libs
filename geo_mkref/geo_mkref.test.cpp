@@ -21,7 +21,7 @@ main(){
     { // nomenclature map with margins
       Opt o = Opt("{\"mkref\":\"nom\", \"name\":\"n37-001\", \"dpi\":\"200\"}");
 
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
       assert_eq(map.name, "n37-001");
       assert_eq(map.proj, "SU39");
       assert_eq(map.image_dpi, 200);
@@ -42,7 +42,7 @@ main(){
     { // nomenclature map with margins
       Opt o = Opt("{\"mkref\":\"nom\", \"name\":\"n37-001\", \"dpi\":\"100\","
                   "\"margins\": \"100\", \"top_margin\": \"200\" }");
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
       assert_eq(map.name, "n37-001");
       assert_eq(map.proj, "SU39");
       assert_eq(map.image_dpi, 100);
@@ -68,7 +68,7 @@ main(){
       o.put("left_margin",18);
       o.put("bottom_margin",775-16-747);
       o.put("right_margin",733-18-702);
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
       assert_eq(map.name, "m47-022");
       assert_eq(map.proj, "SU99");
       assert_eq(map.image_dpi, 50);
@@ -91,8 +91,8 @@ main(){
     /**** tms/google tiles ****/
 
     { // single TMS tile
-      GeoMap map = geo_mkref(Opt("{\"mkref\": \"tms_tile\", \"tiles\": \"[1,1,10]\"}"));
-      GeoMap map1 = geo_mkref(Opt("{\"mkref\": \"tms_tile\", \"tiles\": \"[1,1]\", \"zindex\":\"10\"}"));
+      GeoMap map = geo_mkref_opts(Opt("{\"mkref\": \"tms_tile\", \"tiles\": \"[1,1,10]\"}"));
+      GeoMap map1 = geo_mkref_opts(Opt("{\"mkref\": \"tms_tile\", \"tiles\": \"[1,1]\", \"zindex\":\"10\"}"));
       assert(map1 == map);
 
       assert_eq(map.name, "[1,1,1,1]");
@@ -110,7 +110,7 @@ main(){
     }
 
     { // 2x3 TMS tile range
-      GeoMap map = geo_mkref(Opt("{\"mkref\": \"tms_tile\", \"tiles\": \"[1,1,2,3]\", \"zindex\":\"3\"}"));
+      GeoMap map = geo_mkref_opts(Opt("{\"mkref\": \"tms_tile\", \"tiles\": \"[1,1,2,3]\", \"zindex\":\"3\"}"));
       assert_eq(map.name, "[1,1,2,3]");
       assert_eq(map.proj, "WEB");
       assert_eq(map.image_dpi, 300);
@@ -126,7 +126,7 @@ main(){
     }
 
     { // single TMS tile covering a given point
-      GeoMap map = geo_mkref(Opt("{\"mkref\": \"tms_tile\", \"coords_wgs\": \"[64.0,32.0]\", \"zindex\":\"3\"}"));
+      GeoMap map = geo_mkref_opts(Opt("{\"mkref\": \"tms_tile\", \"coords_wgs\": \"[64.0,32.0]\", \"zindex\":\"3\"}"));
       assert_eq(map.name, "[5,4,1,1]");
       assert_eq(map.proj, "WEB");
       assert_eq(map.image_dpi, 300);
@@ -142,7 +142,7 @@ main(){
     }
 
     { // single google tile covering a given point
-      GeoMap map = geo_mkref(Opt("{\"mkref\": \"google_tile\", \"coords_wgs\": \"[64.0,32.0]\", \"zindex\":\"3\"}"));
+      GeoMap map = geo_mkref_opts(Opt("{\"mkref\": \"google_tile\", \"coords_wgs\": \"[64.0,32.0]\", \"zindex\":\"3\"}"));
       assert_eq(map.name, "[5,3,1,1]");
       assert_eq(map.proj, "WEB");
       assert_eq(map.image_dpi, 300);
@@ -158,11 +158,13 @@ main(){
     }
 
     { // tms tiles covering a triangular area.
-      GeoMap map = geo_mkref(Opt("{"
+      Opt o("{"
         "\"mkref\": \"tms_tile\", "
         "\"border_wgs\": \"[[64,32],[65,31],[63,29]]\", "
         "\"coords_wgs\": \"[[64,32],[65,31],[63,29]]\", "
-        "\"zindex\":\"7\"}"));
+        "\"zindex\":\"7\"}");
+      GeoMap map = geo_mkref_opts(o);
+      geo_mkref_brd(map, o);
       assert_eq(map.name, "[86,74,2,3]");
       assert_eq(map.proj, "WEB");
       assert_eq(map.image_dpi, 300);
@@ -178,7 +180,7 @@ main(){
     }
 
     { // single google tile covering a given point -- write map for manual test
-      GeoMap map = geo_mkref(Opt("{"
+      GeoMap map = geo_mkref_opts(Opt("{"
         "\"mkref\": \"google_tile\", "
         "\"coords_wgs\": \"[26.77188,61.33552]\", "
         "\"zindex\":\"14\"}"));
@@ -208,7 +210,7 @@ main(){
       o.put("proj", "SU39");
       o.put("coords", "[7376000,6208000,2000,2000]");
       o.put("scale", 1000);
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
 
       assert_eq(map.name, "");
       assert_eq(map.proj, "SU39");
@@ -232,7 +234,7 @@ main(){
       o.put("scale", 1000);
       o.put("coords", L);
       o.put("border", L);
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
       assert_eq(map.name, "");
       assert_eq(map.proj, "SU39");
       assert_eq(map.image_dpi, 300);
@@ -256,7 +258,7 @@ main(){
       o.put("proj", "SU27");
       o.put("scale", 250);
       o.put("coords_wgs", L.bbox());
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
 
       assert_eq(map.name, "");
       assert_eq(map.proj, "SU27");
@@ -285,7 +287,8 @@ main(){
       o.put("margins", 10);
       o.put("left_margin", 5);
       o.put("top_margin", 15);
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
+      geo_mkref_brd(map,o);
       assert_eq(map.name, "");
       assert_eq(map.proj, "SU27");
       assert_eq(map.image_dpi, 300);
@@ -308,7 +311,7 @@ main(){
       o.put("coords", "[17552000,5624000,12000,6000]");
       o.put("dpi", 200);
       o.put("scale", 1000);
-      GeoMap map = geo_mkref(o);
+      GeoMap map = geo_mkref_opts(o);
       assert_eq(map.name, "");
       assert_eq(map.proj, "SU99");
       assert_eq(map.image_dpi, 200);
