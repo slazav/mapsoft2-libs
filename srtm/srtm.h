@@ -145,6 +145,7 @@ class SRTM {
     uint32_t get_color(const dPoint & p) {
       return get_color(get_val_int4(p), get_slope_int4(p));}
 
+    uint32_t get_bgcolor() const {return bgcolor;}
 
     // make vector data: contours
     std::map<short, dMultiLine> find_contours(const dRect & range, int step);
