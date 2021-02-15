@@ -81,6 +81,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   // for each zoom level
   for (int z = zmax; z>=zmin; --z){
     iRect tiles = tcalc.range_to_gtiles(bbox,z); // tile range
+    tiles.intersect(iRect(0,0, pow(2,z), pow(2,z)));
 
     // render tiles
     for (int y = tiles.y; y < tiles.y + tiles.h; y++){
