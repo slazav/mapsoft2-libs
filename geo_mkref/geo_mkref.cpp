@@ -235,6 +235,7 @@ geo_mkref_opts(const Opt & o){
 
     pts_r.flip_y(map.image_size.y);
     map.add_ref(pts_r, pts_w);
+    map.border.push_back(pts_r);
   }
 
   /***************************************/
@@ -294,11 +295,14 @@ geo_mkref_opts(const Opt & o){
     map.add_ref(pts_r, pts_w);
 
     // Border in proj coordinates
-    dMultiLine brd;
-    if (o.exists("border"))
-      brd = o.get("border", dMultiLine())/k;
-    map.border = rint(brd - range.tlc());
-    map.border.flip_y(range.h);
+    if (o.exists("border")){
+      dMultiLine brd = o.get("border", dMultiLine())/k;
+      map.border = rint(brd - range.tlc());
+      map.border.flip_y(range.h);
+    }
+    else {
+      map.border.push_back(pts_r);
+    }
 
     // image_size
     map.image_size = dPoint(range.w, range.h);
