@@ -139,3 +139,47 @@ std::vector<std::string> read_words(
   if ((str!="") | qq) ret.push_back(str);
   return ret;
 }
+
+std::string
+join_words(const std::vector<std::string> & words){
+  std::string ret;
+  for (auto const & w:words) {
+
+    auto str(w);
+    std::string::size_type pos;
+
+    pos = 0u;
+    while((pos = str.find("\\", pos)) != std::string::npos){
+      str.insert(pos, 1, '\\');
+      pos += 2;
+    }
+
+    pos = 0u;
+    while((pos = str.find("\"", pos)) != std::string::npos){
+      str.insert(pos, 1, '\\');
+      pos += 2;
+    }
+
+    pos = 0u;
+    while((pos = str.find("\'", pos)) != std::string::npos){
+      str.insert(pos, 1, '\\');
+      pos += 2;
+    }
+
+    pos = 0u;
+    while((pos = str.find("#", pos)) != std::string::npos){
+      str.insert(pos, 1, '\\');
+      pos += 2;
+    }
+    bool qq = (str.find(' ') != std::string::npos ||
+               str.find('\t') != std::string::npos ||
+               str.find('\n') != std::string::npos ||
+               str.size()==0);
+
+    if (ret.size()) ret += ' ';
+    if (qq) ret+='\"';
+    ret+=str;
+    if (qq) ret+='\"';
+  }
+  return ret;
+}

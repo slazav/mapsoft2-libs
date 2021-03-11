@@ -35,6 +35,13 @@ std::vector<std::string> read_words(
    std::istream & ss, int line_num[] = NULL, const bool lc=false);
 ```
 
+## join_words
+
+Inverse operation: join all "words" to have string readable for `read_words()`.
+- All `\` and `"` are replaced with `\\` and `\"`.
+- Characters `\`, `#`, `'`, and `"` are protected with `\`.
+- All words are joined with space character between them.
+
 ## read_conf
 
 This is an example of using `read_words`.
@@ -52,6 +59,10 @@ Opt read_conf(const std::string & fname,
 
 ------------
 ## Changelog:
+
+2021.03.11 V.Zavjalov 1.7:
+- raw mode: read everything as a single string
+- join_words(): inverse operation, join all "words" to have string readable for read_words
 
 2020.09.30 V.Zavjalov 1.6:
 - allow empty words, '' or "".

@@ -3,6 +3,7 @@
 #include <iostream>
 #include "read_words.h"
 #include "err/err.h"
+#include "err/assert_err.h"
 
 int
 main(int argc, const char* argv[]){
@@ -21,11 +22,23 @@ main(int argc, const char* argv[]){
 
       if (raw) {
         if (vs.size()) std::cout << "> " << vs[0];
+        continue;
       }
-      else {
-        std::cout << N[0] << "-" << N[1] << ":";
-        for (auto const & i:vs) std::cout << " [" << i << "]";
-        std::cout << "\n";
+
+      std::cout << N[0] << "-" << N[1] << ":";
+      for (auto const & i:vs) std::cout << " [" << i << "]";
+      std::cout << "\n";
+
+      // test join_words
+      std::string str = join_words(vs);
+      std::istringstream ss(str);
+
+      std::vector<std::string> vs1 = read_words(ss, NULL, false, false);
+      std::vector<std::string> vs2 = read_words(ss, NULL, false, false);
+      assert_eq(vs2.size(), 0 );
+      assert_eq(vs1.size(), vs.size());
+      for (size_t i = 0; i<vs1.size(); i++){
+        assert_eq(vs[i], vs1[i]);
       }
 
     }

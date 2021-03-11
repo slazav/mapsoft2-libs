@@ -32,5 +32,16 @@ std::vector<std::string> read_words(
   const bool raw = false
 );
 
+
+/* Inverse operation: join all "words" to have string readable for read_words().
+- Characters `\`, `#`, `'`, and `"` are protected with `\`.
+- If a word contais `  `, `\t` or `\n` or it is empty, it is surrounded with `"`.
+- All words are joined with " " character between them.
+*/
+std::string join_words(const std::vector<std::string> & words);
+
+
+
+
 ///@}
 #endif
