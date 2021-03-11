@@ -25,6 +25,11 @@ Read one line from the stream and extract words, separated by spaces.
 
  - If lc parameter is true then all Latin characters are converted to lower case.
 
+ - If raw parameter is true, read everything as a single string, without
+   processing special characters. This is useful if one wants to read
+   a single "line" which can be sent to another program which uses read_words
+   to read it.
+
 ```c++
 std::vector<std::string> read_words(
    std::istream & ss, int line_num[] = NULL, const bool lc=false);

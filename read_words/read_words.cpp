@@ -2,7 +2,8 @@
 #include "read_words.h"
 
 std::vector<std::string> read_words(
-      std::istream & ss, int line_num[2], const bool lc) {
+      std::istream & ss, int line_num[2],
+      const bool lc, const bool raw) {
 
   bool first = true;
   std::string str;
@@ -14,6 +15,7 @@ std::vector<std::string> read_words(
 
     // read stream char by char
     for (char c; ss.get(c); !ss.eof()){
+      if (raw) str += c;
 
       if (c == '\n' && line_num) line_num[1]++;
 
@@ -33,12 +35,16 @@ std::vector<std::string> read_words(
       // escape character (all chars including newline can be escaped!)
       if (c == '\\') {
         ss.get(c);
+        if (raw) str += c;
         switch (c) {
           //protected \n works as word separator:
           case '\n':
             if (line_num) line_num[1]++;
-            if (str!="" || qq) ret.push_back(str);
-            str=""; qq=false;
+            if ((str!="" || qq) && !raw){
+              ret.push_back(str);
+              str="";
+            }
+            qq=false;
             continue;
           // standard ANSI escape sequences + '#', space, tab:
           case 'a': c = '\a'; break;
@@ -67,6 +73,7 @@ std::vector<std::string> read_words(
                 ss.unget();
                 break;
               }
+              if (raw) str += c1;
               c = (c<<3) + (c1-'0');
             }
             break;
@@ -75,6 +82,10 @@ std::vector<std::string> read_words(
             char c1,c2;
             ss.get(c1);
             ss.get(c2);
+            if (raw) {
+              str += c1;
+              str += c2;
+            }
             if (c1>='0' && c1<='9') c1-='0';
             else if (c1>='A' && c1<='F') c1-='A'-10;
             else if (c1>='a' && c1<='f') c1-='a'-10;
@@ -100,8 +111,10 @@ std::vector<std::string> read_words(
 
       // space -- word separaters unless quoted
       if (!quote1 && !quote2 && (c == ' ' || c == '\t')){
-         if (str!="" || qq) ret.push_back(str);
-         str=""; qq=false;
+         if ((str!="" || qq) && !raw){
+           ret.push_back(str);
+           str="";
+         } qq=false;
          continue;
       }
 
@@ -110,7 +123,7 @@ std::vector<std::string> read_words(
 
       // append normal characters
       add_char:
-      str += c;
+      if (!raw) str += c;
       if (first && line_num) {line_num[0] = line_num[1]+1; first=false;}
     }
 

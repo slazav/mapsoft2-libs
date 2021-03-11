@@ -26,6 +26,9 @@ c] [de	f]
 EOF
 )"
 
+assert "$(cat test_data/read_words1 | "$prog" -r)" \
+"$(cat test_data/read_words1r)"
+
 # same with lowercase option
 assert "$(cat test_data/read_words1 | "$prog" -l)" \
 "$(cat <<EOF
@@ -39,6 +42,8 @@ c] [de	f]
 EOF
 )"
 
+assert "$(cat test_data/read_words1 | "$prog" -r -l)" \
+"$(cat test_data/read_words1r)"
 
 
 assert "$(cat test_data/read_words2 | "$prog")" \
@@ -54,6 +59,9 @@ b
 c]
 EOF
 )"
+
+assert "$(cat test_data/read_words2 | "$prog" -r)" \
+"$(cat test_data/read_words2r)"
 
 assert "$(cat test_data/read_words3 | "$prog")" \
 "$(cat <<EOF
@@ -71,6 +79,9 @@ assert "$(cat test_data/read_words3 | "$prog")" \
 ]
 EOF
 )"
+
+assert "$(cat test_data/read_words3 | "$prog" -r)" \
+"$(cat test_data/read_words3r)"
 
 
 assert "$(echo abcdez | "$prog")" "1-1: [abcdez]"
