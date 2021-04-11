@@ -348,8 +348,10 @@ nom_to_range(const string & key, nom_scale_t & scale, bool ex){
 
 string
 pt_to_nom(dPoint p, const nom_scale_t sc, const bool single){
-    if ((p.x <-180) || (p.x>180) || (p.y<-90) || (p.y>90))
+    if ((p.y<-90) || (p.y>90))
       throw Err() << "pt_to_nom: bad coordinates: " << p;
+    while (p.x<-180) p.x+=360;
+    while (p.x>+180) p.x-=360;
 
     char A = 'a' + (int)floor(fabs(p.y)/4);
     int  B = 31 +  (int)floor(p.x/6);
@@ -517,11 +519,20 @@ nom_shift(const std::string & name, const iPoint & shift, const bool single){
 set<string>
 range_to_nomlist(const dRect & range, const nom_scale_t rscale, const bool single){
   set<string> ret;
+  nom_scale_t sc1;
   dPoint delta(1e-9, 1e-9);
+
+  // shift range to lon=-180..180
+  double sh = 0;
+  while (range.tlc().x + sh < -180) sh +=360;
+  while (range.tlc().x + sh > +180) sh -=360;
 
   string name=pt_to_nom(range.tlc()+delta, rscale, single);
   if (name == "") return ret;
   ret.insert(name);
+
+  // range of the tlc tile
+  auto r0 = nom_to_range(name, sc1, single);
 
   dRect r;
   for (int dy = 0; ;dy++){
@@ -530,11 +541,13 @@ range_to_nomlist(const dRect & range, const nom_scale_t rscale, const bool singl
     for (int dx = 0; ;dx++){
       // horisontal shift: x-distance may differ from direct x-y shift!
       string name2 = nom_shift(name1, iPoint(dx,0), single);
-      nom_scale_t sc1;
       r = nom_to_range(name2, sc1, single);
-      if (r.tlc().x > range.brc().x - delta.x ||
+      if (r.tlc().x < r0.tlc().x) r.x+=360; // crossing 180
+
+      if (r.tlc().x > sh + range.brc().x - delta.x ||
           r.tlc().y > range.brc().y - delta.y) break;
-      if (!intersect(range, nom_to_range(name2,sc1,single))) continue;
+
+      if (!intersect(range + dPoint(sh,0), r)) continue;
       ret.insert(name2);
     }
     if (r.brc().y > range.brc().y) break;

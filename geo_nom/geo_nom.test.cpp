@@ -454,6 +454,53 @@ main(){
   assert_eq(names.count("xs19,20"),1);
   assert_eq(names.count("xt17,18,19,20"),1);
 
+  ////////////////////
+  // crossing 180/-180
+  assert_eq(nom_shift("n01", iPoint(-1,0)), "n60");
+  assert_eq(nom_shift("n60", iPoint(+1,0)), "n01");
+  assert_eq(nom_shift("n01-01", iPoint(-1,0)), "n60-06");
+  assert_eq(nom_shift("n60-12", iPoint(+1,0)), "n01-07");
+
+  names = range_to_nomlist(dRect(170,0,10,1), SC_1M);
+  //for (auto const & i:names) std::cerr << i << "\n";
+  assert_eq(names.size(), 2);
+  assert_eq(names.count("a59"),1);
+  assert_eq(names.count("a60"),1);
+
+  names = range_to_nomlist(dRect(170,0,12,1), SC_1M);
+  //for (auto const & i:names) std::cerr << i << "\n";
+  assert_eq(names.size(), 3);
+  assert_eq(names.count("a59"),1);
+  assert_eq(names.count("a60"),1);
+  assert_eq(names.count("a01"),1);
+
+  names = range_to_nomlist(dRect(-180,0,10,1), SC_1M);
+  //for (auto const & i:names) std::cerr << i << "\n";
+  assert_eq(names.size(), 2);
+  assert_eq(names.count("a01"),1);
+  assert_eq(names.count("a02"),1);
+
+  names = range_to_nomlist(dRect(-182,0,12,1), SC_1M);
+  //for (auto const & i:names) std::cerr << i << "\n";
+  assert_eq(names.size(), 3);
+  assert_eq(names.count("a60"),1);
+  assert_eq(names.count("a01"),1);
+  assert_eq(names.count("a02"),1);
+
+  names = range_to_nomlist(dRect(-542,0,12,1), SC_1M);
+  //for (auto const & i:names) std::cerr << i << "\n";
+  assert_eq(names.size(), 3);
+  assert_eq(names.count("a60"),1);
+  assert_eq(names.count("a01"),1);
+  assert_eq(names.count("a02"),1);
+
+  names = range_to_nomlist(dRect(538,0,12,1), SC_1M);
+  //for (auto const & i:names) std::cerr << i << "\n";
+  assert_eq(names.size(), 3);
+  assert_eq(names.count("a60"),1);
+  assert_eq(names.count("a01"),1);
+  assert_eq(names.count("a02"),1);
+
 
   }
   catch (Err & E){
