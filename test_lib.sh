@@ -27,7 +27,7 @@ assert_cmd_substr(){
   cmd="$1"
   exp="$2"
   set +o errexit
-  res="$($cmd 2>&1)";
+  res="$(eval $cmd 2>&1)";
   ret="$?"
   rete="${3:-''}"
   printf "%s" "$res" | grep -q "$exp"
