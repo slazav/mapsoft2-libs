@@ -19,16 +19,17 @@ file_ext_repl(const std::string &fname, const char *ext){
 }
 
 #include <iostream>
+#include <algorithm>
 
 std::vector<std::string>
-file_get_dirs(const std::string &fname){
+file_get_dirs(const std::string &fname, const bool inverse){
   std::vector<std::string> ret;
   std::string s = fname;
   std::string tail;
 
   while (1) {
     int i = s.rfind('/');
-    if (i<=0) return ret;
+    if (i<=0) break;
     s = std::string(s.begin(), s.begin()+i);
 
     i = s.rfind('/');
@@ -36,6 +37,7 @@ file_get_dirs(const std::string &fname){
     if (tail!="." && tail!=".." && tail!="")
       ret.push_back(s);
   };
+  if (inverse) std::reverse(ret.begin(), ret.end());
   return ret;
 }
 
@@ -53,7 +55,7 @@ file_rel_path(const std::string &fname, const std::string &ref_name){
   }
 
   // reference dirs
-  auto dirs = file_get_dirs(ref_name);
+  auto dirs = file_get_dirs(ref_name, 0);
 
   size_t i;
   for (i = 0; i < dirs.size(); ++i){

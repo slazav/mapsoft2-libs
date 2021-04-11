@@ -19,7 +19,7 @@ std::string file_ext_repl(const std::string &fname, const char *ext);
    make/delete all dirs:
    Example: d1/d2/d3/../d4/f -> d1/d2/d3/../d4, d1/d2/d3, d1/d2, d1
 */
-std::vector<std::string> file_get_dirs(const std::string &fname);
+std::vector<std::string> file_get_dirs(const std::string &fname, const bool inverse = false);
 
 
 /*
