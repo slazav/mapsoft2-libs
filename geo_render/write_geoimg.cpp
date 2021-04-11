@@ -37,7 +37,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
   opts.add("tmap", 0,0,g,
     "Write tiled map. In this case `fname` parameter should contain a template "
     "with {x}, {y}, {z} fields. Output of map file is not supported at "
-    "the moment. `mkref` options are ignored.");
+    "the moment. `mkref` options are ignored. Sub-directories are created if needed.");
   opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
   opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
   opts.add("tmap_scale", 1,0,g,
@@ -78,6 +78,9 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   if (bbox.is_empty()) throw Err() <<
     "Error calculating tile range. Try to set non-empty boundary";
 
+  // set of existing directories
+  std::set<std::string> dirs;
+
   // for each zoom level
   for (int z = zmax; z>=zmin; --z){
     iRect tiles = tcalc.range_to_gtiles(bbox,z); // tile range
@@ -89,6 +92,17 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
         iPoint tile(x,y,z);
         dRect trange_wgs = tcalc.gtile_to_range(tile, z); // Google, not TMS tiles
         if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
+
+        // make filename, create subdirectories if needed
+        std::string f = ImageT::make_url(fname, tile);
+        for (const auto & d: file_get_dirs(f, 1)) {
+          if (dirs.count(d)>0) continue;
+          if (!file_exists(d)){
+            if (mkdir(d.c_str(), 0777)!=0)
+              throw Err() << "can't create directory: " << d << ": " << strerror(errno);
+          }
+          dirs.insert(d);
+        }
 
         // render tile in a normal way
         if (z == zmax || !opts.get("tmap_scale", false)){
@@ -106,7 +120,6 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
           r.border = cnv1.bck_acc(brd);
 
           // write to file
-          std::string f = ImageT::make_url(fname, tile);
           write_geoimg(f, obj, r, o);
         }
 
@@ -139,7 +152,6 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
               }
             }
           }
-          std::string f = ImageT::make_url(fname, tile);
           image_save(img, f, o);
         }
       }
