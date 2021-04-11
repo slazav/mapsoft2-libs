@@ -9,7 +9,7 @@
 double geo_dist_2d(const dPoint &p1, const dPoint &p2);
 
 /// Read a figure from the string and get its bounding box.
-/// Same as figure_line from poly_tools.h, but can also read track from a file.
+/// Same as figure_line from poly_tools.h, but can also read data from a file (tracks and waypoints).
 dMultiLine figure_geo_line(const::std::string &str);
 
 /********************************************************************/

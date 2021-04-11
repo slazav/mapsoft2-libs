@@ -21,10 +21,22 @@ double geo_dist_2d(const dPoint &p1, const dPoint &p2){
 
 dMultiLine figure_geo_line(const::std::string &str) {
   try {
+    dMultiLine ret;
     GeoData data;
     read_geo(str, data);
-    if (data.trks.size()<1) return dMultiLine();
-    else return (dMultiLine)data.trks.front();
+
+    for (const auto & t: data.trks){
+      dMultiLine ml = t;
+      ret.insert(ret.end(), ml.begin(), ml.end());
+    }
+    for (const auto & wl: data.wpts){
+      for (const auto & w: wl){
+        dLine l;
+        l.push_back( (dPoint)w);
+        ret.push_back(l);
+      }
+    }
+    return ret;
   }
   catch (Err &e) { }
   return figure_line<double>(str);
