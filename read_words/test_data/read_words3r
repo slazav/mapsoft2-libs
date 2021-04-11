@@ -1,0 +1,21 @@
+> # 'a' = 0x61 = 0141
+> # '\n' = 0xA = 012
+> # this three words should be same:
+> 
+> \x61\x0A
+> \141\12
+> \141\012
+> 
+> # 9 is not an octal digit!
+> \141\129
+> # not more then 3 chars read
+> \1411\129
+> 
+> ## this should be errors:
+> #\A
+> #\8
+> #\xAn
+> 
+> # sequence at the end should not be error
+> # \xA at the end should be
+> \12

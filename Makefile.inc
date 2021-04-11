@@ -46,6 +46,14 @@ clean:
 
 ######################################################
 # Build and include dependency file (using get_deps script).
+
+# .SHELLSTATUS variable appears in make 4.2. We set it to 0 for earlier
+# versions of make and skip error detection in the get_deps script:
+$(shell true)
+ifneq (${.SHELLSTATUS},0)
+  .SHELLSTATUS := 0
+endif
+
 $(shell $(MODDIR)/get_deps $(MODDIR) . > Makefile.deps)
 ifneq (${.SHELLSTATUS},0)
 $(error "get_deps failed: ${.SHELLSTATUS}")
