@@ -3,7 +3,7 @@ assert_cmd(){
   cmd="$1"
   exp="$2"
   set +o errexit
-  res="$($cmd 2>&1)";
+  res="$(eval $cmd 2>&1)";
   ret="$?"
   set -o errexit
 
