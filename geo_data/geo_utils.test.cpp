@@ -46,6 +46,12 @@ main(){
         dPoint(12, -90),
         dPoint(22,   0))-d5) <1.0);
     }
+  /****************************/
+
+  assert_eq(figure_geo_line("[1,1,1,1]"), dMultiLine("[[[1,1],[2,1],[2,2],[1,2],[1,1]]]"));
+  assert_eq(figure_geo_line("[1,1]"),     dMultiLine("[[1,1]]"));
+  assert_eq(figure_geo_line("[[1,1],[2,2]]"), dMultiLine("[[1,1],[2,2]]"));
+  assert_err(figure_geo_line("no file"), "can't read figure: no file");
 
   /****************************/
   // lon2lon0

@@ -2,10 +2,15 @@
 #define GEO_LON0_H
 
 #include "geom/point.h"
+#include "geom/multiline.h"
 
 /********************************************************************/
 /// Distance in m between two points (haversine formula, altitude is ignored).
 double geo_dist_2d(const dPoint &p1, const dPoint &p2);
+
+/// Read a figure from the string and get its bounding box.
+/// Same as figure_line from poly_tools.h, but can also read track from a file.
+dMultiLine figure_geo_line(const::std::string &str);
 
 /********************************************************************/
 // Functions for working with cordinate prefixes and lon0 parameter
