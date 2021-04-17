@@ -1064,15 +1064,6 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 GObj::ret_t
 GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
-  // calculate scaling for this range
-  sc = ptsize0/get_ptsize(*cnv, draw_range);
-
-  if (sc!=0 && sc < minsc){
-    cr->set_color_a(minsc_color);
-    cr->paint();
-    return GObj::FILL_PART;
-  }
-
   // clip to border
   if (clip_border && border.size()) {
     dMultiLine brd(border);
@@ -1083,6 +1074,15 @@ GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
     cr->mkpath_smline(brd, true, 0);
     cr->clip();
   }
+
+  // calculate scaling for this range
+  sc = ptsize0/get_ptsize(*cnv, draw_range);
+  if (sc!=0 && sc < minsc){
+    cr->set_color_a(minsc_color);
+    cr->paint();
+    return GObj::FILL_PART;
+  }
+
   cr->save();
   auto ret = GObjMulti::draw(cr, draw_range);
   cr->restore();
