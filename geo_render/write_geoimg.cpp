@@ -131,11 +131,12 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
           size_t w = tcalc.get_tsize();
           ImageR img(w, w, IMAGE_32ARGB);
           img.fill32(0);
+          bool empty = true;
           for (int t=0; t<4; t++){
             iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
             std::string src_f = ImageT::make_url(fname, src_tile);
             if (!file_exists(src_f)) continue;
-
+            empty = false;
             ImageR src_img = image_load(src_f);
             if (src_img.width() != w || src_img.height()!=w)
               throw Err() << "wrong tile size: " << src_f << ": " << src_img; 
@@ -155,7 +156,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
               }
             }
           }
-          image_save(img, f, o);
+          if (!empty) image_save(img, f, o);
         }
       }
     }
