@@ -6,6 +6,7 @@
 #include <deque>
 
 #include "geom/line_walker.h"
+#include "geom/poly_tools.h"
 #include "gobj_mapdb.h"
 #include "read_words/read_words.h"
 #include "geo_data/geo_io.h"
@@ -1076,6 +1077,8 @@ GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (clip_border && border.size()) {
     dMultiLine brd(border);
     if (cnv) brd = cnv->bck_acc(brd); // wgs -> points
+    if (!rect_in_polygon(draw_range, brd)) return GObj::FILL_NONE;
+
     cr->begin_new_path();
     cr->mkpath_smline(brd, true, 0);
     cr->clip();
