@@ -296,7 +296,6 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         st->action = STEP_DRAW_BRD;
         st->step_name = vs[0];
         ftr = vs[1];
-        clip_border = false;
         vs.erase(vs.begin(), vs.begin()+2);
         add(depth--, st);
       }
