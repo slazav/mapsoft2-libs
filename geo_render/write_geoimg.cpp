@@ -43,6 +43,8 @@ ms2opt_add_geoimg(GetOptSet & opts){
   opts.add("tmap_scale", 1,0,g,
     "When creating tile map with multiple zoom levels scale larger tiles to "
     "create smaller ones (instead of rendering all tiles separately). Default: 0");
+  opts.add("skip_empty", 0,0,g,
+    "Do not save image if nothing was drawn. Default: 0");
 }
 
 #define TMAP_TILE_SIZE 256
@@ -70,6 +72,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   o.erase("tmap_scale");
   o.erase("border_wgs");
   o.erase("border_file");
+  o.put<bool>("skip_empty", 1);
 
   dRect bbox;
   if (brd.size()) bbox = brd.bbox();
@@ -246,8 +249,10 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   // Draw data
   // Save context (objects may want to have their own clip regions)
   cr->save();
-  obj.draw(cr, box);
+  int res = obj.draw(cr, box);
   cr->restore();
+
+  if (opts.get<bool>("skip_empty") && res == GObj::FILL_NONE) return;
 
   // Draw title
   cr->reset_clip();
