@@ -41,8 +41,10 @@ ms2opt_add_geoimg(GetOptSet & opts){
   opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
   opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
   opts.add("tmap_scale", 1,0,g,
-    "When creating tile map with multiple zoom levels scale larger tiles to "
-    "create smaller ones (instead of rendering all tiles separately). Default: 0");
+    "When creating tiles with multiple zoom levels scale larger tiles to "
+    "create smaller ones (instead of rendering all tiles separately). "
+    "Tile is created only if at least one source tile is newer then "
+    "the destination tile (or destination does not exist). Default: 0.");
   opts.add("skip_empty", 0,0,g,
     "Do not save image if nothing was drawn. Default: 0");
 }
@@ -131,12 +133,22 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
           size_t w = tcalc.get_tsize();
           ImageR img(w, w, IMAGE_32ARGB);
           img.fill32(0);
-          bool empty = true;
+
+          // Check if we need to update the tile:
+          // Any of 4 large-scale tile exists and newer then the tile,
+          bool skip = true;
+          for (int t=0; t<4; t++){
+            iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
+            std::string src_f = ImageT::make_url(fname, src_tile);
+            if (file_newer(src_f, f)) skip = false;
+          }
+          if (skip) continue;
+
+          // Make the tile by averaging four larger-scale tiles
           for (int t=0; t<4; t++){
             iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
             std::string src_f = ImageT::make_url(fname, src_tile);
             if (!file_exists(src_f)) continue;
-            empty = false;
             ImageR src_img = image_load(src_f);
             if (src_img.width() != w || src_img.height()!=w)
               throw Err() << "wrong tile size: " << src_f << ": " << src_img; 
@@ -156,7 +168,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
               }
             }
           }
-          if (!empty) image_save(img, f, o);
+          image_save(img, f, o);
         }
       }
     }
