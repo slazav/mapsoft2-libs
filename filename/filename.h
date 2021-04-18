@@ -48,4 +48,10 @@ std::string file_get_basename(const std::string &fname, const std::string & ext)
 // check if the file exists
 bool file_exists(const std::string & fname);
 
+// Check if file_src newer then file_dst.
+// Returns true if:
+//  - both files exist, modification time of file_src larger then that of file_dst,
+//  - file_dst does not exist.
+bool file_newer(const std::string & file_src, const std::string & file_dst);
+
 #endif

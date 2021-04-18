@@ -104,3 +104,16 @@ file_exists(const std::string & fname){
   return stat(fname.c_str(), &st_buf) == 0;
 }
 
+bool
+file_newer(const std::string & file_src, const std::string & file_dst){
+  struct stat st_buf1, st_buf2;
+  if (stat(file_src.c_str(), &st_buf1) != 0) return false;
+  if (stat(file_dst.c_str(), &st_buf2) != 0) return true;
+  auto ts1 = st_buf1.st_mtim.tv_sec;
+  auto tn1 = st_buf1.st_mtim.tv_nsec;
+  auto ts2 = st_buf2.st_mtim.tv_sec;
+  auto tn2 = st_buf2.st_mtim.tv_nsec;
+
+  if (ts1==ts2) return tn1 > tn2;
+  return ts1 > ts2;
+}
