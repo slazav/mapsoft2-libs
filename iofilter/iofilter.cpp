@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <exception>
@@ -391,14 +392,14 @@ class IOFilter::Impl{
       FD_ZERO(&set); // clear the set
       FD_SET(fd2[0], &set);
       int res = pselect(fd2[0]+1, &set, NULL, NULL, &timeout_s, NULL);
-      if (res == -1) throw Err() << "IOFilter select error";
-      if (res == 0)  throw Err() << "Read timeout";
+      if (res < 0)  throw Err() << "IOFilter select error: " << strerror(errno);
+      if (res == 0) throw Err() << "Read timeout";
       char c;
       res = read(fd2[0], &c, 1);
-      if (res == 0) return -1;
+      if (res < 0) throw Err() << "IOFilter read error: " << strerror(errno);
+      if (res == 0) return -1; // EOF
       if (c == '\n') return l.size();
       l += c;
-      if (res < 0) throw Err() << "IOFilter read error";
     }
   }
 
