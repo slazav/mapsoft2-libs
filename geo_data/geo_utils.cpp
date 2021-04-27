@@ -2,6 +2,8 @@
 #include "err/err.h"
 #include "opt/opt.h"
 #include "geo_utils.h"
+#include "geo_io.h"
+#include "geom/poly_tools.h"
 
 using namespace std;
 
@@ -13,6 +15,31 @@ double geo_dist_2d(const dPoint &p1, const dPoint &p2){
   double hdx = (1 - cos((p2.x - p1.x) * M_PI/180.0))/2;
   double hdy = (1 - cos((p2.y - p1.y) * M_PI/180.0))/2;
   return 2*R * asin(sqrt(hdy + cy1*cy2*hdx));
+}
+
+/**********************/
+
+dMultiLine figure_geo_line(const::std::string &str) {
+  try {
+    dMultiLine ret;
+    GeoData data;
+    read_geo(str, data);
+
+    for (const auto & t: data.trks){
+      dMultiLine ml = t;
+      ret.insert(ret.end(), ml.begin(), ml.end());
+    }
+    for (const auto & wl: data.wpts){
+      for (const auto & w: wl){
+        dLine l;
+        l.push_back( (dPoint)w);
+        ret.push_back(l);
+      }
+    }
+    return ret;
+  }
+  catch (Err &e) { }
+  return figure_line<double>(str);
 }
 
 /**********************/

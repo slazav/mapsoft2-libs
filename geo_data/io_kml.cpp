@@ -59,23 +59,22 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
 
   LIBXML_TEST_VERSION
 
+  // set some parameters
+  int indent = opts.get<int>("xml_indent", 1);
+  char qchar = opts.get<char>("xml_qchar", '\'');
+  std::string ind_str = opts.get("xml_ind_str", "  ");
+  bool v = opts.get("verbose", false);
+  if (v) cerr << "Writing KML file: " << filename << endl;
+
   // create XML writer
   xmlTextWriterPtr writer =
     xmlNewTextWriterFilename(filename.c_str(), opts.get<int>("xml_compr", 0));
   if (writer == NULL)
     throw Err() << "write_kml: can't write to file: " << filename;
 
-  bool v = opts.get("verbose", false);
-  if (v) cerr << "Writing KML file: " << filename << endl;
-
   try {
-    // set some parameters
-    int indent = opts.get<int>("xml_indent", 1);
-    char qchar = opts.get<char>("xml_qchar", '\'');
-    xmlChar *ind_str = (xmlChar *)opts.get<string>("xml_ind_str", "  ").c_str();
-
     if (xmlTextWriterSetIndent(writer, indent)<0 ||
-        xmlTextWriterSetIndentString(writer, ind_str)<0 ||
+        xmlTextWriterSetIndentString(writer, BAD_CAST ind_str.c_str())<0 ||
         xmlTextWriterSetQuoteChar(writer, qchar)<0)
       throw "setting xml writer parameters";
 
@@ -84,7 +83,7 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
       throw "starting the xml document";
 
     // start KML element.
-    // BAD_CAST converts (const char*) to BAD_CAST.
+    // BAD_CAST converts (const char*) to xmlChar*.
     if (xmlTextWriterStartElement(writer, BAD_CAST "kml")<0 ||
         xmlTextWriterWriteAttribute(writer,
           BAD_CAST "xmlns", BAD_CAST "http://earth.google.com/kml/2.1")<0)

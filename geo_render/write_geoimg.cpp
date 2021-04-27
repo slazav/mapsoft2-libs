@@ -37,12 +37,16 @@ ms2opt_add_geoimg(GetOptSet & opts){
   opts.add("tmap", 0,0,g,
     "Write tiled map. In this case `fname` parameter should contain a template "
     "with {x}, {y}, {z} fields. Output of map file is not supported at "
-    "the moment. `mkref` options are ignored.");
+    "the moment. `mkref` options are ignored. Sub-directories are created if needed.");
   opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
   opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
   opts.add("tmap_scale", 1,0,g,
-    "When creating tile map with multiple zoom levels scale larger tiles to "
-    "create smaller ones (instead of rendering all tiles separately). Default: 0");
+    "When creating tiles with multiple zoom levels scale larger tiles to "
+    "create smaller ones (instead of rendering all tiles separately). "
+    "Tile is created only if at least one source tile is newer then "
+    "the destination tile (or destination does not exist). Default: 0.");
+  opts.add("skip_empty", 0,0,g,
+    "Do not save image if nothing was drawn. Default: 0");
 }
 
 #define TMAP_TILE_SIZE 256
@@ -70,6 +74,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   o.erase("tmap_scale");
   o.erase("border_wgs");
   o.erase("border_file");
+  o.put<bool>("skip_empty", 1);
 
   dRect bbox;
   if (brd.size()) bbox = brd.bbox();
@@ -77,6 +82,9 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
 
   if (bbox.is_empty()) throw Err() <<
     "Error calculating tile range. Try to set non-empty boundary";
+
+  // set of existing directories
+  std::set<std::string> dirs;
 
   // for each zoom level
   for (int z = zmax; z>=zmin; --z){
@@ -89,6 +97,17 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
         iPoint tile(x,y,z);
         dRect trange_wgs = tcalc.gtile_to_range(tile, z); // Google, not TMS tiles
         if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
+
+        // make filename, create subdirectories if needed
+        std::string f = ImageT::make_url(fname, tile);
+        for (const auto & d: file_get_dirs(f, 1)) {
+          if (dirs.count(d)>0) continue;
+          if (!file_exists(d)){
+            if (mkdir(d.c_str(), 0777)!=0)
+              throw Err() << "can't create directory: " << d << ": " << strerror(errno);
+          }
+          dirs.insert(d);
+        }
 
         // render tile in a normal way
         if (z == zmax || !opts.get("tmap_scale", false)){
@@ -106,7 +125,6 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
           r.border = cnv1.bck_acc(brd);
 
           // write to file
-          std::string f = ImageT::make_url(fname, tile);
           write_geoimg(f, obj, r, o);
         }
 
@@ -115,11 +133,22 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
           size_t w = tcalc.get_tsize();
           ImageR img(w, w, IMAGE_32ARGB);
           img.fill32(0);
+
+          // Check if we need to update the tile:
+          // Any of 4 large-scale tile exists and newer then the tile,
+          bool skip = true;
+          for (int t=0; t<4; t++){
+            iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
+            std::string src_f = ImageT::make_url(fname, src_tile);
+            if (file_newer(src_f, f)) skip = false;
+          }
+          if (skip) continue;
+
+          // Make the tile by averaging four larger-scale tiles
           for (int t=0; t<4; t++){
             iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
             std::string src_f = ImageT::make_url(fname, src_tile);
             if (!file_exists(src_f)) continue;
-
             ImageR src_img = image_load(src_f);
             if (src_img.width() != w || src_img.height()!=w)
               throw Err() << "wrong tile size: " << src_f << ": " << src_img; 
@@ -139,7 +168,6 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
               }
             }
           }
-          std::string f = ImageT::make_url(fname, tile);
           image_save(img, f, o);
         }
       }
@@ -234,8 +262,10 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   // Draw data
   // Save context (objects may want to have their own clip regions)
   cr->save();
-  obj.draw(cr, box);
+  int res = obj.draw(cr, box);
   cr->restore();
+
+  if (opts.get<bool>("skip_empty") && res == GObj::FILL_NONE) return;
 
   // Draw title
   cr->reset_clip();

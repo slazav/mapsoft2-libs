@@ -19,16 +19,17 @@ file_ext_repl(const std::string &fname, const char *ext){
 }
 
 #include <iostream>
+#include <algorithm>
 
 std::vector<std::string>
-file_get_dirs(const std::string &fname){
+file_get_dirs(const std::string &fname, const bool inverse){
   std::vector<std::string> ret;
   std::string s = fname;
   std::string tail;
 
   while (1) {
     int i = s.rfind('/');
-    if (i<=0) return ret;
+    if (i<=0) break;
     s = std::string(s.begin(), s.begin()+i);
 
     i = s.rfind('/');
@@ -36,6 +37,7 @@ file_get_dirs(const std::string &fname){
     if (tail!="." && tail!=".." && tail!="")
       ret.push_back(s);
   };
+  if (inverse) std::reverse(ret.begin(), ret.end());
   return ret;
 }
 
@@ -53,7 +55,7 @@ file_rel_path(const std::string &fname, const std::string &ref_name){
   }
 
   // reference dirs
-  auto dirs = file_get_dirs(ref_name);
+  auto dirs = file_get_dirs(ref_name, 0);
 
   size_t i;
   for (i = 0; i < dirs.size(); ++i){
@@ -102,3 +104,16 @@ file_exists(const std::string & fname){
   return stat(fname.c_str(), &st_buf) == 0;
 }
 
+bool
+file_newer(const std::string & file_src, const std::string & file_dst){
+  struct stat st_buf1, st_buf2;
+  if (stat(file_src.c_str(), &st_buf1) != 0) return false;
+  if (stat(file_dst.c_str(), &st_buf2) != 0) return true;
+  auto ts1 = st_buf1.st_mtim.tv_sec;
+  auto tn1 = st_buf1.st_mtim.tv_nsec;
+  auto ts2 = st_buf2.st_mtim.tv_sec;
+  auto tn2 = st_buf2.st_mtim.tv_nsec;
+
+  if (ts1==ts2) return tn1 > tn2;
+  return ts1 > ts2;
+}

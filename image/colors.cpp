@@ -5,6 +5,8 @@
 // distance between two colors
 double
 color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled){
+  if (c1 == c2) return 0.0;
+
   double a1 = (c1>>24)&0xFF, a2 = (c2>>24)&0xFF;
   double r1 = (c1>>16)&0xFF, r2 = (c2>>16)&0xFF;
   double g1 = (c1>>8)&0xFF,  g2 = (c2>>8)&0xFF;

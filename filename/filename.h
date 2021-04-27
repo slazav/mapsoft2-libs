@@ -19,7 +19,7 @@ std::string file_ext_repl(const std::string &fname, const char *ext);
    make/delete all dirs:
    Example: d1/d2/d3/../d4/f -> d1/d2/d3/../d4, d1/d2/d3, d1/d2, d1
 */
-std::vector<std::string> file_get_dirs(const std::string &fname);
+std::vector<std::string> file_get_dirs(const std::string &fname, const bool inverse = false);
 
 
 /*
@@ -47,5 +47,11 @@ std::string file_get_basename(const std::string &fname, const std::string & ext)
 
 // check if the file exists
 bool file_exists(const std::string & fname);
+
+// Check if file_src newer then file_dst.
+// Returns true if:
+//  - both files exist, modification time of file_src larger then that of file_dst,
+//  - file_dst does not exist.
+bool file_newer(const std::string & file_src, const std::string & file_dst);
 
 #endif

@@ -6,6 +6,7 @@
 #include <deque>
 
 #include "geom/line_walker.h"
+#include "geom/poly_tools.h"
 #include "gobj_mapdb.h"
 #include "read_words/read_words.h"
 #include "geo_data/geo_io.h"
@@ -295,7 +296,6 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         st->action = STEP_DRAW_BRD;
         st->step_name = vs[0];
         ftr = vs[1];
-        clip_border = false;
         vs.erase(vs.begin(), vs.begin()+2);
         add(depth--, st);
       }
@@ -1063,23 +1063,25 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 GObj::ret_t
 GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
+  // clip to border
+  if (clip_border && border.size()) {
+    dMultiLine brd(border);
+    if (cnv) brd = cnv->bck_acc(brd); // wgs -> points
+    if (!rect_in_polygon(draw_range, brd)) return GObj::FILL_NONE;
+
+    cr->begin_new_path();
+    cr->mkpath_smline(brd, true, 0);
+    cr->clip();
+  }
+
   // calculate scaling for this range
   sc = ptsize0/get_ptsize(*cnv, draw_range);
-
   if (sc!=0 && sc < minsc){
     cr->set_color_a(minsc_color);
     cr->paint();
     return GObj::FILL_PART;
   }
 
-  // clip to border
-  if (clip_border && border.size()) {
-    dMultiLine brd(border);
-    if (cnv) brd = cnv->bck_acc(brd); // wgs -> points
-    cr->begin_new_path();
-    cr->mkpath_smline(brd, true, 0);
-    cr->clip();
-  }
   cr->save();
   auto ret = GObjMulti::draw(cr, draw_range);
   cr->restore();

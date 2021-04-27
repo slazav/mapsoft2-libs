@@ -19,9 +19,10 @@ std::string file_ext_repl(const std::string &fname, const char *ext);
 * Extract directory names from a filename, a list which can be used to
  make/delete all dirs:
 ```c++
-std::vector<std::string> file_get_dirs(const std::string &fname);
+std::vector<std::string> file_get_dirs(const std::string &fname, const bool inverse=false);
 ```
 Example: d1/d2/d3/../d4/f -> d1/d2/d3/../d4, d1/d2/d3, d1/d2, d1
+If inverse=true then directory order is inverted.
 
 * Calculate path, relative to ref_name (e.g. to put image name into .map or .fig file)
 ```c++

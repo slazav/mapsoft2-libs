@@ -33,12 +33,17 @@ int main() {
     assert_eq(ff[4], "dir1/dir2");
     assert_eq(ff[5], "dir1");
 
-    ff = file_get_dirs("/dir1/dir2/");
-//    for (int i=0; i<ff.size(); i++) std::cerr << i << " -- " << ff[i] << "\n";
-
+    ff = file_get_dirs("/dir1/dir2/", 0);
+    // for (int i=0; i<ff.size(); i++) std::cerr << i << " -- " << ff[i] << "\n";
     assert_eq(ff.size(), 2);
     assert_eq(ff[0], "/dir1/dir2");
     assert_eq(ff[1], "/dir1");
+
+    ff = file_get_dirs("/dir1/dir2/", 1);
+    // for (int i=0; i<ff.size(); i++) std::cerr << i << " -- " << ff[i] << "\n";
+    assert_eq(ff.size(), 2);
+    assert_eq(ff[0], "/dir1");
+    assert_eq(ff[1], "/dir1/dir2");
 
     ff = file_get_dirs("a.b");
     assert_eq(ff.size(), 0);
