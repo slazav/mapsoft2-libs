@@ -7,7 +7,7 @@ assert_cmd(){
   ret="$?"
   set -o errexit
 
-  rete="${3:-''}"
+  rete="${3:-0}"
   if [ "$exp" != "$res" ]; then
     printf "ERROR ($cmd):\n"
     printf "  exp:\n%s\n" "$exp"
@@ -29,7 +29,7 @@ assert_cmd_substr(){
   set +o errexit
   res="$(eval $cmd 2>&1)";
   ret="$?"
-  rete="${3:-''}"
+  rete="${3:-0}"
   printf "%s" "$res" | grep -q "$exp"
   retg="$?"
   set -o errexit
