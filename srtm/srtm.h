@@ -25,7 +25,7 @@ Default data directory is DIR=$HOME/.srtm_data
 */
 
 // default size of SRTM cache
-#define SRTM_CACHE_SIZE 6
+#define SRTM_CACHE_SIZE 32
 
 // default data width
 #define SRTM_DEF_WIDTH 1201
