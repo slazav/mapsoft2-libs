@@ -10,6 +10,41 @@
 ///\defgroup line_utils
 ///@{
 
+
+
+
+/*
+  For point p0 find nearest point on the segment p1,p2
+*/
+
+template<typename T>
+dPoint nearest_pt(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2){
+  if (p1==p2) return p1;
+  double ll = dist(p1,p2);
+  dPoint v = dPoint(p2-p1)/ll;
+
+  double prl = pscal(dPoint(p0-p1), v);
+  if ((prl>=0)&&(prl<=ll))  // point is inside a segment
+    return (dPoint)p1 + v*prl;
+
+  return dist2d(p0,p1) < dist(p0,p2)? p1:p2;
+}
+
+template<typename T>
+dPoint nearest_pt2d(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2){
+  if (p1==p2) return p1;
+  double  ll = dist2d(p1,p2);
+  dPoint v = dPoint(p2-p1)/ll;
+
+  double prl = pscal2d(dPoint(p0-p1), v);
+
+  if ((prl>=0)&&(prl<=ll))  // point is inside a segment
+    return (dPoint)p1 + v*prl;
+
+  return dist2d(p0,p1) < dist2d(p0,p2)? p1:p2;
+}
+
+
 /*
  Find the minimum distance between a line and a point <pt>.
 
@@ -28,23 +63,9 @@ double nearest_pt(const Line<T> & line, dPoint & vec, Point<T> & pt, double maxd
     Point<T> p1(line[j-1]);
     Point<T> p2(line[j]);
 
-    double  ll = dist2d(p1,p2);
-    if (ll==0) continue;
-    dPoint v = dPoint(p2-p1)/ll;
-
-    double ls = dist2d(pt,p1);
-    double le = dist2d(pt,p2);
-
-    if (ls<maxdist){ maxdist=ls; pm=p1; vec=v; }
-    if (le<maxdist){ maxdist=le; pm=p2; vec=v; }
-
-    double prl = pscal2d(dPoint(pt-p1), v);
-
-    if ((prl>=0)&&(prl<=ll)) { // point is inside a segment
-      Point<T> pc = p1 + Point<T>(v * prl);
-      double lc=dist(pt,pc);
-      if (lc<maxdist) { maxdist=lc; pm=pc; vec=v; }
-    }
+    auto pc = nearest_pt2d(pt,p1,p2);
+    auto lc = dist(pt,pc);
+    if (lc<maxdist) { maxdist=lc; pm=pc; vec = dPoint(p2-p1)/dist2d(p1,p2); }
   }
   pt=pm;
   return maxdist;
@@ -63,6 +84,51 @@ double nearest_pt(const MultiLine<T> & lines, dPoint & vec, Point<T> & pt, doubl
   pt=pm;
   return maxdist;
 }
+
+/*
+
+ Filter out some points (up to number np, or distance from original line e)
+
+*/
+
+template<typename T>
+void line_filter_v1(Line<T> & line, double e, int np){
+  // points to skip:
+  std::vector<bool> skip(line.size(), false);
+
+  while (1) {
+    // Calculate distance from each non-end point to line between its neighbours.
+    // Find minimum of this value.
+    double min=-1;
+    auto i1 = line.begin()+1;
+    auto i2 = i1 + (line.end()-i1-1);
+    auto mini = line.end(); // index of point with minimal deviation
+    for (auto & i = i1; i!=i2; i++){
+      dPoint p1 = *(i-1);
+      dPoint p2 = *i;
+      dPoint p3 = *(i+1);
+      auto pc = nearest_pt<double>(p2,p1,p3);
+      double dp = dist(p2,pc);
+      if ((min<0) || (min>dp)) {min = dp; mini=i;}
+    }
+    if (mini == line.end()) break;
+    // skip point if needed
+    if ( ((e>=0) && (min<e)) ||
+         ((np>=0) && (line.size()>np))) line.erase(mini);
+    else break;
+  }
+}
+
+// Same for MultiLine. Remove also segments shorter then e.
+template<typename T>
+void line_filter_v1(MultiLine<T> & lines, double e){
+  for (auto l = lines.begin(); l!=lines.end(); l++){
+    line_filter_v1(*l, e, -1);
+    if ((l->size() == 2) && e>0 && (dist((*l)[0],(*l)[1]) < e))
+      lines.erase(l--);
+  }
+}
+
 
 /// Found bounding convex polygon for points.
 /// Resulting polygon start from point with minimal x,
