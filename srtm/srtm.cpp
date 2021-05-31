@@ -503,6 +503,7 @@ iPoint dir (int k){ return crn(k+1)-crn(k); }
 std::map<short, dMultiLine>
 SRTM::find_contours(const dRect & range, int step){
   int w = get_srtm_width();
+  double E = 1e-6; // distance for merging
   int x1  = int(floor((w-1)*range.tlc().x));
   int x2  = int( ceil((w-1)*range.brc().x));
   int y1  = int(floor((w-1)*range.tlc().y));
@@ -544,55 +545,55 @@ SRTM::find_contours(const dRect & range, int step){
         if (h!=i.first){
           h  = i.first;
           v1 = i.second;
-        } else{
-          v2 = i.second;
-          // convert v coordinates to points:
-          dPoint p1=(dPoint(p + crn(int(v1))) + dPoint(dir(int(v1)))*double(v1-int(v1)))/(double)(w-1);
-          dPoint p2=(dPoint(p + crn(int(v2))) + dPoint(dir(int(v2)))*double(v2-int(v2)))/(double)(w-1);
-
-          // We found segment p1-p2 with height h
-          // first try to append it to existing line in ret[h]
-          bool done=false;
-          for (auto & l:ret[h]){
-            int e=l.size()-1;
-            if (e<=0) continue; // we have no 1pt lines!
-            if (dist(l[0], p1) < 1e-4){ l.insert(l.begin(), p2); done=true; break;}
-            if (dist(l[0], p2) < 1e-4){ l.insert(l.begin(), p1); done=true; break;}
-            if (dist(l[e], p1) < 1e-4){ l.push_back(p2); done=true; break;}
-            if (dist(l[e], p2) < 1e-4){ l.push_back(p1); done=true; break;}
-          }
-          if (!done){ // insert new line into ret[h]
-            dLine hor;
-            hor.push_back(p1);
-            hor.push_back(p2);
-            ret[h].push_back(hor);
-          }
-          h=SRTM_VAL_UNDEF;
-          count++;
+          continue;
         }
+        v2 = i.second;
+        // convert v coordinates to points:
+        dPoint p1=(dPoint(p + crn(int(v1))) + dPoint(dir(int(v1)))*double(v1-int(v1)))/(double)(w-1);
+        dPoint p2=(dPoint(p + crn(int(v2))) + dPoint(dir(int(v2)))*double(v2-int(v2)))/(double)(w-1);
+
+        // We found segment p1-p2 with height h
+        // first try to append it to existing line in ret[h]
+        bool done=false;
+        for (auto & l:ret[h]){
+          int e=l.size()-1;
+          if (e<=0) continue; // we have no 1pt lines!
+          if (dist(l[0], p1)<E){ l.insert(l.begin(), p2); done=true; break;}
+          if (dist(l[0], p2)<E){ l.insert(l.begin(), p1); done=true; break;}
+          if (dist(l[e], p1)<E){ l.push_back(p2); done=true; break;}
+          if (dist(l[e], p2)<E){ l.push_back(p1); done=true; break;}
+        }
+        if (!done){ // insert new line into ret[h]
+          dLine hor;
+          hor.push_back(p1);
+          hor.push_back(p2);
+          ret[h].push_back(hor);
+        }
+        h=SRTM_VAL_UNDEF;
+        count++;
       }
+
     }
   }
 
   // merge contours (similar code is in point_int.cpp/border_line)
-  double e = 1e-4;
   for(auto & d:ret){
     for (auto i1 = d.second.begin(); i1!=d.second.end(); i1++){
       for (auto i2 = i1+1; i2!=d.second.end(); i2++){
         dLine tmp;
-        if      (dist(*(i1->begin()),*(i2->begin()))<e){
+        if      (dist(*(i1->begin()),*(i2->begin()))<E){
           tmp.insert(tmp.end(), i1->rbegin(), i1->rend());
           tmp.insert(tmp.end(), i2->begin()+1, i2->end());
         }
-        else if (dist(*(i1->begin()),*(i2->rbegin()))<e){
+        else if (dist(*(i1->begin()),*(i2->rbegin()))<E){
           tmp.insert(tmp.end(), i1->rbegin(), i1->rend());
           tmp.insert(tmp.end(), i2->rbegin()+1, i2->rend());
         }
-        else if (dist(*(i1->rbegin()),*(i2->begin()))<e){
+        else if (dist(*(i1->rbegin()),*(i2->begin()))<E){
           tmp.insert(tmp.end(), i1->begin(), i1->end());
           tmp.insert(tmp.end(), i2->begin()+1, i2->end());
         }
-        else if (dist(*(i1->rbegin()),*(i2->rbegin()))<e){
+        else if (dist(*(i1->rbegin()),*(i2->rbegin()))<E){
           tmp.insert(tmp.end(), i1->begin(), i1->end());
           tmp.insert(tmp.end(), i2->rbegin()+1, i2->rend());
         }
