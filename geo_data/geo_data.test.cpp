@@ -101,6 +101,25 @@ main(){
       assert_eq(dLine(l2),
         dLine("[[1,2,3],[2,3,4],[3,4,5],[4,5,6],[5,6,7],[6,7,8]]"));
 
+      // constructed from Line/MultiLine
+      l2 = GeoTrk(dMultiLine("[ [[1,2,3],[2,3,4]], [[3,4,5],[4,5,6],[5,6,7]], [[6,7,8]]]"));
+      assert_eq(l2.size(), 6);
+      assert_eq(l2[0].start, 1);
+      assert_eq(l2[0].z, 3);
+      assert_eq(l2[0].t, 0);
+      assert_eq(l2[1].start, 0);
+      assert_eq(dMultiLine(l2),
+        dMultiLine("[ [[1,2,3],[2,3,4]], [[3,4,5],[4,5,6],[5,6,7]], [[6,7,8]]]"));
+
+      l2 = GeoTrk(dLine("[[1,2,3],[2,3,4],[3,4,5],[4,5,6],[5,6,7],[6,7,8]]"));
+      assert_eq(l2.size(), 6);
+      assert_eq(l2[0].start, 1);
+      assert_eq(l2[0].z, 3);
+      assert_eq(l2[0].t, 0);
+      assert_eq(l2[1].start, 0);
+      assert_eq(dMultiLine(l2),
+        dMultiLine("[[[1,2,3],[2,3,4],[3,4,5],[4,5,6],[5,6,7],[6,7,8]]]"));
+
     }
 
     { // GeoMap

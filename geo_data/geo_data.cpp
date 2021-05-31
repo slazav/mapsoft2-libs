@@ -33,6 +33,28 @@ GeoTrk::length() const {
   return ret;
 }
 
+GeoTrk::GeoTrk(const dMultiLine & ml){
+  for (const auto l:ml) {
+    bool s = true;
+    for (const auto pt:l) {
+      GeoTpt tpt(pt);
+      tpt.start = s;
+      push_back(tpt);
+      s = false;
+    }
+  }
+}
+
+GeoTrk::GeoTrk(const dLine & l){
+  bool s = true;
+  for (const auto pt:l) {
+    GeoTpt tpt(pt);
+    tpt.start = s;
+    push_back(tpt);
+    s = false;
+  }
+}
+
 GeoTrk::operator dLine() const {
   dLine ret;
   for (auto i:*this) ret.push_back(dPoint(i));

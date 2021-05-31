@@ -94,6 +94,12 @@ struct GeoTrk : std::vector<GeoTpt>{
   /// Constructor
   GeoTrk() {}
 
+  /// Constructor: make track from dMultiLine
+  GeoTrk(const dMultiLine & l);
+
+  /// Constructor: make track from dLine
+  GeoTrk(const dLine & l);
+
   /// Get x-y range in lon-lat coords.
   dRect bbox() const;
 
