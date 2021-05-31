@@ -150,6 +150,9 @@ class SRTM {
     // make vector data: contours
     std::map<short, dMultiLine> find_contours(const dRect & range, int step);
 
+    // make vector data: slope contours
+    dMultiLine find_slope_contours(const dRect & range, double val);
+
     // make vector data: peaks
     std::map<dPoint, short> find_peaks(const dRect & range, int DH, size_t PS);
 

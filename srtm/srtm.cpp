@@ -525,12 +525,12 @@ SRTM::find_contours(const dRect & range, int step){
         iPoint p2 = p+crn(k+1);
         short h1 = get_val(p1.x, p1.y);
         short h2 = get_val(p2.x, p2.y);
+        if (h2==h1) continue;
         if ((h1<SRTM_VAL_MIN) || (h2<SRTM_VAL_MIN)) continue;
         int min = (h1<h2)? h1:h2;
         int max = (h1<h2)? h2:h1;
         min = int( floor(double(min)/step)) * step;
         max = int( ceil(double(max)/step))  * step;
-        if (h2==h1) continue;
         for (int hh = min; hh<=max; hh+=step){
           double v = double(hh-h1+0.1)/double(h2-h1);
           if ((v<0)||(v>1)) continue;
@@ -607,6 +607,95 @@ SRTM::find_contours(const dRect & range, int step){
 
   return ret;
 }
+
+dMultiLine
+SRTM::find_slope_contours(const dRect & range, double val){
+  int w = get_srtm_width();
+  double E = 1e-6; // distance for merging
+  int x1  = int(floor((w-1)*range.tlc().x));
+  int x2  = int( ceil((w-1)*range.brc().x));
+  int y1  = int(floor((w-1)*range.tlc().y));
+  int y2  = int( ceil((w-1)*range.brc().y));
+  dMultiLine ret;
+  for (int y=y2; y>y1; y--){
+    for (int x=x1; x<x2; x++){
+
+      iPoint p(x,y);
+      // Crossing of all 4 data cell sides with contours
+      // (coordinate v along the 4-segment line).
+      std::vector<double> pts;
+      for (int k=0; k<4; k++){
+        iPoint p1 = p+crn(k);
+        iPoint p2 = p+crn(k+1);
+        double h1 = 0, h2 = 0;
+        if (p1.y>=y1 && p1.y<=y2 && p1.x>=x1 && p1.x<=x2)
+          h1 = get_slope(p1.x, p1.y, 0);
+        if (p2.y>=y1 && p2.y<=y2 && p2.x>=x1 && p2.x<=x2)
+          h2 = get_slope(p2.x, p2.y, 0);
+        double min = (h1<h2)? h1:h2;
+        double max = (h1<h2)? h2:h1;
+        if (min < val && max >= val){
+          double x = double(val-h1)/double(h2-h1);
+          pts.push_back(x+k);
+        }
+      }
+
+      // Put contours which are crossing the data cell 2 or 4 times to `ret`.
+      for (size_t i=1; i<pts.size(); i+=2){
+        double x1 = pts[i-1], x2 = pts[i];
+        dPoint p1=(dPoint(p + crn(int(x1))) + dPoint(dir(int(x1)))*double(x1-int(x1)))/(double)(w-1);
+        dPoint p2=(dPoint(p + crn(int(x2))) + dPoint(dir(int(x2)))*double(x2-int(x2)))/(double)(w-1);
+        // first try to append it to existing line in ret[h]
+        bool done=false;
+        for (auto & l:ret){
+          int e=l.size()-1;
+          if (e<=0) continue; // we have no 1pt lines!
+          if (dist(l[0], p1) < E){ l.insert(l.begin(), p2); done=true; break;}
+          if (dist(l[0], p2) < E){ l.insert(l.begin(), p1); done=true; break;}
+          if (dist(l[e], p1) < E){ l.push_back(p2); done=true; break;}
+          if (dist(l[e], p2) < E){ l.push_back(p1); done=true; break;}
+        }
+        // insert new line into ret
+        if (!done){
+          dLine hor;
+          hor.push_back(p1);
+          hor.push_back(p2);
+          ret.push_back(hor);
+        }
+      }
+    }
+  }
+
+
+  // merge contours (similar code is in point_int.cpp/border_line)
+  for (auto i1 = ret.begin(); i1!=ret.end(); i1++){
+    for (auto i2 = i1+1; i2!=ret.end(); i2++){
+      dLine tmp;
+      if      (dist(*(i1->begin()),*(i2->begin()))<E){
+        tmp.insert(tmp.end(), i1->rbegin(), i1->rend());
+        tmp.insert(tmp.end(), i2->begin()+1, i2->end());
+      }
+      else if (dist(*(i1->begin()),*(i2->rbegin()))<E){
+        tmp.insert(tmp.end(), i1->rbegin(), i1->rend());
+        tmp.insert(tmp.end(), i2->rbegin()+1, i2->rend());
+      }
+      else if (dist(*(i1->rbegin()),*(i2->begin()))<E){
+        tmp.insert(tmp.end(), i1->begin(), i1->end());
+        tmp.insert(tmp.end(), i2->begin()+1, i2->end());
+      }
+      else if (dist(*(i1->rbegin()),*(i2->rbegin()))<E){
+        tmp.insert(tmp.end(), i1->begin(), i1->end());
+        tmp.insert(tmp.end(), i2->rbegin()+1, i2->rend());
+      }
+      else continue;
+      i1->swap(tmp);
+      ret.erase(i2);
+      i2=i1;
+    }
+  }
+  return ret;
+}
+
 
 std::map<dPoint, short>
 SRTM::find_peaks(const dRect & range, int DH, size_t PS){
