@@ -46,9 +46,9 @@ struct FigObj : iLine {
   int     start_x, start_y;    ///    (Fig units; the 1st ellipse point entered)
   int     end_x, end_y;        ///    (Fig units; the last ellipse point entered)
   int     font;                ///    (enumeration type)
-  int     font_size;           ///    (font size in points)
+  float   font_size;           ///    (font size in points)
   int     font_flags;          ///    (bit vector)
-  int     height, length;      ///    (text dimensions, should be ignored?)
+  float   height, length;      ///    (text dimensions, should be ignored?)
   // forward/backward arrow parameters:
   int     farrow_type, barrow_type;
   int     farrow_style, barrow_style;

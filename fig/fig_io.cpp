@@ -533,9 +533,11 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
         // TODO: convert text dimensions?
         if (i->size()!=1) throw Err() << "FigObj: text should have 1 coordinate point";
         s << i->sub_type << " " << pen_color << " " << i->depth << " "
-          << i->pen_style << " " << i->font << " " << i->font_size << " "
+          << i->pen_style << " " << i->font << " "
+          << std::setprecision(0) << i->font_size << " "
           << std::setprecision(4) << i->angle << " " << i->font_flags << " "
-          << i->height << " " << i->length << " " << (*i)[0].x << " " << (*i)[0].y << " ";
+          << std::setprecision(0) << i->height << " " << i->length << " "
+          << (*i)[0].x << " " << (*i)[0].y << " ";
         write_text(s, cnv(i->text), txt7bit);
         if (s.fail()) throw Err() << "FigObj: can't write text object";
         break;
