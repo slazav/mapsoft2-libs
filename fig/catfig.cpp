@@ -16,8 +16,7 @@ main(int argc, char* argv[]){
 
     for (int i=1; i<argc; i++){
       std::cerr << "Reading " << argv[i] << "\n";
-      std::ifstream s(argv[i]);
-      read_fig(s, W);
+      read_fig(argv[i], W);
     }
 
     write_fig(std::cout, W);

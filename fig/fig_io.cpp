@@ -352,6 +352,13 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
   // convert encoding
 }
 
+// read from a file
+void
+read_fig(const std::string & fname, Fig & w, const Opt & ropts){
+  std::ifstream s(fname);
+  read_fig(s,w,ropts);
+}
+
 
 /******************************************************************/
 // Writing

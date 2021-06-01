@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <iostream>
+#include <fstream>
 
 #include "geom/line.h"
 #include "opt/opt.h"
@@ -292,6 +292,9 @@ struct Fig:std::list<FigObj>{
      fig_header   -- read header (default 1)
 */
 void read_fig(std::istream & s, Fig & w, const Opt & ropts = Opt());
+
+// read from a file
+void read_fig(const std::string & fname, Fig & w, const Opt & ropts = Opt());
 
 /// Read object header string. Object will be incomplete
 /// if further reading is needed (multiline text, arrowheads, point coordinates).
