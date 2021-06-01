@@ -3,6 +3,9 @@
 An extension of FIG format. Options inside Fig/FigObj
 comments (compatible with old mapsoft)
 
+Options are recorded in comments in the form
+"\<key>=<value>", or just "\key".
+
 -----------
 ## Changelog:
 
