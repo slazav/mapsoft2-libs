@@ -535,8 +535,6 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
         if (s.fail()) throw Err() << "FigObj: can't write spline object";
         break;
       case FIG_TXT:
-        // TODO: convert charset, convert chars > 127
-        // TODO: convert text dimensions?
         if (i->size()!=1) throw Err() << "FigObj: text should have 1 coordinate point";
         s << i->sub_type << " " << pen_color << " " << i->depth << " "
           << i->pen_style << " " << i->font << " "
