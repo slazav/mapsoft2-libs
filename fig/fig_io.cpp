@@ -197,6 +197,12 @@ int read_figobj_header(FigObj & o, const std::string & header){
   return ret;
 }
 
+FigObj read_figobj_header(const std::string & header){
+  FigObj ret;
+  read_figobj_header(ret, header);
+  return ret;
+}
+
 
 /******************************************************************/
 void read_fig(std::istream & s, Fig & w, const Opt & ropts){

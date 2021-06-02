@@ -304,6 +304,9 @@ void read_fig(const std::string & fname, Fig & w, const Opt & ropts = Opt());
 /// Returns number of points for lines and splines; multiline flag for text objects.
 int read_figobj_header(FigObj &o, const std::string & header);
 
+/// Construct object from a header. Point array is always empty.
+FigObj read_figobj_header(const std::string & header);
+
 /* Write data in FIG file format
    Options:
      fig_enc      -- encoding (default "KOI8-R")
