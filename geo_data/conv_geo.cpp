@@ -71,6 +71,21 @@ std::string expand_proj_aliases(const std::string & pars){
   return pars;
 }
 
+
+std::string
+get_proj_par(const std::string & proj,
+             const std::string & key, const std::string & def){
+  auto exp = expand_proj_aliases(proj);
+
+  auto kv = std::string("+") + key + "=";
+  size_t kl = kv.size();
+
+  size_t n1 = exp.find(kv);
+  size_t n2 = exp.find(" ", n1);
+  return n1!=std::string::npos ? exp.substr(n1+kl,n2-n1-kl) : def;
+}
+
+
 ConvGeo::ConvGeo(const std::string & src,
        const std::string & dst, const bool use2d){
   cnv2d = use2d;

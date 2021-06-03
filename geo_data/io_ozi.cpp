@@ -117,17 +117,6 @@ string convert_ozi2datum(const string & s){
   throw Err() << "io_ozi: unsupported Ozi datum: " << s;
 }
 
-string get_proj_par(const string & proj, const string & key, const string & def = ""){
-  string exp = expand_proj_aliases(proj);
-
-  string kv = string("+") + key + "=";
-  size_t kl = kv.size();
-
-  size_t n1 = exp.find(kv);
-  size_t n2 = exp.find(" ", n1);
-  return n1!=string::npos ? exp.substr(n1+kl,n2-n1-kl) : def;
-}
-
 string convert_proj2ozi(const string & s){
   string pr = get_proj_par(s, "proj");
   if (pr == "") throw Err() << "io_ozi: can't find proj setting: " << s;

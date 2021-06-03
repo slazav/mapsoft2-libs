@@ -37,6 +37,9 @@ Additional parameter 2d switches altitude conversions
 // expand proj aliases (such as "WGS", "WEB", "FI", "SU39")
 std::string expand_proj_aliases(const std::string & pars);
 
+// Extract component from proj string
+std::string get_proj_par(const std::string & proj,
+                         const std::string & key, const std::string & def = "");
 
 class ConvGeo: public ConvBase {
 public:
