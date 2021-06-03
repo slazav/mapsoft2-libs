@@ -63,7 +63,7 @@ main(){
       assert_eq(o.line_style,0);
       assert_eq(o.thickness,2);
       assert_eq(o.pen_color,0);
-      assert_eq(o.fill_color,7);
+      assert_eq(o.fill_color,0xffffff);
       assert_eq(o.depth,50);
       assert_eq(o.pen_style,-1);
       assert_eq(o.area_fill,-1);
@@ -76,6 +76,10 @@ main(){
       assert_eq(o.start_y,5310);
       assert_eq(o.end_x,7695);
       assert_eq(o.end_y,4725);
+
+      o = read_figobj_header("1 3 0 2 0 #AA00cc 50 -1 -1 0.000 1 0.0000 7380 5310 664 664 7380 5310 7695 4725");
+      assert_eq(o.fill_color,0xaa00cc);
+
     }
 
     {
@@ -91,7 +95,7 @@ main(){
       assert_eq(o.line_style,0);
       assert_eq(o.thickness,1);
       assert_eq(o.pen_color,0);
-      assert_eq(o.fill_color,7);
+      assert_eq(o.fill_color,0xffffff);
       assert_eq(o.depth,50);
       assert_eq(o.pen_style,-1);
       assert_eq(o.area_fill,-1);
@@ -140,7 +144,7 @@ main(){
       assert_eq(o.line_style,0);
       assert_eq(o.thickness,1);
       assert_eq(o.pen_color,0);
-      assert_eq(o.fill_color,7);
+      assert_eq(o.fill_color,0xffffff);
       assert_eq(o.depth,50);
       assert_eq(o.pen_style,-1);
       assert_eq(o.area_fill,-1);
@@ -180,7 +184,7 @@ main(){
       assert_eq(o.line_style,0);
       assert_eq(o.thickness,1);
       assert_eq(o.pen_color,0);
-      assert_eq(o.fill_color,7);
+      assert_eq(o.fill_color,0xffffff);
       assert_eq(o.depth,50);
       assert_eq(o.pen_style,-1);
       assert_eq(o.area_fill,-1);
@@ -284,7 +288,7 @@ main(){
       assert_eq(o.line_style,0);
       assert_eq(o.thickness,1);
       assert_eq(o.pen_color,0);
-      assert_eq(o.fill_color,7);
+      assert_eq(o.fill_color,0xffffff);
       assert_eq(o.depth,50);
       assert_eq(o.pen_style,-1);
       assert_eq(o.area_fill,-1);
