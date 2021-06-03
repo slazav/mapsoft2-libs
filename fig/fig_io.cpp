@@ -238,6 +238,75 @@ read_figobj_header(const std::string & header,
   return ret;
 }
 
+FigObj
+figobj_template(const std::string & templ){
+  FigObj o;
+
+  std::istringstream ss(templ);
+  ss >> o.type >> ws;
+  if (ss.fail())
+    throw Err() << "FigObj: can't read template: [" << templ << "]";
+
+  int ret = 0;
+  int x1,x2,x3,y1,y2,y3;
+  std:string pen_color, fill_color; // read as strings, convert later
+  switch (o.type) {
+    case FIG_ELLIPSE:
+      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+         >> o.pen_style >> o.area_fill >> o.style_val >> o.direction >> o.angle
+         >> std::ws;
+      break;
+    case FIG_POLYLINE:
+      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+         >> o.pen_style >> o.area_fill >> o.style_val >> o.join_style >> o.cap_style >> o.radius
+         >> o.forward_arrow >> o.backward_arrow
+         >> std::ws;
+      break;
+    case FIG_SPLINE:
+      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+         >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
+         >> o.forward_arrow >> o.backward_arrow
+         >> std::ws;
+      break;
+    case FIG_TXT:
+      ss >> o.sub_type >> pen_color >> o.depth >> o.pen_style
+         >> o.font >> o.font_size >> o.angle >> o.font_flags
+         >> std::ws;
+      break;
+    case FIG_ARC:
+      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+         >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
+         >> o.direction >> o.forward_arrow >> o.backward_arrow
+         >> std::ws;
+      break;
+    default:
+      throw Err() << "FigObj: unknown template type: [" << templ << "]";
+  }
+
+  // read arrow parameters if needed
+  if (o.type == FIG_POLYLINE || o.type == FIG_SPLINE || o.type == FIG_ARC){
+    if (o.forward_arrow) {
+      ss >> o.farrow_type >> o.farrow_style >> o.farrow_thickness
+         >> o.farrow_width >> o.farrow_height >> std::ws;
+    }
+    if (o.backward_arrow) {
+      ss >> o.barrow_type >> o.barrow_style >> o.barrow_thickness
+         >> o.barrow_width >> o.barrow_height >> std::ws;
+    }
+  }
+
+  if (ss.fail() || !ss.eof())
+    throw Err() << "FigObj: can't read template: [" << templ << "]";
+
+  // convert colors (no custom colormap)
+  map<int,int> cmap;
+  o.pen_color  = color_fig2rgb(pen_color, cmap);
+  o.fill_color = color_fig2rgb(fill_color, cmap);
+
+  return o;
+}
+
+
 
 /******************************************************************/
 void read_fig(std::istream & s, Fig & w, const Opt & ropts){
@@ -383,9 +452,6 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     o.text = cnv(o.text);
     w.push_back(o);
   }
-
-  // convert colors
-  // convert encoding
 }
 
 // read from a file

@@ -77,8 +77,24 @@ main(){
       assert_eq(o.end_x,7695);
       assert_eq(o.end_y,4725);
 
-      o = read_figobj_header("1 3 0 2 0 #AA00cc 50 -1 -1 0.000 1 0.0000 7380 5310 664 664 7380 5310 7695 4725");
-      assert_eq(o.fill_color,0xaa00cc);
+      // rgb colors
+      auto o1 = read_figobj_header("1 3 0 2 #abcdef #AA00cc 50 -1 -1 0.000 1 0.0000 7380 5310 664 664 7380 5310 7695 4725");
+      assert_eq(o1.pen_color,0xabcdef);
+      assert_eq(o1.fill_color,0xaa00cc);
+
+      // template
+      auto o2 = figobj_template("1 3 0 2 #abcdef #AA00cc 50 -1 -1 0.000 1 0.0000");
+      assert_eq(o1.sub_type,   o2.sub_type);
+      assert_eq(o1.line_style, o2.line_style);
+      assert_eq(o1.thickness,  o2.thickness);
+      assert_eq(o1.pen_color,  o2.pen_color);
+      assert_eq(o1.fill_color, o2.fill_color);
+      assert_eq(o1.depth,      o2.depth);
+      assert_eq(o1.pen_style,  o2.pen_style);
+      assert_eq(o1.area_fill,  o2.area_fill);
+      assert_eq(o1.style_val,  o2.style_val);
+      assert_eq(o1.direction,  o2.direction);
+      assert_eq(o1.angle,      o2.angle);
 
     }
 
@@ -108,6 +124,22 @@ main(){
       assert_eq(o.start_y,4092);
       assert_eq(o.end_x,10990);
       assert_eq(o.end_y,2658);
+
+      // template
+      auto o1 = read_figobj_header("1 2 0 1 0 7 50 -1 -1 0.000 1 0.2618 9877 3375 1260 405 8765 4092 10990 2658");
+      auto o2 = figobj_template("1 2 0 1 0 7 50 -1 -1 0.000 1 0.2618");
+      assert_eq(o1.sub_type,   o2.sub_type);
+      assert_eq(o1.line_style, o2.line_style);
+      assert_eq(o1.thickness,  o2.thickness);
+      assert_eq(o1.pen_color,  o2.pen_color);
+      assert_eq(o1.fill_color, o2.fill_color);
+      assert_eq(o1.depth,      o2.depth);
+      assert_eq(o1.pen_style,  o2.pen_style);
+      assert_eq(o1.area_fill,  o2.area_fill);
+      assert_eq(o1.style_val,  o2.style_val);
+      assert_eq(o1.direction,  o2.direction);
+      assert_eq(o1.angle,      o2.angle);
+
     }
 
     {
@@ -154,6 +186,67 @@ main(){
       assert_eq(o.radius,-1);
       assert_eq(o.forward_arrow,0);
       assert_eq(o.backward_arrow,0);
+
+      // template
+      auto o1 = read_figobj_header("2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 4");
+      auto o2 = figobj_template("2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0");
+      assert_eq(o1.sub_type,   o2.sub_type);
+      assert_eq(o1.line_style, o2.line_style);
+      assert_eq(o1.thickness,  o2.thickness);
+      assert_eq(o1.pen_color,  o2.pen_color);
+      assert_eq(o1.fill_color, o2.fill_color);
+      assert_eq(o1.depth,      o2.depth);
+      assert_eq(o1.pen_style,  o2.pen_style);
+      assert_eq(o1.area_fill,  o2.area_fill);
+      assert_eq(o1.style_val,  o2.style_val);
+      assert_eq(o1.join_style, o2.join_style);
+      assert_eq(o1.cap_style,  o2.cap_style);
+      assert_eq(o1.radius,     o2.radius);
+      assert_eq(o1.forward_arrow,  o2.forward_arrow);
+      assert_eq(o1.backward_arrow,  o2.backward_arrow);
+
+      //arrows
+      o2 = figobj_template("2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 1 0  1 2 2.00 65.00 125.00");
+      assert_eq(o2.farrow_type,  1);
+      assert_eq(o2.farrow_style, 2);
+      assert_eq(o2.farrow_thickness, 2);
+      assert_eq(o2.farrow_width, 65);
+      assert_eq(o2.farrow_height, 125);
+
+      assert_eq(o2.barrow_type,  0);
+      assert_eq(o2.barrow_style, 0);
+      assert_eq(o2.barrow_thickness, 1);
+      assert_eq(o2.barrow_width, 60);
+      assert_eq(o2.barrow_height, 30);
+
+      o2 = figobj_template("2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 1  2 1 3.00 64 124");
+
+      assert_eq(o2.farrow_type,  0);
+      assert_eq(o2.farrow_style, 0);
+      assert_eq(o2.farrow_thickness, 1);
+      assert_eq(o2.farrow_width, 60);
+      assert_eq(o2.farrow_height, 30);
+
+      assert_eq(o2.barrow_type,  2);
+      assert_eq(o2.barrow_style, 1);
+      assert_eq(o2.barrow_thickness, 3);
+      assert_eq(o2.barrow_width, 64);
+      assert_eq(o2.barrow_height, 124);
+
+      o2 = figobj_template("2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1  1 1  2 2 2 3 4  3 3 5 6 7");
+
+      assert_eq(o2.farrow_type,  2);
+      assert_eq(o2.farrow_style, 2);
+      assert_eq(o2.farrow_thickness, 2);
+      assert_eq(o2.farrow_width, 3);
+      assert_eq(o2.farrow_height, 4);
+
+      assert_eq(o2.barrow_type,  3);
+      assert_eq(o2.barrow_style, 3);
+      assert_eq(o2.barrow_thickness, 5);
+      assert_eq(o2.barrow_width, 6);
+      assert_eq(o2.barrow_height, 7);
+
     }
 
     {
@@ -192,6 +285,23 @@ main(){
       assert_eq(o.cap_style,0);
       assert_eq(o.forward_arrow,0);
       assert_eq(o.backward_arrow,0);
+
+      // template
+      auto o1 = read_figobj_header("3 0 0 1 0 7 50 -1 -1 0.000 0 0 0 4");
+      auto o2 = figobj_template("3 0 0 1 0 7 50 -1 -1 0.000 0 0 0");
+      assert_eq(o1.sub_type,   o2.sub_type);
+      assert_eq(o1.line_style, o2.line_style);
+      assert_eq(o1.thickness,  o2.thickness);
+      assert_eq(o1.pen_color,  o2.pen_color);
+      assert_eq(o1.fill_color, o2.fill_color);
+      assert_eq(o1.depth,      o2.depth);
+      assert_eq(o1.pen_style,  o2.pen_style);
+      assert_eq(o1.area_fill,  o2.area_fill);
+      assert_eq(o1.style_val,  o2.style_val);
+      assert_eq(o1.cap_style,  o2.cap_style);
+      assert_eq(o1.forward_arrow,  o2.forward_arrow);
+      assert_eq(o1.backward_arrow,  o2.backward_arrow);
+
     }
 
     {
@@ -234,6 +344,17 @@ main(){
       assert_eq(o.length,300);
       assert_eq(o.text,"text");
 
+      // template
+      auto o1 = read_figobj_header("4 0 0 50 -1 0 12 0.0000 4 210 300 -1575 6840 text\\001");
+      auto o2 = figobj_template("4 0 0 50 -1 0 12 0.0000 4");
+      assert_eq(o1.sub_type,   o2.sub_type);
+      assert_eq(o1.pen_color,  o2.pen_color);
+      assert_eq(o1.depth,      o2.depth);
+      assert_eq(o1.pen_style,  o2.pen_style);
+      assert_eq(o1.font,       o2.font);
+      assert_eq(o1.font_size,  o2.font_size);
+      assert_eq(o1.angle,      o2.angle);
+      assert_eq(o1.font_flags, o2.font_flags);
     }
 
     {
@@ -299,6 +420,23 @@ main(){
       assert_eq(o.backward_arrow,0);
       assert_eq(o.center_x,3915.000);
       assert_eq(o.center_y,7477.500);
+
+      // template
+      auto o1 = read_figobj_header("5 1 0 1 0 7 50 -1 -1 0.000 0 0 0 0 3915.000 7477.500 3420 7380 3870 6975 4410 7380");
+      auto o2 = figobj_template("5 1 0 1 0 7 50 -1 -1 0.000 0 0 0 0");
+      assert_eq(o1.sub_type,   o2.sub_type);
+      assert_eq(o1.line_style, o2.line_style);
+      assert_eq(o1.thickness,  o2.thickness);
+      assert_eq(o1.pen_color,  o2.pen_color);
+      assert_eq(o1.fill_color, o2.fill_color);
+      assert_eq(o1.depth,      o2.depth);
+      assert_eq(o1.pen_style,  o2.pen_style);
+      assert_eq(o1.area_fill,  o2.area_fill);
+      assert_eq(o1.style_val,  o2.style_val);
+      assert_eq(o1.cap_style,  o2.cap_style);
+      assert_eq(o1.forward_arrow,  o2.forward_arrow);
+      assert_eq(o1.backward_arrow,  o2.backward_arrow);
+
     }
 
     {

@@ -309,6 +309,34 @@ int read_figobj_header(FigObj & o, const std::string & header,
 FigObj read_figobj_header(const std::string & header,
                           const std::map<int,int> & custom_cmap = std::map<int,int>());
 
+
+/* Build object from template.
+Difference from read_figobj_header:
+- Fewer fields (no coordinates, number of points, text)
+- no custom colormap, use #rrggbb values if needed
+- arrow settings
+
+fields:
+ellipse:  1 sub_type line_style thickness pen_color fill_color depth
+          pen_style area_fill style_val direction angle
+polyline: 2 sub_type line_style thickness pen_color fill_color depth
+          pen_style area_fill style_val join_style cap_style radius
+          forward_arrow backward_arrow
+spline:   3 sub_type line_style thickness pen_color fill_color depth
+          pen_style area_fill style_val cap_style
+          forward_arrow backward_arrow
+text:     4 sub_type pen_color depth pen_style
+          font font_size angle font_flags
+arc:      5 sub_type line_style thickness pen_color fill_color depth
+          pen_style area_fill style_val cap_style
+          direction forward_arrow backward_arrow
+
+For polyline, spline and arc objects with non-zero forward_arrow and/or backward_arrow
+foolowing fields should be added for each arrow: type style thickness width height.
+*/
+FigObj figobj_template(const std::string & templ);
+
+
 /* Write data in FIG file format
    Options:
      fig_enc      -- encoding (default "KOI8-R")
