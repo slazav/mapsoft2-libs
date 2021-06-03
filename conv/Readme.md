@@ -106,6 +106,7 @@ Methods (map is a std::map(dPoint,dPoint)):
  - `ConvAff2D()` -- constructor, trivial transformation,
  - `ConvAff2D(const double & a)` -- constructor, rotation (rad, ccw),
  - `ConvAff2D(map)` -- build a transformation using the map (`map<dPoint,dPoint>`),
+ - `ConvAff2D(l1,l2)` -- build a transformation using two lines (`dLine`),
  - `reset()` -- reset to the trivial transformation,
  - `reset(map)` -- reset using the map,
  - `det()` -- forward conversion determinant,

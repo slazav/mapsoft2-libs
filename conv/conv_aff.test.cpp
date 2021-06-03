@@ -226,6 +226,10 @@ main(){
       dPoint p2c = rotate2d(p1*2, cnt, ang)*sc*3;
       assert_deq(p2, p2c, 0.05);
 
+      // construct using two lines
+      ConvAff2D cnvB(pts1,pts2);
+      assert_deq(cnvB.frw_pts(pts1), pts2, 1e-10);
+
     }
 
 

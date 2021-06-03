@@ -27,6 +27,16 @@ public:
   /// constructor - from a point-to-point reference
   ConvAff2D(const std::map<dPoint, dPoint> & ref) {reset(ref);}
 
+  /// constructor - from two lines
+  ConvAff2D(const dLine & l1, const dLine & l2){
+    if (l1.size()!=l2.size())
+      throw Err() << "ConvAff2D: wrong number of ref points";
+    std::map<dPoint, dPoint> ref;
+    for (size_t i = 0; i<l1.size(); i++)
+       ref.emplace(l1[i],l2[i]);
+    reset(ref);
+  }
+
   /// reset to trivial
   void reset();
 
