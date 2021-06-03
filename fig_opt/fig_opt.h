@@ -30,12 +30,12 @@ void fig_del_opts(FigObj & o);
 
 
 /// Add options to vector<string>.
-void fig_add_opts(std::vector<std::string> & comment, const Opt & opts);
+void fig_set_opts(std::vector<std::string> & comment, const Opt & opts);
 
 /// Add options to Fig.
-void fig_add_opts(Fig & f, const Opt & opts);
+void fig_set_opts(Fig & f, const Opt & opts);
 
 /// Add options to FigObj.
-void fig_add_opts(FigObj & o, const Opt & opts);
+void fig_set_opts(FigObj & o, const Opt & opts);
 
 #endif

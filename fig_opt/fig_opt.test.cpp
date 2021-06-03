@@ -31,18 +31,18 @@ main(){
     fig_del_opts(str);
     assert_eq(str.size(), 2);
 
-    fig_add_opts(str, o);
+    fig_set_opts(str, o);
     assert_eq(str.size(), 5);
     assert_eq(str[2], "\\key1=val1");
     assert_eq(str[3], "\\key2=1");
     assert_eq(str[4], "\\key3=");
 
-    fig_add_opts(str, o);
+    fig_set_opts(str, o);
     assert_eq(str.size(), 5);
 
     o.put("key2", 125);
     o.put("key4", 10);
-    fig_add_opts(str, o);
+    fig_set_opts(str, o);
     assert_eq(str.size(), 6);
     assert_eq(str[2], "\\key1=val1");
     assert_eq(str[3], "\\key2=125");

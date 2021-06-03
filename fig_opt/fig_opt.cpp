@@ -36,14 +36,13 @@ void fig_del_opts(Fig & f){ fig_del_opts(f.comment); }
 void fig_del_opts(FigObj & o){ fig_del_opts(o.comment); }
 
 
-void fig_add_opts(vector<string> & comm, const Opt & opts){
+void fig_set_opts(vector<string> & comm, const Opt & opts){
   Opt o = fig_get_opts(comm);
   fig_del_opts(comm);
   o.put(opts);
-  Opt::const_iterator i;
   for (const auto & i:o){
     comm.push_back(string("\\") + i.first + "=" + i.second);
   }
 }
-void fig_add_opts(Fig & f, const Opt & opts) {fig_add_opts(f.comment, opts);}
-void fig_add_opts(FigObj & o, const Opt & opts) {fig_add_opts(o.comment, opts);}
+void fig_set_opts(Fig & f, const Opt & opts) {fig_set_opts(f.comment, opts);}
+void fig_set_opts(FigObj & o, const Opt & opts) {fig_set_opts(o.comment, opts);}
