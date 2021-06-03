@@ -30,22 +30,18 @@ void fig_del_ref(Fig & F);
 /// Add geo reference to Fig.
 void fig_add_ref(Fig & F, const GeoMap & m);
 
-/*
-  /// get waypoints, tracks, map refrences from fig
-  void get_wpts(const fig_world & w, const g_map & m, geo_data & d);
-  void get_trks(const fig_world & w, const g_map & m, geo_data & d);
-  void get_maps(const fig_world & w, const g_map & m, geo_data & d);
+/// get waypoints, tracks, map refrences from fig
+void fig_get_wpts(const Fig & F, const GeoMap & m, GeoData & d);
+void fig_get_trks(const Fig & F, const GeoMap & m, GeoData & d);
+void fig_get_maps(const Fig & F, const GeoMap & m, GeoData & d);
 
-  /// remove waypoins, tracks, maps, or map borders:
-  void rem_wpts(fig_world & w);
-  void rem_trks(fig_world & w);
-  void rem_maps(fig_world & w);
-  void rem_brds(fig_world & w);
+/// remove waypoins, tracks, maps, or map borders:
+void fig_del_wpts(Fig & F);
+void fig_del_trks(Fig & F);
+void fig_del_maps(Fig & F);
 
-  /// Add waypoints or tracks from to fig
-  /// if raw = 1, no geofig comments are added
-  void put_wpts(fig_world & w, const g_map & m, const geo_data & d, bool raw=true);
-  void put_trks(fig_world & w, const g_map & m, const geo_data & d, bool raw=true);
-*/
+/// Add waypoints or tracks from to fig
+void fig_add_wpts(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o = Opt());
+void fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o = Opt());
 
 #endif
