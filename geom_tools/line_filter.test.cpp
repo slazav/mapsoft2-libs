@@ -25,6 +25,9 @@ main(){
     l2=l1; line_filter_v1(l2, -1, 2);
     assert_eq(l2, iLine("[[0,0],[10,4]]"));
 
+    l2=l1; line_filter_v1(l2, 1000, -1);
+    assert_eq(l2, iLine("[[0,0],[10,4]]"));
+
   }
   catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
