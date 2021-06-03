@@ -49,6 +49,13 @@ main(){
     assert_eq(str[4], "\\key3=");
     assert_eq(str[5], "\\key4=10");
 
+    o.erase("key1");
+    o.erase("key2");
+    fig_set_opts(str, o);
+    assert_eq(str.size(), 4);
+    assert_eq(str[2], "\\key3=");
+    assert_eq(str[3], "\\key4=10");
+
   }
   catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";

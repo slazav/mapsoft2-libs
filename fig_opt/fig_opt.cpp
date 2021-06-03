@@ -37,10 +37,8 @@ void fig_del_opts(FigObj & o){ fig_del_opts(o.comment); }
 
 
 void fig_set_opts(vector<string> & comm, const Opt & opts){
-  Opt o = fig_get_opts(comm);
   fig_del_opts(comm);
-  o.put(opts);
-  for (const auto & i:o){
+  for (const auto & i:opts){
     comm.push_back(string("\\") + i.first + "=" + i.second);
   }
 }
