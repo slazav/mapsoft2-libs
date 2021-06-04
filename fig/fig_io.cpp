@@ -678,3 +678,8 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
   }
 }
 
+void
+write_fig(std::string & fname, const Fig & w, const Opt & wopts){
+  std::ofstream s(fname);
+  write_fig(s, w, wopts);
+}
