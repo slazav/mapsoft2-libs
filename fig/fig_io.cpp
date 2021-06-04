@@ -70,9 +70,10 @@ read_comments(std::istream & s, vector<string> & comment, const IConv & cnv){
 }
 
 // Working with colors.
-// - Internally all colors are stored as 32-bit RGB values.
+// - Internally all colors are stored as 24-bit RGB values.
 //   No transparency.
-// - There is a default colormap (Fig colors -1..31).
+// - Default color (-1) is converted to 0xFF000000
+// - There is a default colormap (Fig colors 0..31).
 //   A custom colormap can also exist in the fig file.
 // - When reading object header, colors are converted to RGB.
 //   using both colormaps.
@@ -80,7 +81,23 @@ read_comments(std::istream & s, vector<string> & comment, const IConv & cnv){
 //   object headers. (This is my extension of Fig, I use it to
 //   construct objects with non-std colors).
 
-// convert Fig color to RGB
+// Convert Fig color to RGB, interger version, does not support #RRGGBB
+// colors, to be used in normal reading
+int
+color_fig2rgb(const int c, const map<int,int> & custom){
+  if (c==-1) return 0xFF000000; // default color
+  // find color in the default colormap
+  auto i=Fig::colors.find(c);
+  if (i!=Fig::colors.end()) return i->second;
+  // find color in the custom colormap
+  i=custom.find(c);
+  if (i!=custom.end()) return i->second;
+  cerr << "Fig: Unknown color: " << c << "\n";
+  return -1;
+}
+
+// Convert Fig color to RGB, string version, supports #RRGGBB
+// colors, to be used in template reading
 int
 color_fig2rgb(const std::string & s, const map<int,int> & custom){
   if (s.size()<1) return -1;
@@ -93,21 +110,13 @@ color_fig2rgb(const std::string & s, const map<int,int> & custom){
       throw Err() << "can't parse color value: \"" << s << "\"";
     return ret & 0xFFFFFF;
   }
-
-  int c = str_to_type<int>(s);
-  // find color in the default colormap
-  auto i=Fig::colors.find(c);
-  if (i!=Fig::colors.end()) return i->second;
-  // find color in the custom colormap
-  i=custom.find(c);
-  if (i!=custom.end()) return i->second;
-  cerr << "Fig: Unknown color: " << c << "\n";
-  return -1;
+  return color_fig2rgb(str_to_type<int>(s), custom);
 }
 
 // Convert RGB color to Fig color.
 int
 color_rgb2fig(const int c, const map<int,int> & custom_cmap){
+  if (c==0xFF000000) return -1; // default color
   int c1 = c & 0xFFFFFF;
   for (const auto & m : Fig::colors){
     if (m.first != -1 && m.second == c1) return m.first;
@@ -137,10 +146,10 @@ color_rgbadd(const int c, map<int,int> & custom_cmap){
 }
 
 /******************************************************************/
-// Read object header string
+// Create object using  header string
 int
 read_figobj_header(FigObj & o, const std::string & header,
-                   const map<int,int> & custom_cmap){
+                       const map<int,int> & custom_cmap){
   std::istringstream ss(header);
   ss >> o.type >> ws;
   if (ss.fail())
@@ -148,10 +157,9 @@ read_figobj_header(FigObj & o, const std::string & header,
 
   int ret = 0;
   int x1,x2,x3,y1,y2,y3;
-  std:string pen_color, fill_color; // read as strings, convert later
   switch (o.type) {
     case FIG_ELLIPSE:
-      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+      ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.direction >> o.angle
          >> x1 >> y1 >> o.radius_x >> o.radius_y >> o.start_x >> o.start_y >> o.end_x >> o.end_y
          >> std::ws;
@@ -160,7 +168,7 @@ read_figobj_header(FigObj & o, const std::string & header,
       o.push_back(iPoint(x1,y1));
       break;
     case FIG_POLYLINE:
-      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+      ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.join_style >> o.cap_style >> o.radius
          >> o.forward_arrow >> o.backward_arrow >> ret
          >> std::ws;
@@ -168,7 +176,7 @@ read_figobj_header(FigObj & o, const std::string & header,
         throw Err() << "FigObj: can't read line object: [" << header << "]";
       break;
     case FIG_SPLINE:
-      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+      ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
          >> o.forward_arrow >> o.backward_arrow >> ret
          >> std::ws;
@@ -176,9 +184,10 @@ read_figobj_header(FigObj & o, const std::string & header,
         throw Err() << "FigObj: can't read spline object: [" << header << "]";
       break;
     case FIG_TXT:
-      ss >> o.sub_type >> pen_color >> o.depth >> o.pen_style
+      ss >> o.sub_type >> o.pen_color >> o.depth >> o.pen_style
          >> o.font >> o.font_size >> o.angle >> o.font_flags
          >> o.height >> o.length >> x1 >> y1;
+      o.fill_color=7;
       ss.get(); // read space;
       if (ss.fail())
         throw Err() << "FigObj: can't read text object: [" << header << "]";
@@ -194,7 +203,7 @@ read_figobj_header(FigObj & o, const std::string & header,
       o.push_back(iPoint(x1,y1));
       break;
     case FIG_ARC:
-      ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
+      ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
          >> o.direction >> o.forward_arrow >> o.backward_arrow
          >> o.center_x >> o.center_y >> x1 >> y1 >> x2 >> y2 >> x3 >> y3
@@ -224,8 +233,8 @@ read_figobj_header(FigObj & o, const std::string & header,
   }
 
   // convert colors
-  o.pen_color  = color_fig2rgb(pen_color, custom_cmap);
-  o.fill_color = color_fig2rgb(fill_color, custom_cmap);
+  o.pen_color  = color_fig2rgb(o.pen_color, custom_cmap);
+  o.fill_color = color_fig2rgb(o.fill_color, custom_cmap);
 
   return ret;
 }

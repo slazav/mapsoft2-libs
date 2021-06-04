@@ -77,13 +77,9 @@ main(){
       assert_eq(o.end_x,7695);
       assert_eq(o.end_y,4725);
 
-      // rgb colors
-      auto o1 = read_figobj_header("1 3 0 2 #abcdef #AA00cc 50 -1 -1 0.000 1 0.0000 7380 5310 664 664 7380 5310 7695 4725");
-      assert_eq(o1.pen_color,0xabcdef);
-      assert_eq(o1.fill_color,0xaa00cc);
-
       // template
-      auto o2 = figobj_template("1 3 0 2 #abcdef #AA00cc 50 -1 -1 0.000 1 0.0000");
+      auto o1 = read_figobj_header("1 3 0 2 1 7 50 -1 -1 0.000 1 0.0000 7380 5310 664 664 7380 5310 7695 4725");
+      auto o2 = figobj_template("1 3 0 2 1 7 50 -1 -1 0.000 1 0.0000");
       assert_eq(o1.sub_type,   o2.sub_type);
       assert_eq(o1.line_style, o2.line_style);
       assert_eq(o1.thickness,  o2.thickness);
@@ -95,6 +91,11 @@ main(){
       assert_eq(o1.style_val,  o2.style_val);
       assert_eq(o1.direction,  o2.direction);
       assert_eq(o1.angle,      o2.angle);
+
+      // rgb colors
+      o2 = figobj_template("1 3 0 2 #abcdef #AA00cc 50 -1 -1 0.000 1 0.0000");
+      assert_eq(o2.pen_color,0xabcdef);
+      assert_eq(o2.fill_color,0xaa00cc);
 
     }
 
@@ -546,11 +547,11 @@ main(){
     "2 3 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 6\n"
     "\t945 2250 1935 1935 2925 2430 2790 3240 1170 3105 945 2250\n");
 
-    // color -1 is converted to 0
+    // color -1 is converted to -1
     test_objs(
     "2 1 0 1 -1 7 50 -1 -1 0.000 0 0 -1 0 0 5\n"
     "\t945 2250 1935 1935 2925 2430 2790 3240 1170 3105\n",
-    "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 5\n"
+    "2 1 0 1 -1 7 50 -1 -1 0.000 0 0 -1 0 0 5\n"
     "\t945 2250 1935 1935 2925 2430 2790 3240 1170 3105\n");
 
     {
