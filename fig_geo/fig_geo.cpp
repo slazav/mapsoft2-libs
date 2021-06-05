@@ -20,7 +20,7 @@ ms2opt_add_geofig_data(GetOptSet & opts){
   opts.add("raw", 0,0,g,
     "Convert tracks and points to fig as simple lines, without any additional information.");
   opts.add("trk_templ", 1,0,g,
-    "Template for track lines (default: \"2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0\").");
+    "Template for track lines (default: \"2 1 0 1 1 7 7 0 -1 1 1 1 -1 0 0\").");
   opts.add("wpt_templ", 1,0,g,
     "Template for waypoints (default: \"2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0\").");
   opts.add("txt_templ", 1,0,g,
@@ -295,7 +295,7 @@ fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
 
   bool raw = o.get("raw", false);
   std::string trk_templ = o.get<std::string>("trk_templ",
-    "2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0");
+    "2 1 0 1 1 7 7 0 -1 1 1 1 -1 0 0");
 
   auto trk_tmpl = figobj_template(trk_templ);
 
