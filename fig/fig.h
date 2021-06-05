@@ -350,7 +350,7 @@ FigObj figobj_template(const std::string & templ);
 void write_fig(std::ostream & s, const Fig & w, const Opt & wopts = Opt());
 
 // Write to file
-void write_fig(std::string & fname, const Fig & w, const Opt & wopts = Opt());
+void write_fig(const std::string & fname, const Fig & w, const Opt & wopts = Opt());
 
 
 #endif
