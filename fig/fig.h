@@ -10,6 +10,11 @@
 #include "geom/line.h"
 #include "opt/opt.h"
 
+#include "getopt/getopt.h"
+// add options for reading/writing fig files
+// group: FIG
+void ms2opt_add_fig(GetOptSet & opts);
+
 #define FIG_COLOR_DEF 0
 #define FIG_ELLIPSE   1
 #define FIG_POLYLINE  2
@@ -18,7 +23,6 @@
 #define FIG_ARC       5
 #define FIG_COMPOUND  6
 #define FIG_END_COMPOUND -FIG_COMPOUND
-
 
 /// fig object
 struct FigObj : iLine {

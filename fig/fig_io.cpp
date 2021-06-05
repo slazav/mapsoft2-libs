@@ -10,6 +10,16 @@ using namespace std;
 string fig_default_enc("KOI8-R");
 
 /******************************************************************/
+void
+ms2opt_add_fig(GetOptSet & opts){
+  const char *g = "FIG";
+  opts.add("fig_enc", 1,0,g,
+    "Encoding for reading/writing fig files (default: KOI8-R).");
+  opts.add("fig_header", 1,0,g,
+    "Read/write fig headers (default: true).");
+}
+
+/******************************************************************/
 // extract a value from a single line
 template <typename T>
 void read_line(std::istream & s, T & val){
