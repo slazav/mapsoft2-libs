@@ -7,7 +7,7 @@
 
 void
 ms2opt_add_geofig_ref(GetOptSet & opts){
-  const char *g = "GEOFIG_DATA";
+  const char *g = "GEOFIG_REF";
   opts.add("ref_templ", 1,0,g,
     "Template for reference points (default: \"2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0\").");
   opts.add("brd_templ", 1,0,g,
@@ -16,7 +16,7 @@ ms2opt_add_geofig_ref(GetOptSet & opts){
 
 void
 ms2opt_add_geofig_data(GetOptSet & opts){
-  const char *g = "GEOFIG_REF";
+  const char *g = "GEOFIG_DATA";
   opts.add("raw", 0,0,g,
     "Convert tracks and points to fig as simple lines, without any additional information.");
   opts.add("trk_templ", 1,0,g,
