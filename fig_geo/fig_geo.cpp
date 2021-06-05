@@ -5,6 +5,29 @@
 
 #include "image/io.h"
 
+void
+ms2opt_add_geofig_ref(GetOptSet & opts){
+  const char *g = "GEOFIG_DATA";
+  opts.add("ref_templ", 1,0,g,
+    "Template for reference points (default: \"2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0\").");
+  opts.add("brd_templ", 1,0,g,
+    "Template for border lines (default: \"2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0\").");
+}
+
+void
+ms2opt_add_geofig_data(GetOptSet & opts){
+  const char *g = "GEOFIG_REF";
+  opts.add("raw", 0,0,g,
+    "Convert tracks and points to fig as simple lines, without any additional information.");
+  opts.add("trk_templ", 1,0,g,
+    "Template for track lines (default: \"2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0\").");
+  opts.add("wpt_templ", 1,0,g,
+    "Template for waypoints (default: \"2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0\").");
+  opts.add("txt_templ", 1,0,g,
+    "Template for waypoint labels (default: \"4 0 8 5 -1 18 6 0.0000 4\").");
+}
+
+
 std::string
 fig_read_name_(const std::string & c){
   std::istringstream ss(c.substr(3));
@@ -89,14 +112,17 @@ fig_del_ref(Fig & F){
 }
 
 void
-fig_add_ref(Fig & F, const GeoMap & m){
+fig_add_ref(Fig & F, const GeoMap & m, const Opt & opts){
 
   Opt O = fig_get_opts(F);
   O.put("name", m.name);
 
+  std::string ref_templ = opts.get("ref_templ", "2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0");
+  std::string brd_templ = opts.get("brd_templ", "2 3 0 1 5 7 41 -1 -1 0.000 0 0 7 0 0");
+
   // add ref points
   for (const auto & pp: m.ref){
-     auto f = figobj_template("2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0");
+     auto f = figobj_template(ref_templ);
      f.push_back((iPoint)pp.first);
      std::ostringstream ss;
      ss << "REF " << std::setprecision(8)
@@ -107,7 +133,7 @@ fig_add_ref(Fig & F, const GeoMap & m){
 
   // add border
   for (const auto & b:m.border){
-    auto f = figobj_template("2 3 0 1 5 7 41 -1 -1 0.000 0 0 7 0 0");
+    auto f = figobj_template(brd_templ);
     std::string cc("BRD");
     if (m.name.size()) cc+=" ";
     f.comment.push_back(cc + m.name);
@@ -236,13 +262,13 @@ void
 fig_add_wpts(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   ConvMap cnv(m); // fig -> wgs
   bool raw = o.get("raw", false);
-  std::string wpt_mask = o.get<std::string>("wpt_mask",
+  std::string wpt_templ = o.get<std::string>("wpt_templ",
     "2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0");
-  std::string txt_mask = o.get<std::string>("txt_mask",
+  std::string txt_templ = o.get<std::string>("txt_templ",
     "4 0 8 5 -1 18 6 0.0000 4");
 
-  auto wpt_tmpl = figobj_template(wpt_mask);
-  auto txt_tmpl = figobj_template(txt_mask);
+  auto wpt_tmpl = figobj_template(wpt_templ);
+  auto txt_tmpl = figobj_template(txt_templ);
 
   for (const auto & wl:d.wpts){
     for (const auto & w:wl) {
@@ -268,10 +294,10 @@ fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   ConvMap cnv(m); // fig -> wgs
 
   bool raw = o.get("raw", false);
-  std::string trk_mask = o.get<std::string>("trk_mask",
+  std::string trk_templ = o.get<std::string>("trk_templ",
     "2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0");
 
-  auto trk_tmpl = figobj_template(trk_mask);
+  auto trk_tmpl = figobj_template(trk_templ);
 
   for (const auto & t:d.trks){
     iLine l(flatten(cnv.bck_pts((dLine)t)));

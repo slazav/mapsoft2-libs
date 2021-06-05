@@ -7,6 +7,13 @@
 #include "opt/opt.h"
 #include "geo_data/geo_data.h"
 
+
+#include "getopt/getopt.h"
+// add options for converting geodata to fig
+// groups: GEOFIG_REF, GEOFIG_DATA
+void ms2opt_add_geofig_ref(GetOptSet & opts);
+void ms2opt_add_geofig_data(GetOptSet & opts);
+
 // Get geo-reference from fig:
 // - Take map name from fig option `name`. Default - empty.
 // - Take map projection from fig options `map_proj`, `lon0`.
@@ -28,7 +35,7 @@ void fig_del_ref(Fig & F);
 
 
 /// Add geo reference to Fig.
-void fig_add_ref(Fig & F, const GeoMap & m);
+void fig_add_ref(Fig & F, const GeoMap & m, const Opt & o = Opt());
 
 /// get waypoints, tracks, map refrences from fig
 void fig_get_wpts(const Fig & F, const GeoMap & m, GeoData & d);
