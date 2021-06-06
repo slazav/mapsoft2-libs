@@ -381,7 +381,7 @@ Line<T> rect_to_line(const Rect<T> & r, bool closed=true) {
 }
 
 /// Distance between two lines A and B: sqrt(sum(dist(A[i],B[i])^2)).
-/// Returns +inf for lines fith different number of points.
+/// Returns +inf for lines with different number of points.
 template <typename T>
 double dist(const Line<T> & A, const Line<T> & B){
   double ret = 0;

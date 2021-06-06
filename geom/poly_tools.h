@@ -299,8 +299,9 @@ void remove_holes(MultiLine<T> & L){
   }
 }
 
-/// Read a figure from the string and get its bounding box.
-/// The figure can be Point, Line/Multiline, Rect
+/// Read a figure from the string.
+/// The figure can be Point, Line/Multiline, Rect.
+/// Return the figure as MultiLine.
 template <typename T>
 MultiLine<T> figure_line(const::std::string &str) {
   MultiLine<T> ret;

@@ -305,7 +305,8 @@ MultiLine<T> flip_x(const MultiLine<T> & l, const T x0=0){
 // additional functions
 
 /// Distance between two lines A and B: sqrt(sum(dist(A[i],B[i])^2)).
-/// Returns +inf for lines fith different number of points.
+/// Returns +inf for lines with different number of segments
+/// or different number of points in a segment.
 template <typename T>
 double dist(const MultiLine<T> & A, const MultiLine<T> & B){
   double ret = 0;
