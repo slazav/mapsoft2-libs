@@ -504,15 +504,16 @@ std::map<short, dMultiLine>
 SRTM::find_contours(const dRect & range, int step){
   int w = get_srtm_width();
   double E = 1e-6; // distance for merging
-  int x1  = int(floor((w-1)*range.tlc().x));
-  int x2  = int( ceil((w-1)*range.brc().x));
-  int y1  = int(floor((w-1)*range.tlc().y));
-  int y2  = int( ceil((w-1)*range.brc().y));
+  iRect irange = ceil(range*(w-1.0));
+  int x1  = irange.tlc().x;
+  int x2  = irange.brc().x;
+  int y1  = irange.tlc().y;
+  int y2  = irange.brc().y;
 
   std::map<short, dMultiLine> ret;
   int count = 0;
-  for (int y=y2; y>y1; y--){
-    for (int x=x1; x<x2; x++){
+  for (int y=y2; y>=y1; y--){
+    for (int x=x1; x<=x2; x++){
 
       iPoint p(x,y);
       // Crossing of all 4 data cell sides with contours
@@ -612,13 +613,17 @@ dMultiLine
 SRTM::find_slope_contours(const dRect & range, double val){
   int w = get_srtm_width();
   double E = 1e-6; // distance for merging
-  int x1  = int(floor((w-1)*range.tlc().x));
-  int x2  = int( ceil((w-1)*range.brc().x));
-  int y1  = int(floor((w-1)*range.tlc().y));
-  int y2  = int( ceil((w-1)*range.brc().y));
+  iRect irange = ceil(range*(w-1.0));
+  int x1  = irange.tlc().x;
+  int x2  = irange.brc().x;
+  int y1  = irange.tlc().y;
+  int y2  = irange.brc().y;
+
   dMultiLine ret;
-  for (int y=y2; y>y1; y--){
-    for (int x=x1; x<x2; x++){
+  // Add one extra point on each side to put zero values there
+  // and get closed contours.
+  for (int y=y2+1; y>=y1-1; y--){
+    for (int x=x1-1; x<=x2+1; x++){
 
       iPoint p(x,y);
       // Crossing of all 4 data cell sides with contours
