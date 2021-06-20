@@ -148,10 +148,12 @@ class SRTM {
     uint32_t get_bgcolor() const {return bgcolor;}
 
     // make vector data: contours
-    std::map<short, dMultiLine> find_contours(const dRect & range, int step);
+    // use kx parameter to use only every kx-th horizontal point.
+    // if kx == 0 then use some latitude-dependent default.
+    std::map<short, dMultiLine> find_contours(const dRect & range, int step, int kx=0);
 
     // make vector data: slope contours
-    dMultiLine find_slope_contours(const dRect & range, double val);
+    dMultiLine find_slope_contours(const dRect & range, double val, int kx=0);
 
     // make vector data: peaks
     std::map<dPoint, short> find_peaks(const dRect & range, int DH, size_t PS);
