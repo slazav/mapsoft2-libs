@@ -19,10 +19,13 @@ void ms2opt_add_image(GetOptSet & opts){
   opts.add("tiff_format", 1,0, g,
     "When writing TIFF, convert image to one of following forms: "
     "argb, rgb, grey, pal (default depends on the image).");
+  opts.add("tiff_compression", 1,0, g,
+    "Set compression algorythm for writing TIFF files: "
+    "none, ccit_rle, ccit_rlew, ccit_fax3, ccit_fax4, lzw (default), jpeg, packbits");
   opts.add("tiff_minwhite", 1,0, g,
     "When writing greyscale TIFF, use MINISWHITE colors (default: 0).");
   opts.add("jpeg_quality", 1,0, g,
-    "Set JPEG quality (default 95).");
+    "Set JPEG quality for writing jpeg and tiff files (default 95).");
   opts.add("png_format", 1,0, g,
     "When writing PNG, convert image to one of following forms: "
     "argb, rgb, grey, agrey, pal (default depends on the image).");

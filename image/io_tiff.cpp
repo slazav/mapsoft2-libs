@@ -370,8 +370,40 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
     TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, samples);
     TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,   bps);
     TIFFSetField(tif, TIFFTAG_PLANARCONFIG,    1);
-    TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,    1);
-    TIFFSetField(tif, TIFFTAG_COMPRESSION,     COMPRESSION_LZW);
+
+    // Compression
+    // Supported by libtiff (see man libtiff and tiff.h):
+    //  - no compression                       (COMPRESSION_NONE = 1)
+    //  - CCITT 1D Huffman compression         (COMPRESSION_CCITTRLE = 2),
+    //  - CCITT Group 3 Facsimile compression  (COMPRESSION_CCITTFAX3 = 3),
+    //  - CCITT Group 4 Facsimile compression  (COMPRESSION_CCITTFAX4 = 4),
+    //  - Lempel-Ziv & Welch compression       (COMPRESSION_LZW = 5),
+    //  - baseline JPEG compression            (COMPRESSION_JPEG = 7),
+    //  - word-aligned 1D Huffman compression  (COMPRESSION_CCITTRLEW = 32771),
+    //  - PackBits compression (Macintosh RLE) (COMPRESSION_PACKBITS = 32773)
+    s = opt.get("tiff_compression", "lzw");
+    uint16_t tiff_compr = 1;
+    if      (s == "none")      tiff_compr = COMPRESSION_NONE;
+    else if (s == "ccit_rle")  tiff_compr = COMPRESSION_CCITTRLE;
+    else if (s == "ccit_rlew") tiff_compr = COMPRESSION_CCITTRLEW;
+    else if (s == "ccit_fax3") tiff_compr = COMPRESSION_CCITTFAX3;
+    else if (s == "ccit_fax4") tiff_compr = COMPRESSION_CCITTFAX4;
+    else if (s == "lzw")       tiff_compr = COMPRESSION_LZW;
+    else if (s == "jpeg")      tiff_compr = COMPRESSION_JPEG;
+    else if (s == "packbits")  tiff_compr = COMPRESSION_PACKBITS;
+    else throw Err() << "Unknown --tiff_compression value: " << s;
+    TIFFSetField(tif, TIFFTAG_COMPRESSION, tiff_compr);
+
+    // Set ROWSPERSTRIP. We want 1 for random access in file
+    // loading. Jpeg compression supports only multiples of 8:
+    TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, 
+      tiff_compr == COMPRESSION_JPEG ? 8:1);
+
+    // Set quality for JPEG compression (note, that TIFFTAG_JPEGQUALITY
+    // is a "pseudo tag", it's not written to the file):
+    if (tiff_compr == COMPRESSION_JPEG) {
+      TIFFSetField(tif, TIFFTAG_JPEGQUALITY, opt.get("jpeg_quality", 95));
+    }
 
     if (samples == 3 || samples == 4){
       TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
