@@ -430,8 +430,10 @@ GeoMap geo_mkref_data(const GeoData & data, const Opt & o){
 
   if (bbox.is_empty()) return GeoMap();
 
-  opts.put("coords_wgs", bbox);
-  //opts.put("coords_wgs", data.bbox());
+  if (!opts.exists("coords") &&
+      !opts.exists("coords_wgs") &&
+      !opts.exists("coords_file"))
+    opts.put("coords_wgs", bbox);
 
   return geo_mkref_opts(opts);
 }
