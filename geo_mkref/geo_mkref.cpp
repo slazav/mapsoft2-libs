@@ -52,6 +52,9 @@ ms2opt_add_mkref_opts(GetOptSet & opts){
   opts.add("coords_wgs", 1,0,g,
     "Figure in wgs84 coordinates to be covered by the map "
     "(\"*_tile\" or \"proj\" maps), a rectangle, a line, or a multi-segment line.");
+  opts.add("coords_file", 1,0,g,
+    "Use tracks and points in the file to calculate map size "
+    "(\"*_tile\" or \"proj\" maps).");
   opts.add("border", 1,0,g,
     "Map border in projection coordinates (For --mkref=\"proj\" maps), "
     "a line or a multi-segment line.");
@@ -83,6 +86,30 @@ ms2opt_add_mkref_data(GetOptSet & opts){
     "When using existing map as a reference source, rescale it.");
 }
 
+
+/********************************************************************/
+// helper function: read a line (w/o z coord) from a geofile,
+// use first track.
+dMultiLine read_geoline(const std::string & fname){
+  GeoData d;
+  read_geo(fname, d);
+  if (d.trks.size()<1) throw Err()
+      << "mkref: can't read any track from file: " << fname;
+  dMultiLine ret = *d.trks.begin();
+  ret.flatten(); // remove z component
+  return ret;
+}
+
+// Get bbox (tracks and wpts) from a geofile,
+// use first track.
+dRect read_bbox(const std::string & fname){
+  dRect bbox;
+  GeoData data;
+  read_geo(fname, data);
+  for (auto const & t:data.trks) bbox.expand(t.bbox());
+  for (auto const & w:data.wpts) bbox.expand(w.bbox());
+  return bbox;
+}
 
 /********************************************************************/
 
@@ -260,7 +287,7 @@ geo_mkref_opts(const Opt & o){
     // get bounding box (in map pixels)
     dRect range;
 
-    o.check_conflict({"coords", "coords_wgs"});
+    o.check_conflict({"coords", "coords_wgs", "coords_file"});
 
     if (o.exists("coords"))
       range = figure_bbox<double>(o.get("coords",""))/k;
@@ -268,6 +295,10 @@ geo_mkref_opts(const Opt & o){
     if (o.exists("coords_wgs"))
         range = cnv.bck_acc(
           figure_line<double>(o.get("coords_wgs",""))).bbox();
+
+    if (o.exists("coords_file"))
+        range = cnv.bck_acc(
+          read_bbox(o.get("coords_wgs","")));
 
     // check if range is set
     if (range.is_zsize())
@@ -341,13 +372,7 @@ geo_mkref_brd(GeoMap & ref, const Opt & o){
   }
 
   if (o.exists("border_file")){
-    std::string name = o.get("border_file");
-    GeoData d;
-    read_geo(name, d);
-    if (d.trks.size()<1) throw Err()
-      << "mkref: can't read any track from border_file: " << name;
-    ref.border = *d.trks.begin();
-    ref.border.flatten(); // remove z component
+    ref.border = read_geoline(o.get("border_file"));
     if (!ref.empty()){
       ConvMap cnv(ref);
       ref.border = cnv.bck_acc(ref.border);
