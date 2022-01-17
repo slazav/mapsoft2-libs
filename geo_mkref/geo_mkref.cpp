@@ -298,7 +298,7 @@ geo_mkref_opts(const Opt & o){
 
     if (o.exists("coords_file"))
         range = cnv.bck_acc(
-          read_bbox(o.get("coords_wgs","")));
+          read_bbox(o.get("coords_file","")));
 
     // check if range is set
     if (range.is_zsize())
