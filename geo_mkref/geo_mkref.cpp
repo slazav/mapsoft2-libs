@@ -55,6 +55,9 @@ ms2opt_add_mkref_opts(GetOptSet & opts){
   opts.add("coords_file", 1,0,g,
     "Use tracks and points in the file to calculate map size "
     "(\"*_tile\" or \"proj\" maps).");
+  opts.add("coords_nom", 1,0,g,
+    "Use Soviet nomenclature name calculate map size "
+    "(\"*_tile\" or \"proj\" maps).");
   opts.add("border", 1,0,g,
     "Map border in projection coordinates (For --mkref=\"proj\" maps), "
     "a line or a multi-segment line.");
@@ -223,10 +226,25 @@ geo_mkref_opts(const Opt & o){
 
     }
 
+    o.check_conflict({"coords_wgs", "coords_file", "coord_nom"});
+
     if (o.exists("coords_wgs")){
       dRect r = figure_bbox<double>(o.get("coords_wgs",""));
       if (G) tile_range = tcalc.range_to_gtiles(r, z);
       else   tile_range = tcalc.range_to_tiles(r, z);
+    }
+    if (o.exists("coords_file")){
+      dRect r = read_bbox(o.get("coords_file",""));
+      if (G) tile_range = tcalc.range_to_gtiles(r, z);
+      else   tile_range = tcalc.range_to_tiles(r, z);
+    }
+    if (o.exists("coords_nom")){
+      nom_scale_t sc;
+      ConvGeo cnv2("SU_LL");
+      dRect r = nom_to_range(o.get("coords_nom",""), sc, true);
+      if (G) tile_range = tcalc.range_to_gtiles(cnv2.frw_acc(r), z);
+      else   tile_range = tcalc.range_to_tiles(cnv2.frw_acc(r), z);
+      map.border.push_back(cnv2.frw_acc(rect_to_line(r)));
     }
 
     // here tile_range should be set to non-zero rectangle
@@ -262,7 +280,13 @@ geo_mkref_opts(const Opt & o){
 
     pts_r.flip_y(map.image_size.y);
     map.add_ref(pts_r, pts_w);
-    map.border.push_back(pts_r);
+
+    if (map.border.size()!=0){
+      ConvMap cnv(map);
+      map.border = cnv.bck_acc(map.border);
+    }
+    else
+      map.border.push_back(pts_r);
   }
 
   /***************************************/
@@ -287,18 +311,24 @@ geo_mkref_opts(const Opt & o){
     // get bounding box (in map pixels)
     dRect range;
 
-    o.check_conflict({"coords", "coords_wgs", "coords_file"});
-
+    o.check_conflict({"coords", "coords_wgs", "coords_file", "coords_nom"});
     if (o.exists("coords"))
       range = figure_bbox<double>(o.get("coords",""))/k;
-
     if (o.exists("coords_wgs"))
         range = cnv.bck_acc(
           figure_line<double>(o.get("coords_wgs",""))).bbox();
-
     if (o.exists("coords_file"))
         range = cnv.bck_acc(
           read_bbox(o.get("coords_file","")));
+    if (o.exists("coords_nom")){
+      nom_scale_t sc;
+      ConvGeo cnv2("SU_LL");
+      dRect r = nom_to_range(o.get("coords_nom",""), sc, true);
+      range = cnv2.frw_acc(r);
+      range = cnv.bck_acc(range);
+      map.border.push_back(cnv2.frw_acc(rect_to_line(r)));
+      cnv.bck_acc(map.border);
+    }
 
     // check if range is set
     if (range.is_zsize())
@@ -331,7 +361,7 @@ geo_mkref_opts(const Opt & o){
       map.border = rint(brd - range.tlc());
       map.border.flip_y(range.h);
     }
-    else {
+    else if (map.border.size()==0){
       map.border.push_back(pts_r);
     }
 
