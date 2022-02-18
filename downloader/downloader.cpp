@@ -5,6 +5,16 @@
 #include "err/err.h"
 #include "opt/opt.h"
 
+
+void
+ms2opt_add_downloader(GetOptSet & opts){
+  const char *g = "DNLDR";
+  opts.add("insecure",   1,0,g, "do not check TLS certificate (default: 0)");
+  opts.add("user_agent", 1,0,g, "set user agent (default: \"mapsoft2 downloader\")");
+  opts.add("http_ref",   1,0,g, "set fttp reference (default: \"https://github.com/slazav/mapsoft2\")");
+}
+
+
 // Write callback for libcurl.
 // Userdata is a pointer to std::string, where data should be appended
 static size_t
@@ -16,9 +26,8 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 /**********************************/
 Downloader::Downloader(const int cache_size, const int max_conn, const int log_level):
        max_conn(max_conn), num_conn(0), log_level(log_level), worker_needed(true),
-       worker_thread(&Downloader::worker, this), data(cache_size),
-       user_ag("mapsoft2 downloader (slazav@altlinux.org)"),
-       http_ref("https://github.com/slazav/mapsoft2") {
+       worker_thread(&Downloader::worker, this), data(cache_size) {
+  set_opt(Opt());
 }
 
 Downloader::~Downloader(){
@@ -27,6 +36,13 @@ Downloader::~Downloader(){
   lk.unlock();
   add_cond.notify_one();
   worker_thread.join();
+}
+
+void
+Downloader::set_opt(const Opt & opts){
+  insecure = opts.get("insecure", false);
+  user_ag  = opts.get("user_agent", "mapsoft2 downloader");
+  http_ref = opts.get("http_ref",   "https://github.com/slazav/mapsoft2");
 }
 
 /**********************************/
@@ -172,6 +188,7 @@ Downloader::worker(){
       curl_easy_setopt(eh, CURLOPT_USERAGENT, user_ag.c_str());
       curl_easy_setopt(eh, CURLOPT_REFERER, http_ref.c_str());
       curl_easy_setopt(eh, CURLOPT_VERBOSE, log_level>2);
+      curl_easy_setopt(eh, CURLOPT_SSL_VERIFYPEER, insecure? 0L:1L);
 
       curl_multi_add_handle(cm, eh);
       if (log_level>1)

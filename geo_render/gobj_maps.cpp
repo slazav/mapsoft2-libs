@@ -33,7 +33,6 @@ ms2opt_add_drawmap(GetOptSet & opts){
     "Max scale (<map pixels>/<image pixels>) (default is 10).");
   opts.add("map_def_col", 1,0,g,
     "Color to paint the map outside min_sc/max_sc  (default is 0x80FF0000).");
-
 }
 
 Opt
@@ -60,6 +59,7 @@ GObjMaps::set_opt(const Opt & opt) {
   minsc     = opt.get("map_min_sc",   0.1);
   maxsc     = opt.get("map_max_sc",   10);
   def_col   = opt.get("map_def_col",  0x80FF0000);
+  for (auto & d:data){ if (d.timg) d.timg->set_opt(opt); }
   redraw_me();
 }
 
