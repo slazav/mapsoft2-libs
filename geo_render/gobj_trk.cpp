@@ -15,7 +15,7 @@ ms2opt_add_drawtrk(GetOptSet & opts){
   opts.add("trk_draw_mode", 1,0,g,
     "Track drawing mode (normal, speed, height, default - normal).");
   opts.add("trk_draw_transp", 1,0,g,
-    "Use transparent color (0..1, default - 0).");
+    "Use transparent color (0..1, default - 0.5).");
   opts.add("trk_draw_dots", 1,0,g,
     "Draw dots (for normal drawing mode), default: 1.");
   opts.add("trk_draw_width", 1,0,g, "Track width factor, default: 3px.");
@@ -30,7 +30,7 @@ ms2opt_add_drawtrk(GetOptSet & opts){
 Opt
 GObjTrk::get_def_opt(){
   Opt o;
-  o.put("trk_draw_transp", 0);
+  o.put("trk_draw_transp", 0.5);
   o.put("trk_draw_mode", "normal");
   o.put("trk_draw_dots", 1);
   o.put("trk_draw_width", 3.0);
@@ -96,7 +96,7 @@ GObjTrk::update_opt(){
 
   // color from track is always non-transparent.
   // set transparency (0..1)
-  double tr = opt.get<double>("trk_draw_transp", 0);
+  double tr = opt.get<double>("trk_draw_transp", 0.5);
   color = color | ((int)rint((1-tr)*255)<<24);
 
   // track drawing mode (normal, speed, height)
