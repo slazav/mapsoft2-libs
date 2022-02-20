@@ -18,6 +18,7 @@ ms2opt_add_drawtrk(GetOptSet & opts){
     "Use transparent color (0..1, default - 0).");
   opts.add("trk_draw_dots", 1,0,g,
     "Draw dots (for normal drawing mode), default: 1.");
+  opts.add("trk_draw_width", 1,0,g, "Track width factor, default: 3px.");
   opts.add("trk_draw_smin",    1,0,g, "Min value for speed mode [km/h].");
   opts.add("trk_draw_smax",    1,0,g, "Max value for speed mode [km/h].");
   opts.add("trk_draw_hmin",    1,0,g, "Min value for height mode [m].");
@@ -32,6 +33,7 @@ GObjTrk::get_def_opt(){
   o.put("trk_draw_transp", 0);
   o.put("trk_draw_mode", "normal");
   o.put("trk_draw_dots", 1);
+  o.put("trk_draw_width", 3.0);
   o.put("trk_draw_grad", "BCGYRM");
   // for speed mode
   o.put("trk_draw_smin", 0);
@@ -88,7 +90,8 @@ GObjTrk::update_opt(){
   if (trk.size() != segments.size())
     throw Err() << "GObjTrk: segments are not syncronized with track";
 
-  linewidth = trk.opts.get<double>("thickness", 1);
+  linewidth = trk.opts.get<double>("thickness", 1.0)
+            * opt.get<double>("trk_draw_width", 3.0);
   int  color  = trk.opts.get<int>("color", 0x0000FF);
 
   // color from track is always non-transparent.
