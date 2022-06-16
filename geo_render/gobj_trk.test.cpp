@@ -21,6 +21,7 @@ main(){
     GObjTrk trk_obj(trk);
     Opt o;
     o.put("dot_w", 0.0);
+    o.put("trk_draw_width", 1.0);
     trk_obj.set_opt(o);
 
     auto v1 = trk_obj.find_segments(dPoint(1.1,1.1));
