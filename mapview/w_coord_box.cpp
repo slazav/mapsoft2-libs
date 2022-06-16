@@ -72,7 +72,8 @@ CoordBox::get_xy(){
   std::istringstream s(coords->get_text());
   double x,y;
   char c;
-  s >> x >> std::ws;
+  s >> x;
+  if (!s.eof()) s >> std::ws;
   if (!s) return old_pt;
   do {s >> c;} while (s && (c==',' || c==';'));
   s.putback(c);

@@ -249,8 +249,8 @@ read_point_node(xmlTextReaderPtr reader, GeoWpt & ww){
       if (ret != 1) break;
       char s1,s2;
       istringstream s(str);
-      s >> ws >> ww.x >> ws >> s1 >>
-           ws >> ww.y >> ws;
+      s >> ws >> ww.x >> ws >> s1 >> ws >> ww.y;
+      if (!s.eof()) s >> ws;
       if (s.fail() || s1!=','){
         cerr << "Warning: Coord error (" << str << ")\n";
         ret=0;

@@ -54,7 +54,8 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
       int symb, displ;
       char c;
       istringstream s1(l);
-      s1 >> p.name >> p.y >> p.x >> symb >> c >> displ >> ws;
+      s1 >> p.name >> p.y >> p.x >> symb >> c >> displ;
+      if (!s1.eof()) s1 >> ws;
       getline(s1, p.comm);
       if (s1.fail() || !s1.eof() || c != '/')
         throw Err() << "io_gu: can't parse a waypoint: [" << l << "]";
@@ -67,9 +68,10 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
       GeoTpt p;
       string t1,t2,st;
       istringstream s1(l);
-      s1 >> p.y >> p.x >> t1 >> t2 >> ws;
+      s1 >> p.y >> p.x >> t1 >> t2;
       p.t = parse_utc_time(t1 + " " + t2);
-      if (!s1.eof()){
+      if (!s1.eof()) s1 >> ws;
+      if (!s1.eof()) {
         s1 >> st;
         if (st != "start")
           throw Err() << "io_gu: can't parse a trackpoint: [" << l << "]";

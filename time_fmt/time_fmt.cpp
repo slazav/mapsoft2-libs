@@ -160,7 +160,8 @@ int64_t
 parse_ozi_time(const string & str){
   istringstream ss(str);
   double t;
-  ss >> ws >> t >> ws;
+  ss >> ws >> t;
+  if (!ss.eof()) ss >> ws;
   if (ss.fail() || !ss.eof())
     throw Err() << "Unsupported time format: \"" << str << "\"";
 
