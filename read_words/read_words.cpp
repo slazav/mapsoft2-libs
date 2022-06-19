@@ -183,3 +183,18 @@ join_words(const std::vector<std::string> & words){
   }
   return ret;
 }
+
+std::string
+unquote_words(const std::string & in){
+  std::string ret;
+  std::istringstream ss(in);
+  while (1){
+    auto words = read_words(ss);
+    if (words.size()==0) break;
+    for (auto const & w:words){
+      if (ret.size()) ret+=" ";
+      ret += w;
+    }
+  }
+  return ret;
+}
