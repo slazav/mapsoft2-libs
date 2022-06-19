@@ -60,6 +60,9 @@ class ImageT: public Image {
        tmpl(tmpl), tsize(tsize), swapy(swapy), tiles(IMAGE_T_TCACHE_SIZE), zoom(0),
        dmanager(IMAGE_T_DCACHE_SIZE, IMAGE_T_NCONN) {};
 
+    // Set options, now it's only Downloader options
+    void set_opt(const Opt & opt) {dmanager.set_opt(opt);}
+
     // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
     static std::string make_url(const std::string& tmpl, const iPoint & key);
 

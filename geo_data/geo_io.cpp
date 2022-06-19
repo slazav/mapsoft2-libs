@@ -224,6 +224,9 @@ write_geo (const string &fname, const GeoData & data, const Opt & opt){
     }
     return;
   }
-  throw Err(-2) << "Can't determine output format for file: " << fname;
+  if (fmt!="")
+    throw Err(-2) << "Unknown output format for geodata file: " << fname << ": " << fmt;
+  else
+    throw Err(-2) << "Can't determine output format for geodata file: " << fname;
 }
 

@@ -1,6 +1,14 @@
 #ifndef DOWNLOADER_H
 #define DOWNLOADER_H
 
+/********************************************************************/
+#include "getopt/getopt.h"
+
+// add DNLDR group of options
+void ms2opt_add_downloader(GetOptSet & opts);
+
+/********************************************************************/
+
 /*
 Download manager. Download files using libcurl, use parallel
 downloading. Results are stored in a cache with fixed size.
@@ -66,11 +74,14 @@ class Downloader {
 
     std::string user_ag;  // user agent
     std::string http_ref; // http referer
+    bool insecure; // do not check TLS certificate
 
   public:
 
   Downloader(const int cache_size=64, const int max_conn=4, const int log_level=1);
   ~Downloader();
+
+  void set_opt(const Opt & opts);
 
   // Add an URL to the downloading queue.
   // If the URL is already in queue, downloading or finished, do nothing.

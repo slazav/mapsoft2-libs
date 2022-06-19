@@ -5,7 +5,6 @@
 ///@{
 
 #include <cmath> // fabs
-#include <cassert>
 #include "err.h"
 
 // assert_err macro

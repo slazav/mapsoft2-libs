@@ -26,7 +26,8 @@ void read_line(std::istream & s, T & val){
   std::string l;
   std::getline(s,l);
   std::istringstream s1(l);
-  s1 >> val >> std::ws;
+  s1 >> val;
+  if (!s1.eof()) s1 >> std::ws;
   if (s1.fail() || !s1.eof())
     throw Err() << "Fig: can't read fig file";
 }
@@ -161,7 +162,8 @@ int
 read_figobj_header(FigObj & o, const std::string & header,
                        const map<int,int> & custom_cmap){
   std::istringstream ss(header);
-  ss >> o.type >> ws;
+  ss >> o.type;
+  if (!ss.eof()) ss >> ws;
   if (ss.fail())
     throw Err() << "FigObj: can't read object: [" << header << "]";
 
@@ -171,8 +173,8 @@ read_figobj_header(FigObj & o, const std::string & header,
     case FIG_ELLIPSE:
       ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.direction >> o.angle
-         >> x1 >> y1 >> o.radius_x >> o.radius_y >> o.start_x >> o.start_y >> o.end_x >> o.end_y
-         >> std::ws;
+         >> x1 >> y1 >> o.radius_x >> o.radius_y >> o.start_x >> o.start_y >> o.end_x >> o.end_y;
+      if (!ss.eof()) ss >> ws;
       if (ss.fail() || !ss.eof())
         throw Err() << "FigObj: can't read ellipse object: [" << header << "]";
       o.push_back(iPoint(x1,y1));
@@ -180,16 +182,16 @@ read_figobj_header(FigObj & o, const std::string & header,
     case FIG_POLYLINE:
       ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.join_style >> o.cap_style >> o.radius
-         >> o.forward_arrow >> o.backward_arrow >> ret
-         >> std::ws;
+         >> o.forward_arrow >> o.backward_arrow >> ret;
+      if (!ss.eof()) ss >> ws;
       if (ss.fail() || !ss.eof())
         throw Err() << "FigObj: can't read line object: [" << header << "]";
       break;
     case FIG_SPLINE:
       ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
-         >> o.forward_arrow >> o.backward_arrow >> ret
-         >> std::ws;
+         >> o.forward_arrow >> o.backward_arrow >> ret;
+      if (!ss.eof()) ss >> ws;
       if (ss.fail() || !ss.eof())
         throw Err() << "FigObj: can't read spline object: [" << header << "]";
       break;
@@ -216,8 +218,8 @@ read_figobj_header(FigObj & o, const std::string & header,
       ss >> o.sub_type >> o.line_style >> o.thickness >> o.pen_color >> o.fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
          >> o.direction >> o.forward_arrow >> o.backward_arrow
-         >> o.center_x >> o.center_y >> x1 >> y1 >> x2 >> y2 >> x3 >> y3
-         >> std::ws;
+         >> o.center_x >> o.center_y >> x1 >> y1 >> x2 >> y2 >> x3 >> y3;
+      if (!ss.eof()) ss >> ws;
       if (ss.fail() || !ss.eof())
          throw Err() << "FigObj: can't read arc object: [" << header << "]";
       o.push_back(iPoint(x1,y1));
@@ -225,8 +227,9 @@ read_figobj_header(FigObj & o, const std::string & header,
       o.push_back(iPoint(x3,y3));
       break;
     case FIG_COMPOUND:
-      if (!ss.eof()) ss >> x1 >> y1 >> x2 >> y2 >> std::ws;
+      if (!ss.eof()) ss >> x1 >> y1 >> x2 >> y2;
       else x1=x2=y1=y2=0;
+      if (!ss.eof()) ss >> ws;
       if (ss.fail() || !ss.eof())
         throw Err() << "FigObj: can't read compound object: [" << header << "]";
       o.push_back(iPoint(x1,y1));
@@ -262,7 +265,8 @@ figobj_template(const std::string & templ){
   FigObj o;
 
   std::istringstream ss(templ);
-  ss >> o.type >> ws;
+  ss >> o.type;
+  if (!ss.eof()) ss >> ws;
   if (ss.fail())
     throw Err() << "FigObj: can't read template: [" << templ << "]";
 
@@ -272,48 +276,44 @@ figobj_template(const std::string & templ){
   switch (o.type) {
     case FIG_ELLIPSE:
       ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
-         >> o.pen_style >> o.area_fill >> o.style_val >> o.direction >> o.angle
-         >> std::ws;
+         >> o.pen_style >> o.area_fill >> o.style_val >> o.direction >> o.angle;
       break;
     case FIG_POLYLINE:
       ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.join_style >> o.cap_style >> o.radius
-         >> o.forward_arrow >> o.backward_arrow
-         >> std::ws;
+         >> o.forward_arrow >> o.backward_arrow;
       break;
     case FIG_SPLINE:
       ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
-         >> o.forward_arrow >> o.backward_arrow
-         >> std::ws;
+         >> o.forward_arrow >> o.backward_arrow;
       break;
     case FIG_TXT:
       ss >> o.sub_type >> pen_color >> o.depth >> o.pen_style
-         >> o.font >> o.font_size >> o.angle >> o.font_flags
-         >> std::ws;
+         >> o.font >> o.font_size >> o.angle >> o.font_flags;
       break;
     case FIG_ARC:
       ss >> o.sub_type >> o.line_style >> o.thickness >> pen_color >> fill_color >> o.depth
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
-         >> o.direction >> o.forward_arrow >> o.backward_arrow
-         >> std::ws;
+         >> o.direction >> o.forward_arrow >> o.backward_arrow;
       break;
     default:
       throw Err() << "FigObj: unknown template type: [" << templ << "]";
   }
+  if (!ss.eof()) ss >> ws;
 
   // read arrow parameters if needed
   if (o.type == FIG_POLYLINE || o.type == FIG_SPLINE || o.type == FIG_ARC){
     if (o.forward_arrow) {
       ss >> o.farrow_type >> o.farrow_style >> o.farrow_thickness
-         >> o.farrow_width >> o.farrow_height >> std::ws;
+         >> o.farrow_width >> o.farrow_height;
     }
     if (o.backward_arrow) {
       ss >> o.barrow_type >> o.barrow_style >> o.barrow_thickness
-         >> o.barrow_width >> o.barrow_height >> std::ws;
+         >> o.barrow_width >> o.barrow_height;
     }
   }
-
+  if (!ss.eof()) ss >> ws;
   if (ss.fail() || !ss.eof())
     throw Err() << "FigObj: can't read template: [" << templ << "]";
 
@@ -381,7 +381,8 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
 
     // read resolution line
     std::istringstream s1(l);
-    s1 >> w.resolution >> w.coord_system >> ws;
+    s1 >> w.resolution >> w.coord_system;
+    if (!s1.eof()) s1 >> ws;
     if (s1.fail() || !s1.eof())
       throw Err() << "Fig: can't read fig file header";
   }
@@ -394,7 +395,8 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     int type, ckey, cval;
     char c;
     std::istringstream s1(l);
-    s1 >> type >> ckey >> c >> hex >> cval >> ws;
+    s1 >> type >> ckey >> c >> hex >> cval;
+    if (!s1.eof()) s1 >> ws;
     if (s1.fail() || !s1.eof() || c != '#')
       throw Err() << "Fig: bad color object: [" << l << "]";
     if (Fig::colors.find(ckey) != Fig::colors.end())
@@ -422,7 +424,8 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
         getline(s, arr);
         std::istringstream s1(arr);
         s1 >> o.farrow_type >> o.farrow_style >> o.farrow_thickness
-           >> o.farrow_width >> o.farrow_height >> std::ws;
+           >> o.farrow_width >> o.farrow_height;
+        if (!s1.eof()) s1 >> ws;
         if (s1.fail() || !s1.eof())
           throw Err() << "FigObj: can't read arrow parameters: [" << arr << "]";
       }
@@ -431,7 +434,8 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
         getline(s, arr);
         std::istringstream s1(arr);
         s1 >> o.barrow_type >> o.barrow_style >> o.barrow_thickness
-           >> o.barrow_width >> o.barrow_height >> std::ws;
+           >> o.barrow_width >> o.barrow_height;
+        if (!s1.eof()) s1 >> ws;
         if (s1.fail() || !s1.eof())
           throw Err() << "FigObj: can't read arrow parameters: [" << arr << "]";
       }
@@ -439,7 +443,7 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
 
     // read image
     if (o.type == FIG_POLYLINE && o.sub_type == 5) {
-      s >> o.image_orient >> std::ws;
+      s >> o.image_orient >> ws;
       getline(s, o.image_file);
       if (s.fail())
         throw Err() << "FigObj: can't image parameters";
@@ -451,7 +455,8 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     if (o.type == FIG_POLYLINE || o.type == FIG_SPLINE) {
       o.resize(hret);
       for (size_t i=0; i<o.size(); i++){
-        s >> o[i].x >> o[i].y >> std::ws;
+        s >> o[i].x >> o[i].y;
+        if (!s.eof()) s >> ws;
         if (s.fail()) throw Err() << "FigObj: can't read line coordinates";
       }
     }
@@ -459,12 +464,13 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     if (o.type == FIG_SPLINE) {
       o.f.resize(hret);
       for (size_t i=0; i<o.f.size(); i++){
-        s >> o.f[i] >> std::ws;
+        s >> o.f[i];
+        if (!s.eof()) s >> ws;
         if (s.fail()) throw Err() << "FigObj: can't read spline coordinates";
       }
     }
 
-    s >> ws; // empty lines after the object
+    if (!s.eof()) s >> ws; // empty lines after the object
     if (s.fail()) throw Err() << "Fig: can't read fig file";
 
     // convert text encoding

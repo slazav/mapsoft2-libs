@@ -34,7 +34,8 @@ int vmap_get_kv(const string &s, string &key, string &val){
 dPoint vmap_read_pt(istream & IN){
   dPoint p;
   char sep;
-  IN >> p.x >> sep >> p.y >> std::ws;
+  IN >> p.x >> sep >> p.y;
+  if (!IN.eof()) IN >> std::ws;
   if (sep!=','){
     cerr << "bad point: " << IN.rdbuf() << "\n";
     return dPoint();

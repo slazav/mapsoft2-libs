@@ -245,7 +245,12 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   else if (fmt == "pdf") cr.set_surface_pdf(fname.c_str(), w,h);
   else if (fmt == "ps")  cr.set_surface_ps(fname.c_str(), w,h);
   else if (fmt == "svg") cr.set_surface_svg(fname.c_str(), w,h);
-  else throw Err(-2) << "Can't determine output format for file: " << fname;
+  else{
+    if (fmt!="")
+      throw Err(-2) << "Unknown output format for image file: " << fname << ": " << fmt;
+    else
+      throw Err(-2) << "Can't determine output format for image file: " << fname;
+  }
 
   if (!raster){
     cr->set_color_a(bg);

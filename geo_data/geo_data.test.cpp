@@ -1,5 +1,6 @@
 ///\cond HIDDEN (do not show this in Doxyden)
 
+#include <cassert>
 #include "err/assert_err.h"
 #include "geo_data.h"
 
