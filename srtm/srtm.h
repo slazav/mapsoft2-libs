@@ -6,7 +6,6 @@
 #include <string>
 #include <mutex>
 
-#include "rainbow/rainbow.h"
 #include "cache/cache.h"
 #include "image/image_r.h"
 #include "geom/multiline.h"
@@ -71,23 +70,7 @@ class SRTM {
   /// area (m^2) of 1x1 srtm point on equator
   double area0;
 
-  // color parameters:
-
-  /// how to draw data
-  enum draw_mode_t {
-    SRTM_DRAW_SHADES, // heights shaded with slope value
-    SRTM_DRAW_HEIGHTS,
-    SRTM_DRAW_SLOPES,
-  } draw_mode;
-
-  double hmin,hmax;  // limits for heights and shades modes
-  double smin,smax;  // limits for slopes mode
-
   bool interp_holes; // interpolate holes in data
-  uint32_t bgcolor;  // how to draw holes
-
-  Rainbow R; // color converter
-
 
 
   /// load data into cache
@@ -136,16 +119,6 @@ class SRTM {
     /// Get slope, 4-point interpolation, long-lat coordinates.
     /// Hole interpolation is done according with srtm_interp_holes option.
     double get_slope_int4(const dPoint & p);
-
-
-    // Get color for given height and slope, according with drawing options
-    uint32_t get_color(const double h, const double s);
-
-    /// Get color for a point (lon-lat coords), according with drawing options.
-    uint32_t get_color(const dPoint & p) {
-      return get_color(get_val_int4(p), get_slope_int4(p));}
-
-    uint32_t get_bgcolor() const {return bgcolor;}
 
     // make vector data: contours
     // use kx parameter to use only every kx-th horizontal point.

@@ -6,6 +6,7 @@ void
 ms2opt_add_drawsrtm(GetOptSet & opts){
 
   ms2opt_add_srtm(opts);
+  ms2opt_add_srtm_surf(opts);
 
   const char *g = "DRAWSRTM";
   opts.add("srtm_surf", 1,0,g,
@@ -56,8 +57,10 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
 Opt
 GObjSRTM::get_def_opt(){
 
-  Opt o =SRTM::get_def_opt();
+  Opt o = SRTM::get_def_opt();
+  o.put(SRTMSurf::get_def_opt());
 
+  // draw_surface?
   o.put("srtm_surf",    1);
   o.put("srtm_maxsc",   15.0);
   o.put("srtm_maxscv",  1.0);
@@ -95,8 +98,10 @@ GObjSRTM::set_opt(const Opt & o){
     srtm->set_opt(o);
   }
 
-  surf = o.get("srtm_surf", 1);
+  // surface parameters
+  SRTMSurf::set_opt(o);
 
+  surf = o.get("srtm_surf", 1);
   maxsc    = o.get<double>("srtm_maxsc",   15);
   maxscv   = o.get<double>("srtm_maxscv",  1);
 
@@ -150,14 +155,14 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
         for (size_t i=0; i<image.width(); i++){
           dPoint p(i + draw_range.x, j+draw_range.y);
           if (cnv) cnv->frw(p);
-          image.set32(i,j, srtm->get_color(p));
+          image.set32(i,j, get_color(p));
        }
       }
       cr->set_source(image_to_surface(image), draw_range.x, draw_range.y);
       cr->paint();
     }
     else {
-      cr->set_color(srtm->get_bgcolor());
+      cr->set_color(get_bgcolor());
       cr->paint();
     }
   }

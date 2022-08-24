@@ -3,7 +3,7 @@
 
 #include "viewer/gobj.h"
 #include "srtm/srtm.h"
-
+#include "srtm/srtm_surf.h"
 
 /// SRTM data layer.
 
@@ -15,7 +15,7 @@ void ms2opt_add_drawsrtm(GetOptSet & opts);
 
 /********************************************************************/
 
-class GObjSRTM : public GObj {
+class GObjSRTM : public GObj, SRTMSurf {
 
   std::shared_ptr<ConvBase> cnv;
   SRTM * srtm;
@@ -47,8 +47,14 @@ class GObjSRTM : public GObj {
 
   public:
 
+    GObjSRTM(SRTM *srtm, const Opt & o): SRTMSurf(o), srtm(srtm) { set_opt(o); }
 
-    GObjSRTM(SRTM *srtm, const Opt & o): srtm(srtm) { set_opt(o); }
+  /************************************************/
+
+    /// Get color for a point (lon-lat coords), according with drawing options.
+    uint32_t get_color(const dPoint & p) {
+      if (!srtm) return get_bgcolor();
+      return SRTMSurf::get_color(srtm->get_val_int4(p), srtm->get_slope_int4(p));}
 
   /************************************************/
 

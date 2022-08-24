@@ -4,6 +4,7 @@
 #include "rainbow/rainbow.h"
 #include "viewer/gobj.h"
 #include "srtm/srtm.h"
+#include "srtm/srtm_surf.h"
 #include <vector>
 #include <mutex>
 
@@ -17,7 +18,7 @@ void ms2opt_add_drawpano(GetOptSet & opts);
 
 /********************************************************************/
 
-class GObjPano : public GObj {
+class GObjPano : public GObj, public SRTMSurf {
 private:
 
   std::shared_ptr<ConvBase> cnv; // used only for rescaling
@@ -68,8 +69,15 @@ public:
   dPoint xy2geo(const iPoint & pt);
 
 
-  GObjPano(SRTM * s, const Opt & o): srtm(s),
+  GObjPano(SRTM * s, const Opt & o): SRTMSurf(o), srtm(s),
       width(width0), ray_cache(512) { set_opt(o); }
+
+  /************************************************/
+
+    /// Get color for a point (lon-lat coords), according with drawing options.
+    uint32_t get_color(const dPoint & p) {
+      if (!srtm) return get_bgcolor();
+      return SRTMSurf::get_color(srtm->get_val_int4(p), srtm->get_slope_int4(p));}
 
   /************************************************/
 

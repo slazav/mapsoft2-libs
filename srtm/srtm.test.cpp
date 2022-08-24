@@ -32,9 +32,9 @@ main(){
     assert_eq(S.get_val(x0, y0, false), 100);
 
     Opt o1 = S.get_def_opt();
-    assert_eq(o1.size(), 8);
+    assert_eq(o1.size(), 2);
     assert_eq(o1.exists("srtm_dir"), true);
-    assert_eq(o1.get("srtm_draw_mode"), "shades");
+    assert_eq(o1.get("srtm_interp_holes"), "1");
 
 
   }
