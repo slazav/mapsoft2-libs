@@ -131,7 +131,7 @@ public:
         mapview->rubber.add_cr_mark(p0i, false);
         mapview->rubber.add_cr_mark(p, false);
         mapview->rubber.add_line(p,p0i);
-        dlg.set_dir(p1);
+        dlg.set_target(p1);
       }
     }
 

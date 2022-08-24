@@ -123,8 +123,8 @@ class MyWindow : public Gtk::ApplicationWindow {
 
     // SRTM pano
     Opt pano_opts;
-//    pano_opts.put("pano_pt", dPoint(29.5, 78.5));
-    pano_opts.put("pano_pt", dPoint(78.5, 41.5));
+//    pano_opts.put("pano_origin", dPoint(29.5, 78.5));
+    pano_opts.put("pano_origin", dPoint(78.5, 41.5));
     pano_opts.put("srtm_dir", "../../srtm/test_srtm");
     srtm.set_opt(pano_opts);
     pano.set_opt(pano_opts);

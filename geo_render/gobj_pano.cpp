@@ -7,7 +7,7 @@ void
 ms2opt_add_drawpano(GetOptSet & opts){
   ms2opt_add_srtm(opts);
   const char *g = "DRAWSRTM";
-  opts.add("pano_pt",1,0,g,  "Coordinates of the viewpoint, default [0,0].");
+  opts.add("pano_origin",1,0,g,  "Origin coordinates, default [0,0].");
   opts.add("pano_alt",1,0,g, "Altitude of the viewpoint above terrain, meters, default 20.");
   opts.add("pano_rmax",1,0,g, "Max distance, km, default 100.");
 }
@@ -16,7 +16,7 @@ Opt
 GObjPano::get_def_opt() {
   Opt o;
   o.put(SRTMSurf::get_def_opt());
-  o.put("pano_pt",  dPoint());
+  o.put("pano_origin",  dPoint());
   o.put("pano_alt",     20.0);
   o.put("pano_rmax",   100.0);
   return o;
@@ -25,7 +25,7 @@ GObjPano::get_def_opt() {
 void
 GObjPano::set_opt(const Opt & o){
   SRTMSurf::set_opt(o);
-  p0 = o.get<dPoint>("pano_pt");
+  p0 = o.get<dPoint>("pano_origin");
   dh = o.get<double>("pano_alt", 20.0);
   max_r = o.get<double>("pano_rmax", 100) * 1000; // convert km->m
   std::lock_guard<std::mutex> lk(cache_mutex);
@@ -148,6 +148,7 @@ GObjPano::geo2xy(const dPoint & pt){
   iPoint ret;
   double cx=cos(p0.y*M_PI/180);
   ret.x = width * atan2((pt.x-p0.x)*cx, pt.y-p0.y)/2.0/M_PI;
+
   double r0 = hypot((pt.x-p0.x)*cx, pt.y-p0.y)*6380000/180.0*M_PI;
 
   auto ray = get_ray(ret.x);

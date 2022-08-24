@@ -17,7 +17,7 @@ class DlgPano : public Gtk::Dialog{
     Gtk::SpinButton *dh;
     Gtk::SpinButton *mr;
 
-    dPoint pt;
+    dPoint target; // target point (place to keep it during origin change)
 
     void on_ch();
     bool on_key_press(GdkEventKey * event);
@@ -36,7 +36,7 @@ class DlgPano : public Gtk::Dialog{
     void set_opt(const Opt & o);
 
     void set_origin(const dPoint & pt);
-    void set_dir(const dPoint & pt);
+    void set_target(const dPoint & pt, bool scroll=true);
     void set_az();
     void get_az(const iPoint & p); // update az value from viewer signal
     void redraw() {viewer.redraw();}

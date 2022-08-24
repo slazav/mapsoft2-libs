@@ -1,9 +1,9 @@
 #include "dlg_pano.h"
+#include <cfloat> // NAN
 
 Opt
 DlgPano::get_opt() const{
   Opt o;
-  o.put("pano_pt", pt);
   o.put("pano_alt", dh->get_value());
   o.put("pano_rmax", mr->get_value());
   return o;
@@ -11,8 +11,6 @@ DlgPano::get_opt() const{
 
 void
 DlgPano::set_opt(const Opt & o) {
-  pt = o.get<dPoint>("pano_pt", pt);
-
   if (o.exists("pano_alt"))
     dh->set_value(o.get<double>("pano_alt"));
 
@@ -88,6 +86,7 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
 
   set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
   set_opt(GObjPano::get_def_opt()); //set default options
+  target = dPoint(NAN,NAN);
 }
 
 
@@ -98,20 +97,24 @@ DlgPano::on_ch(){
 
 void
 DlgPano::set_origin(const dPoint & p){
-  pt = p;
   Gtk::Dialog::show_all();
-  gobj_pano.set_origin(pt);
+  gobj_pano.set_origin(p);
+  if (std::isnan(target.x)) target = p; // initial call
+  set_target(target); // keep same target
 }
 
 void
-DlgPano::set_dir(const dPoint & pt){
+DlgPano::set_target(const dPoint & pt, bool scroll){
+  target = pt;
   dPoint pt0 = gobj_pano.get_origin();
   double width = gobj_pano.get_width();
   double angle = atan2((pt.x-pt0.x)*cos(pt0.y*M_PI/180), pt.y-pt0.y);
   rubber.clear();
-  viewer.set_center(iPoint( width*angle/2.0/M_PI, viewer.get_center(false).y), false);
+  if (scroll)
+    viewer.set_center(iPoint( width*angle/2.0/M_PI, viewer.get_center(false).y), false);
   iPoint p = gobj_pano.geo2xy(pt);
   if (p.y>0) rubber.add_cr_mark(p, false);
+  signal_point_.emit(pt);
 }
 
 void
@@ -151,15 +154,9 @@ DlgPano::on_key_press(GdkEventKey * event) {
 void
 DlgPano::click (iPoint p, int button, const Gdk::ModifierType & state) {
   dPoint pg=gobj_pano.xy2geo(p);
-  rubber.clear();
-  if (pg.y<90){
-    rubber.add_cr_mark(p, false);
-    if (state&Gdk::CONTROL_MASK){
-      set_origin(pg);
-      signal_go_.emit(pg);
-    }
-    else signal_point_.emit(pg);
-  }
+  if (pg.y>90) return;
+  if (state&Gdk::CONTROL_MASK) set_origin(pg);
+  else set_target(pg, false);
 }
 
 sigc::signal<void, dPoint>
