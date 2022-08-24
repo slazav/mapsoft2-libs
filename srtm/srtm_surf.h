@@ -43,9 +43,7 @@ public:
   uint32_t get_color(const double h, const double s);
 
   /// Get color for a point (lon-lat coords), according with drawing options.
-  uint32_t get_color(const dPoint & p) {
-    return get_color(SRTM::get_val_int4(p), SRTM::get_slope_int4(p));}
-
+  uint32_t get_color(const dPoint & p);
 
   uint32_t get_bgcolor() const {return bgcolor;}
 

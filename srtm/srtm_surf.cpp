@@ -18,7 +18,6 @@ ms2opt_add_srtm_surf(GetOptSet & opts){
     "Color to draw no-data and out-of-scale areas (default 0x60FF0000).");
 }
 
-
 uint32_t
 SRTMSurf::get_color(const double h, const double s){
   switch (draw_mode){
@@ -28,6 +27,20 @@ SRTMSurf::get_color(const double h, const double s){
   }
   return bgcolor;
 }
+
+
+/// Get color for a point (lon-lat coords), according with drawing options.
+uint32_t
+SRTMSurf::get_color(const dPoint & p) {
+  switch (draw_mode){
+    case SRTM_DRAW_SLOPES:  return R.get(SRTM::get_slope_int4(p));
+    case SRTM_DRAW_HEIGHTS: return R.get(SRTM::get_val_int4(p));
+    case SRTM_DRAW_SHADES:
+      return color_shade(R.get(SRTM::get_val_int4(p)), 1-SRTM::get_slope_int4(p)/90.0);
+  }
+  return bgcolor;
+}
+
 
 Opt
 SRTMSurf::get_def_opt(){
