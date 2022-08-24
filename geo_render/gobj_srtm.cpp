@@ -123,37 +123,54 @@ GObjSRTM::set_opt(const Opt & o){
   peaks_text   = o.get<bool>("srtm_peaks_text",  1);
   peaks_text_size   = o.get<double>("srtm_peaks_text_size",  10);
   peaks_text_font   = o.get("srtm_peaks_text_font",  "serif");
+  surf_tiles.clear();
   redraw_me();
 }
 
 void
 GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
   cnv = c;
+  surf_tiles.clear();
   redraw_me();
 }
+
+
+bool
+GObjSRTM::render_surf_tile(const dRect & draw_range) {
+  if (!srtm) return false;
+  ImageR image = ImageR(draw_range.w, draw_range.h, IMAGE_32ARGB);
+
+  auto srtm_lock = srtm->get_lock();
+  for (size_t j=0; j<image.height(); j++){
+    if (is_stopped()) return GObj::FILL_NONE;
+    for (size_t i=0; i<image.width(); i++){
+      dPoint p(i + draw_range.x, j+draw_range.y);
+      if (cnv) cnv->frw(p);
+      image.set32(i,j, srtm->get_color(p));
+    }
+  }
+  surf_tiles.add(draw_range, image);
+  return true;
+}
+
 
 GObj::ret_t
 GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (!srtm) return GObj::FILL_NONE;
+  if (is_stopped()) return GObj::FILL_NONE;
 
   dPoint scp = cnv->scales(draw_range);
   double sc = std::min(scp.x, scp.y) * srtm->get_srtm_width();
 
   if (surf) {
     if (sc < maxsc) {
-      ImageR image(draw_range.w, draw_range.h, IMAGE_32ARGB);
-
-      auto srtm_lock = srtm->get_lock();
-      for (size_t j=0; j<image.height(); j++){
-        if (is_stopped()) return GObj::FILL_NONE;
-        for (size_t i=0; i<image.width(); i++){
-          dPoint p(i + draw_range.x, j+draw_range.y);
-          if (cnv) cnv->frw(p);
-          image.set32(i,j, srtm->get_color(p));
-       }
+      // render tile, put to tile cache if needed
+      if (!surf_tiles.contains(draw_range)){
+        if (!render_surf_tile(draw_range)) return GObj::FILL_NONE;
       }
-      cr->set_source(image_to_surface(image), draw_range.x, draw_range.y);
+      cr->set_source(image_to_surface(surf_tiles.get(draw_range)),
+                     draw_range.x, draw_range.y);
       cr->paint();
     }
     else {

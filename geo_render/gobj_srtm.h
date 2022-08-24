@@ -44,9 +44,13 @@ class GObjSRTM : public GObj {
   double peaks_text_size;
   std::string peaks_text_font;
 
+#define SURF_TILE_CACHE_SIZE 128
+  Cache<iRect, ImageR> surf_tiles;
+
   public:
 
-    GObjSRTM(SRTMSurf *srtm, const Opt & o): srtm(srtm) { set_opt(o); }
+    GObjSRTM(SRTMSurf *srtm, const Opt & o):
+      srtm(srtm), surf_tiles(SURF_TILE_CACHE_SIZE){ set_opt(o); }
 
     static Opt get_def_opt();
 
@@ -54,6 +58,7 @@ class GObjSRTM : public GObj {
 
     void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
+    bool render_surf_tile(const dRect & range_dst);
     ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
 };
