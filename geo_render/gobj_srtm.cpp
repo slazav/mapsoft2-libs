@@ -124,115 +124,59 @@ GObjSRTM::set_opt(const Opt & o){
   peaks_text_size   = o.get<double>("srtm_peaks_text_size",  10);
   peaks_text_font   = o.get("srtm_peaks_text_font",  "serif");
 
-  surf_tiles.clear();
-  cont_tiles.clear();
-  hole_tiles.clear();
-  peak_tiles.clear();
+  tiles.clear();
   redraw_me();
 }
 
 void
 GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
   cnv = c;
-  surf_tiles.clear();
-  cont_tiles.clear();
-  hole_tiles.clear();
-  peak_tiles.clear();
+  tiles.clear();
   redraw_me();
 }
 
 
 bool
-GObjSRTM::render_surf_tile(const dRect & draw_range) {
+GObjSRTM::
+render_tile(const dRect & draw_range){
   if (!srtm) return false;
+
   ImageR image = ImageR(draw_range.w, draw_range.h, IMAGE_32ARGB);
 
   auto srtm_lock = srtm->get_lock();
-  for (size_t j=0; j<image.height(); j++){
-    if (is_stopped()) return GObj::FILL_NONE;
-    for (size_t i=0; i<image.width(); i++){
-      dPoint p(i + draw_range.x, j+draw_range.y);
-      if (cnv) cnv->frw(p);
-      image.set32(i,j, srtm->get_color(p));
-    }
-  }
-  surf_tiles.add(draw_range, image);
-  return true;
-}
 
-bool
-GObjSRTM::render_cont_tile(const dRect & draw_range, int cnt_step) {
-  if (!srtm) return false;
-  auto srtm_lock = srtm->get_lock();
-  dRect wgs_range = cnv->frw_acc(draw_range);
-  wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
-  cont_tiles.add(draw_range, srtm->find_contours(wgs_range, cnt_step));
-  return true;
-}
-
-bool
-GObjSRTM::render_hole_tile(const dRect & draw_range){
-  if (!srtm) return false;
-  auto srtm_lock = srtm->get_lock();
-  dRect wgs_range = cnv->frw_acc(draw_range);
-  wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
-  hole_tiles.add(draw_range, srtm->find_holes(wgs_range));
-  return true;
-}
-
-bool
-GObjSRTM::render_peak_tile(const dRect & draw_range, int DH, size_t PS){
-  if (!srtm) return false;
-  auto srtm_lock = srtm->get_lock();
-  dRect wgs_range = cnv->frw_acc(draw_range);
-  wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
-  peak_tiles.add(draw_range, srtm->find_peaks(wgs_range, DH, PS));
-  return true;
-}
-
-
-GObj::ret_t
-GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
-
-  if (!srtm) return GObj::FILL_NONE;
-  if (is_stopped()) return GObj::FILL_NONE;
-
-  dPoint scp = cnv->scales(draw_range);
-  double sc = std::min(scp.x, scp.y) * srtm->get_srtm_width();
-
+  // draw surface
   if (surf) {
-    if (sc < maxsc) {
-      // render tile, put to tile cache if needed
-      if (!surf_tiles.contains(draw_range)){
-        if (!render_surf_tile(draw_range)) return GObj::FILL_NONE;
+    for (size_t j=0; j<image.height(); j++){
+      if (is_stopped()) return false;
+      for (size_t i=0; i<image.width(); i++){
+        dPoint p(i + draw_range.x, j+draw_range.y);
+        if (cnv) cnv->frw(p);
+        image.set32(i,j, srtm->get_color(p));
       }
-      cr->set_source(image_to_surface(surf_tiles.get(draw_range)),
-                     draw_range.x, draw_range.y);
-      cr->paint();
-    }
-    else {
-      cr->set_color(srtm->get_bgcolor());
-      cr->paint();
     }
   }
 
+  CairoWrapper cr;
+  cr.set_surface_img(image);
+
+  // calculate wgs range and set some cairo parameters
+  // for drawing vector data
   dRect wgs_range;
-  if ((cnt || holes || peaks) && sc < maxscv) {
+  if (cnt || holes) {
     wgs_range = cnv->frw_acc(draw_range);
     wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
     cr->set_line_cap(Cairo::LINE_CAP_ROUND);
     cr->set_line_join(Cairo::LINE_JOIN_ROUND);
+    cr->translate(-draw_range.tlc());
   }
 
   // draw contours
-  if (cnt && sc < maxscv) {
-    if (!cont_tiles.contains(draw_range)){
-      if (!render_cont_tile(draw_range, cnt_step)) return GObj::FILL_NONE;
-    }
-    auto c_data = cont_tiles.get(draw_range);
+  if (cnt) {
+    auto c_data = srtm->find_contours(wgs_range, cnt_step);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
-      if (is_stopped()) return GObj::FILL_NONE;
+      if (is_stopped()) return false;
       bool isth = c.first%(cnt_step*cnt_smult); // is it a thick contour
       cr->set_line_width(cnt_w*(isth? 1:cnt_wmult));
       dMultiLine l = c.second;
@@ -243,32 +187,26 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   }
 
   // draw holes
-  if (holes && sc < maxscv) {
-    if (!hole_tiles.contains(draw_range)){
-      if (!render_hole_tile(draw_range)) return GObj::FILL_NONE;
-    }
-    auto h_data = hole_tiles.get(draw_range);
+  if (holes) {
+    auto h_data = srtm->find_holes(wgs_range);
     cr->set_color(holes_color);
     cr->set_line_width(holes_w);
     cnv->bck(h_data);
     for(auto const & l:h_data){
-      if (is_stopped()) return GObj::FILL_NONE;
+      if (is_stopped()) return false;
       cr->mkpath_smline(l,0,0);
     }
     cr->stroke();
   }
 
   // draw peaks
-  if (peaks && sc < maxscv) {
-    dRect p_range = expand(draw_range,peaks_text_size*4);
-    if (!peak_tiles.contains(p_range)){
-      if (!render_peak_tile(p_range, peaks_dh, peaks_ps)) return GObj::FILL_NONE;
-    }
-    auto p_data = peak_tiles.get(p_range);
+  if (peaks) {
+    wgs_range = cnv->frw_acc(expand(draw_range,peaks_text_size*4));
+    auto p_data = srtm->find_peaks(wgs_range, peaks_dh, peaks_ps);
     cr->set_color(peaks_color);
     cr->set_line_width(peaks_w);
     for (auto & d:p_data){
-      if (is_stopped()) return GObj::FILL_NONE;
+      if (is_stopped()) return false;
       dPoint p0 = d.first;
       cnv->bck(p0);
       cr->move_to(p0);
@@ -290,6 +228,32 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
       cr->fill();
     }
   }
+
+  tiles.add(draw_range, image);
+  return true;
+}
+
+GObj::ret_t
+GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
+
+  if (!srtm) return GObj::FILL_NONE;
+  if (is_stopped()) return GObj::FILL_NONE;
+
+  // too small scale: draw bgcolor only
+  dPoint scp = cnv->scales(draw_range);
+  double sc = std::min(scp.x, scp.y) * srtm->get_srtm_width();
+  if (sc >= maxsc) {
+    cr->set_color(srtm->get_bgcolor());
+    cr->paint();
+    return GObj::FILL_ALL;
+  }
+
+  if (!tiles.contains(draw_range)){
+    if (!render_tile(draw_range)) return GObj::FILL_NONE;
+  }
+  cr->set_source(image_to_surface(tiles.get(draw_range)),
+                 draw_range.x, draw_range.y);
+  cr->paint();
 
   if (is_stopped()) return GObj::FILL_NONE;
   return GObj::FILL_ALL;
