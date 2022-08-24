@@ -143,11 +143,13 @@ SimpleViewer::rescale(const double k, const iPoint & cnt){
   iPoint wcenter = get_origin() + cnt;
   wcenter=iPoint(wcenter.x * k, wcenter.y * k);
   if (bbox) bbox *= k;
-  set_origin(wcenter - cnt);
   if (cnv){
     cnv->rescale_src(1.0/k);
     obj->set_cnv(cnv);
   }
+  // set_origin() should be at the end, because signal_ch_origin
+  // is emitted here, cnv should be already set.
+  set_origin(wcenter - cnt);
 }
 
 /***********************************************************/
