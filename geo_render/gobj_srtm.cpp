@@ -123,7 +123,11 @@ GObjSRTM::set_opt(const Opt & o){
   peaks_text   = o.get<bool>("srtm_peaks_text",  1);
   peaks_text_size   = o.get<double>("srtm_peaks_text_size",  10);
   peaks_text_font   = o.get("srtm_peaks_text_font",  "serif");
+
   surf_tiles.clear();
+  cont_tiles.clear();
+  hole_tiles.clear();
+  peak_tiles.clear();
   redraw_me();
 }
 
@@ -131,6 +135,9 @@ void
 GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
   cnv = c;
   surf_tiles.clear();
+  cont_tiles.clear();
+  hole_tiles.clear();
+  peak_tiles.clear();
   redraw_me();
 }
 
@@ -150,6 +157,36 @@ GObjSRTM::render_surf_tile(const dRect & draw_range) {
     }
   }
   surf_tiles.add(draw_range, image);
+  return true;
+}
+
+bool
+GObjSRTM::render_cont_tile(const dRect & draw_range, int cnt_step) {
+  if (!srtm) return false;
+  auto srtm_lock = srtm->get_lock();
+  dRect wgs_range = cnv->frw_acc(draw_range);
+  wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
+  cont_tiles.add(draw_range, srtm->find_contours(wgs_range, cnt_step));
+  return true;
+}
+
+bool
+GObjSRTM::render_hole_tile(const dRect & draw_range){
+  if (!srtm) return false;
+  auto srtm_lock = srtm->get_lock();
+  dRect wgs_range = cnv->frw_acc(draw_range);
+  wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
+  hole_tiles.add(draw_range, srtm->find_holes(wgs_range));
+  return true;
+}
+
+bool
+GObjSRTM::render_peak_tile(const dRect & draw_range, int DH, size_t PS){
+  if (!srtm) return false;
+  auto srtm_lock = srtm->get_lock();
+  dRect wgs_range = cnv->frw_acc(draw_range);
+  wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
+  peak_tiles.add(draw_range, srtm->find_peaks(wgs_range, DH, PS));
   return true;
 }
 
@@ -189,8 +226,10 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw contours
   if (cnt && sc < maxscv) {
-    auto srtm_lock = srtm->get_lock();
-    auto c_data = srtm->find_contours(wgs_range, cnt_step);
+    if (!cont_tiles.contains(draw_range)){
+      if (!render_cont_tile(draw_range, cnt_step)) return GObj::FILL_NONE;
+    }
+    auto c_data = cont_tiles.get(draw_range);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
       if (is_stopped()) return GObj::FILL_NONE;
@@ -205,8 +244,10 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw holes
   if (holes && sc < maxscv) {
-    auto srtm_lock = srtm->get_lock();
-    auto h_data = srtm->find_holes(wgs_range);
+    if (!hole_tiles.contains(draw_range)){
+      if (!render_hole_tile(draw_range)) return GObj::FILL_NONE;
+    }
+    auto h_data = hole_tiles.get(draw_range);
     cr->set_color(holes_color);
     cr->set_line_width(holes_w);
     cnv->bck(h_data);
@@ -219,10 +260,11 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // draw peaks
   if (peaks && sc < maxscv) {
-
-    auto srtm_lock = srtm->get_lock();
-    dRect p_range = cnv->frw_acc(expand(draw_range,peaks_text_size*4));
-    auto p_data = srtm->find_peaks(p_range, peaks_dh, peaks_ps);
+    dRect p_range = expand(draw_range,peaks_text_size*4);
+    if (!peak_tiles.contains(p_range)){
+      if (!render_peak_tile(p_range, peaks_dh, peaks_ps)) return GObj::FILL_NONE;
+    }
+    auto p_data = peak_tiles.get(p_range);
     cr->set_color(peaks_color);
     cr->set_line_width(peaks_w);
     for (auto & d:p_data){
