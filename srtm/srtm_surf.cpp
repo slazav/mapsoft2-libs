@@ -2,6 +2,7 @@
 
 void
 ms2opt_add_srtm_surf(GetOptSet & opts){
+  ms2opt_add_srtm(opts);
   const char *g = "DRAWSRTM";
   opts.add("srtm_draw_mode", 1,0,g,
     "SRTM surface drawing mode (slopes, heights, shades, default - shades).");
@@ -30,7 +31,7 @@ SRTMSurf::get_color(const double h, const double s){
 
 Opt
 SRTMSurf::get_def_opt(){
-  Opt o;
+  Opt o = SRTM::get_def_opt();
   o.put("srtm_draw_mode", "shades");
   o.put("srtm_hmin", 0);
   o.put("srtm_hmax", 5000);
@@ -42,6 +43,8 @@ SRTMSurf::get_def_opt(){
 
 void
 SRTMSurf::set_opt(const Opt & o){
+  SRTM::set_opt(o);
+
   // surface parameters
   auto     m = o.get("srtm_draw_mode", "shades");
   if      (m == "heights") { draw_mode = SRTM_DRAW_HEIGHTS; }

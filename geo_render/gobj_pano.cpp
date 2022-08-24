@@ -5,7 +5,7 @@
 
 void
 ms2opt_add_drawpano(GetOptSet & opts){
-  ms2opt_add_srtm(opts);
+  ms2opt_add_srtm_surf(opts);
   const char *g = "DRAWSRTM";
   opts.add("pano_origin",1,0,g,  "Origin coordinates, default [0,0].");
   opts.add("pano_alt",1,0,g, "Altitude of the viewpoint above terrain, meters, default 20.");
@@ -14,8 +14,7 @@ ms2opt_add_drawpano(GetOptSet & opts){
 
 Opt
 GObjPano::get_def_opt() {
-  Opt o;
-  o.put(SRTMSurf::get_def_opt());
+  Opt o = SRTMSurf::get_def_opt();
   o.put("pano_origin",  dPoint());
   o.put("pano_alt",     20.0);
   o.put("pano_rmax",   100.0);
@@ -24,7 +23,10 @@ GObjPano::get_def_opt() {
 
 void
 GObjPano::set_opt(const Opt & o){
-  SRTMSurf::set_opt(o);
+  if (srtm){
+    auto srtm_lock = srtm->get_lock();
+    srtm->set_opt(o);
+  }
   p0 = o.get<dPoint>("pano_origin");
   dh = o.get<double>("pano_alt", 20.0);
   max_r = o.get<double>("pano_rmax", 100) * 1000; // convert km->m
@@ -258,7 +260,7 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
         if (y<0 || y>=yo) continue; // select visible points
         double s = sp + (sn-sp)*(y-yp)/double(yn-yp); // Interpolate slope and altitude
         double h = hp + (hn-hp)*(y-yp)/double(yn-yp); //  and calculate point color.
-        uint32_t color = color_shade(SRTMSurf::get_color(h,s), (1-r/max_r));
+        uint32_t color = color_shade(srtm->get_color(h,s), (1-r/max_r));
         image.set32(x,y, color);
       }
       if (yn<yo) yo=yn;
