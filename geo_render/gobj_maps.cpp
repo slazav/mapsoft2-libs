@@ -235,7 +235,9 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
 
   // render tile, put to tile cache if needed
-  if (!tiles.contains(draw_range)) render_tile(draw_range);
+  if (!tiles.contains(draw_range)){
+    if (!render_tile(draw_range)) return GObj::FILL_NONE;
+  }
 
   // render image
   cr->set_source(image_to_surface(tiles.get(draw_range)),
