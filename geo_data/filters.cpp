@@ -103,7 +103,7 @@ filter_join(GeoData & data, const Opt & opt){
     auto m0 = data.maps.begin();
     auto m1 = m0; ++m1;
     while (m1!=data.maps.end()){
-      m0->insert(m0->begin(), m1->begin(), m1->end());
+      m0->insert(m0->end(), m1->begin(), m1->end());
       m1=data.maps.erase(m1);
     }
     m0->name = name;
@@ -114,7 +114,7 @@ filter_join(GeoData & data, const Opt & opt){
     auto w0 = data.wpts.begin();
     auto w1 = w0; ++w1;
     while (w1!=data.wpts.end()){
-      w0->insert(w0->begin(), w1->begin(), w1->end());
+      w0->insert(w0->end(), w1->begin(), w1->end());
       w1=data.wpts.erase(w1);
     }
     w0->name = name;
@@ -125,7 +125,7 @@ filter_join(GeoData & data, const Opt & opt){
     auto t0 = data.trks.begin();
     auto t1 = t0; ++t1;
     while (t1!=data.trks.end()){
-      t0->insert(t0->begin(), t1->begin(), t1->end());
+      t0->insert(t0->end(), t1->begin(), t1->end());
       t1=data.trks.erase(t1);
     }
     t0->name = name;
