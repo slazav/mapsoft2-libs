@@ -40,8 +40,11 @@ std::vector<std::string> read_words(
 */
 std::string join_words(const std::vector<std::string> & words);
 
-
-
+/*
+  Read text by read_words and join everything using space.
+  "a b" \'c --> a b 'c
+*/
+std::string unquote_words(const std::string & in);
 
 ///@}
 #endif

@@ -42,6 +42,11 @@ Inverse operation: join all "words" to have string readable for `read_words()`.
 - Characters `\`, `#`, `'`, and `"` are protected with `\`.
 - All words are joined with space character between them.
 
+## unquote_words
+
+Read text by read_words and join everything using space.
+`"a b" \'c --> a b 'c`
+
 ## read_conf
 
 This is an example of using `read_words`.
@@ -59,6 +64,9 @@ Opt read_conf(const std::string & fname,
 
 ------------
 ## Changelog:
+
+2022.06.19 V.Zavjalov 1.8:
+- add unquote_words function
 
 2021.03.11 V.Zavjalov 1.7:
 - raw mode: read everything as a single string
