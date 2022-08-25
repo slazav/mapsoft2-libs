@@ -50,5 +50,6 @@ void fig_del_maps(Fig & F);
 /// Add waypoints or tracks from to fig
 void fig_add_wpts(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o = Opt());
 void fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o = Opt());
+void fig_add_maps(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o = Opt());
 
 #endif

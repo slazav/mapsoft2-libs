@@ -308,3 +308,97 @@ fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   }
 }
 
+
+#include "geo_render/gobj_maps.h"
+void
+fig_add_maps(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
+  ConvMap cnv(m); // fig -> wgs
+
+  int tsize = o.get("tsize", 1024);
+  int depth = o.get("map_depth", 500);
+  int marg  = o.get("map_marg",  50);
+  std::string dir_name = o.get("map_dir",  "fig_images");
+
+  // put all maps into one map_list
+  GeoMapList maps;
+  for (const auto & m:d.maps) maps.insert(maps.end(), m.begin(), m.end());
+
+  if (maps.size()<1) return;
+  GeoMap map_ref = maps[0];
+  GeoMap fig_ref = m;
+  std::shared_ptr<ConvMap> map_cnv(new ConvMap(map_ref));
+  std::shared_ptr<ConvMap> fig_cnv(new ConvMap(fig_ref));
+  dRect range = fig_ref.bbox();
+
+  double rescale = map_cnv->scales(range).x/fig_cnv->scales(range).x; // map pixels per fig pixel
+  fig_ref/=rescale;
+  range/=rescale;
+  fig_cnv.reset(new ConvMap(fig_ref));
+
+  // create gobj
+  GObjMaps gobj(maps);
+  gobj.set_opt(o);
+  gobj.set_cnv(fig_cnv);
+  range.expand(marg);
+
+  // create directory
+  struct stat st;
+  if (stat(dir_name.c_str(), &st)!=0){
+    if (mkdir(dir_name.c_str(), 0755)!=0)
+      throw Err() << "can't make dir: " << dir_name;
+  }
+  else if (!S_ISDIR(st.st_mode))
+    throw Err() << "not a directory: " << dir_name;
+
+  int nx = int(range.w)/(tsize-1)+1; // number of tiles
+  int ny = int(range.h)/(tsize-1)+1;
+  double dx = range.w / double(nx);  // size of tiles
+  double dy = range.h / double(ny);
+
+  // start compound object
+  {
+    FigObj fo;
+    fo.type = FIG_COMPOUND;
+    fo.push_back(range.tlc()*rescale);
+    fo.push_back(range.brc()*rescale);
+    F.push_back(fo);
+  }
+
+  for (int j = 0; j<ny; j++){
+    for (int i = 0; i<nx; i++){
+      dPoint tlc(range.x+i*dx, range.y+j*dy);
+      dRect r = iRect(tlc, tlc+dPoint(dx,dy));
+
+      ImageR img(dx,dy,IMAGE_32ARGB);
+      img.fill32(0);
+      CairoWrapper cr;
+      cr.set_surface_img(img);
+      cr->translate(-tlc);
+      if (gobj.draw(cr, r) == GObj::FILL_NONE) continue;
+
+      std::ostringstream fname;
+      fname << dir_name << "/" << depth << "-" << i << "-" << j << ".jpg"; 
+      image_save(img, fname.str(), o);
+
+      auto fo = figobj_template("2 5 0 1 0 -1 500 -1 -1 0.000 0 0 -1 0 0");
+      fo.depth = depth;
+
+      fo.push_back(tlc*rescale);
+      fo.push_back((tlc+dPoint(dx,0))*rescale);
+      fo.push_back((tlc+dPoint(dx,dy))*rescale);
+      fo.push_back((tlc+dPoint(0,dy))*rescale);
+      fo.push_back(tlc*rescale);
+      fo.image_file = fname.str();
+      fo.comment.push_back("MAP "+fname.str());
+      F.push_back(fo);
+    }
+  }
+
+  // finish compound object
+  {
+    FigObj fo;
+    fo.type = FIG_END_COMPOUND;
+    F.push_back(fo);
+  }
+
+}
