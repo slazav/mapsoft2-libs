@@ -606,18 +606,18 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
     int pen_color  = color_rgb2fig(o.pen_color,  custom_cmap);
     int fill_color = color_rgb2fig(o.fill_color, custom_cmap);
 
-    s << o.type << " " << std::setprecision(3) << std::fixed;
+    s << o.type << std::setprecision(3) << std::fixed;
     int add_pt;
     switch (o.type) {
       case FIG_ELLIPSE:
         if (o.size()!=1) throw Err() << "FigObj: ellipse should have 1 coordinate point";
-        s << o.sub_type <<" " << o.line_style << " " << o.thickness << " "
-          << pen_color << " " << fill_color << " " << o.depth << " "
-          << o.pen_style << " " << o.area_fill << " " << o.style_val << " "
-          << o.direction << " " << std::setprecision(4) << o.angle << " "
-          << o[0].x << " " << o[0].y << " "
-          << o.radius_x << " " << o.radius_y << " " << o.start_x << " "
-          << o.start_y << " " << o.end_x << " " << o.end_y << "\n";
+        s << " " << o.sub_type <<" " << o.line_style << " " << o.thickness
+          << " " << pen_color << " " << fill_color << " " << o.depth
+          << " " << o.pen_style << " " << o.area_fill << " " << o.style_val
+          << " " << o.direction << " " << std::setprecision(4) << o.angle
+          << " " << o[0].x << " " << o[0].y
+          << " " << o.radius_x << " " << o.radius_y << " " << o.start_x
+          << " " << o.start_y << " " << o.end_x << " " << o.end_y << "\n";
         if (s.fail()) throw Err() << "FigObj: can't write ellipse object";
         break;
       case FIG_POLYLINE:
@@ -627,11 +627,11 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
         // Let's add the missing point if needed:
         add_pt = (o.is_closed() && o[o.size()-1] != o[0]) ? 1:0;
 
-        s << o.sub_type << " " << o.line_style << " " << o.thickness << " "
-          << pen_color << " " << fill_color << " " << o.depth << " "
-          << o.pen_style << " " << o.area_fill << " " << o.style_val << " "
-          << o.join_style << " " << o.cap_style << " " << o.radius << " "
-          << o.forward_arrow << " " << o.backward_arrow << " " << o.size() + add_pt << "\n";
+        s << " " << o.sub_type << " " << o.line_style << " " << o.thickness
+          << " " << pen_color << " " << fill_color << " " << o.depth
+          << " " << o.pen_style << " " << o.area_fill << " " << o.style_val
+          << " " << o.join_style << " " << o.cap_style << " " << o.radius
+          << " " << o.forward_arrow << " " << o.backward_arrow << " " << o.size() + add_pt << "\n";
         write_arrows(s, o);
         if (o.sub_type==5){ // image
           s << "\t" << o.image_orient << " "
@@ -644,48 +644,49 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
         if (o.is_closed()  && o.size()<3) throw Err() << "FigObj: closed spline with < 3 points";
         if (!o.is_closed() && o.size()<2) throw Err() << "FigObj: spline with < 2 points";
         if (o.size()!=o.f.size()) throw Err() << "FigObj: different amount of x,y and f values in a spline";
-        s << o.sub_type << " " << o.line_style << " " << o.thickness << " "
-          << pen_color << " " << fill_color << " " << o.depth << " "
-          << o.pen_style << " " << o.area_fill << " " << o.style_val << " "
-          << o.cap_style << " " << o.forward_arrow << " " << o.backward_arrow << " "
-          << o.size() << "\n";
+        s << " " << o.sub_type << " " << o.line_style << " " << o.thickness
+          << " " << pen_color << " " << fill_color << " " << o.depth
+          << " " << o.pen_style << " " << o.area_fill << " " << o.style_val
+          << " " << o.cap_style << " " << o.forward_arrow << " " << o.backward_arrow
+          << " " << o.size() << "\n";
         write_arrows(s, o);
         write_coords(s, o);
         if (s.fail()) throw Err() << "FigObj: can't write spline object";
         break;
       case FIG_TXT:
         if (o.size()!=1) throw Err() << "FigObj: text should have 1 coordinate point";
-        s << o.sub_type << " " << pen_color << " " << o.depth << " "
-          << o.pen_style << " " << o.font << " "
-          << std::setprecision(0) << o.font_size << " "
-          << std::setprecision(4) << o.angle << " " << o.font_flags << " "
-          << std::setprecision(0) << o.height << " " << o.length << " "
-          << o[0].x << " " << o[0].y << " ";
+        s << " " << o.sub_type << " " << pen_color << " " << o.depth
+          << " " << o.pen_style << " " << o.font
+          << " " << std::setprecision(0) << o.font_size
+          << " " << std::setprecision(4) << o.angle << " " << o.font_flags
+          << " " << std::setprecision(0) << o.height << " " << o.length
+          << " " << o[0].x << " " << o[0].y << " ";
         write_text(s, cnv(o.text), txt7bit);
         if (s.fail()) throw Err() << "FigObj: can't write text object";
         break;
       case FIG_ARC:
         if (o.size()!=3) throw Err() << "FigObj: arc should have 3 coordinate point";
         // TODO: calculate center!
-        s << o.sub_type << " " << o.line_style << " " << o.thickness << " "
-          << pen_color << " " << fill_color << " " << o.depth << " "
-          << o.pen_style << " " << o.area_fill << " " << o.style_val << " "
-          << o.cap_style << " " << o.direction << " "
-          << o.forward_arrow << " " << o.backward_arrow << " "
-          << o.center_x << " " << o.center_y << " "
-          << o[0].x << " " << o[0].y << " "
-          << o[1].x << " " << o[1].y << " "
-          << o[2].x << " " << o[2].y << "\n";
+        s << " " << o.sub_type << " " << o.line_style << " " << o.thickness
+          << " " << pen_color << " " << fill_color << " " << o.depth
+          << " " << o.pen_style << " " << o.area_fill << " " << o.style_val
+          << " " << o.cap_style << " " << o.direction
+          << " " << o.forward_arrow << " " << o.backward_arrow
+          << " " << o.center_x << " " << o.center_y
+          << " " << o[0].x << " " << o[0].y
+          << " " << o[1].x << " " << o[1].y
+          << " " << o[2].x << " " << o[2].y << "\n";
         write_arrows(s, o);
         if (s.fail()) throw Err() << "FigObj: can't write arc object";
         break;
       case FIG_COMPOUND:
         if (o.size()!=2) throw Err() << "FigObj: compound should have 2 coordinate point";
-        s << o[0].x << " " << o[0].y << " "
-          << o[1].x << " " << o[1].y << "\n";
+        s << " " << o[0].x << " " << o[0].y
+          << " " << o[1].x << " " << o[1].y << "\n";
         if (s.fail()) throw Err() << "FigObj: can't write compound object";
         break;
       case FIG_END_COMPOUND:
+        s << "\n";
         if (s.fail()) throw Err() << "FigObj: can't write compound end object";
         break;
       default:
