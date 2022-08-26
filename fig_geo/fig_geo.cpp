@@ -25,6 +25,12 @@ ms2opt_add_geofig_data(GetOptSet & opts){
     "Template for waypoints (default: \"2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0\").");
   opts.add("txt_templ", 1,0,g,
     "Template for waypoint labels (default: \"4 0 8 5 -1 18 6 0.0000 4\").");
+
+  opts.add("map_tsize", 1,0,g, "Tile size for raster maps (default 1024).");
+  opts.add("map_depth", 1,0,g, "FIG depth for raster maps (default 500).");
+  opts.add("map_marg",  1,0,g, "Margins for raster maps (pixels, default 50).");
+  opts.add("map_dir",   1,0,g, "Directory for raster map tiles (default fig_images).");
+
 }
 
 
@@ -314,7 +320,7 @@ void
 fig_add_maps(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   ConvMap cnv(m); // fig -> wgs
 
-  int tsize = o.get("tsize", 1024);
+  int tsize = o.get("map_tsize", 1024);
   int depth = o.get("map_depth", 500);
   int marg  = o.get("map_marg",  50);
   std::string dir_name = o.get("map_dir",  "fig_images");
