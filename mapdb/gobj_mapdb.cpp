@@ -12,6 +12,7 @@
 #include "geo_data/geo_io.h"
 #include "geo_mkref/geo_mkref.h"
 #include "filename/filename.h"
+#include "conv_label.h"
 
 using namespace std;
 
@@ -596,7 +597,8 @@ void
 GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align){
   if (O.size()==0 || O[0].size()==0) return; // no coordinates
   dPoint pt = O[0][0];
-  dRect ext = cr->get_text_extents(O.name.c_str());
+  auto txt = conv_label(O.name);
+  dRect ext = cr->get_text_extents(txt.c_str());
   // To allow any rotated/align text do be in the range use diagonal
   dRect rng = expand(dRect(pt,pt), hypot(ext.w, ext.h));
   if (!intersect(rng, range)) return;
@@ -622,8 +624,8 @@ GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const d
   cr->rotate(O.angle);
   cr->scale(O.scale, O.scale);
   cr->move_to(sh);
-  if (path) cr->text_path(O.name);
-  else      cr->show_text(O.name);
+  if (path) cr->text_path(txt);
+  else      cr->show_text(txt);
   cr->restore();
 }
 
