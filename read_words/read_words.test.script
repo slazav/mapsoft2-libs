@@ -83,6 +83,10 @@ EOF
 assert "$(cat test_data/read_words3 | "$prog" -r)" \
 "$(cat test_data/read_words3r)"
 
+assert "$(cat test_data/read_words4 | "$prog")" \
+"1-1: [define] [w1] [123]
+2-2: [use] [123]"
+
 
 assert "$(echo abcdez | "$prog")" "1-1: [abcdez]"
 assert "$(echo ABCDEZ | "$prog")" "1-1: [ABCDEZ]"

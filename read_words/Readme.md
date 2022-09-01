@@ -65,6 +65,9 @@ Opt read_conf(const std::string & fname,
 ------------
 ## Changelog:
 
+2022.08.31 V.Zavjalov 1.9:
+- add read_words_defs class: define and substitute variables
+
 2022.06.19 V.Zavjalov 1.8:
 - add unquote_words function
 

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <iostream>
 
 ///\addtogroup libmapsoft
@@ -45,6 +46,26 @@ std::string join_words(const std::vector<std::string> & words);
   "a b" \'c --> a b 'c
 */
 std::string unquote_words(const std::string & in);
+
+/***********************************/
+// Define/substitute variables
+// (copy from cryoblocks project)
+
+class read_words_defs : public std::map<std::string, std::string> {
+public:
+  // initialize from map<str,str>, or Opt
+  read_words_defs(const std::map<std::string, std::string> & map):
+    std::map<std::string, std::string>(map){}
+  read_words_defs() {}
+
+  void define(const std::string & name, const std::string & value){
+    emplace(name, value); }
+
+  void apply(std::string & str) const;
+
+  void apply(std::vector<std::string> & vs) const {
+     for (auto &s:vs) apply(s); }
+};
 
 ///@}
 #endif

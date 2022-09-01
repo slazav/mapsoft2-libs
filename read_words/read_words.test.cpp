@@ -15,10 +15,19 @@ main(int argc, const char* argv[]){
       if (std::string(argv[i])=="-r") raw = true;
     }
 
-    int N[2] = {0,0};
+    int N[2] = {0,0}; // line counter for read_words
+    read_words_defs defs;
     while (1){
       std::vector<std::string> vs = read_words(std::cin, N, lc, raw);
       if (vs.size()<1) break;
+
+      // definitions
+      defs.apply(vs);
+      if (vs[0] == "define"){
+        if (vs.size()!=3) throw Err() << "bad definition in line " << N[0]
+          << ": expected: define <key> <value>";
+        defs.define(vs[1], vs[2]);
+      }
 
       if (raw) {
         if (vs.size()) std::cout << "> " << vs[0];

@@ -198,3 +198,17 @@ unquote_words(const std::string & in){
   }
   return ret;
 }
+
+/***********************************/
+
+void
+read_words_defs::apply(std::string & str) const{
+  while (1) {
+    auto n1 = str.find("${");
+    if (n1 == std::string::npos) break;
+    auto n2 = str.find("}", n1);
+    auto v = find(str.substr(n1+2, n2-n1-2));
+    if (v == end()) throw Err() << "Undefined variable: " << str.substr(n1, n2-n1+1);
+    str.replace(n1,n2-n1+1, v->second);
+  }
+}
