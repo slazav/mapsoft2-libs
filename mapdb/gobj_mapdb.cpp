@@ -83,13 +83,14 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o): GObjMulti(false)
   map = std::shared_ptr<MapDB>(new MapDB(mapdir));
 
   // Read configuration file.
-  Opt defs = o.get("define", Opt());
+  read_words_defs defs(o.get("define", Opt()));
+
   int depth = 0;
   load_conf(opt.get<string>("config", mapdir + "/render.cfg"), defs, depth);
 }
 
 void
-GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
+GObjMapDB::load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth){
 
   std::string cfgdir = file_get_prefix(cfgfile); // for including images and other files
 
@@ -97,7 +98,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
   if (!ff) throw Err()
     << "GObjMapDB: can't open configuration file: " << cfgfile;
 
-  int line_num[2] = {0,0};
+  int line_num[2] = {0,0}; // line counter for read_words
   std::shared_ptr<DrawingStep> st(NULL); // current step
   std::string ftr; // current feature
   std::deque<bool> ifs;  // for if/endif commands
@@ -106,11 +107,12 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
     vector<string> vs = read_words(ff, line_num, false);
     if (vs.size()==0) break;
 
-    // apply definitions
-    for (auto & s:vs){ if (defs.exists(s)) s = defs.get(s, ""); }
 
     ftr = "";
     try{
+
+      // apply definitions
+      defs.apply(vs);
 
       // include command
       if (vs[0] == "include"){
@@ -237,7 +239,7 @@ GObjMapDB::load_conf(const std::string & cfgfile, Opt & defs, int & depth){
         st.reset(); // "+" should not work after the command
         if (vs.size()!=3) throw Err()
             << "wrong number of arguments: define <name> <definition>";
-        defs.put(vs[1],vs[2]);
+        defs.define(vs[1],vs[2]);
         continue;
       }
 

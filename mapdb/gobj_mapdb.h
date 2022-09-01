@@ -14,6 +14,7 @@
 #include "geo_data/geo_data.h"
 #include "geo_data/conv_geo.h"
 #include "opt/opt.h"
+#include "read_words/read_words.h"
 
 #include "mapdb.h"
 
@@ -74,7 +75,7 @@ other commands in the configuration file
     set_ref nom <name> <dpi> -- set map reference and border as a Soviet nomenclature name
     set_brd file <filename> -- set map border from track file
     max_text_size <value> -- set max_text_size value for selecting text objects in the database
-    define <name> <definition> -- redefine a word (substitution works on full words and done once)
+    define <name> <definition> -- define a variable which can be used as ${name} later
     if <word1> (==|!=) <word2>, else, endif --  if statement. If condition is true/false
        text between if and endif is is processed/ignored. One can use nested if-endif commands.
        Command else just inverts condition of the last if command.
@@ -535,7 +536,7 @@ public:
   GObjMapDB(const std::string & mapdir, const Opt & o);
 
   // load configuration file
-  void load_conf(const std::string & cfgfile, Opt & defs, int & depth);
+  void load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth);
 
   /*******************************************/
 
