@@ -237,14 +237,6 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
 
   }
 
-  // border
-  dMultiLine brd;
-  brd.push_back(vmap_data.brd);
-  set_map_brd(brd);
-
-  // map name
-  set_map_name(vmap_data.name);
-
   // print unknown types (if any)
   for (auto const t:unknowns)
     std::cerr << "unknown type: " << MapDBObj::print_type(t) << "\n";
@@ -438,12 +430,6 @@ MapDB::export_vmap(const std::string & vmap_file, const Opt & opts){
     key++;
     str = objects.get_range(key);
   }
-
-  // map border (convert to single-segment line)
-  vmap_data.brd = join_polygons(get_map_brd());
-
-  // map name
-  vmap_data.name = get_map_name();
 
   // print unknown types (if any)
   for (auto const t:unknowns)
