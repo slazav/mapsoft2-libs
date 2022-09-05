@@ -101,6 +101,12 @@ main(){
   assert_eq(GEO_PROJ_SU(5), "SU3");
   assert_eq(GEO_PROJ_SU(-10), "SU-9");
 
+  // OS references
+  assert_err(os_to_pt(""), "bad OS reference length: ");
+  assert_err(os_to_pt("NN123"), "bad OS reference length: NN123");
+  assert_err(os_to_pt("AA1212"), "unknown OS letter code: AA1212");
+  assert_eq((iPoint)os_to_pt("NN166712"), iPoint(216600,771200));
+
   }
   catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";

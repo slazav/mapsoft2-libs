@@ -35,6 +35,14 @@ double crdx2nonpref(const double X);
 // To be removed!
 std::string GEO_PROJ_SU(double lon);
 
+// Ordnance Survey letter codes. "code" -> x,y (in 100 km units)
+// https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid
+extern std::map<std::string, std::pair<int, int> > os_codes;
+
+// Convert OS grid reference to a x,y point
+dPoint os_to_pt(const std::string & s);
+
 /********************************************************************/
 
 #endif
+
