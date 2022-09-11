@@ -43,11 +43,11 @@ public:
 
   /// Find objects with given type and range
   std::set<uint32_t> find(MapDBObjClass cl, uint16_t tnum, const dRect & range){
-    return geohash.get((cl  << 24) | tnum, range); }
+    return geohash.get(range, (cl  << 24) | tnum); }
 
   /// Find objects with given type and range
   std::set<uint32_t> find(uint32_t type, const dRect & range){
-    return geohash.get(type, range); }
+    return geohash.get(range,type); }
 
   /// get all object types in the database
   std::set<uint32_t> get_types() {

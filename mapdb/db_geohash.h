@@ -5,51 +5,37 @@
 #include <set>
 #include <stdint.h>
 #include "geom/rect.h"
+#include "geohash/storage.h"
 
-// Geohash database for spatial indexing.
+// BerkleyDB analog of GeoHashStorage from geohash/.
 // One can add "object ID -- object type -- object range"
 // combinations and then query for objects of a certain type
 // which may appear in a given coordinate range.
 
-// There are two implementations: Memory and BerkleyDB.
-// Use empty fname parameter in the constructor to use memory implementation.
-
-// Memory version is almost same as GeoHashStorage class in geohash/
-// (TODO: remove one)
-
-class GeoHashDB {
-  private:
-    class Impl;
-    class ImplDB;
-    class ImplMem;
-    std::shared_ptr<Impl> impl;
+/**********************************************************/
+class GeoHashDB : public GeoHashStorage {
+    std::shared_ptr<void> db;
 
   public:
+    GeoHashDB(std::string fname, const char *dbname, bool create);
 
-    GeoHashDB(std::string fname = std::string(), const char *dbname = NULL, bool create = true);
-    ~GeoHashDB();
+    // add an object
+    void put(const uint32_t id, const dRect & range, const uint32_t type=0) override;
 
-    // Get id of objects of certain type which may be found in the range.
-    // If bbox is empty return zero set.
-    std::set<uint32_t> get(const uint32_t type, const dRect & range);
+    // delete an object
+    void del(const uint32_t id, const dRect & range, const uint32_t type=0) override;
 
-    // Add an object with id, type and range.
-    // If bbox is empty do nothing.
-    void put(const uint32_t id, const uint32_t type, const dRect & range);
-
-    // Delete an object with id, type and range.
-    // If the record does not exist do nothing.
-    void del(const uint32_t id, const uint32_t type, const dRect & range);
-
-    // get all object types in the database
-    std::set<uint32_t> get_types();
+    // get all types
+    std::set<uint32_t> get_types() const override;
 
     // get range of the largest geohash
-    dRect bbox();
+    dRect bbox() const override;
 
-    // dump database to stdout
-    void dump();
+    // dump database
+    void dump() const override;
 
+    // get objects for geohash
+    std::set<uint32_t> get_hash(const std::string & hash0, bool exact) const override;
 };
 
 #endif
