@@ -175,14 +175,24 @@ int main( /* int argc, char **argv */ ) {
   }
 
   {
-    assert_eq(GEOHASH_convert_box(dRect(1,1,1,1), dRect(0,0,10,10)),
+    assert_eq(GEOHASH_encode_box(dRect(1,1,1,1), dRect(0,0,10,10)),
            dRect(-180+36,-90+18,36,18));
 
-    assert_eq(GEOHASH_convert_box(dRect(1,1,1,1), dRect()),
+    assert_eq(GEOHASH_encode_box(dRect(1,1,1,1), dRect()),
            dRect(1,1,1,1));
 
-    assert_eq(GEOHASH_convert_box(dRect(), dRect(0,0,10,10)),
+    assert_eq(GEOHASH_encode_box(dRect(), dRect(0,0,10,10)),
            dRect());
+
+    assert_eq(GEOHASH_decode_box(dRect(-180+36,-90+18,36,18), dRect(0,0,10,10)),
+           dRect(1,1,1,1));
+
+    assert_eq(GEOHASH_decode_box(dRect(1,1,1,1), dRect()),
+           dRect(1,1,1,1));
+
+    assert_eq(GEOHASH_decode_box(dRect(), dRect(0,0,10,10)),
+           dRect());
+
   }
 
   }

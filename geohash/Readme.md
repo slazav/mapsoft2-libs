@@ -39,9 +39,10 @@ std::string GEOHASH_adjacent(const std::string & hash, int dir);
 * Sometimes it is needed to encode arbitrary type of coordinates,
 not lat-lon. This function does a linear transformation of
 coordinates in such a way that `bbox -> dRect(-180,-90,360,90)`.
-If bor or bbox is empty then original box is returned without modification.
+If box or bbox is empty then original box is returned without modification.
 ```c++
-dRect GEOHASH_convert_box(const dRect & box, const dRect & bbox);
+dRect GEOHASH_encode_box(const dRect & box, const dRect & bbox);
+dRect GEOHASH_decode_box(const dRect & box, const dRect & bbox);
 ```
 
 ## GeoHashStorage -- spatial indexing storage (see storage.h)

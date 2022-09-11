@@ -239,14 +239,14 @@ GObjWpts::adjust_text_pos() {
 
   // create geohash storage
   GeoHashStorage db;
-  db.set_bbox(range);
+  db.set_db_range(range);
 
   // for each box
   for (int i=0; i<(int)tmpls.size(); ++i){
     dRect bi = tmpls[i].text_box + tmpls[i].text_pt;
     tmpls[i].style = Normal; // all points are Normal in the beginning
     db.put(i, bi);
-    std::set<int> v = db.get(bi);
+    auto v = db.get(bi);
     // find box with smaller number which may touch this one
     int i0 = -1;
     for (auto j:v){

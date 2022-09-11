@@ -22,7 +22,7 @@ main(){
       db.put(8, dRect(35,57,       0.10,0.10));
       db.put(9, dRect(-100,-50,    220,100));
 
-      std::set<int> v1 = db.get(dRect(-0.01,-0.01, 1.12,1.12));
+      auto v1 = db.get(dRect(-0.01,-0.01, 1.12,1.12));
       //for (auto i:v1) std::cerr << "> " << i << "\n";
       assert_eq(v1.size(),5);
       assert_eq(v1.count(1),1);
@@ -30,6 +30,8 @@ main(){
       assert_eq(v1.count(3),1);
       assert_eq(v1.count(4),1);
       assert_eq(v1.count(9),1);
+      v1 = db.get(dRect(-0.01,-0.01, 1.12,1.12), 1); // unknown type
+      assert_eq(v1.size(),0);
 
       v1 = db.get(dRect(36,57, 0.001,0.001));
       //for (auto i:v1) std::cerr << "> " << i << "\n";
@@ -43,8 +45,8 @@ main(){
       //for (auto i:v1) std::cerr << "> " << i << "\n";
       assert_eq(v1.size(),9);
 
-      // set_bbox
-      db.set_bbox(dRect(-1800,-900, 3600, 1800)); // x10
+      // set_db_range
+      db.set_db_range(dRect(-1800,-900, 3600, 1800)); // x10
       v1 = db.get(dRect(360,570, 0.01,0.01));
       //for (auto i:v1) std::cerr << "> " << i << "\n";
       assert_eq(v1.size(),3);
@@ -56,8 +58,8 @@ main(){
       //for (auto i:v1) std::cerr << "> " << i << "\n";
       assert_eq(v1.size(),9);
 
-      // set_bbox
-      db.set_bbox(dRect()); // reset
+      // set_db_range
+      db.set_db_range(dRect()); // reset
       v1 = db.get(dRect(36,57, 0.001,0.001));
       //for (auto i:v1) std::cerr << "> " << i << "\n";
       assert_eq(v1.size(),3);

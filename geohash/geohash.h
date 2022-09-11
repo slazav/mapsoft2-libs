@@ -39,7 +39,8 @@ std::string GEOHASH_adjacent(const std::string & hash, int dir);
 // coordinates in such a way that bbox -> dRect(-180,-90,360,90).
 // If bbox is empty then original box is returned.
 // If box is empty then empty box is returned.
-dRect GEOHASH_convert_box(const dRect & box, const dRect & bbox);
+dRect GEOHASH_encode_box(const dRect & box, const dRect & bbox);
+dRect GEOHASH_decode_box(const dRect & box, const dRect & bbox);
 
 
 #endif

@@ -6,26 +6,41 @@
 #include <set>
 #include "geom/rect.h"
 
+/**********************************************************/
 // In-memory (std::map-based) geohash database for spatial indexing
+
 class GeoHashStorage {
-  private:
-    std::multimap<std::string, int> storage;
-    virtual std::set<int> get_hash(const std::string & hash0, bool exact);
-    dRect bbox;
+    std::multimap<std::string, uint32_t> db;
+    dRect BB; // coordinate range; empty for default [-180..180, -90..90]
 
   public:
-   // add object with id and range.
-   virtual void put(const int id, const dRect & range);
 
-   // get id of objects which may be found in the range
-   std::set<int> get(const dRect & range);
+    // Get id of objects which may be found in the range
+    virtual std::set<uint32_t> get(const dRect & range, const uint32_t type=0) const;
 
-   // Delete an object with id and range.
-   // If the record does not exist do nothing.
-   void del(const int id, const dRect & range);
+    // add an object
+    virtual void put(const uint32_t id, const dRect & range, const uint32_t type=0);
 
-   // set bbox for coordinate transformation
-   void set_bbox(const dRect & bbox_){ bbox = bbox_; }
+    // delete an object
+    virtual void del(const uint32_t id, const dRect & range, const uint32_t type=0);
+
+    // get all types
+    virtual std::set<uint32_t> get_types() const;
+
+    // get range of the largest geohash
+    virtual dRect bbox() const;
+
+    // dump database
+    virtual void dump() const;
+
+    // get objects for geohash
+    virtual std::set<uint32_t> get_hash(const std::string & hash0, bool exact) const;
+
+    // we use type+geohash key
+    static std::string join_type(const uint32_t type, const std::string & hash);
+
+    // set bbox for coordinate transformation
+    virtual void set_db_range(const dRect & range_){ BB = range_; }
 };
 
 
