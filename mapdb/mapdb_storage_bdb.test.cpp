@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 #include "err/assert_err.h"
-#include "mapdb.h"
+#include "mapdb_storage_bdb.h"
 
 using namespace std;
 
@@ -12,10 +12,10 @@ int
 main(){
   try{
 
-    // MapDB test
+    // MapDBStorageBDB test
     {
-      MapDB::delete_db("tmp.db");
-      MapDB m("tmp.db", 1);
+      MapDBStorageBDB::delete_db("tmp.db");
+      MapDBStorageBDB m("tmp.db", 1);
 
       // get/set object
       MapDBObj o1;
@@ -25,13 +25,13 @@ main(){
       o1.comm = "object comment\nsecond line";
       o1.tags.insert("object source\nsecond line");
 
-      assert_err(m.put(0,o1), "MapDB::put: object does not exists: 0");
-      assert_err(m.del(0), "MapDB::del: object does not exists: 0");
-      assert_err(m.get(0), "MapDB::get: object does not exists: 0");
+      assert_err(m.put(0,o1), "MapDBStorageBDB::put: object does not exists: 0");
+      assert_err(m.del(0), "MapDBStorageBDB::del: object does not exists: 0");
+      assert_err(m.get(0), "MapDBStorageBDB::get: object does not exists: 0");
 
       assert_eq(m.get_types().size(), 0);
 
-      assert_err(m.add(o1), "MapDB::add: empty object");
+      assert_err(m.add(o1), "MapDBStorageBDB::add: empty object");
       o1.dMultiLine::operator=(dMultiLine("[[0,0],[1,1]]"));
 
       // add/get object
@@ -41,14 +41,14 @@ main(){
 
       assert_eq(m.get_types().size(), 1);
 
-      assert_err(m.put(1,o1), "MapDB::put: object does not exists: 1");
-      assert_err(m.del(1), "MapDB::del: object does not exists: 1");
-      assert_err(m.get(1), "MapDB::get: object does not exists: 1");
+      assert_err(m.put(1,o1), "MapDBStorageBDB::put: object does not exists: 1");
+      assert_err(m.del(1), "MapDBStorageBDB::del: object does not exists: 1");
+      assert_err(m.get(1), "MapDBStorageBDB::get: object does not exists: 1");
 
       // update object
       o1.set_type(MAPDB_LINE, 0x2342);
       o1.dMultiLine::operator=(dMultiLine());
-      assert_err(m.put(id, o1), "MapDB::put: empty object");
+      assert_err(m.put(id, o1), "MapDBStorageBDB::put: empty object");
 
       o1.dMultiLine::operator=(dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
       m.put(id,o1);
@@ -56,7 +56,7 @@ main(){
 
       // delete object
       m.del(id);
-      assert_err(m.get(0), "MapDB::get: object does not exists: 0");
+      assert_err(m.get(0), "MapDBStorageBDB::get: object does not exists: 0");
 
       // find
       id = m.add(o1);
@@ -71,7 +71,7 @@ main(){
 
 
     }
-    MapDB::delete_db("tmp.db");
+    MapDBStorageBDB::delete_db("tmp.db");
 
   }
   catch (Err & e) {

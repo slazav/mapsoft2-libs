@@ -16,7 +16,7 @@
 #include "opt/opt.h"
 #include "read_words/read_words.h"
 
-#include "mapdb.h"
+#include "mapdb_storage_bdb.h"
 
 /*
 
@@ -96,7 +96,7 @@ void ms2opt_add_mapdb_render(GetOptSet & opts);
 class GObjMapDB : public GObjMulti{
 private:
 
-  std::shared_ptr<MapDB> map;
+  std::shared_ptr<MapDBStorageBDB> map;
   std::vector<std::string> groups; // ordered list of all groups
   GeoMap ref;            // default map reference
   double max_text_size;  // for selecting text objects

@@ -80,7 +80,7 @@ GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o): GObjMulti(false)
   fit_patt_size = o.get<bool>("fit_patt_size", false);
 
   opt = o;
-  map = std::shared_ptr<MapDB>(new MapDB(mapdir));
+  map = std::shared_ptr<MapDBStorageBDB>(new MapDBStorageBDB(mapdir));
 
   // Read configuration file.
   read_words_defs defs(o.get("define", Opt()));
@@ -537,7 +537,7 @@ void
 GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();
-  MapDB *map = mapdb_gobj->map.get();
+  MapDBStorageBDB *map = mapdb_gobj->map.get();
 
   // deg -> rad
   // Note:
@@ -635,7 +635,7 @@ GObj::ret_t
 GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   ConvBase *cnv = mapdb_gobj->cnv.get();
-  MapDB *map = mapdb_gobj->map.get();
+  MapDBStorageBDB *map = mapdb_gobj->map.get();
   double osc = mapdb_gobj->obj_scale;
   if (mapdb_gobj->sc!=0) osc *= mapdb_gobj->sc;
 

@@ -2,12 +2,8 @@
 #define MAPDB_OBJ_H
 
 #include <string>
-#include <list>
-#include <map>
 #include <set>
 
-#include "db_simple.h"
-#include "db_geohash.h"
 #include "geom/multiline.h"
 
 // Class for vector map object.
