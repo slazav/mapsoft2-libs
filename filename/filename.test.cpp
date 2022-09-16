@@ -83,6 +83,15 @@ int main() {
     assert_eq(file_get_basename("abc/.aaa.ccc", ".ccc"), ".aaa");
     assert_eq(file_get_basename("abc/.aaa.ccc", ".aaa.ccc"), "");
 
+    // file_get_basename (with all extensions)
+    assert_eq(file_get_basename(""), "");
+    assert_eq(file_get_basename("aaa"), "aaa");
+    assert_eq(file_get_basename("/aaa"), "aaa");
+    assert_eq(file_get_basename("/abc//aa.b.c"), "aa");
+    assert_eq(file_get_basename("abc/.aaa.ccc"), ".aaa");
+    assert_eq(file_get_basename("abc/.a.b.c"), ".a");
+    assert_eq(file_get_basename("a.b.c/.a.b.c"), ".a");
+
     // file exists
     assert_eq(file_exists("filename.test.cpp"), 1);
     assert_eq(file_exists("missing.txt"), 0);

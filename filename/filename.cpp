@@ -96,6 +96,16 @@ file_get_basename(const std::string &fname, const std::string &ext){
   return ret;
 }
 
+std::string
+file_get_basename(const std::string &fname){
+  // remove path:
+  auto ret = file_get_name(fname);
+
+  // remove all extensions
+  int i = ret.find('.', 1);
+  return i<0? ret : ret.substr(0,i);
+}
+
 #include <sys/types.h>
 #include <sys/stat.h>
 bool
