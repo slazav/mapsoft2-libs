@@ -47,12 +47,15 @@ struct MapDBObj: public dMultiLine {
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
+
   std::set<uint32_t> children;   // id's of related objects (usually labels)
+  dPoint   ref_pt;    // type of parent object (for detached labels)
+  uint32_t ref_type;  // coordinates of a parent object point (for detached labels)
 
   // defaults
   MapDBObj(const uint32_t t = 0):
       type(t), angle(std::nan("")),
-      scale(1.0), align(MAPDB_ALIGN_SW) {}
+      scale(1.0), align(MAPDB_ALIGN_SW), ref_type(0xFFFFFFFF) {}
 
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
@@ -106,6 +109,8 @@ struct MapDBObj: public dMultiLine {
     if (comm!=o.comm)   return comm<o.comm;
     if (tags!=o.tags)   return tags<o.tags;
     if (children!=o.children)   return children<o.children;
+    if (ref_type!=o.ref_type)   return ref_type<o.ref_type;
+    if (ref_pt!=o.ref_pt)       return ref_pt<o.ref_pt;
     return dMultiLine::operator<(o);
   }
 
@@ -114,6 +119,7 @@ struct MapDBObj: public dMultiLine {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
     return type==o.type && ang_eq && scale==o.scale && align==o.align &&
         name==o.name && comm==o.comm && tags==o.tags && children==o.children &&
+        ref_type==o.ref_type && ref_pt==o.ref_pt &&
         dMultiLine::operator==(o);
   }
   // derived operators:
