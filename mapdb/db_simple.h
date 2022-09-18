@@ -11,12 +11,10 @@
 
 class DBSimple{
   private:
-    class Impl;
-    std::unique_ptr<Impl> impl;
+    std::shared_ptr<void> db;   // database
+    std::shared_ptr<void> cur;  // cursor
 
   public:
-
-   // TODO: write iterator?
 
    // open database:
    // fname - file name
@@ -44,6 +42,9 @@ class DBSimple{
 
    // Check if the key exists in the database.
    bool exists(const uint32_t key);
+
+   // Low-level get function with BerkleyDB flags
+   std::string get(uint32_t & key, int flags);
 
    // Get data for a given key.
    // If record is not found then key is set to 0xFFFFFFFF and
@@ -88,6 +89,7 @@ class DBSimple{
    // If key duplication is allowed then multiple records can be deleted.
    // Returns number of deleted entries (maybe zero)
    uint32_t del(const uint32_t key);
+
 
 };
 

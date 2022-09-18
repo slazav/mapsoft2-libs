@@ -7,69 +7,33 @@
 #include "db_tools.h"
 
 /**********************************************************/
-// Implementation class
-class DBSimple::Impl {
-  private:
-    std::string pack_uint32(const uint32_t v);
-    uint32_t unpack_uint32(DBT *k);
-
-  public:
-    std::shared_ptr<void> db;   // database
-    std::shared_ptr<void> cur;  // cursor
-
-    Impl(std::string fname, const char *dbname, bool create, bool dup);
-    ~Impl() {}
-
-   bool exists(const uint32_t key);
-
-   void put(const uint32_t key, const std::string & val);
-
-   std::string get(uint32_t & key, int flags);
-
-   uint32_t del(const uint32_t key);
-};
-
-/**********************************************************/
-// Main class methods
-DBSimple::DBSimple(std::string fname, const char *dbname, bool create, bool dup):
-  impl(std::unique_ptr<Impl>(new Impl(fname, dbname, create, dup))) { }
-
-bool
-DBSimple::exists(const uint32_t key){ return impl->exists(key);}
-
-void
-DBSimple::put(const uint32_t key, const std::string & val){
-  impl->put(key, val);}
-
+// pack/unpack uint32_t key
 
 std::string
-DBSimple::get(uint32_t & key){ return impl->get(key, DB_SET);}
-
-std::string
-DBSimple::get_range(uint32_t & key){ return impl->get(key, DB_SET_RANGE);}
-
-std::string
-DBSimple::get_next(uint32_t & key){ return impl->get(key, DB_NEXT);}
-
-std::string
-DBSimple::get_prev(uint32_t & key){ return impl->get(key, DB_PREV);}
-
-std::string
-DBSimple::get_last(uint32_t & key){ return impl->get(key, DB_LAST);}
-
-std::string
-DBSimple::get_first(uint32_t & key){ return impl->get(key, DB_FIRST);}
+pack_uint32(const uint32_t v){
+  std::string ret(4,0);
+  ret[0] = (char)((v>>24)&0xff);
+  ret[1] = (char)((v>>16)&0xff);
+  ret[2] = (char)((v>>8)&0xff);
+  ret[3] = (char)(v&0xff);
+  return ret;
+}
 
 uint32_t
-DBSimple::del(const uint32_t key) {return impl->del(key);}
+unpack_uint32(DBT *k){
+  if (k->size != sizeof(uint32_t))
+    throw Err() << "db_simple: broken database, wrong key size: " << k->size;
+  unsigned char *d = (unsigned char *)k->data;
+  uint32_t ret = ((uint32_t)d[0]<<24) + ((uint32_t)d[1]<<16)
+               + ((uint32_t)d[2]<<8) + (uint32_t)d[3];
+  return ret;
+}
 
+/**********************************************************/
 
 DBSimple::~DBSimple(){}
 
-/**********************************************************/
-// Implementation class methods
-
-DBSimple::Impl::Impl(std::string fname, const char *dbname, bool create, bool dup){
+DBSimple::DBSimple(std::string fname, const char *dbname, bool create, bool dup){
   // set flags
   int open_flags = create? DB_CREATE|DB_EXCL:0;
 
@@ -104,29 +68,9 @@ DBSimple::Impl::Impl(std::string fname, const char *dbname, bool create, bool du
   cur = std::shared_ptr<void>(curp, bdb_cur_close);
 }
 
-std::string
-DBSimple::Impl::pack_uint32(const uint32_t v){
-  std::string ret(4,0);
-  ret[0] = (char)((v>>24)&0xff);
-  ret[1] = (char)((v>>16)&0xff);
-  ret[2] = (char)((v>>8)&0xff);
-  ret[3] = (char)(v&0xff);
-  return ret;
-}
-
-uint32_t
-DBSimple::Impl::unpack_uint32(DBT *k){
-  if (k->size != sizeof(uint32_t))
-    throw Err() << "db_simple: broken database, wrong key size: " << k->size;
-  unsigned char *d = (unsigned char *)k->data;
-  uint32_t ret = ((uint32_t)d[0]<<24) + ((uint32_t)d[1]<<16)
-               + ((uint32_t)d[2]<<8) + (uint32_t)d[3];
-  return ret;
-}
-
 
 bool
-DBSimple::Impl::exists(const uint32_t key){
+DBSimple::exists(const uint32_t key){
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -139,7 +83,7 @@ DBSimple::Impl::exists(const uint32_t key){
 }
 
 void
-DBSimple::Impl::put(const uint32_t key, const std::string & val){
+DBSimple::put(const uint32_t key, const std::string & val){
   DB  *dbp = (DB*)db.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -151,7 +95,7 @@ DBSimple::Impl::put(const uint32_t key, const std::string & val){
 // Main get function. Uses cursor, supports all flags.
 // Set key to 0xFFFFFFFF if nothing is found.
 std::string
-DBSimple::Impl::get(uint32_t & key, int flags){
+DBSimple::get(uint32_t & key, int flags){
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -166,9 +110,28 @@ DBSimple::Impl::get(uint32_t & key, int flags){
   return std::string((char*)v.data, (char*)v.data+v.size);
 }
 
+std::string
+DBSimple::get(uint32_t & key){ return get(key, DB_SET);}
+
+std::string
+DBSimple::get_range(uint32_t & key){ return get(key, DB_SET_RANGE);}
+
+std::string
+DBSimple::get_next(uint32_t & key){ return get(key, DB_NEXT);}
+
+std::string
+DBSimple::get_prev(uint32_t & key){ return get(key, DB_PREV);}
+
+std::string
+DBSimple::get_last(uint32_t & key){ return get(key, DB_LAST);}
+
+std::string
+DBSimple::get_first(uint32_t & key){ return get(key, DB_FIRST);}
+
+
 // Delete function.
 uint32_t
-DBSimple::Impl::del(const uint32_t key){
+DBSimple::del(const uint32_t key){
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
