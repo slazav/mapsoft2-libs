@@ -90,7 +90,38 @@ class DBSimple{
    // Returns number of deleted entries (maybe zero)
    uint32_t del(const uint32_t key);
 
+   // Iterator interface
+   // (A very basic one, BerkleyDB cursors have many more features to implement here)
+   struct iterator {
+     iterator(void *dbp);
+     iterator(const iterator & i); // copy iterator -- using cursor->dup
+     // Low-level BerkleyDB cursor operations.
+     void c_del(int flags);
+     void c_get(int flags);
+     void c_get(uint32_t key, const std::string & val, int flags);
+     void c_put(uint32_t key, const std::string & val, int flags);
 
+     std::pair<uint32_t, std::string> & operator*() {
+       if (end) throw Err() << "db_simple: invalid iterator";
+       return curr_val;}
+     std::pair<uint32_t, std::string> * operator->() {
+       if (end) throw Err() << "db_simple: invalid iterator";
+       return &curr_val;
+     }
+     iterator& operator++(); // prefix only!
+     // only end flag comparison!
+     friend bool operator== (const iterator& a, const iterator& b) {return a.end == b.end;}
+     friend bool operator!= (const iterator& a, const iterator& b) {return a.end != b.end;}
+
+   private:
+     std::shared_ptr<void> cur;            // cursor
+     bool end;                             // end flag
+     std::pair<uint32_t, std::string> curr_val; // current value
+   };
+   iterator begin();
+   iterator end();
+   iterator find(uint32_t key);
+   iterator erase(iterator & i); // returns next iterator
 };
 
 

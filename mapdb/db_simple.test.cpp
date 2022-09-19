@@ -99,8 +99,8 @@ main(){
       assert_eq(db.del(257), 0);
       key=257;
       assert_eq(db.get(key), "");
-
     }
+
     {
       // open existing file
       assert_err(DBSimple("a.dbp", NULL, 1), "db_simple: a.dbp: File exists");
@@ -109,7 +109,39 @@ main(){
       uint32_t key = 2;
       assert_eq(db.get(key), "fgh");
       assert_eq(db.get_next(key), "def");
+
+      // iterators
+      //for (auto i:db) std::cerr << "> " << i.first << " " << i.second << "\n";
+      auto i = db.begin();
+      assert_eq(i->first, 1);
+      assert_eq(i->second, "abc");
+      ++i;
+      assert_eq(i->first, 2);
+      assert_eq(i->second, "fgh");
+      ++i;
+      assert_eq(i->first, 3);
+      assert_eq(i->second, "def");
+      assert_eq(i == db.end(), false);
+      ++i;
+      assert_eq(i == db.end(), true);
+
+      i = db.find(2);
+      assert_eq(i->second, "fgh");
+      assert_eq(i == db.end(), false);
+      i = db.find(10);
+      assert_eq(i == db.end(), true);
+
+      i = db.find(1);
+      i = db.erase(i);
+      assert_eq(i->first, 2);
+      assert_eq(i->second, "fgh");
+      assert_eq(i == db.end(), false);
+      i = db.find(3);
+      i = db.erase(i);
+      assert_eq(i == db.end(), true);
+
     }
+
     unlink("a.dbp");
 
     {

@@ -152,3 +152,109 @@ DBSimple::del(const uint32_t key){
   return num;
 }
 
+/***************************************************************/
+
+DBSimple::iterator::iterator(void *dbp): end(true){
+  if (dbp==NULL) throw Err() << "db_simple: can't get cursor (NULL db)";
+  DBC *curp=NULL;
+  ((DB*)dbp)->cursor((DB*)dbp, NULL, &curp, 0);
+  if (curp==NULL) throw Err() << "db_simple: can't get cursor";
+  cur = std::shared_ptr<void>(curp, bdb_cur_close);
+}
+
+DBSimple::iterator::iterator(const iterator & i){
+  *this = i;
+  DBC *dbc = (DBC*)cur.get(), *next;
+  int ret = dbc->dup(dbc, &next,  DB_POSITION);
+  if (ret != 0) throw Err() << "db_simple: " << db_strerror(ret);
+  cur.reset(next, bdb_cur_close);
+}
+
+void
+DBSimple::iterator::c_get(int flags){
+  DBC *dbc = (DBC*)cur.get();
+  DBT k = mk_dbt();
+  DBT v = mk_dbt();
+  int ret = dbc->c_get(dbc, &k, &v, flags);
+  if (ret != 0 && ret != DB_NOTFOUND)
+    throw Err() << "db_simple: " << db_strerror(ret);
+  if (ret != DB_NOTFOUND) {
+    end=false;
+    curr_val.first  = unpack_uint32(&k);
+    curr_val.second = std::string((char*)v.data, (char*)v.data+v.size);
+  }
+  else {
+    end=true;
+  }
+}
+
+void
+DBSimple::iterator::c_get(uint32_t key, const std::string & val, int flags){
+  DBC *dbc = (DBC*)cur.get();
+  std::string key_s = pack_uint32(key);
+  DBT k = mk_dbt(key_s);
+  DBT v = mk_dbt(val);
+  int ret = dbc->c_get(dbc, &k, &v, flags);
+  if (ret != 0 && ret != DB_NOTFOUND)
+    throw Err() << "db_simple: " << db_strerror(ret);
+  if (ret != DB_NOTFOUND) {
+    end=false;
+    curr_val.first  = unpack_uint32(&k);
+    curr_val.second = std::string((char*)v.data, (char*)v.data+v.size);
+  }
+  else {
+    end=true;
+  }
+}
+
+void
+DBSimple::iterator::c_put(uint32_t key, const std::string & val, int flags){
+  DBC *dbc = (DBC*)cur.get();
+  std::string key_s = pack_uint32(key);
+  DBT k = mk_dbt(key_s);
+  DBT v = mk_dbt(val);
+  int ret = dbc->c_put(dbc, &k, &v, flags);
+  if (ret != 0)
+    throw Err() << "db_simple: " << db_strerror(ret);
+  end=false;
+  curr_val.first  = unpack_uint32(&k);
+  curr_val.second = std::string((char*)v.data, (char*)v.data+v.size);
+}
+
+void
+DBSimple::iterator::c_del(int flags){
+  if (end) return;
+  auto next = *this;
+  ++next;
+  DBC *dbc = (DBC*)cur.get();
+  int ret = dbc->c_del(dbc, flags);
+  if (ret != 0) throw Err() << "db_simple: " << db_strerror(ret);
+  *this = next;
+}
+
+DBSimple::iterator&
+DBSimple::iterator::operator++(){ c_get(DB_NEXT); return *this;}
+
+DBSimple::iterator
+DBSimple::begin(){
+  iterator i(db.get());
+  i.c_get(DB_FIRST);
+  return i;
+}
+
+DBSimple::iterator
+DBSimple::end(){ return iterator(db.get());}
+
+DBSimple::iterator
+DBSimple::find(uint32_t key){
+  iterator i(db.get());
+  i.c_get(key, "", DB_SET);
+  return i;
+}
+
+DBSimple::iterator
+DBSimple::erase(iterator & i){
+  i.c_del(0);
+  return i;
+}
+
