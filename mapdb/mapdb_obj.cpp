@@ -12,70 +12,70 @@ using namespace std;
 /**********************************************************/
 // pack object to a string (for DB storage)
 string
-MapDBObj::pack() const {
+MapDBObj::pack(const MapDBObj & obj) {
   ostringstream s;
 
-  // two integer numbers: flags, type are packed in a single 32-bit integer:
-  s.write((char *)&type, sizeof(uint32_t));
+  // type is as a single 32-bit integer:
+  s.write((char *)&obj.type, sizeof(uint32_t));
 
   // optional values
-  if (!isnan(angle)) string_pack<float>(s, "angl", angle);
-  if (scale != 1.0)  string_pack<float>(s, "scle", scale);
-  if (align != MAPDB_ALIGN_SW)
-    string_pack<int8_t>(s, "algn", (int8_t)(align));
+  if (!isnan(obj.angle)) string_pack<float>(s, "angl", obj.angle);
+  if (obj.scale != 1.0)  string_pack<float>(s, "scle", obj.scale);
+  if (obj.align != MAPDB_ALIGN_SW)
+    string_pack<int8_t>(s, "algn", (int8_t)(obj.align));
 
   // optional text fields (4-byte tag, 4-byte length, data);
-  if (name!="") string_pack_str(s, "name", name);
-  if (comm!="") string_pack_str(s, "comm", comm);
+  if (obj.name!="") string_pack_str(s, "name", obj.name);
+  if (obj.comm!="") string_pack_str(s, "comm", obj.comm);
 
   // tags
-  for (auto const & t: tags)
+  for (auto const & t: obj.tags)
     string_pack_str(s, "tags", t);
 
   // children
-  for (auto const & c: children)
+  for (auto const & c: obj.children)
     string_pack<uint32_t>(s, "chld", c);
 
-  // reference point end type
-  if (ref_type!=0xFFFFFFFF) {
-    string_pack<uint32_t>(s, "reft", ref_type);
-    string_pack<dPoint>(s, "refp", ref_pt);
+  // reference point and type
+  if (obj.ref_type!=0xFFFFFFFF) {
+    string_pack<uint32_t>(s, "reft", obj.ref_type);
+    string_pack<dPoint>(s, "refp", obj.ref_pt);
   }
 
   // coordinates
-  string_pack_crds(s, "crds", *this);
+  string_pack_crds(s, "crds", obj);
 
   return s.str();
 }
 
 // unpack object from a string (for DB storage)
-void
+MapDBObj
 MapDBObj::unpack(const std::string & str) {
 
-  // re-initialize
-  *this = MapDBObj();
+  MapDBObj ret;
 
   istringstream s(str);
 
   // type
-  s.read((char*)&type, sizeof(int32_t));
+  s.read((char*)&ret.type, sizeof(int32_t));
 
   // other fields
   while (1){
     string tag = string_unpack_tag(s);
     if (tag == "") break;
-    else if (tag == "angl") angle = string_unpack<float>(s);
-    else if (tag == "scle") scale = string_unpack<float>(s);
-    else if (tag == "algn") align = (MapDBObjAlign)string_unpack<int8_t>(s);
-    else if (tag == "name") name  = string_unpack_str(s);
-    else if (tag == "comm") comm  = string_unpack_str(s);
-    else if (tag == "tags") tags.insert(string_unpack_str(s));
-    else if (tag == "chld") children.insert(string_unpack<uint32_t>(s));
-    else if (tag == "reft") ref_type = string_unpack<uint32_t>(s);
-    else if (tag == "refp") ref_pt   = string_unpack<dPoint>(s);
-    else if (tag == "crds") push_back(string_unpack_crds(s));
+    else if (tag == "angl") ret.angle = string_unpack<float>(s);
+    else if (tag == "scle") ret.scale = string_unpack<float>(s);
+    else if (tag == "algn") ret.align = (MapDBObjAlign)string_unpack<int8_t>(s);
+    else if (tag == "name") ret.name  = string_unpack_str(s);
+    else if (tag == "comm") ret.comm  = string_unpack_str(s);
+    else if (tag == "tags") ret.tags.insert(string_unpack_str(s));
+    else if (tag == "chld") ret.children.insert(string_unpack<uint32_t>(s));
+    else if (tag == "reft") ret.ref_type = string_unpack<uint32_t>(s);
+    else if (tag == "refp") ret.ref_pt   = string_unpack<dPoint>(s);
+    else if (tag == "crds") ret.push_back(string_unpack_crds(s));
     else throw Err() << "Unknown tag: " << tag;
   }
+  return ret;
 }
 
 /**********************************************************/

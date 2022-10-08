@@ -135,8 +135,8 @@ main(){
       o1.set_coords("[[[0,0],[1,1]],[[1,1],[2,2]]]");
       assert_err(o1.set_coords("[0,0]"), "can't parse multisegment line: \"[0,0]\": a JSON array expected");
       assert_eq(dMultiLine(o1), dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
-      std::string pack = o1.pack();
-      o2.unpack(pack);
+      std::string pack = MapDBObj::pack(o1);
+      o2 = MapDBObj::unpack(pack);
       assert_eq(o1,o2);
 
       o1.set_type(MAPDB_POINT, 0x12);
@@ -147,8 +147,8 @@ main(){
       o1.comm = "";
       o1.tags.clear();
       o1.children.clear();
-      pack = o1.pack();
-      o2.unpack(pack);
+      pack = MapDBObj::pack(o1);
+      o2 = MapDBObj::unpack(pack);
       assert_eq(o1,o2);
 
       o1.set_type(MAPDB_POINT, 0x2342);

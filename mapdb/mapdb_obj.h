@@ -57,6 +57,7 @@ struct MapDBObj: public dMultiLine {
       type(t), angle(std::nan("")),
       scale(1.0), align(MAPDB_ALIGN_SW), ref_type(0xFFFFFFFF) {}
 
+
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
 
@@ -90,10 +91,10 @@ struct MapDBObj: public dMultiLine {
   /***********************************************/
 
   // pack object to a string (for DB storage)
-  std::string pack() const;
+  static std::string pack(const MapDBObj & obj);
 
   // unpack object from a string (for DB storage)
-  void unpack(const std::string & s);
+  static MapDBObj unpack(const std::string & s);
 
   /***********************************************/
   // operators <=>

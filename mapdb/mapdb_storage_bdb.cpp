@@ -40,7 +40,7 @@ MapDBStorageBDB::add(const MapDBObj & o){
     throw Err() << "MapDBStorageBDB::add: object ID overfull";
 
   // write object
-  objects.put(id, o.pack());
+  objects.put(id, MapDBObj::pack(o));
 
   // write geohash
   geohash.put(id, o.bbox(), o.type);
@@ -60,14 +60,13 @@ MapDBStorageBDB::put(const uint32_t id, const MapDBObj & o){
   if (o.empty())
     throw Err() << "MapDBStorageBDB::put: empty object";
 
-  MapDBObj o1;
-  o1.unpack(str);
+  MapDBObj o1 = MapDBObj::unpack(str);
 
   // Delete geohashes
   geohash.del(id, o1.bbox(), o1.type);
 
   // write new object
-  objects.put(id, o.pack());
+  objects.put(id, MapDBObj::pack(o));
 
   // write geohash
   geohash.put(id, o.bbox(), o.type);
@@ -80,9 +79,7 @@ MapDBStorageBDB::get(const uint32_t id){
   std::string str = objects.get(id1);
   if (id1 == 0xFFFFFFFF)
     throw Err() << "MapDBStorageBDB::get: object does not exists: " << id;
-  MapDBObj ret;
-  ret.unpack(str);
-  return ret;
+  return MapDBObj::unpack(str);
 }
 
 
@@ -95,8 +92,7 @@ MapDBStorageBDB::del(const uint32_t id){
   if (id1 == 0xFFFFFFFF)
     throw Err() << "MapDBStorageBDB::del: object does not exists: " << id;
 
-  MapDBObj o;
-  o.unpack(str);
+  MapDBObj o = MapDBObj::unpack(str);
 
   // Delete geohashes
   geohash.del(id, o.bbox(), o.type);
