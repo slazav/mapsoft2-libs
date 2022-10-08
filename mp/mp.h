@@ -116,10 +116,9 @@ void ms2opt_add_mp(GetOptSet & opts);
 
 /// Read mp-file from a stream <f> into <data>. If some data
 /// already exists in <data> then objects are appended and the header
-/// is overwrited...
+/// is replaced...
 /// Text is converted to UTF8 encoding using CodePage parameter in the
 /// file header or "mp_in_enc" option.
-
 void read_mp(std::istream & f, MP & data, const Opt & opts = Opt());
 
 /// Write <data> to stream <f> in MP format.
@@ -127,5 +126,7 @@ void read_mp(std::istream & f, MP & data, const Opt & opts = Opt());
 /// by CodePage parameter or "mp_out_enc" option.
 void write_mp(std::ostream & f, const MP & data, const Opt & opts = Opt());
 
+void read_mp(const std::string & fname, MP & data, const Opt & opts = Opt());
+void write_mp(const std::string & fname, const MP & data, const Opt & opts = Opt());
 
 #endif

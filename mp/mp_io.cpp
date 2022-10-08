@@ -384,3 +384,15 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
   }
 }
 
+void
+read_mp(const std::string & fname, MP & data, const Opt & opts){
+  std::ifstream str(fname);
+  read_mp(str, data, opts);
+}
+void
+write_mp(const std::string & fname, const MP & data, const Opt & opts){
+  std::ofstream str(fname);
+  write_mp(str, data, opts);
+}
+
+
