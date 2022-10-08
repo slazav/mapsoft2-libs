@@ -3,6 +3,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <iomanip>
 #include <cstdlib> // for atoi
 
@@ -348,3 +349,12 @@ write_vmap(ostream & OUT, const VMap & W){
   return 0;
 }
 
+
+VMap read_vmap(const std::string &fname){
+  std::ifstream str(fname);
+  return read_vmap(str);
+}
+int write_vmap(const std::string &fname, const VMap & W){
+  std::ofstream str(fname);
+  return write_vmap(str, W);
+}

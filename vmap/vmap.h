@@ -71,8 +71,11 @@ struct VMap : std::list<VMapObj> {
   void add(const VMap & W);
 };
 
-// Reading and writitng native format
+// Reading and writing native format
 VMap read_vmap(std::istream & IN);
 int write_vmap(std::ostream & OUT, const VMap & W);
+
+VMap read_vmap(const std::string &fname);
+int write_vmap(const std::string &fname, const VMap & W);
 
 #endif
