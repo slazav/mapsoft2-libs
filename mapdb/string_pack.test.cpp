@@ -28,6 +28,9 @@ main(){
       dRect bbox("[100,200,10,10]");
       string_pack_bbox(s1, "bbox", bbox);
 
+      dPoint pt(10,10);
+      string_pack_pt(s1, "ptpt", pt);
+
       dMultiLine crds2;
       std::istringstream s2(s1.str());
       while (1){
@@ -37,6 +40,7 @@ main(){
         else if (tag == "str2") {assert_eq(string_unpack_str(s2), "text2");}
         else if (tag == "crds") {crds2.push_back(string_unpack_crds(s2));}
         else if (tag == "bbox") {assert_eq(string_unpack_bbox(s2), bbox);}
+        else if (tag == "ptpt") {assert_eq(string_unpack_pt(s2), pt);}
         else throw Err() << "Unknown tag: " << tag;
       }
       assert_deq(crds1, crds2, 1e-7);

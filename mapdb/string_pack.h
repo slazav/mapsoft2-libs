@@ -32,11 +32,15 @@ void string_pack_str(std::ostream & s, const char *tag, const std::string & str)
 // Tag should contain 4 characters.
 void string_pack_crds(std::ostream & s, const char *tag, const dMultiLine & ml);
 
+// Pack a point with LonLat coordinates.
+// Double values are multiplied by 1e7 and rounded to nearest integer values.
+// Tag should contain 4 characters.
+void string_pack_pt(std::ostream & s, const char *tag, const dPoint & pt);
+
 // Pack bbox with LonLat coordinates.
 // Double values are multiplied by 1e7 and rounded to nearest integer values.
 // Tag should contain 4 characters.
 void string_pack_bbox(std::ostream & s, const char *tag, const dRect & box);
-
 
 // read 4-byte tag, return empty string at the end of file,
 // throw error if there is not enough data for the tag.
@@ -59,6 +63,9 @@ std::string string_unpack_str(std::istream & s);
 
 // unpack coordinate line (tag is already read)
 dLine string_unpack_crds(std::istream & s);
+
+// unpack point (tag is already read)
+dPoint string_unpack_pt(std::istream & s);
 
 // unpack bbox (tag is already read)
 dRect string_unpack_bbox(std::istream & s);

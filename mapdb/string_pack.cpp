@@ -36,6 +36,21 @@ string_pack_crds(ostream & s, const char *tag, const dMultiLine & ml){
 }
 
 void
+string_pack_pt(ostream & s, const char *tag, const dPoint & pt){
+  s.write(tag, 4);
+  uint32_t size = 2*sizeof(int32_t); // 2 ints per point
+  s.write((char *)&size, sizeof(uint32_t));
+  dPoint p(pt);
+  while (p.x >  180) p.x-=360;
+  while (p.x < -180) p.x+=360;
+  while (p.y >   90) p.y-=180;
+  while (p.y <  -90) p.y+=180;
+  int32_t crd[2] = {(int32_t)rint(p.x * 1e7), (int32_t)rint(p.y * 1e7)};
+  s.write((char *)crd, 2*sizeof(int32_t));
+  if (s.fail()) throw Err() << "string_pack_pt: write error";
+}
+
+void
 string_pack_bbox(ostream & s, const char *tag, const dRect & box) {
   s.write(tag, 4);
   uint32_t size = 4*sizeof(int32_t);
@@ -85,6 +100,18 @@ string_unpack_crds(istream & s){
   }
   if (s.fail()) throw Err() << "string_unpack_crds: read error";
   return ret;
+}
+
+dPoint
+string_unpack_pt(istream & s){
+  uint32_t size;
+  s.read((char*)&size, sizeof(uint32_t));
+  if (size!=2*sizeof(int32_t))
+    throw Err() << "string_unpack_pt: wrong point size: " << size;
+  int32_t crd[2];
+  s.read((char*)crd, 2*sizeof(int32_t));
+  if (s.fail()) throw Err() << "string_unpack_pt: read error";
+  return dPoint(crd[0]/1e7, crd[1]/1e7);
 }
 
 dRect
