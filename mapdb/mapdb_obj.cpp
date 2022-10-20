@@ -39,7 +39,7 @@ MapDBObj::pack(const MapDBObj & obj) {
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF) {
     string_pack<uint32_t>(s, "reft", obj.ref_type);
-    string_pack<dPoint>(s, "refp", obj.ref_pt);
+    string_pack_pt(s, "refp", obj.ref_pt);
   }
 
   // coordinates
@@ -71,7 +71,7 @@ MapDBObj::unpack(const std::string & str) {
     else if (tag == "tags") ret.tags.insert(string_unpack_str(s));
     else if (tag == "chld") ret.children.insert(string_unpack<uint32_t>(s));
     else if (tag == "reft") ret.ref_type = string_unpack<uint32_t>(s);
-    else if (tag == "refp") ret.ref_pt   = string_unpack<dPoint>(s);
+    else if (tag == "refp") ret.ref_pt   = string_unpack_pt(s);
     else if (tag == "crds") ret.push_back(string_unpack_crds(s));
     else throw Err() << "Unknown tag: " << tag;
   }

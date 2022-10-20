@@ -16,9 +16,12 @@ class MapDBStorageMem : public MapDBStorage{
 private:
 
   std::map<uint32_t, MapDBObj> objects;
+  std::map<uint32_t, MapDBObj>::iterator i;
   GeoHashStorage geohash;
 
 public:
+
+  MapDBStorageMem(): i(objects.begin()){}
 
   /// Add new object to the map, return object ID.
   uint32_t add(const MapDBObj & o) override;
@@ -46,6 +49,12 @@ public:
 
   /// get map bounding box (extracted from geohash data)
   dRect bbox() override { return geohash.bbox();}
+
+
+  /// Iterating through all objects:
+  void iter_start() override {i = objects.begin();}
+  std::pair<uint32_t, MapDBObj> iter_get_next() override {return *i;}
+  bool iter_end() override {return i == objects.end();}
 
 };
 

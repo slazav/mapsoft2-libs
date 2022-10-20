@@ -12,10 +12,10 @@ public:
   std::string name;     // type short name
   std::string comm;     // type description
   std::string fig_mask; // mask for FIG format
-  int mp_sl, mp_el;     // start/end level for MP format
+  int mp_start, mp_end; // start/end level for MP format
   int text_type;        // type for related text objects
 
-  MapBDTypeInfo(): mp_sl(0), mp_el(0), text_type(-1) {}
+  MapBDTypeInfo(): mp_start(0), mp_end(0), text_type(-1) {}
 };
 
 // All object types

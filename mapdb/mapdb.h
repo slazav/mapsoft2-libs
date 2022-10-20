@@ -9,6 +9,7 @@
 
 #include "geom/rect.h"
 #include "geom/multiline.h"
+#include "mapdb_storage.h"
 
 /*********************************************************************/
 // MapDB -- Main class for vector map.
@@ -20,11 +21,11 @@ private:
 
   struct VmapPage {
     std::string file;
-    std::string name;
     dRect bbox; // wgs84 bbox
+    std::shared_ptr<MapDBStorage> storage;
   };
 
-  std::list<VmapPage> pages;
+  std::map<std::string, VmapPage> pages;
   dMultiLine      border;
   std::string     path;   // path to the main file
   std::string     name;   // map name
@@ -35,6 +36,14 @@ public:
 
   // load from a file
   void load(const std::string & fname);
+  void list_pages(const bool lng=false) const;
+  void import_page(const std::string & page, const std::string & file);
+  void export_page(const std::string & page, const std::string & file);
+
+  MapDB() {}
+  MapDB(const std::string & fname) {load(fname);}
+
+
   ///////////////
   /* Import/export */
 /*

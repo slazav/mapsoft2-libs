@@ -54,7 +54,7 @@ MapDB::import_vmap(const std::string & vmap_file, const Opt & opts){
   // use some default conversion.
   std::string cfg_file = opts.get<string>("config", "");
 
-  // What do we want to do with objects wich are not listed explicetely in
+  // What do we want to do with objects which are not listed explicetely in
   // the configuration file?
   unknown_types_t unknown_types = UNKNOWN_TYPES_CNV;
   std::set<uint32_t> unknowns;

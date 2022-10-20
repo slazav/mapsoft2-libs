@@ -55,6 +55,17 @@ public:
   /// get map bounding box (extracted from geohash data)
   dRect bbox() override { return geohash.bbox();}
 
+
+  /// Iterating through all objects:
+  void iter_start() override {i=objects.begin();}
+  std::pair<uint32_t, MapDBObj> iter_get_next() override {
+    return std::make_pair(i->first, MapDBObj::unpack(i->second));}
+  bool iter_end() override {return i!=objects.end();}
+
+  private:
+    DBSimple::iterator i;
+
+
 };
 
 #endif

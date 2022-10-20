@@ -12,8 +12,10 @@ using namespace std;
 
 /**********************************************************/
 MapDBStorageBDB::MapDBStorageBDB(std::string name, bool create):
+    MapDBStorage(name),
     objects(name,    NULL, create, false),
-    geohash(name + "_gh", NULL, create){
+    geohash(name + "_gh", NULL, create),
+    i(objects.begin()){
 };
 
 /**********************************************************/
