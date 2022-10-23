@@ -1,7 +1,6 @@
 ///\cond HIDDEN (do not show this in Doxyden)
 
 #include <cassert>
-#include <proj_api.h> // for PJ_VERSION
 #include "err/assert_err.h"
 #include "conv_geo.h"
 #include "geo_utils.h"
@@ -12,14 +11,8 @@ main(){
     assert_eq(expand_proj_aliases("WGS"),
       "+datum=WGS84 +proj=lonlat");
 
-#if PJ_VERSION < 500
-std::cerr << ">>> " << PJ_VERSION << "\n";
-    assert_eq(expand_proj_aliases("WEB"),
-      "+proj=merc +a=6378137 +b=6378137 +nadgrids=@null +no_defs");
-#else
     assert_eq(expand_proj_aliases("WEB"),
       "+proj=webmerc +datum=WGS84");
-#endif
 
     assert_eq(expand_proj_aliases("FI"),
       "+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl "
@@ -59,13 +52,6 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
     ConvGeo cnv1(proj_wgs,proj_wgs, false);   // wgs -> wgs, 3D
     ConvGeo cnv2(proj_krass);                 // krass -> wgs, 2D
     ConvGeo cnv3(proj_wgs, proj_krass, true); // wgs -> krass, 2D
-
-    assert_eq(cnv1.is_src_deg(), true);
-    assert_eq(cnv1.is_dst_deg(), true);
-    assert_eq(cnv2.is_src_deg(), false);
-    assert_eq(cnv2.is_dst_deg(), true);
-    assert_eq(cnv3.is_src_deg(), true);
-    assert_eq(cnv3.is_dst_deg(), false);
 
     assert_eq(cnv1.get_2d(), false);
     assert_eq(cnv2.get_2d(), true);
@@ -221,7 +207,7 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
 
       ConvGeo cnv1(proj_ll, proj_tmerc);
       dPoint p1(25.651054, 160.976941);
-      assert_err(cnv1.frw(p1), "Can't convert coordinates: latitude or longitude exceeded limits");
+      assert_err(cnv1.frw(p1), "Can't convert coordinates: Invalid coordinate");
 
       // too large y
       p1 = dPoint(426963,16763676);
@@ -229,7 +215,7 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
       // assert_eq(p1, dPoint(27,90)); // strange PROJ feature (different in proj 5.0 and 6.2)
 
       p1 = dPoint(nan(""), 60.976941);
-      assert_err(cnv1.frw(p1), "Can't convert coordinates: non-numeric result");
+      assert_err(cnv1.frw(p1), "Can't convert coordinates: Point outside of projection domain");
     }
 
     // bad coordinates (with datum conversion)
@@ -239,15 +225,15 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
 
       ConvGeo cnv1(proj_wgs, proj_krass);
       dPoint p1(25.651054, 160.976941);
-      assert_err(cnv1.frw(p1), "Can't convert coordinates: non-numeric result");
+      assert_err(cnv1.frw(p1), "Can't convert coordinates: Invalid coordinate");
 
       p1 = dPoint(nan(""), 60.976941);
-      assert_err(cnv1.frw(p1), "Can't convert coordinates: non-numeric result");
+      assert_err(cnv1.frw(p1), "Can't convert coordinates: Point outside of projection domain");
 
     }
 
     // SU conversion with automatic zones
-    {
+/*    {
       ConvGeo cnv1("SU", "WGS");
       dPoint p1(32.780603, 56.221141);
       dPoint p2(6486513.76, 6233327.52);
@@ -266,20 +252,8 @@ std::cerr << ">>> " << PJ_VERSION << "\n";
       ConvGeo cnv4("SU", "SU33");
       assert_deq(cnv4.bck_pts(p2), p2, 0.1);
       assert_deq(cnv4.frw_pts(p2), p2, 0.1);
-
-      assert_eq(cnv1.is_src_deg(), false);
-      assert_eq(cnv1.is_dst_deg(), true);
-
-      assert_eq(cnv2.is_src_deg(), true);
-      assert_eq(cnv2.is_dst_deg(), false);
-
-      assert_eq(cnv3.is_src_deg(), false);
-      assert_eq(cnv3.is_dst_deg(), false);
-
-      assert_eq(cnv4.is_src_deg(), false);
-      assert_eq(cnv4.is_dst_deg(), false);
     }
-
+*/
 
     // CnvMap
     {

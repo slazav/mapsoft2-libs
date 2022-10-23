@@ -58,18 +58,14 @@ public:
     return std::shared_ptr<ConvBase>(new ConvGeo(*this));
   }
 
-  // are source/destination coordinates in degrees (not meters)
-  bool is_src_deg() const;
-  bool is_dst_deg() const;
-
   // get/set 2d flag
   bool get_2d() const {return cnv2d;}
-  void set_2d(const bool v = true) {cnv2d = v;}
+  void set_2d(const bool v = true) { cnv2d = v; }
 
 private:
-  std::shared_ptr<void> pj_src, pj_dst, pj_su;
+  std::shared_ptr<void> pj, pc;
   bool cnv2d; // Do 2D or 3D conversion
-  bool su_src, su_dst; // Use automatic 6-degree zones (for SU coordinate system)
+//  bool su_src, su_dst; // Use automatic 6-degree zones (for SU coordinate system)
 };
 
 
