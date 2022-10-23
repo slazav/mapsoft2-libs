@@ -300,7 +300,7 @@ geo_mkref_opts(const Opt & o){
     ConvGeo cnv(map.proj);
 
     // map resolution
-    double scale = cnv.is_src_deg() ? 0.01:1000;
+    double scale = ConvGeo::is_deg(map.proj)? 0.01:1000;
     scale = o.get("scale",scale);
     map.image_dpi = o.get("dpi",300);
 
