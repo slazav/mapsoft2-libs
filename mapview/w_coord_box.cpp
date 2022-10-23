@@ -60,7 +60,7 @@ void
 CoordBox::set_ll(const dPoint & p){
   dPoint pc(p);
   cnv.bck(pc);
-  int prec = cnv.is_src_deg()? 7:0;
+  int prec = std::max(pc.x,pc.y)<1000? 7:0;
   std::ostringstream s;
   s << std::fixed << std::setprecision(prec) << pc.x << " " << pc.y;
   coords->set_text(s.str());
