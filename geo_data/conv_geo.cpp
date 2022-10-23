@@ -243,6 +243,25 @@ ConvGeo::bck_pt(dPoint & p) const{
   if (sc_src.z!=1.0) {p.z/=sc_src.z;}
 }
 
+bool
+ConvGeo::is_deg(const std::string & str){
+  auto str1 = expand_proj_aliases(str);
+  auto p   = proj_create(NULL, str1.c_str());
+  bool ret = proj_degree_input(p, PJ_FWD);
+  proj_destroy(p);
+  return ret;
+}
+
+bool
+ConvGeo::is_rad(const std::string & str){
+  auto str1 = expand_proj_aliases(str);
+  auto p   = proj_create(NULL, str1.c_str());
+  bool ret = proj_angular_input(p, PJ_FWD);
+  proj_destroy(p);
+  return ret;
+}
+
+
 /**********************************************************/
 
 ConvMap::ConvMap(const GeoMap & m, const std::string & dst) {

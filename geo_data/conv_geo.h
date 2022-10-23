@@ -62,6 +62,10 @@ public:
   bool get_2d() const {return cnv2d;}
   void set_2d(const bool v = true) { cnv2d = v; }
 
+  // is projection coordinates are in degrees/radians
+  static bool is_deg(const std::string & str);
+  static bool is_rad(const std::string & str);
+
 private:
   std::shared_ptr<void> pj, pc;
   bool cnv2d; // Do 2D or 3D conversion
