@@ -4,21 +4,21 @@
 #include <string>
 #include <cstdio>
 
-#include "mapdb_storage_mem.h"
+#include "vmap2mem.h"
 
 using namespace std;
 
 
 uint32_t
-MapDBStorageMem::add(const MapDBObj & o){
-  if (o.empty()) throw Err() << "MapDBStorageMem::add: empty object";
+VMap2mem::add(const VMap2obj & o){
+  if (o.empty()) throw Err() << "VMap2mem::add: empty object";
 
   // get last id + 1
   uint32_t id = 0;
   if (objects.size()) id = objects.rbegin()->first + 1;
 
   if (id == 0xFFFFFFFF)
-    throw Err() << "MapDBStorageMem::add: object ID overfull";
+    throw Err() << "VMap2mem::add: object ID overfull";
 
   // write object
   objects.emplace(id, o);
@@ -30,15 +30,15 @@ MapDBStorageMem::add(const MapDBObj & o){
 }
 
 void
-MapDBStorageMem::put(const uint32_t id, const MapDBObj & o){
+VMap2mem::put(const uint32_t id, const VMap2obj & o){
 
   // get old object
   auto i = objects.find(id);
   if (i == objects.end())
-    throw Err() << "MapDBStorageMem::put: object does not exists: " << id;
+    throw Err() << "VMap2mem::put: object does not exists: " << id;
 
   if (i->second.empty())
-    throw Err() << "MapDBStorageMem::put: empty object";
+    throw Err() << "VMap2mem::put: empty object";
 
   // Delete geohashes
   geohash.del(id, i->second.bbox(), i->second.type);
@@ -50,20 +50,20 @@ MapDBStorageMem::put(const uint32_t id, const MapDBObj & o){
   geohash.put(id, o.bbox(), o.type);
 }
 
-MapDBObj
-MapDBStorageMem::get(const uint32_t id){
+VMap2obj
+VMap2mem::get(const uint32_t id){
   auto i = objects.find(id);
   if (i == objects.end())
-    throw Err() << "MapDBStorageMem::put: object does not exists: " << id;
+    throw Err() << "VMap2mem::put: object does not exists: " << id;
   return i->second;
 }
 
 
 void
-MapDBStorageMem::del(const uint32_t id){
+VMap2mem::del(const uint32_t id){
   auto i = objects.find(id);
   if (i == objects.end())
-    throw Err() << "MapDBStorageMem::put: object does not exists: " << id;
+    throw Err() << "VMap2mem::put: object does not exists: " << id;
 
   // Delete geohashes
   geohash.del(id, i->second.bbox(), i->second.type);

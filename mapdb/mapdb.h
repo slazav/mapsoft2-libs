@@ -9,7 +9,7 @@
 
 #include "geom/rect.h"
 #include "geom/multiline.h"
-#include "mapdb_storage.h"
+#include "vmap2/vmap2.h"
 
 /*********************************************************************/
 // MapDB -- Main class for vector map.

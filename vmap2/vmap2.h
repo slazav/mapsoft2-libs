@@ -1,35 +1,35 @@
-#ifndef MAPDB_STORAGE_H
-#define MAPDB_STORAGE_H
+#ifndef VMAP2_H
+#define VMAP2_H
 
 #include <set>
 #include <memory>
-#include "mapdb_obj.h"
+#include "vmap2obj.h"
 
 /*********************************************************************/
-// MapDBStorage -- interface class for map object storage
+// VMap2 -- interface class for map object storage
 
-class MapDBStorage {
+class VMap2 {
 public:
 
-  MapDBStorage(const std::string & fname = std::string()): fname(fname) {}
+  VMap2(const std::string & fname = std::string()): fname(fname) {}
 
-  virtual ~MapDBStorage() {}
+  virtual ~VMap2() {}
 
   /// Add new object to the map, return object ID.
-  virtual uint32_t add(const MapDBObj & o) = 0;
+  virtual uint32_t add(const VMap2obj & o) = 0;
 
   /// Rewrite existing object (add if not exist)
-  virtual void put(const uint32_t id, const MapDBObj & o) = 0;
+  virtual void put(const uint32_t id, const VMap2obj & o) = 0;
 
   /// Read an object.
-  virtual MapDBObj get(const uint32_t id) = 0;
+  virtual VMap2obj get(const uint32_t id) = 0;
 
   /// Delete an object (error if not exist).
   virtual void del(const uint32_t id) = 0;
 
 
   /// Find objects with given type and range
-  virtual std::set<uint32_t> find(MapDBObjClass cl, uint16_t tnum, const dRect & range) = 0;
+  virtual std::set<uint32_t> find(VMap2objClass cl, uint16_t tnum, const dRect & range) = 0;
 
   /// Find objects with given type and range
   virtual std::set<uint32_t> find(uint32_t type, const dRect & range) = 0;
@@ -51,7 +51,7 @@ public:
   //  iterators from different classes).
   // But here I need a much simpler thing: iterating through all objects.
   virtual void iter_start() = 0; // reset the iterator
-  virtual std::pair<uint32_t, MapDBObj> iter_get_next() = 0; // get next object
+  virtual std::pair<uint32_t, VMap2obj> iter_get_next() = 0; // get next object
   virtual bool iter_end() = 0; // is it end, or we can get one more object?
 
 };

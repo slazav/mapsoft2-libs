@@ -1,7 +1,7 @@
 #include <fstream>
 #include "filename/filename.h"
 #include "read_words/read_words.h"
-#include "mapdb_types.h"
+#include "vmap2types.h"
 
 #define POINT_MASK  0x000000
 #define LINE_MASK   0x100000
@@ -9,7 +9,7 @@
 #define TEXT_MASK   0x300000
 
 void
-MapDBTypeMap::load(const std::string & fname){
+VMap2typemap::load(const std::string & fname){
   clear();
 
   std::ifstream ff(fname);
@@ -40,7 +40,7 @@ MapDBTypeMap::load(const std::string & fname){
       if (vs[0] == "point") {
         if (vs.size()!=2) throw Err() << "point: argument expected: <type>";
         type = POINT_MASK + 0xFFFF * str_to_type<int>(vs[1]);
-        emplace(type, MapBDTypeInfo());
+        emplace(type, VMap2type());
         continue;
       }
 
@@ -48,7 +48,7 @@ MapDBTypeMap::load(const std::string & fname){
       if (vs[0] == "line") {
         if (vs.size()!=2) throw Err() << "line: argument expected: <type>";
         type = LINE_MASK + 0xFFFF * str_to_type<int>(vs[1]);
-        emplace(type, MapBDTypeInfo());
+        emplace(type, VMap2type());
         continue;
       }
 
@@ -56,7 +56,7 @@ MapDBTypeMap::load(const std::string & fname){
       if (vs[0] == "area") {
         if (vs.size()!=2) throw Err() << "area: argument expected: <type>";
         int type = AREA_MASK + 0xFFFF * str_to_type<int>(vs[1]);
-        emplace(type, MapBDTypeInfo());
+        emplace(type, VMap2type());
         continue;
       }
 

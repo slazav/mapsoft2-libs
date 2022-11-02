@@ -4,15 +4,15 @@
 #include <string>
 #include <cstdio>
 
-#include "mapdb_storage_bdb.h"
+#include "vmap2bdb.h"
 #include "string_pack.h"
 
 using namespace std;
 
 
 /**********************************************************/
-MapDBStorageBDB::MapDBStorageBDB(std::string name, bool create):
-    MapDBStorage(name),
+VMap2bdb::VMap2bdb(std::string name, bool create):
+    VMap2(name),
     objects(name,    NULL, create, false),
     geohash(name + "_gh", NULL, create),
     i(objects.begin()){
@@ -20,7 +20,7 @@ MapDBStorageBDB::MapDBStorageBDB(std::string name, bool create):
 
 /**********************************************************/
 void
-MapDBStorageBDB::delete_db(std::string name){
+VMap2bdb::delete_db(std::string name){
   remove(name.c_str());
   remove((name + "_gh").c_str());
 }
@@ -28,9 +28,9 @@ MapDBStorageBDB::delete_db(std::string name){
 /**********************************************************/
 
 uint32_t
-MapDBStorageBDB::add(const MapDBObj & o){
+VMap2bdb::add(const VMap2obj & o){
   if (o.empty())
-    throw Err() << "MapDBStorageBDB::add: empty object";
+    throw Err() << "VMap2bdb::add: empty object";
 
   // get last id + 1
   uint32_t id;
@@ -39,10 +39,10 @@ MapDBStorageBDB::add(const MapDBObj & o){
   else id++;
 
   if (id == 0xFFFFFFFF)
-    throw Err() << "MapDBStorageBDB::add: object ID overfull";
+    throw Err() << "VMap2bdb::add: object ID overfull";
 
   // write object
-  objects.put(id, MapDBObj::pack(o));
+  objects.put(id, VMap2obj::pack(o));
 
   // write geohash
   geohash.put(id, o.bbox(), o.type);
@@ -51,50 +51,50 @@ MapDBStorageBDB::add(const MapDBObj & o){
 }
 
 void
-MapDBStorageBDB::put(const uint32_t id, const MapDBObj & o){
+VMap2bdb::put(const uint32_t id, const VMap2obj & o){
 
   // get old object
   uint32_t id1 = id;
   std::string str = objects.get(id1);
   if (id1 == 0xFFFFFFFF)
-    throw Err() << "MapDBStorageBDB::put: object does not exists: " << id;
+    throw Err() << "VMap2bdb::put: object does not exists: " << id;
 
   if (o.empty())
-    throw Err() << "MapDBStorageBDB::put: empty object";
+    throw Err() << "VMap2bdb::put: empty object";
 
-  MapDBObj o1 = MapDBObj::unpack(str);
+  VMap2obj o1 = VMap2obj::unpack(str);
 
   // Delete geohashes
   geohash.del(id, o1.bbox(), o1.type);
 
   // write new object
-  objects.put(id, MapDBObj::pack(o));
+  objects.put(id, VMap2obj::pack(o));
 
   // write geohash
   geohash.put(id, o.bbox(), o.type);
 
 }
 
-MapDBObj
-MapDBStorageBDB::get(const uint32_t id){
+VMap2obj
+VMap2bdb::get(const uint32_t id){
   uint32_t id1 = id;
   std::string str = objects.get(id1);
   if (id1 == 0xFFFFFFFF)
-    throw Err() << "MapDBStorageBDB::get: object does not exists: " << id;
-  return MapDBObj::unpack(str);
+    throw Err() << "VMap2bdb::get: object does not exists: " << id;
+  return VMap2obj::unpack(str);
 }
 
 
 void
-MapDBStorageBDB::del(const uint32_t id){
+VMap2bdb::del(const uint32_t id){
 
   // get old object
   uint32_t id1 = id;
   std::string str = objects.get(id1);
   if (id1 == 0xFFFFFFFF)
-    throw Err() << "MapDBStorageBDB::del: object does not exists: " << id;
+    throw Err() << "VMap2bdb::del: object does not exists: " << id;
 
-  MapDBObj o = MapDBObj::unpack(str);
+  VMap2obj o = VMap2obj::unpack(str);
 
   // Delete geohashes
   geohash.del(id, o.bbox(), o.type);

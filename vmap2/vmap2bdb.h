@@ -1,18 +1,17 @@
-#ifndef MAPDB_STORAGE_BDB_H
-#define MAPDB_STORAGE_BDB_H
+#ifndef VMAP2BDB_H
+#define VMAP2BDB_H
 
 #include <string>
 #include <set>
 
-#include "mapdb_obj.h"
-#include "mapdb_storage.h"
+#include "vmap2.h"
 #include "db_simple.h"
 #include "db_geohash.h"
 
 /*********************************************************************/
-// MapDBStorageBDB -- BerkleyDB storage for map objects
+// VMap2bdb -- BerkleyDB storage for map objects
 
-class MapDBStorageBDB : public MapDBStorage{
+class VMap2bdb : public VMap2{
 private:
 
   DBSimple   objects; // object data
@@ -21,27 +20,27 @@ private:
 public:
 
   // Constructor. Open all databases
-  MapDBStorageBDB(std::string name, const bool create = true);
+  VMap2bdb(std::string name, const bool create = true);
 
   // delete map databases
   static void delete_db(std::string name);
 
   /// Add new object to the map, return object ID.
-  uint32_t add(const MapDBObj & o) override;
+  uint32_t add(const VMap2obj & o) override;
 
   /// Rewrite existing object, update geohashes.
   /// If object does not exist it will be added anyway.
-  void put(const uint32_t id, const MapDBObj & o) override;
+  void put(const uint32_t id, const VMap2obj & o) override;
 
   /// Read an object.
-  MapDBObj get(const uint32_t id) override;
+  VMap2obj get(const uint32_t id) override;
 
   /// Delete an object.
   /// If the object does not exist throw an error.
   void del(const uint32_t id) override;
 
   /// Find objects with given type and range
-  std::set<uint32_t> find(MapDBObjClass cl, uint16_t tnum, const dRect & range) override {
+  std::set<uint32_t> find(VMap2objClass cl, uint16_t tnum, const dRect & range) override {
     return geohash.get(range, (cl  << 24) | tnum); }
 
   /// Find objects with given type and range
@@ -58,8 +57,8 @@ public:
 
   /// Iterating through all objects:
   void iter_start() override {i=objects.begin();}
-  std::pair<uint32_t, MapDBObj> iter_get_next() override {
-    return std::make_pair(i->first, MapDBObj::unpack(i->second));}
+  std::pair<uint32_t, VMap2obj> iter_get_next() override {
+    return std::make_pair(i->first, VMap2obj::unpack(i->second));}
   bool iter_end() override {return i!=objects.end();}
 
   private:

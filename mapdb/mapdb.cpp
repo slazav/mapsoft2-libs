@@ -6,8 +6,8 @@
 #include "geo_nom/geo_nom.h"
 
 #include "mapdb.h"
-#include "mapdb_storage_bdb.h"
-#include "mapdb_storage_mem.h"
+#include "vmap2/vmap2bdb.h"
+#include "vmap2/vmap2mem.h"
 #include "mapdb_storage_io.h"
 
 void

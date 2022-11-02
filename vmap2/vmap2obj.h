@@ -1,49 +1,49 @@
-#ifndef MAPDB_OBJ_H
-#define MAPDB_OBJ_H
+#ifndef VMAP2OBJ_H
+#define VMAP2OBJ_H
 
 #include <string>
 #include <set>
 
 #include "geom/multiline.h"
 
-// Class for vector map object.
+// Class for VMAP2 object.
 // All coordinates are lat,lon in WGS84 datum.
 
 /*********************************************************************/
 // enums
 
 typedef enum{
-  MAPDB_POINT    = 0,
-  MAPDB_LINE     = 1,
-  MAPDB_POLYGON  = 2,
-  MAPDB_TEXT     = 3
-} MapDBObjClass;
+  VMAP2_POINT    = 0,
+  VMAP2_LINE     = 1,
+  VMAP2_POLYGON  = 2,
+  VMAP2_TEXT     = 3
+} VMap2objClass;
 
 typedef enum{
-  MAPDB_ALIGN_SW = 0,
-  MAPDB_ALIGN_W  = 1,
-  MAPDB_ALIGN_NW = 2,
-  MAPDB_ALIGN_N  = 3,
-  MAPDB_ALIGN_NE = 4,
-  MAPDB_ALIGN_E  = 5,
-  MAPDB_ALIGN_SE = 6,
-  MAPDB_ALIGN_S  = 7,
-  MAPDB_ALIGN_C  = 8,
-} MapDBObjAlign;
+  VMAP2_ALIGN_SW = 0,
+  VMAP2_ALIGN_W  = 1,
+  VMAP2_ALIGN_NW = 2,
+  VMAP2_ALIGN_N  = 3,
+  VMAP2_ALIGN_NE = 4,
+  VMAP2_ALIGN_E  = 5,
+  VMAP2_ALIGN_SE = 6,
+  VMAP2_ALIGN_S  = 7,
+  VMAP2_ALIGN_C  = 8,
+} VMap2objAlign;
 
 /*********************************************************************/
-// MapDBObj -- a single map object
+// VMap2obj -- a single map object
 
-struct MapDBObj: public dMultiLine {
+struct VMap2obj: public dMultiLine {
 
   // object type is assembled from following parts:
-  // - first byte: object classification (MapDBObjClass)
+  // - first byte: object classification (VMap2objClass)
   // - second byte: reserved;
   // - two last bytes: type number (= MP type)
   uint32_t        type;
   float           angle;   // object angle, deg
   float           scale;   // object scale
-  MapDBObjAlign   align;   // align
+  VMap2objAlign   align;   // align
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
@@ -53,9 +53,9 @@ struct MapDBObj: public dMultiLine {
   uint32_t ref_type;  // coordinates of a parent object point (for detached labels)
 
   // defaults
-  MapDBObj(const uint32_t t = 0):
+  VMap2obj(const uint32_t t = 0):
       type(t), angle(std::nan("")),
-      scale(1.0), align(MAPDB_ALIGN_SW), ref_type(0xFFFFFFFF) {}
+      scale(1.0), align(VMAP2_ALIGN_SW), ref_type(0xFFFFFFFF) {}
 
 
   // assemble object type:
@@ -73,14 +73,14 @@ struct MapDBObj: public dMultiLine {
   // set object type from string
   void set_type(const std::string & s) {type = make_type(s);}
 
-  // get object classification (MapDBObjClass)
-  MapDBObjClass get_class() const;
+  // get object classification (VMap2objClass)
+  VMap2objClass get_class() const;
 
   // get object type number
   uint16_t get_tnum()  const;
 
-  MapDBObj(const uint16_t cl, const uint16_t tnum): MapDBObj(make_type(cl,tnum)) {}
-  MapDBObj(const std::string & s): MapDBObj(make_type(s)) { }
+  VMap2obj(const uint16_t cl, const uint16_t tnum): VMap2obj(make_type(cl,tnum)) {}
+  VMap2obj(const std::string & s): VMap2obj(make_type(s)) { }
 
   /***********************************************/
 
@@ -90,16 +90,18 @@ struct MapDBObj: public dMultiLine {
 
   /***********************************************/
 
+
   // pack object to a string (for DB storage)
-  static std::string pack(const MapDBObj & obj);
+  static std::string pack(const VMap2obj & obj);
 
   // unpack object from a string (for DB storage)
-  static MapDBObj unpack(const std::string & s);
+  static VMap2obj unpack(const std::string & s);
+
 
   /***********************************************/
   // operators <=>
   /// Less then operator.
-  bool operator< (const MapDBObj & o) const {
+  bool operator< (const VMap2obj & o) const {
     if (type!=o.type)   return type<o.type;
     if (std::isnan(angle) && !std::isnan(o.angle)) return true;
     if (std::isnan(o.angle) && !std::isnan(angle)) return false;
@@ -116,7 +118,7 @@ struct MapDBObj: public dMultiLine {
   }
 
   /// Equal opertator.
-  bool operator== (const MapDBObj & o) const {
+  bool operator== (const VMap2obj & o) const {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
     return type==o.type && ang_eq && scale==o.scale && align==o.align &&
         name==o.name && comm==o.comm && tags==o.tags && children==o.children &&
@@ -124,10 +126,10 @@ struct MapDBObj: public dMultiLine {
         dMultiLine::operator==(o);
   }
   // derived operators:
-  bool operator!= (const MapDBObj & other) const { return !(*this==other); } ///< operator!=
-  bool operator>= (const MapDBObj & other) const { return !(*this<other);  } ///< operator>=
-  bool operator<= (const MapDBObj & other) const { return *this<other || *this==other; } ///< operator<=
-  bool operator>  (const MapDBObj & other) const { return !(*this<=other); } ///< operator>
+  bool operator!= (const VMap2obj & other) const { return !(*this==other); } ///< operator!=
+  bool operator>= (const VMap2obj & other) const { return !(*this<other);  } ///< operator>=
+  bool operator<= (const VMap2obj & other) const { return *this<other || *this==other; } ///< operator<=
+  bool operator>  (const VMap2obj & other) const { return !(*this<=other); } ///< operator>
 
 };
 #endif
