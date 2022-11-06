@@ -155,7 +155,7 @@ DBSimple::del(const uint32_t key){
 /***************************************************************/
 
 DBSimple::iterator::iterator(void *dbp): end(true){
-  if (dbp==NULL) throw Err() << "db_simple: can't get cursor (NULL db)";
+  if (dbp==NULL) return;
   DBC *curp=NULL;
   ((DB*)dbp)->cursor((DB*)dbp, NULL, &curp, 0);
   if (curp==NULL) throw Err() << "db_simple: can't get cursor";
@@ -164,6 +164,7 @@ DBSimple::iterator::iterator(void *dbp): end(true){
 
 DBSimple::iterator::iterator(const iterator & i){
   *this = i;
+  if (!cur) return;
   DBC *dbc = (DBC*)cur.get(), *next;
   int ret = dbc->dup(dbc, &next,  DB_POSITION);
   if (ret != 0) throw Err() << "db_simple: " << db_strerror(ret);
@@ -172,6 +173,7 @@ DBSimple::iterator::iterator(const iterator & i){
 
 void
 DBSimple::iterator::c_get(int flags){
+  if (!cur) throw "db_simple: can't do c_get on empty iterator";
   DBC *dbc = (DBC*)cur.get();
   DBT k = mk_dbt();
   DBT v = mk_dbt();
@@ -190,6 +192,7 @@ DBSimple::iterator::c_get(int flags){
 
 void
 DBSimple::iterator::c_get(uint32_t key, const std::string & val, int flags){
+  if (!cur) throw "db_simple: can't do c_get on empty iterator";
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -209,6 +212,7 @@ DBSimple::iterator::c_get(uint32_t key, const std::string & val, int flags){
 
 void
 DBSimple::iterator::c_put(uint32_t key, const std::string & val, int flags){
+  if (!cur) throw "db_simple: can't do c_put on empty iterator";
   DBC *dbc = (DBC*)cur.get();
   std::string key_s = pack_uint32(key);
   DBT k = mk_dbt(key_s);
@@ -223,7 +227,7 @@ DBSimple::iterator::c_put(uint32_t key, const std::string & val, int flags){
 
 void
 DBSimple::iterator::c_del(int flags){
-  if (end) return;
+  if (end || !cur) return;
   auto next = *this;
   ++next;
   DBC *dbc = (DBC*)cur.get();

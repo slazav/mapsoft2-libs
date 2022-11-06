@@ -93,7 +93,7 @@ class DBSimple{
    // Iterator interface
    // (A very basic one, BerkleyDB cursors have many more features to implement here)
    struct iterator {
-     iterator(void *dbp);
+     iterator(void *dbp = NULL);
      iterator(const iterator & i); // copy iterator -- using cursor->dup
      // Low-level BerkleyDB cursor operations.
      void c_del(int flags);
