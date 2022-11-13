@@ -22,9 +22,9 @@ string_write_str(ostream & s, const char *tag, const std::string & str){
   s << tag << ' ';
   for (const auto c: str){
     switch (c){
-    case '\\': s << "\\\\";
-    case '\n': s << "\\n";
-    case '\0': s << "\\0";
+    case '\\': s << "\\\\"; break;
+    case '\n': s << "\\n"; break;
+    case '\0': s << "\\0"; break;
     default: s << c;
     }
   }

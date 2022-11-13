@@ -21,6 +21,7 @@ main(){
       std::ostringstream s1;
       string_pack_str(s1, "str1", "text1");
       string_pack_str(s1, "str2", "text2");
+      string_pack_str(s1, "str3", "\\text3\ntext3a\\");
 
       dMultiLine crds1("[[[-180,-90],[0,0],[180,90]],[],[[37.11,56.20],[37.22,56.11]]]");
       string_pack_crds(s1, "crds", crds1);
@@ -41,6 +42,7 @@ main(){
         if (tag == "") break;
         else if (tag == "str1") {assert_eq(string_unpack_str(s2), "text1");}
         else if (tag == "str2") {assert_eq(string_unpack_str(s2), "text2");}
+        else if (tag == "str3") {assert_eq(string_unpack_str(s2), "\\text3\ntext3a\\");}
         else if (tag == "crds") {crds2.push_back(string_unpack_crds(s2));}
         else if (tag == "bbox") {assert_eq(string_unpack_bbox(s2), bbox);}
         else if (tag == "ptpt") {assert_eq(string_unpack_pt(s2), pt);}
@@ -55,6 +57,7 @@ main(){
       std::ostringstream s1;
       string_write_str(s1, "str1", "text1");
       string_write_str(s1, "str2", "text2");
+      string_write_str(s1, "str3", "\\text3\ntext3a\\");
 
       dMultiLine crds1("[[[-180,-90],[0,0],[180,90]],[],[[37.11,56.20],[37.22,56.11]]]");
       string_write_crds(s1, "crds", crds1);
@@ -75,6 +78,7 @@ main(){
         if (tag == "") break;
         else if (tag == "str1") {assert_eq(string_read_str(s2), "text1");}
         else if (tag == "str2") {assert_eq(string_read_str(s2), "text2");}
+        else if (tag == "str3") {assert_eq(string_read_str(s2), "\\text3\ntext3a\\");}
         else if (tag == "crds") {crds2.push_back(string_read_crds(s2));}
         else if (tag == "bbox") {assert_eq(string_read_bbox(s2), bbox);}
         else if (tag == "pt")   {assert_eq(string_read_pt(s2), pt);}
