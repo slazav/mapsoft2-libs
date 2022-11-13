@@ -90,6 +90,9 @@ class DBSimple{
    // Returns number of deleted entries (maybe zero)
    uint32_t del(const uint32_t key);
 
+   // Return number of records
+   size_t size();
+
    // Iterator interface
    // (A very basic one, BerkleyDB cursors have many more features to implement here)
    struct iterator {

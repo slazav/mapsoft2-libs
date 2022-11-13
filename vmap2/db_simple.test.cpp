@@ -31,12 +31,14 @@ main(){
       assert_eq(key, 0xFFFFFFFF);
       key=1;
 
+      assert_eq(db.size(), 0);
       db.put(1, "abc");
       db.put(2, "cde");
       db.put(3, "def");
       db.put(2, "fgh"); // overwrite
       db.put(128, "aaa");
       db.put(257, "bbb");
+      assert_eq(db.size(), 5);
 
       assert_eq(db.exists(1), true);
       assert_eq(db.exists(4), false);

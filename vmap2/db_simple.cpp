@@ -152,6 +152,16 @@ DBSimple::del(const uint32_t key){
   return num;
 }
 
+size_t
+DBSimple::size(){
+  if (db==NULL) throw Err() << "DBSimple::size: no tatabase";
+  DB_BTREE_STAT *sp;
+  DB *dbp = (DB*)db.get();
+  int ret = dbp->stat(dbp, NULL, &sp, 0);
+  if (ret!=0) throw Err() << "db_simple: " << db_strerror(ret);
+  return (size_t)sp->bt_nkeys;
+}
+
 /***************************************************************/
 
 DBSimple::iterator::iterator(void *dbp): end(true){
