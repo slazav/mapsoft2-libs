@@ -120,7 +120,6 @@ main(){
     }
 
     // packing and unpacking of VMap2obj
-    // for OBJ database
     {
       VMap2obj o1,o2;
       o1.set_type(VMAP2_LINE, 0x2342);
@@ -135,9 +134,23 @@ main(){
       o1.set_coords("[[[0,0],[1,1]],[[1,1],[2,2]]]");
       assert_err(o1.set_coords("[0,0]"), "can't parse multisegment line: \"[0,0]\": a JSON array expected");
       assert_eq(dMultiLine(o1), dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
-      std::string pack = VMap2obj::pack(o1);
-      o2 = VMap2obj::unpack(pack);
-      assert_eq(o1,o2);
+
+      // pack/upack
+      {
+        std::string pack = VMap2obj::pack(o1);
+        o2 = VMap2obj::unpack(pack);
+        assert_eq(o1,o2);
+      }
+
+      //write/read
+      {
+        std::ostringstream s1;
+        VMap2obj::write(s1,o1);
+        std::istringstream s2(s1.str());
+        assert_eq(s2.get(), '*')
+        o2 = VMap2obj::read(s2);
+        assert_eq(o1,o2);
+      }
 
       o1.set_type(VMAP2_POINT, 0x12);
       o1.angle  = 0;
@@ -147,9 +160,23 @@ main(){
       o1.comm = "";
       o1.tags.clear();
       o1.children.clear();
-      pack = VMap2obj::pack(o1);
-      o2 = VMap2obj::unpack(pack);
-      assert_eq(o1,o2);
+
+      // pack/upack
+      {
+        std::string pack = VMap2obj::pack(o1);
+        o2 = VMap2obj::unpack(pack);
+        assert_eq(o1,o2);
+      }
+
+      //write/read
+      {
+        std::ostringstream s1;
+        VMap2obj::write(s1,o1);
+        std::istringstream s2(s1.str());
+        assert_eq(s2.get(), '*')
+        o2 = VMap2obj::read(s2);
+        assert_eq(o1,o2);
+      }
 
       o1.set_type(VMAP2_POINT, 0x2342);
       o1.set_coords("[1,1]");

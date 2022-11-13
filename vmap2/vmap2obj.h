@@ -97,6 +97,12 @@ struct VMap2obj: public dMultiLine {
   // unpack object from a string (for DB storage)
   static VMap2obj unpack(const std::string & s);
 
+  // write object (to text file)
+  static void write(std::ostream & s, const VMap2obj & obj);
+
+  // read object (from a text file)
+  static VMap2obj read(std::istream & s);
+
 
   /***********************************************/
   // operators <=>

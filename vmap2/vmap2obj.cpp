@@ -48,6 +48,41 @@ VMap2obj::pack(const VMap2obj & obj) {
   return s.str();
 }
 
+/**********************************************************/
+// write object in a text form
+void
+VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
+
+  // type in the form "line:0x15"
+  s << "* " << print_type(obj.type) << '\n';
+
+  // optional values
+  if (!isnan(obj.angle)) string_write<int32_t>(s, "angl", rint(1000*obj.angle));
+  if (obj.scale != 1.0)  string_write<int32_t>(s, "scle", rint(1000*obj.scale));
+  if (obj.align != VMAP2_ALIGN_SW)
+     string_write<uint32_t>(s, "algn", (uint32_t)obj.align);
+
+  // optional text fields (4-byte tag, 4-byte length, data);
+  if (obj.name!="") string_write_str(s, "name", obj.name);
+  if (obj.comm!="") string_write_str(s, "comm", obj.comm);
+
+  // tags
+  for (auto const & t: obj.tags) string_write_str(s, "tags", t);
+
+  // children
+  for (auto const & c: obj.children) string_write<uint32_t>(s, "chld", c);
+
+  // reference point and type
+  if (obj.ref_type!=0xFFFFFFFF){
+    string_write<uint32_t>(s, "reft", obj.ref_type);
+    string_write_pt(s, "refp", obj.ref_pt);
+  }
+
+  // coordinates
+  string_write_crds(s, "crds", obj);
+}
+
+
 // unpack object from a string (for DB storage)
 VMap2obj
 VMap2obj::unpack(const std::string & str) {
@@ -77,6 +112,42 @@ VMap2obj::unpack(const std::string & str) {
   }
   return ret;
 }
+
+// Read object from a stream (for reading text files)
+// The stream should be set to a correct place (object type string)
+VMap2obj
+VMap2obj::read(std::istream & s) {
+
+  VMap2obj ret;
+
+  // read type
+  s >> std::ws;
+  std::string str;
+  std::getline(s, str, '\n');
+  ret.type = make_type(str);
+
+  // other fields
+  while (1){
+    string tag = string_read_tag(s);
+    if (tag == "" || tag == "*") break;
+    else if (tag == "angl") ret.angle = string_read<int32_t>(s)/1000.0;
+    else if (tag == "scle") ret.scale = string_read<int32_t>(s)/1000.0;
+    else if (tag == "algn") ret.align = (VMap2objAlign)string_read<uint32_t>(s);
+    else if (tag == "name") ret.name  = string_read_str(s);
+    else if (tag == "comm") ret.comm  = string_read_str(s);
+    else if (tag == "tags") ret.tags.insert(string_read_str(s));
+    else if (tag == "chld") ret.children.insert(string_read<uint32_t>(s));
+    else if (tag == "reft") ret.ref_type = string_read<uint32_t>(s);
+    else if (tag == "refp") ret.ref_pt   = string_read_pt(s);
+    else if (tag == "crds") ret.push_back(string_read_crds(s));
+    else throw Err() << "Unknown tag: " << tag;
+  }
+  return ret;
+}
+
+
+
+
 
 /**********************************************************/
 
