@@ -292,6 +292,10 @@ Class for walking alone a line (2D).
 * `figure_bbox(string)` -- Read a figure from the string and get its bounding box.
   The figure can be Point, Line/Multiline, Rect.
 
+* `nearest_pt(line or multiline, point)` -- Return point of the line which is
+  nearest to the given point. Throw error if line is empty (or all points are
+  non-finite).
+
 -----------------
 ## line_int.h -- extra functions for handling iPoint sets
 

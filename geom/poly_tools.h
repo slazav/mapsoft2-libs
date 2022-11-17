@@ -339,5 +339,37 @@ Rect<T> figure_bbox(const::std::string &str) {
   return figure_line<T>(str).bbox();
 }
 
+/// Find a point of a Line which is close to pt.
+template <typename T>
+Point<T>
+nearest_pt(const Line<T> & l, const Point<T> & pt){
+  Point<T> ret;
+  double d = INFINITY;
+  for (const auto & p:l){
+    double d1 = dist(p, pt);
+    if (d1>=d) continue;
+    d = d1; ret=p;
+  }
+  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
+  return ret;
+}
+
+/// Find a point of a MultiLine which is close to pt.
+template <typename T>
+Point<T>
+nearest_pt(const MultiLine<T> & ml, const Point<T> & pt){
+  Point<T> ret;
+  double d =  INFINITY;
+  for (const auto & l:ml){
+    for (const auto & p:l){
+      double d1 = dist(p, pt);
+      if (d1>=d) continue;
+      d = d1; ret=p;
+    }
+  }
+  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
+  return ret;
+}
+
 
 #endif
