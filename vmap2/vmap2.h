@@ -42,6 +42,9 @@ public:
 
   ~VMap2() {}
 
+  // remove database files
+  static void remove(const std::string & dbname);
+
   /// Add new object to the map, return object ID.
   uint32_t add(const VMap2obj & o);
 
@@ -54,6 +57,8 @@ public:
   /// Delete an object (error if not exist).
   void del(const uint32_t id);
 
+  /// Number of objects
+  size_t size() const;
 
   /// Find objects with given type and range
   std::set<uint32_t> find(VMap2objClass cl, uint16_t tnum, const dRect & range) {
@@ -69,7 +74,6 @@ public:
   /// get map bounding box (extracted from geohash data)
   dRect bbox() { return geohash->bbox();}
 
-
   /// get filename (empty for in-memory database)
   public: std::string get_fname() const {return fname;}
 
@@ -83,6 +87,13 @@ public:
   std::pair<uint32_t, VMap2obj> iter_get_next(); // get next object
   bool iter_end(); // is it end, or we can get one more object?
 
+  /// Read/write text file into VMap2. Keep existing objects.
+  void read(std::istream & s, bool keep_labels=true, bool keep_objects=true);
+  void read(std::string & file, bool keep_labels=true, bool keep_objects=true);
+
+  /// Write VMap2 to text file. Drop ids, sort objects.
+  void write(std::ostream & s);
+  void write(std::string & file);
 };
 
 #endif

@@ -1,11 +1,14 @@
 #include <sstream>
-#include <stdint.h>
+#include <cstdint>
 #include <cstring>
 #include <string>
 #include <cstdio>
+#include <algorithm>
+#include <unistd.h>
 
 #include "vmap2.h"
 #include "string_pack.h"
+#include "filename/filename.h"
 
 using namespace std;
 
@@ -15,14 +18,22 @@ VMap2::VMap2(const std::string & name, const bool create): fname(name) {
 
   bdb = (fname!="");
   if (bdb){
+    auto ghname = file_ext_repl(name, ".vmap2gh");
     objects_bdb.reset(new DBSimple(name, NULL, create, false));
-    geohash.reset(new GeoHashDB(name + "_gh", NULL, create));
+    geohash.reset(new GeoHashDB(ghname, NULL, create));
   }
   else {
     geohash.reset(new GeoHashStorage);
   }
 
 };
+
+void
+VMap2::remove(const std::string & dbname){
+  auto ghname = file_ext_repl(dbname, ".vmap2gh");
+  if (file_exists(dbname)) ::unlink(dbname.c_str());
+  if (file_exists(ghname)) ::unlink(ghname.c_str());
+}
 
 /**********************************************************/
 
@@ -141,10 +152,16 @@ VMap2::del(const uint32_t id){
   }
 }
 
+size_t
+VMap2::size() const{
+  if (bdb) return objects_bdb->size();
+  else     return objects_mem.size();
+}
+
 /**********************************************************/
 
 void
-VMap2::iter_start() {
+VMap2::iter_start(){
   if (bdb)
     it_bdb=objects_bdb->begin();
   else
@@ -152,7 +169,7 @@ VMap2::iter_start() {
 }
 
 std::pair<uint32_t, VMap2obj>
-VMap2::iter_get_next() {
+VMap2::iter_get_next(){
   if (bdb){
     auto p = *it_bdb;
     ++it_bdb;
@@ -163,9 +180,55 @@ VMap2::iter_get_next() {
 }
 
 bool
-VMap2::iter_end() {
+VMap2::iter_end(){
   if (bdb)
     return it_bdb==objects_bdb->end();
   else
     return it_mem==objects_mem.end();
+}
+
+/**********************************************************/
+
+void
+VMap2::read(std::istream & s, bool keep_labels, bool keep_objects){
+  while (1){
+    char c = s.get();
+    switch (c){
+      case -1: return;
+      case '*': {
+        auto o = VMap2obj::read(s);
+        auto c = o.get_class();
+        if ((keep_labels  && c == VMAP2_TEXT) ||
+            (keep_objects && c  < VMAP2_TEXT)) add(o);
+        break;
+      }
+      default: throw Err() << "VMap2::read: broken file";
+    }
+  }
+}
+
+void
+VMap2::read(std::string & file, bool keep_labels, bool keep_objects){
+  std::istringstream s(file);
+  read(s, keep_labels, keep_objects);
+}
+
+void
+VMap2::write(std::ostream & s){
+  // copy objects to vector
+  std::vector<VMap2obj> vec;
+  iter_start();
+  while (!iter_end())
+    vec.push_back(iter_get_next().second);
+
+  std::sort(vec.begin(), vec.end());
+
+  for (auto const & o:vec)
+    VMap2obj::write(s, o);
+}
+
+void
+VMap2::write(std::string & file){
+  std::ostringstream s(file);
+  write(s);
 }
