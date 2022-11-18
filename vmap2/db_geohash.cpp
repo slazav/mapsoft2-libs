@@ -202,7 +202,8 @@ GeoHashDB::dump() const {
       std::string hash((char*)k.data+sizeof(uint32_t), k.size-sizeof(uint32_t));
       auto  type = *(uint32_t*)k.data;
       auto  id   = *(uint32_t*)v.data;
-      std::cout << id << "\t" << type << "\t" << hash << "\n";
+      std::cout << id << "\t" << type << "\t"
+                << hash << "\t" << GEOHASH_decode(hash) << "\n";
 
       fl=DB_NEXT; // switch to DB_NEXT
     }
