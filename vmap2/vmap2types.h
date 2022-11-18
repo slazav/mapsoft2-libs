@@ -13,14 +13,15 @@ public:
   std::string name;     // type short name
   std::string comm;     // type description
   std::string fig_mask; // mask for FIG format
+  std::string fig_pic;  // picture for FIG format
   int mp_start, mp_end; // start/end level for MP format
-  int text_type;        // type for related text objects
+  int label_type;       // type for related lables
 
-  VMap2type(): mp_start(0), mp_end(0), text_type(-1) {}
+  VMap2type(): mp_start(0), mp_end(0), label_type(-1) {}
 };
 
 // All object types
-class VMap2typemap : public std::map<int, VMap2type> {
+class VMap2types : public std::map<int, VMap2type> {
 public:
   // load from a file
   void load(const std::string & fname);

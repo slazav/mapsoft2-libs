@@ -2,14 +2,10 @@
 #include "filename/filename.h"
 #include "read_words/read_words.h"
 #include "vmap2types.h"
-
-#define POINT_MASK  0x000000
-#define LINE_MASK   0x100000
-#define AREA_MASK   0x200000
-#define TEXT_MASK   0x300000
+#include "vmap2obj.h"
 
 void
-VMap2typemap::load(const std::string & fname){
+VMap2types::load(const std::string & fname){
   clear();
 
   std::ifstream ff(fname);
@@ -36,26 +32,10 @@ VMap2typemap::load(const std::string & fname){
         continue;
       }
 
-      // point <type> -- define a point object
-      if (vs[0] == "point") {
-        if (vs.size()!=2) throw Err() << "point: argument expected: <type>";
-        type = POINT_MASK + 0xFFFF * str_to_type<int>(vs[1]);
-        emplace(type, VMap2type());
-        continue;
-      }
-
-      // line <type> -- define a line object
-      if (vs[0] == "line") {
-        if (vs.size()!=2) throw Err() << "line: argument expected: <type>";
-        type = LINE_MASK + 0xFFFF * str_to_type<int>(vs[1]);
-        emplace(type, VMap2type());
-        continue;
-      }
-
-      // area <type> -- define an area object
-      if (vs[0] == "area") {
-        if (vs.size()!=2) throw Err() << "area: argument expected: <type>";
-        int type = AREA_MASK + 0xFFFF * str_to_type<int>(vs[1]);
+      // type <type> -- add description of an object type
+      if (vs[0] == "type") {
+        if (vs.size()!=2) throw Err() << "type: argument expected: <type>";
+        type = VMap2obj::make_type(vs[1]);
         emplace(type, VMap2type());
         continue;
       }
@@ -83,6 +63,11 @@ VMap2typemap::load(const std::string & fname){
           o->second.fig_mask = vs[2];
           continue;
         }
+        if (vs[1] == "fig_pic"){
+          if (vs.size()!=3) throw Err() << "+ fig_pic: argument expected: <fig path>";
+          o->second.fig_pic = vs[2];
+          continue;
+        }
         if (vs[1] == "mp_start"){
           if (vs.size()!=3) throw Err() << "+ mp_start: argument expected: <start level>";
           o->second.mp_start = str_to_type<int>(vs[2]);
@@ -93,9 +78,9 @@ VMap2typemap::load(const std::string & fname){
           o->second.mp_end = str_to_type<int>(vs[2]);
           continue;
         }
-        if (vs[1] == "text_type"){
-          if (vs.size()!=3) throw Err() << "+ text_type: argument expected: <integer type>";
-          o->second.text_type = TEXT_MASK + 0xFFFF * str_to_type<int>(vs[2]);
+        if (vs[1] == "label_type"){
+          if (vs.size()!=3) throw Err() << "+ label_type: argument expected: <integer type>";
+          o->second.label_type = VMap2obj::make_type(VMAP2_TEXT, str_to_type<int>(vs[2]));
           continue;
         }
 
