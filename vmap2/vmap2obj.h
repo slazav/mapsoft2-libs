@@ -34,6 +34,28 @@ typedef enum{
 /*********************************************************************/
 // VMap2obj -- a single map object
 
+/*
+Vmap2 format contains a number of independent objects of different type:
+points, lines, polygons, and text.
+
+Lebels are text objects and they do not have to be connected to other
+objects. But in some cases we need this connection: When creating/aditing
+an object we may want to create/update labels; when exporting vmap2 to
+other formal we may want to attach labels to objects.
+
+There are two ways to connect label to an object: hard and soft.
+For hard connection object contains ids of labels in the `children` field.
+For soft connection label contains object type and object nearest point in
+`ref_type` and `ref_pt` fields.
+
+Soft connection can be kept in formats which do not have object id's
+(fig, mp, etc.). Also soft connection is useful when one
+wants to update objects and keep old labels (this happens when somebody
+sends me corrections in mp format).
+
+*/
+
+
 struct VMap2obj: public dMultiLine {
 
   // object type is assembled from following parts:
@@ -41,8 +63,8 @@ struct VMap2obj: public dMultiLine {
   // - second byte: reserved;
   // - two last bytes: type number (= MP type)
   uint32_t        type;
-  float           angle;   // object angle, deg
-  float           scale;   // object scale
+  float           angle;   // object angle, deg (default is NaN!)
+  float           scale;   // object scale (default is 1.0)
   VMap2objAlign   align;   // align
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
