@@ -242,6 +242,11 @@ main(){
       assert_eq(nearest_pt(dLine("[[0,0],[2,1],[4,2]]"), dPoint(1,2)), dPoint(2,1));
       assert_eq(nearest_pt(dMultiLine("[[], [[0,0],[2,1],[4,2]]]"), dPoint(1,2)), dPoint(2,1));
       assert_err(nearest_pt(dMultiLine("[[], []]"), dPoint(1,2)), "Can't find nearest point: empty line");
+
+      assert_feq(nearest_dist(iLine("[[0,0],[2,1],[4,2]]"), iPoint(1,2)), sqrt(2), 1e-6);
+      assert_feq(nearest_dist(dLine("[[0,0],[2,1],[4,2]]"), dPoint(1,2)), sqrt(2), 1e-6);
+      assert_feq(nearest_dist(dMultiLine("[[], [[0,0],[2,1],[4,2]]]"), dPoint(1,2)), sqrt(2), 1e-6);
+      assert_err(nearest_dist(dMultiLine("[[], []]"), dPoint(1,2)), "Can't find nearest point: empty line");
     }
 
 
