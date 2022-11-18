@@ -14,7 +14,7 @@ main(){
 
     // BerkleyDB test
     {
-      VMap2::remove("tmp.vmap2db");
+      VMap2::remove_db("tmp.vmap2db");
       VMap2 m("tmp.vmap2db", 1);
 
       // get/set object
@@ -77,7 +77,7 @@ main(){
       assert_eq(m.iter_end(), true);
 
     }
-    VMap2::remove("tmp.vmap2db");
+    VMap2::remove_db("tmp.vmap2db");
 
 
     // In-memory test

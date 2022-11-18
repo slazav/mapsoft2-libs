@@ -30,7 +30,7 @@ VMap2::VMap2(const std::string & name, const bool create): fname(name) {
 };
 
 void
-VMap2::remove(const std::string & dbname){
+VMap2::remove_db(const std::string & dbname){
   auto ghname = file_ext_repl(dbname, ".vmap2gh");
   if (file_exists(dbname)) ::unlink(dbname.c_str());
   if (file_exists(ghname)) ::unlink(ghname.c_str());

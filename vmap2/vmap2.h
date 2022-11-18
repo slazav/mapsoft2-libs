@@ -43,7 +43,7 @@ public:
   ~VMap2() {}
 
   // remove database files
-  static void remove(const std::string & dbname);
+  static void remove_db(const std::string & dbname);
 
   /// Add new object to the map, return object ID.
   uint32_t add(const VMap2obj & o);
