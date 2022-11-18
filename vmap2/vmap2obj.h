@@ -41,12 +41,10 @@ points, lines, polygons, and text.
 Lebels are text objects and they do not have to be connected to other
 objects. But in some cases we need this connection: When creating/aditing
 an object we may want to create/update labels; when exporting vmap2 to
-other formal we may want to attach labels to objects.
+other format we may want to attach labels to objects.
 
-There are two ways to connect label to an object: hard and soft.
-For hard connection object contains ids of labels in the `children` field.
-For soft connection label contains object type and object nearest point in
-`ref_type` and `ref_pt` fields.
+We use soft connection, similar to mapsoft1: label contains object type and
+object nearest point in `ref_type` and `ref_pt` fields.
 
 Soft connection can be kept in formats which do not have object id's
 (fig, mp, etc.). Also soft connection is useful when one
@@ -70,7 +68,6 @@ struct VMap2obj: public dMultiLine {
   std::string     comm;    // object comment
   std::set<std::string> tags;    // object tags
 
-  std::set<uint32_t> children;   // id's of related objects (usually labels)
   dPoint   ref_pt;    // type of parent object (for detached labels)
   uint32_t ref_type;  // coordinates of a parent object point (for detached labels)
 
@@ -79,6 +76,7 @@ struct VMap2obj: public dMultiLine {
       type(t), angle(std::nan("")),
       scale(1.0), align(VMAP2_ALIGN_SW), ref_type(0xFFFFFFFF) {}
 
+  /***********************************************/
 
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
@@ -106,6 +104,11 @@ struct VMap2obj: public dMultiLine {
 
   /***********************************************/
 
+  static std::string print_align(const VMap2objAlign align);
+  static VMap2objAlign parse_align(const std::string & str);
+
+  /***********************************************/
+
   // Set object coordinates from a string.
   // For point and text objects point expected, for lines and areas - line/multilines.
   void set_coords(const std::string & s);
@@ -126,6 +129,7 @@ struct VMap2obj: public dMultiLine {
   static VMap2obj read(std::istream & s);
 
 
+
   /***********************************************/
   // operators <=>
   /// Less then operator.
@@ -139,7 +143,6 @@ struct VMap2obj: public dMultiLine {
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
     if (tags!=o.tags)   return tags<o.tags;
-    if (children!=o.children)   return children<o.children;
     if (ref_type!=o.ref_type)   return ref_type<o.ref_type;
     if (ref_pt!=o.ref_pt)       return ref_pt<o.ref_pt;
     return dMultiLine::operator<(o);
@@ -148,8 +151,9 @@ struct VMap2obj: public dMultiLine {
   /// Equal opertator.
   bool operator== (const VMap2obj & o) const {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
-    return type==o.type && ang_eq && scale==o.scale && align==o.align &&
-        name==o.name && comm==o.comm && tags==o.tags && children==o.children &&
+    return type==o.type && ang_eq &&
+        scale==o.scale && align==o.align &&
+        name==o.name && comm==o.comm && tags==o.tags &&
         ref_type==o.ref_type && ref_pt==o.ref_pt &&
         dMultiLine::operator==(o);
   }
@@ -160,4 +164,13 @@ struct VMap2obj: public dMultiLine {
   bool operator>  (const VMap2obj & other) const { return !(*this<=other); } ///< operator>
 
 };
+
+/// \relates VMap2obj
+/// \brief Output operator: print VMap2obj
+std::ostream & operator<< (std::ostream & s, const VMap2obj & o);
+
+/// \relates VMap2obj
+/// \brief Input operator: read VMap2obj
+std::istream & operator>> (std::istream & s, VMap2obj & o);
+
 #endif

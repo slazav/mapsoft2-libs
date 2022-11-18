@@ -32,10 +32,6 @@ VMap2obj::pack(const VMap2obj & obj) {
   for (auto const & t: obj.tags)
     string_pack_str(s, "tags", t);
 
-  // children
-  for (auto const & c: obj.children)
-    string_pack<uint32_t>(s, "chld", c);
-
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF) {
     string_pack<uint32_t>(s, "reft", obj.ref_type);
@@ -57,10 +53,11 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
   s << print_type(obj.type) << '\n';
 
   // optional values
-  if (!isnan(obj.angle)) string_write<float>(s, "angl", obj.angle);
-  if (obj.scale != 1.0)  string_write<float>(s, "scle", obj.scale);
+  s.unsetf(ios_base::floatfield);
+  if (!isnan(obj.angle)) string_write(s, "angl", obj.angle);
+  if (obj.scale != 1.0)  string_write(s, "scle", obj.scale);
   if (obj.align != VMAP2_ALIGN_SW)
-     string_write<uint32_t>(s, "algn", (uint32_t)obj.align);
+     string_write_str(s, "algn", print_align(obj.align));
 
   // optional text fields (4-byte tag, 4-byte length, data);
   if (obj.name!="") string_write_str(s, "name", obj.name);
@@ -68,9 +65,6 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
 
   // tags
   for (auto const & t: obj.tags) string_write_str(s, "tags", t);
-
-  // children
-  for (auto const & c: obj.children) string_write<uint32_t>(s, "chld", c);
 
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF){
@@ -105,7 +99,6 @@ VMap2obj::unpack(const std::string & str) {
     else if (tag == "name") ret.name  = string_unpack_str(s);
     else if (tag == "comm") ret.comm  = string_unpack_str(s);
     else if (tag == "tags") ret.tags.insert(string_unpack_str(s));
-    else if (tag == "chld") ret.children.insert(string_unpack<uint32_t>(s));
     else if (tag == "reft") ret.ref_type = string_unpack<uint32_t>(s);
     else if (tag == "refp") ret.ref_pt   = string_unpack_pt(s);
     else if (tag == "crds") ret.push_back(string_unpack_crds(s));
@@ -130,13 +123,13 @@ VMap2obj::read(std::istream & s) {
   while (1){
     string tag = string_read_tag(s);
     if (tag == "") break;
+    // note: no chld tag!
     else if (tag == "angl") ret.angle = string_read<float>(s);
     else if (tag == "scle") ret.scale = string_read<float>(s);
-    else if (tag == "algn") ret.align = (VMap2objAlign)string_read<uint32_t>(s);
+    else if (tag == "algn") ret.align = parse_align(string_read_str(s));
     else if (tag == "name") ret.name  = string_read_str(s);
     else if (tag == "comm") ret.comm  = string_read_str(s);
     else if (tag == "tags") ret.tags.insert(string_read_str(s));
-    else if (tag == "chld") ret.children.insert(string_read<uint32_t>(s));
     else if (tag == "reft") ret.ref_type = string_read<uint32_t>(s);
     else if (tag == "refp") ret.ref_pt   = string_read_pt(s);
     else if (tag == "crds") ret.push_back(string_read_crds(s));
@@ -144,9 +137,6 @@ VMap2obj::read(std::istream & s) {
   }
   return ret;
 }
-
-
-
 
 
 /**********************************************************/
@@ -209,6 +199,46 @@ VMap2obj::get_class() const {
   }
 }
 
+/**********************************************************/
+
+static const std::map<VMap2objAlign, std::string> align_tab_i2s = {
+  {VMAP2_ALIGN_SW,"SW"},
+  {VMAP2_ALIGN_W,  "W"},
+  {VMAP2_ALIGN_NW,"NW"},
+  {VMAP2_ALIGN_N,  "N"},
+  {VMAP2_ALIGN_NE,"NE"},
+  {VMAP2_ALIGN_E,  "E"},
+  {VMAP2_ALIGN_SE,"SE"},
+  {VMAP2_ALIGN_S,  "S"},
+  {VMAP2_ALIGN_C,  "C"}
+};
+
+std::string
+VMap2obj::print_align(const VMap2objAlign align){
+  if (align_tab_i2s.count(align)<1) throw Err() << "unknown object align: " << align;
+  return align_tab_i2s.find(align)->second;
+}
+
+static const std::map<std::string,VMap2objAlign> align_tab_s2i = {
+  {"SW",VMAP2_ALIGN_SW},
+  { "W",VMAP2_ALIGN_W},
+  {"NW",VMAP2_ALIGN_NW},
+  { "N",VMAP2_ALIGN_N},
+  {"NE",VMAP2_ALIGN_NE},
+  { "E",VMAP2_ALIGN_E},
+  {"SE",VMAP2_ALIGN_SE},
+  { "S",VMAP2_ALIGN_S},
+  { "C",VMAP2_ALIGN_C}
+};
+
+VMap2objAlign
+VMap2obj::parse_align(const std::string & str){
+  if (align_tab_s2i.count(str)<1) throw Err() << "unknown object align: " << str;
+  return align_tab_s2i.find(str)->second;
+}
+
+/**********************************************************/
+
 uint16_t
 VMap2obj::get_tnum()  const {
   return type & 0xFFFF; }
@@ -226,3 +256,12 @@ VMap2obj::set_coords(const std::string & s){
   }
 }
 
+/**********************************************************/
+
+std::ostream &
+operator<< (std::ostream & s, const VMap2obj & o){
+  VMap2obj::write(s,o); return s; }
+
+std::istream &
+operator>> (std::istream & s, VMap2obj & o){
+  o = VMap2obj::read(s); return s; }
