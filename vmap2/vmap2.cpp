@@ -15,13 +15,18 @@ using namespace std;
 
 
 /**********************************************************/
-VMap2::VMap2(const std::string & name, const bool create): fname(name) {
+VMap2::VMap2(const std::string & name, const bool create) {
 
-  bdb = (fname!="");
+  bdb = (name!="");
   if (bdb){
-    auto ghname = file_ext_repl(name, ".vmap2gh");
-    objects_bdb.reset(new DBSimple(name, NULL, create, false));
-    geohash.reset(new GeoHashDB(ghname, NULL, create));
+    dbname = file_ext_repl(name, VMAP2DB_EXT);
+    ghname = file_ext_repl(dbname, VMAP2GH_EXT);
+    bool nogh = file_exists(dbname) && !file_exists(ghname);
+    objects_bdb.reset(new DBSimple(dbname, NULL, create, false));
+    if (nogh)
+      geohash_rebuild();
+    else
+      geohash.reset(new GeoHashDB(ghname, NULL, create));
   }
   else {
     geohash.reset(new GeoHashStorage);
@@ -30,10 +35,29 @@ VMap2::VMap2(const std::string & name, const bool create): fname(name) {
 };
 
 void
-VMap2::remove_db(const std::string & dbname){
-  auto ghname = file_ext_repl(dbname, ".vmap2gh");
+VMap2::remove_db(const std::string & name){
+  auto dbname = file_ext_repl(name,   VMAP2DB_EXT);
+  auto ghname = file_ext_repl(dbname, VMAP2GH_EXT);
   if (file_exists(dbname)) ::unlink(dbname.c_str());
   if (file_exists(ghname)) ::unlink(ghname.c_str());
+}
+
+void
+VMap2::geohash_rebuild(){
+  if (bdb){
+    if (file_exists(ghname)) ::unlink(ghname.c_str());
+    geohash.reset(new GeoHashDB(ghname, NULL, true));
+    for (const auto & p:*objects_bdb){
+      auto o = VMap2obj::unpack(p.second);
+      geohash->put(p.first, o.bbox(), o.type);
+    }
+  }
+  else {
+    geohash.reset(new GeoHashStorage);
+    for (const auto & p:objects_mem){
+      geohash->put(p.first, p.second.bbox(), p.second.type);
+    }
+  }
 }
 
 /**********************************************************/
@@ -211,12 +235,62 @@ VMap2::write(std::ostream & s){
 
   std::sort(vec.begin(), vec.end());
 
-  for (auto const & o:vec)
-    VMap2obj::write(s, o);
+  for (auto const & o:vec) s << o;
 }
 
 void
 VMap2::write(const std::string & file){
   std::ofstream s(file);
   VMap2::write(s);
+}
+
+/**********************************************************/
+
+#include "geo_data/geo_utils.h"
+uint32_t
+VMap2::find_ref(const dPoint & pt, const uint32_t type, const double & dist1, const double & dist2){
+  // First pass, try to find exact coordinate
+  // with same or different name.
+  dRect r(pt, pt);
+  double m = INFINITY;
+  uint32_t mi;
+  for (auto const & i:find(type, r)){
+    auto o1 = get(i);
+    auto d1 = geo_nearest_dist(o1, pt);
+    if (d1<m) {m=d1, mi=i;}
+  }
+  // Note that here we can have objects which are really far away.
+  // We need to find minimum and check that distance is less then dist1
+  if (m<dist1) return mi;
+
+  // Pass 2 with bigger distance. It's slower, but here we have only
+  // objects which were moved. Should we check that name is same?
+  r.expand(dist2);
+  m = INFINITY;
+  for (auto const & i:find(type, r)){
+    auto o1 = get(i);
+    auto d1 = geo_nearest_dist(o1, pt);
+    if (d1<m) {m=d1, mi=i;}
+  }
+  if (m<dist2) return mi;
+  return 0xFFFFFFFF;
+}
+
+std::multimap<uint32_t, uint32_t>
+VMap2::find_refs(const double & dist1, const double & dist2){
+  std::multimap<uint32_t, uint32_t> tab;
+
+  // Iterate through all text objects.
+  // It's better to use geohash, because there we have
+  // objects sorted by type.
+  for (auto const t: geohash->get_types()){
+    if (t>>24 != VMAP2_TEXT) continue;
+    for (auto const i: geohash->get(t)){
+      auto l = get(i);
+      auto j = find_ref(l.ref_pt, l.ref_type, dist1, dist2);
+      if (j==0xFFFFFFFF) continue;
+      tab.emplace(j,i);
+    }
+  }
+  return tab;
 }

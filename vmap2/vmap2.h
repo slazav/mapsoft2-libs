@@ -12,6 +12,9 @@
 // in-memory geohash storage
 #include "geohash/storage.h"
 
+#define VMAP2DB_EXT  ".vmap2db"
+#define VMAP2GH_EXT  ".vmap2gh"
+
 /*********************************************************************/
 // VMap2 -- interface class for map object storage
 
@@ -29,21 +32,29 @@ class VMap2 {
   std::map<uint32_t, VMap2obj>::iterator it_mem;
 
   // geohashes for spatial indexing
-  std::shared_ptr<GeoHashStorage> geohash; 
+  std::shared_ptr<GeoHashStorage> geohash;
 
-  /// filename (empty for in-memory database)
-  std::string fname;
+  /// filenames (empty for in-memory database)
+  std::string dbname;
+  std::string ghname;
 
 public:
 
-  // Constructor. If fname is empty create VMap2 in-memory storage.
+  // Constructor. If <name> is empty create VMap2 in-memory storage.
   // It not, open BerkleyDB storage (create if needed).
-  VMap2(const std::string & fname = std::string(), const bool create = false);
+  // <name> is database name with or without .vmap2db extension.
+  VMap2(const std::string & name = std::string(), const bool create = false);
 
   ~VMap2() {}
 
   // remove database files
   static void remove_db(const std::string & dbname);
+
+  /// Rebuild geohash database
+  void geohash_rebuild();
+
+  /// Dump geohash database
+  void geohash_dump() {geohash->dump();}
 
   /// Add new object to the map, return object ID.
   uint32_t add(const VMap2obj & o);
@@ -56,6 +67,7 @@ public:
 
   /// Delete an object (error if not exist).
   void del(const uint32_t id);
+
 
   /// Number of objects
   size_t size() const;
@@ -75,7 +87,8 @@ public:
   dRect bbox() { return geohash->bbox();}
 
   /// get filename (empty for in-memory database)
-  public: std::string get_fname() const {return fname;}
+  public: std::string get_dbname() const {return dbname;}
+  public: std::string get_ghname() const {return ghname;}
 
 
   // Functions for getting all elements.
@@ -94,6 +107,14 @@ public:
   /// Write VMap2 to text file. Drop ids, sort objects.
   void write(std::ostream & s);
   void write(const std::string & file);
+
+
+  uint32_t find_ref(const dPoint & pt, const uint32_t type,
+     const double & dist1=1, const double & dist2=1000);
+
+  std::multimap<uint32_t, uint32_t> find_refs(const double & dist1, const double & dist2);
+
 };
+
 
 #endif
