@@ -94,7 +94,8 @@ GeoHashStorage::dump() const {
     auto hash     = i.first.substr(4);
     uint32_t type = *(uint32_t*)i.first.data();
     uint32_t id   = i.second;
-    std::cout << id << "\t" << type << "\t" << hash << "\n";
+    std::cout << id << "\t" << type << "\t"
+              << hash << "\t" << GEOHASH_decode(hash) << "\n";
   }
 }
 
