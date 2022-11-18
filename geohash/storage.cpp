@@ -30,6 +30,12 @@ GeoHashStorage::get(const dRect & range, const uint32_t type) const{
   return ret;
 }
 
+// Get id of all objects with one type
+std::set<uint32_t>
+GeoHashStorage::get(const uint32_t type) const{
+  return get_hash(join_type(type, ""), false);
+}
+
 
 // add an object
 void

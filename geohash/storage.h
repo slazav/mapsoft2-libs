@@ -18,6 +18,9 @@ class GeoHashStorage {
     // Get id of objects which may be found in the range
     virtual std::set<uint32_t> get(const dRect & range, const uint32_t type=0) const;
 
+    // Get id of all objects with one type
+    virtual std::set<uint32_t> get(const uint32_t type) const;
+
     // add an object
     virtual void put(const uint32_t id, const dRect & range, const uint32_t type=0);
 

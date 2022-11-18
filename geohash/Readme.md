@@ -49,20 +49,25 @@ dRect GEOHASH_decode_box(const dRect & box, const dRect & bbox);
 
 Methods:
 
-* Add object with id and range.
+* Add object with id and range. Objects ac have different types.
 ``` c++
-virtual void put(const int id, const dRect & range);
+virtual void put(const int id, const dRect & range, const uint32_t type=0);
 ```
 
 * Get id of objects which may be found in the range.
 ``` c++
-std::set<int> get(const dRect & range);
+std::set<int> get(const dRect & range, const uint32_t type=0);
+```
+
+* Get id of objects which a given type
+``` c++
+std::set<int> get(const uint32_t type);
 ```
 
 * Delete an object with id and range.
 If the record does not exist do nothing.
 ``` c++
-void del(const int id, const dRect & range);
+void del(const int id, const dRect & range, const uint32_t type=0);
 ```
 
 * set bbox for coordinate transformation.
