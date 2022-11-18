@@ -59,11 +59,8 @@ string_pack_crds(ostream & s, const char *tag, const dMultiLine & ml){
 void
 string_write_crds(ostream & s, const char *tag, const dMultiLine & ml){
   for (auto const &l:ml) {
-    s << tag;
-    for (auto const & p:l) {
-      auto ip = convert_crd(p);
-      s << ' ' << ip.x << ' ' << ip.y;
-    }
+    s << tag << std::fixed << std::setprecision(6);
+    for (auto const & p:l) s <<' ' << p.x << ' ' << p.y;
     s << '\n';
   }
   if (s.fail()) throw Err() << "string_write_crds: write error";
@@ -82,8 +79,8 @@ string_pack_pt(ostream & s, const char *tag, const dPoint & pt){
 
 void
 string_write_pt(ostream & s, const char *tag, const dPoint & pt){
-  auto ip = convert_crd(pt);
-  s << tag << ' ' << ' ' << ip.x << ' ' << ip.y << '\n';
+  s << tag << std::fixed << std::setprecision(6)
+    << ' ' << pt.x << ' ' << pt.y << '\n';
   if (s.fail()) throw Err() << "string_write_pt: write error";
 }
 
@@ -102,9 +99,9 @@ string_pack_bbox(ostream & s, const char *tag, const dRect & box) {
 
 void
 string_write_bbox(ostream & s, const char *tag, const dRect & box) {
-  auto ip1 = convert_crd(box.tlc());
-  auto ip2 = convert_crd(box.brc());
-  s << tag << ' ' << ip1.x << ' ' << ip1.y << ' ' << ip2.x << ' ' << ip2.y << '\n';
+  s << tag << std::fixed << std::setprecision(6)
+    << ' ' << box.tlc().x << ' ' << box.tlc().y
+    << ' ' << box.brc().x << ' ' << box.brc().y << '\n';
   if (s.fail()) throw Err() << "string_write_bbox: write error";
 }
 
@@ -121,6 +118,10 @@ string_unpack_tag(istream & s){
 
 std::string
 string_read_tag(istream & s){
+  if (s.peek()=='\n') {
+    s>>std::ws; // if there is eof we want to reach it here
+    return std::string();
+  }
   std::string tag;
   s >> tag;
   if (s.get()=='\n') s.unget(); // skip space
@@ -175,21 +176,14 @@ string_unpack_crds(istream & s){
   return ret;
 }
 
-// read two ints, convert to dPoint
-dPoint
-read_pt(istream & s){
-  int x,y;
-  s >> x >> y;
-  return dPoint(x/1e7, y/1e7);
-}
-
 dLine
 string_read_crds(istream & s){
   dLine ret;
   while (1) {
     if (s.get()=='\n') return ret;
     else s.unget();
-    dPoint p = read_pt(s);
+    dPoint p;
+    s >> p.x >> p.y;
     if (s.fail()) throw Err() << "string_read_crds: read error or unexpected eof";
     ret.push_back(p);
   }
@@ -210,7 +204,8 @@ string_unpack_pt(istream & s){
 
 dPoint
 string_read_pt(istream & s){
-  dPoint p = read_pt(s);
+  dPoint p;
+  s >> p.x >> p.y;
   if (s.get()!='\n') throw Err() << "string_read_pt: eol expected";
   if (s.fail()) throw Err() << "string_read_pt: read error or unexpected eof";
   return p;
@@ -230,8 +225,9 @@ string_unpack_bbox(istream & s) {
 
 dRect
 string_read_bbox(istream & s) {
-  dPoint p1 = read_pt(s);
-  dPoint p2 = read_pt(s);
+  dPoint p1,p2;
+  s >> p1.x >> p1.y
+    >> p2.x >> p2.y;
   if (s.get()!='\n') throw Err() << "string_read_bbox: eol expected";
   if (s.fail()) throw Err() << "string_read_bbox: read error or unexpected eof";
   return dRect(p1,p2);
