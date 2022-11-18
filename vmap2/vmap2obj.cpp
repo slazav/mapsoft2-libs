@@ -54,11 +54,11 @@ void
 VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
 
   // type in the form "line:0x15"
-  s << "* " << print_type(obj.type) << '\n';
+  s << print_type(obj.type) << '\n';
 
   // optional values
-  if (!isnan(obj.angle)) string_write<int32_t>(s, "angl", rint(1000*obj.angle));
-  if (obj.scale != 1.0)  string_write<int32_t>(s, "scle", rint(1000*obj.scale));
+  if (!isnan(obj.angle)) string_write<float>(s, "angl", obj.angle);
+  if (obj.scale != 1.0)  string_write<float>(s, "scle", obj.scale);
   if (obj.align != VMAP2_ALIGN_SW)
      string_write<uint32_t>(s, "algn", (uint32_t)obj.align);
 
@@ -80,6 +80,7 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
 
   // coordinates
   string_write_crds(s, "crds", obj);
+  s << "\n";
 }
 
 
@@ -121,17 +122,16 @@ VMap2obj::read(std::istream & s) {
   VMap2obj ret;
 
   // read type
-  s >> std::ws;
   std::string str;
+  s >> std::ws;
   std::getline(s, str, '\n');
   ret.type = make_type(str);
-
   // other fields
   while (1){
     string tag = string_read_tag(s);
-    if (tag == "" || tag == "*") break;
-    else if (tag == "angl") ret.angle = string_read<int32_t>(s)/1000.0;
-    else if (tag == "scle") ret.scale = string_read<int32_t>(s)/1000.0;
+    if (tag == "") break;
+    else if (tag == "angl") ret.angle = string_read<float>(s);
+    else if (tag == "scle") ret.scale = string_read<float>(s);
     else if (tag == "algn") ret.align = (VMap2objAlign)string_read<uint32_t>(s);
     else if (tag == "name") ret.name  = string_read_str(s);
     else if (tag == "comm") ret.comm  = string_read_str(s);

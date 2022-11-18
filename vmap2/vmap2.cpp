@@ -1,4 +1,5 @@
 #include <sstream>
+#include <fstream>
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -191,26 +192,18 @@ VMap2::iter_end(){
 
 void
 VMap2::read(std::istream & s, bool keep_labels, bool keep_objects){
-  while (1){
-    char c = s.get();
-    switch (c){
-      case -1: return;
-      case '*': {
-        auto o = VMap2obj::read(s);
-        auto c = o.get_class();
-        if ((keep_labels  && c == VMAP2_TEXT) ||
-            (keep_objects && c  < VMAP2_TEXT)) add(o);
-        break;
-      }
-      default: throw Err() << "VMap2::read: broken file";
-    }
+  while (!s.eof()){
+    auto o = VMap2obj::read(s);
+    auto c = o.get_class();
+    if ((keep_labels  && c == VMAP2_TEXT) ||
+        (keep_objects && c  < VMAP2_TEXT)) add(o);
   }
 }
 
 void
-VMap2::read(std::string & file, bool keep_labels, bool keep_objects){
-  std::istringstream s(file);
-  read(s, keep_labels, keep_objects);
+VMap2::read(const std::string & file){
+  std::ifstream s(file);
+  read(s);
 }
 
 void
@@ -228,7 +221,7 @@ VMap2::write(std::ostream & s){
 }
 
 void
-VMap2::write(std::string & file){
-  std::ostringstream s(file);
-  write(s);
+VMap2::write(const std::string & file){
+  std::ofstream s(file);
+  VMap2::write(s);
 }

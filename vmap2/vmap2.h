@@ -88,12 +88,12 @@ public:
   bool iter_end(); // is it end, or we can get one more object?
 
   /// Read/write text file into VMap2. Keep existing objects.
-  void read(std::istream & s, bool keep_labels=true, bool keep_objects=true);
-  void read(std::string & file, bool keep_labels=true, bool keep_objects=true);
+  void read(std::istream & s);
+  void read(const std::string & file);
 
   /// Write VMap2 to text file. Drop ids, sort objects.
   void write(std::ostream & s);
-  void write(std::string & file);
+  void write(const std::string & file);
 };
 
 #endif

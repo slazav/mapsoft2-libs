@@ -147,7 +147,6 @@ main(){
         std::ostringstream s1;
         VMap2obj::write(s1,o1);
         std::istringstream s2(s1.str());
-        assert_eq(s2.get(), '*')
         o2 = VMap2obj::read(s2);
         assert_eq(o1,o2);
       }
@@ -173,7 +172,6 @@ main(){
         std::ostringstream s1;
         VMap2obj::write(s1,o1);
         std::istringstream s2(s1.str());
-        assert_eq(s2.get(), '*')
         o2 = VMap2obj::read(s2);
         assert_eq(o1,o2);
       }
