@@ -32,13 +32,19 @@ main(){
       db.put(11, dRect(36,57,0,0), 0);
       assert_eq(type_to_str(db.bbox()), "[-180,-90,360,180]");
 
+      db.put(12, dRect(0,0,    0.1,0.1), 1);
+      db.put(13, dRect(1,1,    0.1,0.1), 1);
+      db.put(14, dRect(2,2,    0.1,0.1), 2);
+
       std::set<uint32_t> v1 = db.get(dRect(),0);
       assert_eq(v1.size(),0);
 
-      assert_eq(db.get_types().size(), 1);
       v1 = db.get_types();
-      assert_eq(v1.size(), 1);
+      assert_eq(v1.size(), 3);
       assert_eq(v1.count(0),1);
+      assert_eq(v1.count(1),1);
+      assert_eq(v1.count(2),1);
+      assert_eq(v1.count(3),0);
 
       v1 = db.get(dRect(-0.01,-0.01, 1.12,1.12), 0);
       //for (auto i:v1) std::cerr << "> " << i << "\n";
@@ -50,7 +56,26 @@ main(){
       assert_eq(v1.count(9),1);
 
       v1 = db.get(dRect(-0.01,-0.01, 1.12,1.12),1);
+      assert_eq(v1.size(),2);
+
+      v1 = db.get(dRect(-0.01,-0.01, 2.12,2.12),2);
+      assert_eq(v1.size(),1);
+
+      v1 = db.get(dRect(-0.01,-0.01, 1.12,1.12),3);
       assert_eq(v1.size(),0);
+
+      v1 = db.get(0);
+      assert_eq(v1.size(),10);
+
+      v1 = db.get(1);
+      assert_eq(v1.size(),2);
+
+      v1 = db.get(2);
+      assert_eq(v1.size(),1);
+
+      v1 = db.get(3);
+      assert_eq(v1.size(),0);
+
 
       v1 = db.get(dRect(36,57, 0.001,0.001), 0);
       //for (auto i:v1) std::cerr << "> " << i << "\n";
@@ -104,9 +129,10 @@ main(){
       assert_eq(v1.count(11),1);
 
       v1 = db.get_types();
-      assert_eq(v1.size(), 2);
+      assert_eq(v1.size(), 3);
       assert_eq(v1.count(0),1);
       assert_eq(v1.count(1),1);
+      assert_eq(v1.count(2),1);
     }
     unlink("a.dbh");
 
