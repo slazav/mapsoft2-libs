@@ -296,6 +296,10 @@ Class for walking alone a line (2D).
   nearest to the given point. Throw error if line is empty (or all points are
   non-finite).
 
+* `nearest_dist(line or multiline, point)` -- Return distance to the nearest point
+  of the line. Throw error if line is empty (or all points are
+  non-finite).
+
 -----------------
 ## line_int.h -- extra functions for handling iPoint sets
 
