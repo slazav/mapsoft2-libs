@@ -135,6 +135,7 @@ dRect
 GeoHashDB::bbox() const {
   DBT k = mk_dbt();
   DBT v = mk_dbt();
+  std::string ks; // keep data for k
 
   dRect ret;
 
@@ -157,8 +158,11 @@ GeoHashDB::bbox() const {
       std::string hash((char*)k.data+sizeof(uint32_t), k.size-sizeof(uint32_t));
       ret.expand(GEOHASH_decode(hash));
       auto type = *(uint32_t*)k.data;
-      k = mk_dbt(join_type(type, hash+(char)('z'+1)) );
-      fl=DB_SET_RANGE; // switch to DB_NEXT
+      // We want to switch to next geohash which
+      // is not inside previous one, or have different type.
+      ks = join_type(type, hash+(char)('z'+1));
+      k = mk_dbt(ks);
+      fl=DB_SET_RANGE; // switch to next
     }
   }
   catch (Err & e){
