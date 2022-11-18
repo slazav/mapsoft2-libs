@@ -191,13 +191,8 @@ VMap2::iter_end(){
 /**********************************************************/
 
 void
-VMap2::read(std::istream & s, bool keep_labels, bool keep_objects){
-  while (!s.eof()){
-    auto o = VMap2obj::read(s);
-    auto c = o.get_class();
-    if ((keep_labels  && c == VMAP2_TEXT) ||
-        (keep_objects && c  < VMAP2_TEXT)) add(o);
-  }
+VMap2::read(std::istream & s){
+  while (!s.eof()) add(VMap2obj::read(s));
 }
 
 void
