@@ -483,6 +483,7 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
 void
 read_fig(const std::string & fname, Fig & w, const Opt & ropts){
   std::ifstream s(fname);
+  if (!s) throw Err() << "can't open file: " << fname;
   read_fig(s,w,ropts);
 }
 
@@ -698,5 +699,6 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
 void
 write_fig(const std::string & fname, const Fig & w, const Opt & wopts){
   std::ofstream s(fname);
+  if (!s) throw Err() << "can't open file: " << fname;
   write_fig(s, w, wopts);
 }
