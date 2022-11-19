@@ -35,10 +35,6 @@ vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
     uint16_t tnum = o.type & 0xFFFF;
     uint32_t type = (cl<<24) + tnum;
 
-    // Get type info. We need it to convert labels
-    if (types.count(type)<1) throw Err()
-      << "unknown type: " << VMap2obj::print_type(type);
-    auto info = types.find(type)->second;
 
     // make object
     VMap2obj o1(type);
@@ -66,9 +62,13 @@ vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
 
     vmap2.add(o1);
 
+
+    uint32_t label_type =
+      types.count(type) ? types.find(type)->second.label_type : 0;
+
     // lables attached to the object:
-    if (info.label_type >= 0){
-      auto tt = VMap2obj::make_type(VMAP2_TEXT, info.label_type);
+    if (label_type > 0){
+      auto tt = VMap2obj::make_type(VMAP2_TEXT, label_type);
       for (auto const & l:o.labels){
         VMap2obj l1(tt);
         l1.name = o.text;
