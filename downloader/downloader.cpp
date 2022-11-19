@@ -11,7 +11,7 @@ ms2opt_add_downloader(GetOptSet & opts){
   const char *g = "DNLDR";
   opts.add("insecure",   1,0,g, "do not check TLS certificate (default: 0)");
   opts.add("user_agent", 1,0,g, "set user agent (default: \"mapsoft2 downloader\")");
-  opts.add("http_ref",   1,0,g, "set fttp reference (default: \"https://github.com/slazav/mapsoft2\")");
+  opts.add("http_ref",   1,0,g, "set http reference (default: \"https://github.com/slazav/mapsoft2\")");
 }
 
 
