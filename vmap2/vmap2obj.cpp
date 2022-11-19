@@ -68,7 +68,7 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
 
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF){
-    string_write<uint32_t>(s, "reft", obj.ref_type);
+    string_write_str(s, "reft", print_type(obj.ref_type));
     string_write_pt(s, "refp", obj.ref_pt);
   }
 
@@ -130,7 +130,7 @@ VMap2obj::read(std::istream & s) {
     else if (tag == "name") ret.name  = string_read_str(s);
     else if (tag == "comm") ret.comm  = string_read_str(s);
     else if (tag == "tags") ret.tags.insert(string_read_str(s));
-    else if (tag == "reft") ret.ref_type = string_read<uint32_t>(s);
+    else if (tag == "reft") ret.ref_type = make_type(string_read_str(s));
     else if (tag == "refp") ret.ref_pt   = string_read_pt(s);
     else if (tag == "crds") ret.push_back(string_read_crds(s));
     else throw Err() << "Unknown tag: " << tag;

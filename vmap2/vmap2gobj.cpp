@@ -5,30 +5,31 @@
 #include <string>
 #include <deque>
 
+#include "vmap2gobj.h"
+
 #include "geom/line_walker.h"
 #include "geom/poly_tools.h"
-#include "gobj_mapdb.h"
 #include "read_words/read_words.h"
 #include "geo_data/geo_io.h"
 #include "geo_mkref/geo_mkref.h"
 #include "filename/filename.h"
-#include "conv_label.h"
+//#include "conv_label.h"
 
 using namespace std;
 
 /**********************************************************/
 void
-ms2opt_add_mapdb_render(GetOptSet & opts){
-  const char *g = "MAPDB_RENDER";
+ms2opt_add_vmap2_render(GetOptSet & opts){
+  const char *g = "VMAP2_RENDER";
   opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
   opts.add("define",      1,0,g, "Definitions for vector map rendering (json object)");
   opts.add("obj_scale",   1,0,g, "Rescaling factor for all objects, default 1.0.");
-  opts.add("mapdb_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
+  opts.add("vmap2_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
            "reference). Below it the map is drawn by with color "
-           "(see --mapdb_minsc_color option). Default is 0.01");
+           "(see --vmap2_minsc_color option). Default is 0.01");
   opts.add("fit_patt_size", 0,0,g, "Adjust pattern size to fit image size. "
            "This option is useful for generating tiled images. Default: false.");
-  opts.add("mapdb_minsc_color", 1,0,g, "Color to draw maps below minimum scale (see --mapdb_minsc). "
+  opts.add("vmap2_minsc_color", 1,0,g, "Color to draw maps below minimum scale (see --vmap2_minsc). "
            "Default is 0xFFDB5A00).");
 }
 /**********************************************************/
@@ -48,7 +49,7 @@ get_ptsize(ConvBase & cnv, const dRect & r) {
 
 // set reference
 void
-GObjMapDB::set_ref(const GeoMap & r, bool set_ptsize) {
+GObjVMap2::set_ref(const GeoMap & r, bool set_ptsize) {
   ref = r;
   if (ref.empty()) return;
   ConvMap cnv(ref);
@@ -58,7 +59,7 @@ GObjMapDB::set_ref(const GeoMap & r, bool set_ptsize) {
 
 // set WGS border
 void
-GObjMapDB::set_brd(const dMultiLine & brd) {
+GObjVMap2::set_brd(const dMultiLine & brd) {
   border = brd;
   if (ref.ref.size()==0) return;
   ConvMap cnv(ref);
@@ -68,35 +69,35 @@ GObjMapDB::set_brd(const dMultiLine & brd) {
 
 /**********************************************************/
 
-GObjMapDB::GObjMapDB(const std::string & mapdir, const Opt &o): GObjMulti(false) {
+GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
 
   ptsize0 = 0;
   sc = 1.0;
-  minsc       = o.get<double>("mapdb_minsc", 0.01);
-  minsc_color = o.get<uint32_t>("mapdb_minsc_color", 0xFFDB5A00);
+  minsc       = o.get<double>("vmap2_minsc", 0.01);
+  minsc_color = o.get<uint32_t>("vmap2_minsc_color", 0xFFDB5A00);
   obj_scale   = o.get<double>("obj_scale", 1.0);
   max_text_size = 1024;
   clip_border = true;
   fit_patt_size = o.get<bool>("fit_patt_size", false);
 
   opt = o;
-  map = std::shared_ptr<MapDBStorageBDB>(new MapDBStorageBDB(mapdir));
 
   // Read configuration file.
   read_words_defs defs(o.get("define", Opt()));
 
   int depth = 0;
-  load_conf(opt.get<string>("config", mapdir + "/render.cfg"), defs, depth);
+  std::string def_cfg = file_get_prefix(map.get_dbname()) + "/render.cfg";
+  load_conf(opt.get<string>("config", def_cfg), defs, depth);
 }
 
 void
-GObjMapDB::load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth){
+GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth){
 
   std::string cfgdir = file_get_prefix(cfgfile); // for including images and other files
 
   ifstream ff(cfgfile);
   if (!ff) throw Err()
-    << "GObjMapDB: can't open configuration file: " << cfgfile;
+    << "GObjVMap2: can't open configuration file: " << cfgfile;
 
   int line_num[2] = {0,0}; // line counter for read_words
   std::shared_ptr<DrawingStep> st(NULL); // current step
@@ -269,12 +270,12 @@ GObjMapDB::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       // draw an object (point, line, area)
       if (vs.size() > 1 && vs[0].find(':')!=std::string::npos) {
         st.reset(new DrawingStep(this));
-        st->etype = MapDBObj::make_type(vs[0]);
+        st->etype = VMap2obj::make_type(vs[0]);
         switch (st->etype >> 24) {
-          case MAPDB_POINT:   st->action = STEP_DRAW_POINT; break;
-          case MAPDB_LINE:    st->action = STEP_DRAW_LINE; break;
-          case MAPDB_POLYGON: st->action = STEP_DRAW_AREA; break;
-          case MAPDB_TEXT:    st->action = STEP_DRAW_TEXT; break;
+          case VMAP2_POINT:   st->action = STEP_DRAW_POINT; break;
+          case VMAP2_LINE:    st->action = STEP_DRAW_LINE; break;
+          case VMAP2_POLYGON: st->action = STEP_DRAW_AREA; break;
+          case VMAP2_TEXT:    st->action = STEP_DRAW_TEXT; break;
           default: throw Err() << "Bad map object type: " << hex << st->etype;
         }
         st->step_name = vs[0];
@@ -534,10 +535,9 @@ GObjMapDB::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 // change object coordinates according to features
 // change object angle to radians
 void
-GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
+GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 
-  ConvBase *cnv = mapdb_gobj->cnv.get();
-  MapDBStorageBDB *map = mapdb_gobj->map.get();
+  ConvBase *cnv = gobj->cnv.get();
 
   // deg -> rad
   // Note:
@@ -568,9 +568,9 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 
         dMultiLine lines;
         for (auto & t: ftr->targets){
-          auto ids = mapdb_gobj->map->find(t, r);
+          auto ids = gobj->map.find(t, r);
             for (int i:ids){
-            auto O1 = map->get(i);
+            auto O1 = gobj->map.get(i);
             if (cnv) cnv->bck(O1);
             for (auto const & l:O1)
               lines.push_back(l);
@@ -596,10 +596,11 @@ GObjMapDB::DrawingStep::convert_coords(MapDBObj & O){
 // `fill`/`stroke`/`patt` features (with path=true).
 // `range` parameter is used for check if we should draw the object.
 void
-GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align){
+GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align){
   if (O.size()==0 || O[0].size()==0) return; // no coordinates
   dPoint pt = O[0][0];
-  auto txt = conv_label(O.name);
+//  auto txt = conv_label(O.name);
+  auto txt = O.name;
   dRect ext = cr->get_text_extents(txt.c_str());
   // To allow any rotated/align text do be in the range use diagonal
   dRect rng = expand(dRect(pt,pt), hypot(ext.w, ext.h));
@@ -607,15 +608,15 @@ GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const d
 
   dPoint sh;
   switch (O.align){
-    case MAPDB_ALIGN_SW: break;
-    case MAPDB_ALIGN_W:  sh.y=ext.h/2; break;
-    case MAPDB_ALIGN_NW: sh.y=ext.h;   break;
-    case MAPDB_ALIGN_N:  sh.y=ext.h;   sh.x=-ext.w/2; break;
-    case MAPDB_ALIGN_NE: sh.y=ext.h;   sh.x=-ext.w;   break;
-    case MAPDB_ALIGN_E:  sh.y=ext.h/2; sh.x=-ext.w;   break;
-    case MAPDB_ALIGN_SE:               sh.x=-ext.w;   break;
-    case MAPDB_ALIGN_S:                sh.x=-ext.w/2; break;
-    case MAPDB_ALIGN_C:  sh.y=ext.h/2; sh.x=-ext.w/2; break;
+    case VMAP2_ALIGN_SW: break;
+    case VMAP2_ALIGN_W:  sh.y=ext.h/2; break;
+    case VMAP2_ALIGN_NW: sh.y=ext.h;   break;
+    case VMAP2_ALIGN_N:  sh.y=ext.h;   sh.x=-ext.w/2; break;
+    case VMAP2_ALIGN_NE: sh.y=ext.h;   sh.x=-ext.w;   break;
+    case VMAP2_ALIGN_E:  sh.y=ext.h/2; sh.x=-ext.w;   break;
+    case VMAP2_ALIGN_SE:               sh.x=-ext.w;   break;
+    case VMAP2_ALIGN_S:                sh.x=-ext.w/2; break;
+    case VMAP2_ALIGN_C:  sh.y=ext.h/2; sh.x=-ext.w/2; break;
   }
   if (pix_align) {
     pt = rint(pt);
@@ -632,12 +633,11 @@ GObjMapDB::DrawingStep::draw_text(MapDBObj & O, const CairoWrapper & cr, const d
 }
 
 GObj::ret_t
-GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
+GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
-  ConvBase *cnv = mapdb_gobj->cnv.get();
-  MapDBStorageBDB *map = mapdb_gobj->map.get();
-  double osc = mapdb_gobj->obj_scale;
-  if (mapdb_gobj->sc!=0) osc *= mapdb_gobj->sc;
+  ConvBase *cnv = gobj->cnv.get();
+  double osc = gobj->obj_scale;
+  if (gobj->sc!=0) osc *= gobj->sc;
 
   std::set<uint32_t> ids;
 
@@ -646,7 +646,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   double exp_dist = 0;
 
   if (action == STEP_DRAW_TEXT){
-    exp_dist = mapdb_gobj->max_text_size*osc;
+    exp_dist = gobj->max_text_size*osc;
   }
   else {
     // expand by line width
@@ -686,7 +686,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       action == STEP_DRAW_AREA ||
       action == STEP_DRAW_TEXT){
 
-    ids = map->find(etype, sel_range);
+    ids = gobj->map.find(etype, sel_range);
     if (ids.size()==0) return GObj::FILL_NONE;
   }
 
@@ -697,7 +697,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->set_color_a(data->col);
     cr->set_line_width(data->th);
     for (auto const i: ids){
-      auto O = map->get(i);
+      auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       dRect box = cnv->bck_acc(O.bbox()); //to points
       box.expand(exp_dist);
@@ -805,7 +805,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // Draw each object
   for (auto const i: ids){
-    auto O = map->get(i);
+    auto O = gobj->map.get(i);
     if (!intersect(O.bbox(), sel_range)) continue;
     convert_coords(O);
     cr->begin_new_path();
@@ -917,7 +917,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       double scx = osc, scy = osc;
-      if (mapdb_gobj->fit_patt_size) {
+      if (gobj->fit_patt_size) {
         double nx = range.w/data->w/data->sc0;
         double ny = range.h/data->h/data->sc0;
         scx = nx/rint(nx/osc);
@@ -969,7 +969,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   if ((action == STEP_DRAW_AREA) &&
         features.count(FEATURE_CLIP)) {
     for (auto const i: ids){
-      auto O = map->get(i);
+      auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       convert_coords(O);
       cr->begin_new_path();
@@ -981,7 +981,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // clip feature for text: make a single path for all objects:
   if ((action == STEP_DRAW_TEXT) && features.count(FEATURE_CLIP)) {
     for (auto const i: ids){
-      auto O = map->get(i);
+      auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       convert_coords(O);
       cr->begin_new_path();
@@ -996,7 +996,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (features.count(FEATURE_PATT)){
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       double scx = osc, scy = osc;
-      if (mapdb_gobj->fit_patt_size) {
+      if (gobj->fit_patt_size) {
         double nx = range.w/data->w/data->sc0;
         double ny = range.h/data->h/data->sc0;
         scx = nx/rint(nx/osc);
@@ -1013,8 +1013,8 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
 
   // BRD drawing step:
-  if (action == STEP_DRAW_BRD && mapdb_gobj->border.size()>0) {
-    dMultiLine brd(mapdb_gobj->border);
+  if (action == STEP_DRAW_BRD && gobj->border.size()>0) {
+    dMultiLine brd(gobj->border);
     if (cnv) brd = cnv->bck_acc(brd);
     cr->begin_new_path();
     cr->mkpath_smline(brd, true, sm);
@@ -1025,7 +1025,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       double scx = osc, scy = osc;
-      if (mapdb_gobj->fit_patt_size) {
+      if (gobj->fit_patt_size) {
         double nx = range.w/data->w/data->sc0;
         double ny = range.h/data->h/data->sc0;
         scx = nx/rint(nx/osc);
@@ -1065,7 +1065,7 @@ GObjMapDB::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
 
 GObj::ret_t
-GObjMapDB::draw(const CairoWrapper & cr, const dRect & draw_range) {
+GObjVMap2::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   // clip to border
   if (clip_border && border.size()) {

@@ -222,6 +222,7 @@ VMap2::read(std::istream & s){
 void
 VMap2::read(const std::string & file){
   std::ifstream s(file);
+  if (!s) throw Err() << "can't open file: " << file;
   read(s);
 }
 
@@ -241,6 +242,7 @@ VMap2::write(std::ostream & s){
 void
 VMap2::write(const std::string & file){
   std::ofstream s(file);
+  if (!s) throw Err() << "can't open file: " << file;
   VMap2::write(s);
 }
 

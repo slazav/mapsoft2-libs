@@ -1,5 +1,5 @@
-#ifndef GOBJ_MAPDB_H
-#define GOBJ_MAPDB_H
+#ifndef VMAP2_GOBJ_H
+#define VMAP2_GOBJ_H
 
 #include <list>
 #include <vector>
@@ -16,7 +16,7 @@
 #include "opt/opt.h"
 #include "read_words/read_words.h"
 
-#include "mapdb_storage_bdb.h"
+#include "vmap2.h"
 
 /*
 
@@ -87,16 +87,16 @@ other commands in the configuration file
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add MS2OPT_DRAWMAPDB options
-void ms2opt_add_mapdb_render(GetOptSet & opts);
+// add VMAP2_RENDER options
+void ms2opt_add_vmap2_render(GetOptSet & opts);
 
 /********************************************************************/
 
-/* Render MapDB map */
-class GObjMapDB : public GObjMulti{
+/* Render VMap2 map */
+class GObjVMap2 : public GObjMulti{
 private:
 
-  std::shared_ptr<MapDBStorageBDB> map;
+  VMap2 & map;
   std::vector<std::string> groups; // ordered list of all groups
   GeoMap ref;            // default map reference
   double max_text_size;  // for selecting text objects
@@ -421,7 +421,7 @@ public:
       check_args(vs, {"<dist>", "(area|line):<type>", "..."});
       dist   = str_to_type<double>(vs[0]);
       for (size_t i=1; i<vs.size(); ++i)
-        targets.insert(MapDBObj::make_type(vs[i]));
+        targets.insert(VMap2obj::make_type(vs[i]));
     }
   };
 
@@ -478,21 +478,20 @@ public:
   /*******************************************/
   // drawing step class
   struct DrawingStep : public GObj {
-    GObjMapDB * mapdb_gobj; // back reference to the mapdb gobj
+    GObjVMap2 * gobj; // back reference to the mapdb gobj
     StepAction action;  // what to do
     uint32_t etype;     // object extended type (type + (cl<<16) )
     std::string step_name;  // step name
     std::string group_name; // group name
     std::map<StepFeature, std::shared_ptr<Feature> > features;
 
-    DrawingStep(GObjMapDB * mapdb_gobj):
-       mapdb_gobj(mapdb_gobj), action(STEP_UNKNOWN), etype(0) {}
+    DrawingStep(GObjVMap2 * gobj): gobj(gobj), action(STEP_UNKNOWN), etype(0) {}
     std::string get_name() const {return step_name;}
     std::string get_group() const {return group_name;}
 
     // helpers used in draw() method, see .cpp files for description
-    void convert_coords(MapDBObj & O);
-    void draw_text(MapDBObj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align=false);
+    void convert_coords(VMap2obj & O);
+    void draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align=false);
 
     // main drawing function
     ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
@@ -533,7 +532,7 @@ public:
   void set_brd(const dMultiLine & brd);
 
   // constructor -- open new map
-  GObjMapDB(const std::string & mapdir, const Opt & o);
+  GObjVMap2(VMap2 & map, const Opt & o);
 
   // load configuration file
   void load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth);
@@ -551,7 +550,7 @@ public:
 
   dRect bbox() const override {
     if (border.size()) return border.bbox(); // wgs
-    else return map->bbox();
+    else return map.bbox();
   }
 
   // Draw all objects
