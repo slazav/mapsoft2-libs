@@ -69,7 +69,7 @@ GeoHashStorage::get_types() const {
     auto i = db.lower_bound(join_type(type, std::string()));
     if (i==db.end()) break;
     if (i->first.size()<4) throw Err() << "broken database, key size<4";
-    type = *(uint32_t*)(i->first.data());
+    type = extract_type((char*)i->first.data());
     ret.insert(type);
     type++;
   }
@@ -98,7 +98,7 @@ GeoHashStorage::dump() const {
   for (const auto & i:db){
     if (i.first.size()<4) throw Err() << "broken database, key size<4";
     auto hash     = i.first.substr(4);
-    uint32_t type = *(uint32_t*)i.first.data();
+    uint32_t type = extract_type((char*)i.first.data());
     uint32_t id   = i.second;
     std::cout << id << "\t" << type << "\t"
               << hash << "\t" << GEOHASH_decode(hash) << "\n";
@@ -123,7 +123,15 @@ GeoHashStorage::get_hash(const std::string & hash0, bool exact) const{
 std::string
 GeoHashStorage::join_type(const uint32_t type, const std::string & hash){
   std::ostringstream ss;
-  ss.write((char*)&type, sizeof(type));
+  ss << (char)((type>>24)&0xFF);
+  ss << (char)((type>>16)&0xFF);
+  ss << (char)((type>>8)&0xFF);
+  ss << (char)(type&0xFF);
   ss.write(hash.data(), hash.size());
   return ss.str();
+}
+
+uint32_t
+GeoHashStorage::extract_type(char *data){
+  return (data[0]<<24) | (data[1]<<16) | (data[2]<<8) | data[3];
 }

@@ -39,8 +39,9 @@ class GeoHashStorage {
     // get objects for geohash
     virtual std::set<uint32_t> get_hash(const std::string & hash0, bool exact) const;
 
-    // we use type+geohash key
+    // we use type+geohash key; type should be written in big endian order
     static std::string join_type(const uint32_t type, const std::string & hash);
+    static uint32_t extract_type(char *data);
 
     // set bbox for coordinate transformation
     virtual void set_db_range(const dRect & range_){ BB = range_; }
