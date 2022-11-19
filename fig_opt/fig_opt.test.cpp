@@ -56,6 +56,12 @@ main(){
     assert_eq(str[2], "\\key3=");
     assert_eq(str[3], "\\key4=10");
 
+    fig_add_opt(str, "k1", "");
+    fig_add_opt(str, "k2", "2");
+    assert_eq(str[4], "\\k1=");
+    assert_eq(str[5], "\\k2=2");
+
+
   }
   catch (Err & E){
     std::cerr << "Error: " << E.str() << "\n";

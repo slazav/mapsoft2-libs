@@ -29,13 +29,24 @@ void fig_del_opts(FigObj & o);
 
 
 
-/// Add options to vector<string>.
+/// Set options in vector<string> (old options are deleted).
 void fig_set_opts(std::vector<std::string> & comment, const Opt & opts);
 
-/// Add options to Fig.
+/// Set options in Fig (old options are deleted).
 void fig_set_opts(Fig & f, const Opt & opts);
 
-/// Add options to FigObj.
+/// Set options in FigObj (old options are deleted).
 void fig_set_opts(FigObj & o, const Opt & opts);
+
+/// Add a single option to vector<string>
+void fig_add_opt(std::vector<std::string> & comm,
+                 const std::string & key, const std::string & val);
+
+/// Add a single option to Fig
+void fig_add_opt(Fig & f, const std::string & key, const std::string & val);
+
+/// Add a single option to FigObj
+void fig_add_opt(FigObj & o, const std::string & key, const std::string & val);
+
 
 #endif
