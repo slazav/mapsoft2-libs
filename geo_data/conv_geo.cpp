@@ -92,6 +92,9 @@ ConvGeo::ConvGeo(const std::string & src,
   auto pcp = (PJ_CONTEXT*)pc.get();
   proj_log_level((PJ_CONTEXT*)pc.get(), PJ_LOG_NONE);
 
+  if (src == "" || dst == "") throw Err() <<
+    "ConvGeo: can't make conversion with an empty projection string";
+
   // make transformation object
   auto src1 = expand_proj_aliases(src) + " +type=crs";
   auto dst1 = expand_proj_aliases(dst) + " +type=crs";
@@ -265,6 +268,9 @@ ConvGeo::is_rad(const std::string & str){
 /**********************************************************/
 
 ConvMap::ConvMap(const GeoMap & m, const std::string & dst) {
+
+  if (m.empty()) throw Err()
+    << "ConvMap: can't make conversion with an empty reference";
 
   // convert refpoints to map projection
   ConvGeo map2wgs(m.proj);
