@@ -386,13 +386,15 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
 
 void
 read_mp(const std::string & fname, MP & data, const Opt & opts){
-  std::ifstream str(fname);
-  read_mp(str, data, opts);
+  std::ifstream s(fname);
+  if (!s) throw Err() << "can't open file: " << fname;
+  read_mp(s, data, opts);
 }
 void
 write_mp(const std::string & fname, const MP & data, const Opt & opts){
-  std::ofstream str(fname);
-  write_mp(str, data, opts);
+  std::ofstream s(fname);
+  if (!s) throw Err() << "can't open file: " << fname;
+  write_mp(s, data, opts);
 }
 
 
