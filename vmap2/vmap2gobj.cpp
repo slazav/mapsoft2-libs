@@ -86,7 +86,7 @@ GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
   read_words_defs defs(o.get("define", Opt()));
 
   int depth = 0;
-  std::string def_cfg = file_get_prefix(map.get_dbname()) + "/render.cfg";
+  std::string def_cfg = file_get_prefix(map.get_dbname()) + "render.cfg";
   load_conf(opt.get<string>("config", def_cfg), defs, depth);
 }
 
