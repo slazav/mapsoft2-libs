@@ -31,6 +31,15 @@ void read_line(std::istream & s, T & val){
   if (s1.fail() || !s1.eof())
     throw Err() << "Fig: can't read fig file";
 }
+// version for string: read averything until end of line
+void read_line(std::istream & s, std::string & val){
+  std::getline(s,val);
+  val.erase(val.find_last_not_of(' ') + 1); // trim spaces
+  val.erase(0, val.find_first_not_of(' '));
+  if (s.fail())
+    throw Err() << "Fig: can't read fig file";
+}
+
 
 // read object text (char by char, with \XXX conversions).
 // Returns true if '\\001' did not found.
@@ -338,13 +347,19 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     if (l.size()<8 || l.substr(0,8) != "#FIG 3.2")
       throw Err() << "Fig: non-supported format";
 
+    // WinFIG writes comments after #FIG line
+    while (s.get()=='#') std::getline(s, l);
+    s.unget();
+
     read_line(s, w.orientation);
     if (w.orientation!="Landscape" && w.orientation != "Portrait"){
       std::cerr << "Fig: unknown orientation setting: " << w.orientation << "\n";
       w.orientation = "Landscape";
     }
+    // WinFIG uses non-standard "Flush left"
     read_line(s, w.justification);
-    if (w.justification!="Center" && w.justification != "Flush Left"){
+    if (w.justification!="Center" && w.justification != "Flush Left" &&
+        w.justification != "Flush left"){
       std::cerr << "Fig: unknown justification setting: " << w.justification << "\n";
       w.justification = "Center";
     }
