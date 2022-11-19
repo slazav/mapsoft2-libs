@@ -25,16 +25,35 @@ angle_from_vmap(const double a, const double lat){
 void
 vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
 
+  // this should go to options:
+  bool skip_unknown = false;   // skip objects which are not in typeinfo file
+  bool quiet = false;          // by quiet (by default types of skipped objects are printed)
+  uint32_t def_label_type = 0; // default type for unknown labels (use 0 to skip them)
+
+  std::set<uint32_t> skipped_types;
+  std::set<uint32_t> skipped_labels;
+
   for (auto const & o:vmap){
    // skip empty objects
     if (o.is_empty()) continue;
 
-    // get type in MapDB format
+    // get type in Vmap2 format
     uint16_t cl = o.type >> 20;
     if (cl>2) throw Err() << "bad object class: " << cl;
     uint16_t tnum = o.type & 0xFFFF;
     uint32_t type = (cl<<24) + tnum;
 
+    // find type information if any.
+    uint32_t label_type = def_label_type;
+    if (types.count(type)){
+      label_type = types.find(type)->second.label_type;
+    }
+    else if (skip_unknown) {
+      if (!quiet) skipped_types.insert(type);
+      continue;
+    }
+    if (o.labels.size()>0 && label_type == 0 && !quiet)
+      skipped_labels.insert(type);
 
     // make object
     VMap2obj o1(type);
@@ -61,10 +80,6 @@ vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
     o1.dMultiLine::operator=(o);
 
     vmap2.add(o1);
-
-
-    uint32_t label_type =
-      types.count(type) ? types.find(type)->second.label_type : 0;
 
     // lables attached to the object:
     if (label_type > 0){
@@ -106,6 +121,22 @@ vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
     // Separate labels are not converted: it's not that easy to
     // understand related objects. To fix this (if needed) one should implement
     // analog of join_labels/split_labels for vmap as it was done in mapsoft1.
+  }
+  if (skipped_types.size()){
+    std::cerr <<
+       "Reading VMAP file: some types were skipped because "
+       "skip_unknown parameter is set and there is no information in "
+       "the typeinfo file:\n";
+    for (const auto & t:skipped_types)
+      std::cerr << VMap2obj::print_type(t) << "\n";
+  }
+  if (skipped_labels.size()){
+    std::cerr <<
+       "Reading VMAP file: labels for following types were skipped because "
+       "label_type in the typeinfo file is 0, or type is unknown and "
+       "def_label_type parameter is 0:\n";
+    for (const auto & t:skipped_labels)
+      std::cerr << VMap2obj::print_type(t) << "\n";
   }
 }
 

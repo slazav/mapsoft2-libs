@@ -4,7 +4,13 @@
 
 void
 mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2){
+
+  // this should go to options:
   int level = 0; // move to options?
+  bool skip_unknown = false;   // skip objects which are not in typeinfo file
+  bool quiet = false;          // by quiet (by default types of skipped objects are printed)
+
+  std::set<uint32_t> skipped_types;
 
   for (auto const & o:mp){
 
@@ -18,6 +24,14 @@ mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2){
         throw Err() << "wrong MP class: "<< o.Class;
     }
     VMap2obj o1(cl, tnum);
+
+    // find type information if any.
+    if (types.count(o1.type)){
+    }
+    else if (skip_unknown) {
+      if (!quiet) skipped_types.insert(o1.type);
+      continue;
+    }
 
     // name, comments
     o1.name = o.Label;
@@ -44,6 +58,15 @@ mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2){
 
     // add object
     vmap2.add(o1);
+  }
+
+  if (skipped_types.size()){
+    std::cerr <<
+       "Reading VMAP file: some types were skipped because "
+       "skip_unknown parameter is set and there is no information in "
+       "the typeinfo file:\n";
+    for (const auto & t:skipped_types)
+      std::cerr << VMap2obj::print_type(t) << "\n";
   }
 }
 
