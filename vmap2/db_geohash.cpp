@@ -94,7 +94,7 @@ std::set<uint32_t>
 GeoHashDB::get_types() const {
   DBT k = mk_dbt();
   DBT v = mk_dbt();
-
+  std::string ks;
   std::set<uint32_t> ret;
 
   int fl = DB_FIRST; // get first
@@ -113,11 +113,12 @@ GeoHashDB::get_types() const {
       // extract type
       if (k.size < sizeof(uint32_t))
         throw Err() << "db_geohash: bad value";
-      uint32_t type = *(uint32_t*)k.data;
+      uint32_t type = extract_type((char*)k.data);
       ret.insert(type);
 
       // set key to type+1 and repeat search
-      *(uint32_t*)k.data = type+1;
+      ks = join_type(type+1,"");
+      k = mk_dbt(ks);
       fl=DB_NEXT; // switch to DB_NEXT
     }
   }
@@ -155,9 +156,9 @@ GeoHashDB::bbox() const {
       // extract type
       if (k.size < sizeof(uint32_t))
         throw Err() << "db_geohash: bad value";
+      auto type = extract_type((char*)k.data);
       std::string hash((char*)k.data+sizeof(uint32_t), k.size-sizeof(uint32_t));
       ret.expand(GEOHASH_decode(hash));
-      auto type = *(uint32_t*)k.data;
       // We want to switch to next geohash which
       // is not inside previous one, or have different type.
       ks = join_type(type, hash+(char)('z'+1));
@@ -200,7 +201,7 @@ GeoHashDB::dump() const {
         throw Err() << "db_geohash: bad value";
 
       std::string hash((char*)k.data+sizeof(uint32_t), k.size-sizeof(uint32_t));
-      auto  type = *(uint32_t*)k.data;
+      auto  type = extract_type((char*)k.data);
       auto  id   = *(uint32_t*)v.data;
       std::cout << id << "\t" << type << "\t"
                 << hash << "\t" << GEOHASH_decode(hash) << "\n";
