@@ -14,7 +14,7 @@
 #include "am_view.h"
 #include "am_trks.h"
 #include "am_maps.h"
-#include "am_mapdb.h"
+#include "am_vmap.h"
 #include "am_panel.h"
 #include "am_srtm.h"
 
@@ -82,8 +82,8 @@ ActionManager::ActionManager (Mapview * mapview_):
       AddMaps("Maps", std::string(getenv("HOME")) + "/." + DATADIR + "/" + MAPS_MENU_FILE);
     }
 
-    ADD_ACT(OpenMapDB,       "MapDB")
-    ADD_ACT(CloseMapDB,      "MapDB")
+    ADD_ACT(OpenVMap,        "VMap")
+    ADD_ACT(CloseVMap,       "VMap")
 
     ADD_ACT(AMShowSRTM,      "SRTM")
     ADD_ACT(AMPano,          "SRTM")
@@ -158,7 +158,7 @@ ActionManager::ActionManager (Mapview * mapview_):
     actions->add(Gtk::Action::create("MenuView",  "_View"));
     actions->add(Gtk::Action::create("MenuEdit",  "_Edit"));
     actions->add(Gtk::Action::create("MenuMaps",  "_Maps"));
-    actions->add(Gtk::Action::create("MenuMapDB", "Map_DB"));
+    actions->add(Gtk::Action::create("MenuVMap",  "VMa_p"));
     actions->add(Gtk::Action::create("MenuSRTM",  "_SRTM"));
 
     mapview->panel_wpts->popup_menu = (Gtk::Menu *)ui_manager->get_widget("/PopupWPTs");

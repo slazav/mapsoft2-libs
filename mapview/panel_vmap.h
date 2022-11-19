@@ -1,53 +1,54 @@
-#ifndef MAPVIEW_PANEL_MAPDB_H
-#define MAPVIEW_PANEL_MAPDB_H
+#ifndef MAPVIEW_PANEL_VMAP_H
+#define MAPVIEW_PANEL_VMAP_H
 
-#include "mapdb/gobj_mapdb.h"
+#include "vmap2/vmap2gobj.h"
 #include <memory>
 
 /**********************************************************/
-/* Control panel for MapDB.
+/* Control panel for VMap2.
 */
 
-class MapDBGrRecord : public Gtk::TreeModelColumnRecord {
+class VMapGrRecord : public Gtk::TreeModelColumnRecord {
 public:
     Gtk::TreeModelColumn<bool> checked;
     Gtk::TreeModelColumn<std::string> name;
 
-    MapDBGrRecord() {
+    VMapGrRecord() {
       add(checked); add(name);
     }
 };
 
-class MapDBStRecord : public Gtk::TreeModelColumnRecord {
+class VMapStRecord : public Gtk::TreeModelColumnRecord {
 public:
     Gtk::TreeModelColumn<bool> checked;
     Gtk::TreeModelColumn<std::string> name;
     Gtk::TreeModelColumn<std::shared_ptr<GObj> > obj;
 
-    MapDBStRecord() {
+    VMapStRecord() {
       add(checked); add(name); add(obj);
     }
 };
 
 /**********************************************************/
 
-class PanelMapDB : public Gtk::Notebook {
+class PanelVMap : public Gtk::Notebook {
   Gtk::TreeView *tv_gr, *tv_st; // list of groups and steps
   Glib::RefPtr<Gtk::ListStore> store_gr, store_st;
-  MapDBGrRecord cols_gr;
-  MapDBStRecord cols_st;
+  VMapGrRecord cols_gr;
+  VMapStRecord cols_st;
 
-  std::shared_ptr<GObjMapDB> gobj;
+  VMap2 vmap;
+  std::shared_ptr<GObjVMap2> gobj;
 
 public:
-  PanelMapDB() {
+  PanelVMap() {
 
     /*******************************/
     // Setup group view
 
     tv_gr = manage(new Gtk::TreeView);
     store_gr = Gtk::ListStore::create(cols_gr);
-    tv_gr->set_name("MapDB groups");
+    tv_gr->set_name("VMap groups");
     tv_gr->set_model(store_gr);
     tv_gr->append_column_editable("V", cols_gr.checked);
     tv_gr->append_column("V", cols_gr.name);
@@ -66,7 +67,7 @@ public:
     // Setup step view
     tv_st = manage(new Gtk::TreeView);
     store_st = Gtk::ListStore::create(cols_st);
-    tv_st->set_name("MapDB groups");
+    tv_st->set_name("VMap groups");
     tv_st->set_model(store_st);
     tv_st->append_column_editable("V", cols_st.checked);
     tv_st->append_column("V", cols_st.name);
@@ -82,7 +83,7 @@ public:
 
     /*******************************/
     // Setup the main widget (Gtk::Notebook)
-    set_name("MapDB viewes");
+    set_name("VMap viewes");
     set_scrollable(false);
     //set_size_request(100,-1);
     append_page(*scr_gr, "Groups", "Groups");
@@ -90,17 +91,26 @@ public:
 
     // connect signals
     store_gr->signal_row_changed().connect (
-      sigc::mem_fun (this, &PanelMapDB::on_gr_edited));
+      sigc::mem_fun (this, &PanelVMap::on_gr_edited));
     store_st->signal_row_changed().connect (
-      sigc::mem_fun (this, &PanelMapDB::on_st_edited));
+      sigc::mem_fun (this, &PanelVMap::on_st_edited));
   }
 
-  // open MapDB project, show the panel
-  void open(const std::string & mapdir){
-    gobj.reset(new GObjMapDB(mapdir, Opt()));
+  // open VMap project, show the panel
+  void open(const std::string & file){
+
+    if (file_ext_check(file, ".vmap2db")){
+      vmap = VMap2(file);
+    }
+    else if (file_ext_check(file, ".vmap2")){
+      vmap.read(file);
+    }
+    else throw Err() << "unsupported file extension: " << file;
+
+    gobj.reset(new GObjVMap2(vmap, Opt()));
 
     if (gobj->get_ref().empty())
-      throw Err() << "MapDB panel: reference is not set";
+      throw Err() << "VMap panel: reference is not set";
 
     store_st->clear();
     store_gr->clear();
@@ -108,7 +118,7 @@ public:
       auto it = store_st->append();
       Gtk::TreeModel::Row row = *it;
       row[cols_st.checked] = gobj->get_visibility(st);
-      row[cols_st.name]    = ((GObjMapDB::DrawingStep*)st.get())->get_name();
+      row[cols_st.name]    = ((GObjVMap2::DrawingStep*)st.get())->get_name();
       row[cols_st.obj]     = st;
     }
     for (auto const & gr: gobj->get_groups()){
@@ -120,15 +130,16 @@ public:
     show();
   }
 
-  // close MapDB project, hide the panel
+  // close VMap project, hide the panel
   void close(){
     store_st->clear();
     store_gr->clear();
     gobj.reset();
+    vmap = VMap2();
     hide();
   }
 
-  std::shared_ptr<GObjMapDB> get_gobj() const {return gobj;}
+  std::shared_ptr<GObjVMap2> get_gobj() const {return gobj;}
 
   // callback for updating data from the panel
   void on_gr_edited (const Gtk::TreeModel::Path& path,

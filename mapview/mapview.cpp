@@ -11,7 +11,7 @@ Mapview::Mapview(const Opt & o) :
     panel_trks(new PanelTrks),
     panel_wpts(new PanelWpts),
     panel_maps(new PanelMaps),
-    panel_mapdb(new PanelMapDB),
+    panel_vmap(new PanelVMap),
     obj_srtm(new GObjSRTM(&srtm, o)),
     amanager(this),
     dlg_confirm("Data have been changed. Continue?"),
@@ -69,7 +69,7 @@ Mapview::Mapview(const Opt & o) :
     // (PAGE_* constants)
     panels->append_page(*panel_wpts.get(), "WPT", "WPT");
     panels->append_page(*panel_trks.get(), "TRK", "TRK");
-    panels->append_page(*panel_mapdb.get(), "MAPDB", "MAPDB");
+    panels->append_page(*panel_vmap.get(), "VMAP", "VMAP");
     panels->append_page(*panel_maps.get(), "MAP", "MAP");
 
 
@@ -114,10 +114,10 @@ Mapview::Mapview(const Opt & o) :
     show_all(); // show window
 
     // vmaps
-    if (opts.exists("mapdb"))
-      open_mapdb(opts.get("mapdb",""));
+    if (opts.exists("vmap"))
+      open_vmap(opts.get("vmap",""));
     else
-      panel_mapdb->hide();
+      panel_vmap->hide();
 
 }
 
@@ -181,7 +181,7 @@ Mapview::clear_data() {
   panel_wpts->remove_all();
   panel_trks->remove_all();
   panel_maps->remove_all();
-  close_mapdb();
+  close_vmap();
   close_srtm();
   tmpref = true;
 }
@@ -249,12 +249,12 @@ Mapview::new_project(bool force) {
 }
 
 void
-Mapview::open_mapdb(const std::string & dir){
-  close_mapdb();
+Mapview::open_vmap(const std::string & file){
+  close_vmap();
   try {
-    panel_mapdb->open(dir);
-    gobj.add(PAGE_VMAP, panel_mapdb->get_gobj());
-    GeoMap r = panel_mapdb->get_gobj()->get_ref();
+    panel_vmap->open(file);
+    gobj.add(PAGE_VMAP, panel_vmap->get_gobj());
+    GeoMap r = panel_vmap->get_gobj()->get_ref();
     if (!r.empty()){
       set_cnv_map(r, true); // force changing the reference!
     }
@@ -263,10 +263,10 @@ Mapview::open_mapdb(const std::string & dir){
 }
 
 void
-Mapview::close_mapdb(){
+Mapview::close_vmap(){
   try {
-    gobj.del(panel_mapdb->get_gobj());
-    panel_mapdb->close();
+    gobj.del(panel_vmap->get_gobj());
+    panel_vmap->close();
   }
   catch (Err & e) { dlg_err.call(e); }
 }

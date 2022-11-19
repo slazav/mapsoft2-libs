@@ -1,16 +1,16 @@
-#ifndef AM_MAPDB_H
-#define AM_MAPDB_H
+#ifndef AM_VMAP_H
+#define AM_VMAP_H
 
-/* Action modes for MapDB menu */
+/* Action modes for VMap menu */
 #include "am.h"
 //#include "geo_data/conv_geo.h"
 
 /**********************************************************/
 // Open MapBD project
-class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
+class OpenVMap : public ActionMode, public Gtk::FileChooserDialog{
     std::string folder; // current folder
   public:
-    OpenMapDB (Mapview * mapview):
+    OpenVMap (Mapview * mapview):
         ActionMode(mapview),
         Gtk::FileChooserDialog(get_name(), Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER),
         folder("./") {
@@ -22,7 +22,7 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
       set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
     }
 
-    std::string get_name() override { return "Open MapDB"; }
+    std::string get_name() override { return "Open VMap"; }
     std::string get_icon() override { return "open"; }
 //    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>f"); }
     bool is_radio() override { return false; }
@@ -31,7 +31,7 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
       set_current_folder(folder);
       if (run() == GTK_RESPONSE_ACCEPT){
         folder = get_current_folder();
-        mapview->open_mapdb(folder);
+        mapview->open_vmap(folder);
       }
       hide();
     }
@@ -40,17 +40,17 @@ class OpenMapDB : public ActionMode, public Gtk::FileChooserDialog{
 /**********************************************************/
 // Close MapBD project
 
-class CloseMapDB : public ActionMode{
+class CloseVMap : public ActionMode{
   public:
-    CloseMapDB (Mapview * mapview): ActionMode(mapview) { }
+    CloseVMap (Mapview * mapview): ActionMode(mapview) { }
 
-    std::string get_name() override { return "Close MapDB"; }
+    std::string get_name() override { return "Close VMap"; }
     std::string get_icon() override { return "close"; }
 //    Gtk::AccelKey get_acckey() override { return Gtk::AccelKey("<control>f"); }
     bool is_radio() override { return false; }
 
     void activate(const std::string & menu) override {
-      mapview->close_mapdb();
+      mapview->close_vmap();
     }
 };
 

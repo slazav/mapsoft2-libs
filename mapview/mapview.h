@@ -19,7 +19,7 @@
 #include "panel_wpts.h"
 #include "panel_trks.h"
 #include "panel_maps.h"
-#include "panel_mapdb.h"
+#include "panel_vmap.h"
 #include "panel_status.h"
 #include "srtm/srtm_surf.h"
 #include "geo_render/gobj_srtm.h"
@@ -56,7 +56,7 @@ public:
     std::shared_ptr<PanelTrks> panel_trks;
     std::shared_ptr<PanelWpts> panel_wpts;
     std::shared_ptr<PanelMaps> panel_maps;
-    std::shared_ptr<PanelMapDB> panel_mapdb;
+    std::shared_ptr<PanelVMap> panel_vmap;
     std::shared_ptr<GObjSRTM>   obj_srtm;
 
     PanelStatus spanel; // status bar
@@ -126,12 +126,12 @@ public:
     // if previous project has been changed and force==false).
     void new_project(bool force=false);
 
-    // Open MapDB database. Rendering configuration is taken from options
+    // Open vmap. Rendering configuration is taken from options
     // (by default it is <dir>/raster.txt)
-    void open_mapdb(const std::string & dir);
+    void open_vmap(const std::string & file);
 
-    // Close MapDB project
-    void close_mapdb();
+    // Close vmap project
+    void close_vmap();
 
     // Open SRTM layer
     void open_srtm();
