@@ -73,6 +73,7 @@ fig_get_ref(const Fig & F) {
         ret.border.push_back((dLine)o);
     }
   }
+  if (ret.empty()) return ret;
 
   // set map projection
   ret.proj = O.get("map_proj", "tmerc");
