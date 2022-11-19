@@ -351,10 +351,12 @@ write_vmap(ostream & OUT, const VMap & W){
 
 
 VMap read_vmap(const std::string &fname){
-  std::ifstream str(fname);
-  return read_vmap(str);
+  std::ifstream s(fname);
+  if (!s) throw Err() << "can't open file: " << fname;
+  return read_vmap(s);
 }
 int write_vmap(const std::string &fname, const VMap & W){
-  std::ofstream str(fname);
-  return write_vmap(str, W);
+  std::ofstream s(fname);
+  if (!s) throw Err() << "can't open file: " << fname;
+  return write_vmap(s, W);
 }
