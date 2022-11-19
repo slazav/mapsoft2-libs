@@ -171,6 +171,15 @@ struct FigObj : iLine {
     return;
   }
 
+  // A very simple function. More accurate version
+  // can be found in xfig/u_bound.c
+  iRect bbox() const {
+    iRect ret;
+    for (const auto & pt:*this) ret.expand(pt);
+    if (is_ellipse()) ret.expand(radius_x, radius_y);
+    return ret;
+  }
+
   /******************************************************************/
 
   /// set points from a line
@@ -277,10 +286,8 @@ struct Fig:std::list<FigObj>{
   /******************************************************************/
 
   iRect bbox() const{
-    if (size()<1) return iRect();
-    const_iterator i=begin();
-    iRect ret = i->bbox();
-    while ((++i) != this->end()) ret.expand(i->bbox());
+    iRect ret;
+    for (const auto & o:*this) ret.expand(o.bbox());
     return ret;
   }
 
@@ -351,6 +358,5 @@ void write_fig(std::ostream & s, const Fig & w, const Opt & wopts = Opt());
 
 // Write to file
 void write_fig(const std::string & fname, const Fig & w, const Opt & wopts = Opt());
-
 
 #endif
