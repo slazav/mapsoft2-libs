@@ -11,7 +11,7 @@ ms2opt_add_geofig_ref(GetOptSet & opts){
   opts.add("ref_templ", 1,0,g,
     "Template for reference points (default: \"2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0\").");
   opts.add("brd_templ", 1,0,g,
-    "Template for border lines (default: \"2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0\").");
+    "Template for border lines (default: \"2 3 0 1 5 7 2 -1 -1 0.000 0 0 7 0 0\").");
 }
 
 void
@@ -125,7 +125,7 @@ fig_add_ref(Fig & F, const GeoMap & m, const Opt & opts){
   O.put("name", m.name);
 
   std::string ref_templ = opts.get("ref_templ", "2 1 0 4 4 7 1 -1 -1 0.000 0 1 -1 0 0");
-  std::string brd_templ = opts.get("brd_templ", "2 3 0 1 5 7 41 -1 -1 0.000 0 0 7 0 0");
+  std::string brd_templ = opts.get("brd_templ", "2 3 0 1 5 7 2 -1 -1 0.000 0 0 7 0 0");
 
   // add ref points
   for (const auto & pp: m.ref){
