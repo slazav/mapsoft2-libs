@@ -15,50 +15,28 @@
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add VMAP2IO group of options
-void ms2opt_add_vmap2io(GetOptSet & opts);
+// add VMAP2I, VMAP2O, VMAP2IO, VMAP2T groups of options
+void ms2opt_add_vmap2i(GetOptSet & opts);  // options for reading files
+void ms2opt_add_vmap2o(GetOptSet & opts);  // options for writing files
+void ms2opt_add_vmap2io(GetOptSet & opts); // common options for reading/writing
+void ms2opt_add_vmap2t(GetOptSet & opts);  // --type option (does not used directly)
 
 /********************************************************************/
 
-/* Convert vector map objects between different formats.
-   Read map objects from a number of input files and save
-   to the output file. Format is determined from file extension.
-   Old content of the ouput file is deleted.
-*/
-void vmap2_convert(const std::vector<std::string> & ifiles, const Opt & opts);
+// Read files (format is determined from file extension), add all
+// objects to vmap2
+void vmap2_import(const std::vector<std::string> & files,
+                  const VMap2types & types,
+                  VMap2 & vmap2,
+                  const Opt & opts);
 
-
-/*
- Convert vector map objects between different formats.
-  - Read output file (or open database)
-  - Cleanup old data according to options
-  - Read objects from all input files
-  - Save result in the output file (or close database)
-  - Input/Output format is determined from file extension
-
- Options (see ms2opt_add_vmap2io()):
-  --out,-o -- output file, should be non-empty
-  --types,-t -- type information file
-  --headers -- Use non-object information from output file
-               (mp headers, fig reference and objects, etc.),
-               1 (default) or 0
-  --old_objects -- Keep old objects, 0 (default) or 1
-  --old_labels  -- Keep old labels,  0 (default) or 1
-  --new_objects -- Copy new objects, 1 (default) or 0
-  --new_labels  -- Copy new labels,  1 (default) or 0
-*/
-void vmap2_merge(const std::vector<std::string> & ifiles, const Opt & opts);
+// Write vmap2 to a different format
+void vmap2_export(VMap2 & vmap2, const VMap2types & types,
+                 const std::string & ofile, const Opt & opts);
 
 /********************************************************************/
 // Decoding different formats.
 
-// Read files (format is determined from file extension), add all
-// objects to vmap2 file
-void any_to_vmap2(const std::vector<std::string> & files, const VMap2types & types,
-                 VMap2 & vmap2, const Opt & opts);
-
-// Convert vmap objects to vmap2 format.
-// <types> parameter is needed to calculate label types.
 void vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2);
 
 void fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2);
@@ -68,8 +46,6 @@ void mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2);
 
 /********************************************************************/
 // Encoding different formats.
-void vmap2_to_any(VMap2 & vmap2, const VMap2types & types,
-                 const std::string & ofile, const Opt & opts);
 
 // Convert vmap2 objects to vmap format and add to vmap storage.
 // <types> parameter is not used.
