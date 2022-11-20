@@ -9,57 +9,43 @@
 
 // common for input and output
 void
-ms2opt_add_vmap2c(GetOptSet & opts){
+ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
   const char *g = "VMAP2";
-  opts.add("quite",  1, 'q', g,
-      "Be quiet, do not print types of skipped objects. "
-      " Default: 0. This works when reading/writing MP, VMAP, writing FIG.");
-  opts.add("skip_unknown",  1, 0, g,
-      "Skip objects which are not defined in typeinfo file."
-      " Default: 0. This works when reading/writing MP, VMAP.");
 
-  opts.add("min_depth",  1, 0, "FIG", "minimum depth of map object (default 40)");
-  opts.add("max_depth",  1, 0, "FIG", "minimum depth of map object (default 200)");
+  if (read || write){
+    opts.add("quite",  1, 'q', g,
+        "Be quiet, do not print types of skipped objects. "
+        " Default: 0. This works when reading/writing MP, VMAP, writing FIG.");
+    opts.add("skip_unknown",  1, 0, g,
+        "Skip objects which are not defined in typeinfo file."
+        " Default: 0. This works when reading/writing MP, VMAP.");
 
-  ms2opt_add_fig(opts); // FIG group, reading/writing fig files
-  opts.remove("fig_header");
-}
+    opts.add("min_depth",  1, 0, "FIG", "minimum depth of map object (default 40)");
+    opts.add("max_depth",  1, 0, "FIG", "minimum depth of map object (default 200)");
 
-void
-ms2opt_add_vmap2i(GetOptSet & opts){
-  const char *g = "VMAP2";
-  opts.add("def_label_type",  1, 0, "VMAP",
-      "When reading VMAP file, set type for labels which are not "
-      " defined in typeinfo file. Use 0 to skip unknown labels (default)."
-      " If skip_unknown is set then labels are skipped with unknown objects.");
-  ms2opt_add_mp_i(opts);// MP group, reading mp files
-}
-
-void
-ms2opt_add_vmap2o(GetOptSet & opts){
-  const char *g = "VMAP2";
-  opts.add("mp_ip",        1, 0, "MP", "override MP ID");
-  opts.add("mp_name",      1, 0, "MP", "override MP Name");
-  opts.add("keep_labels",  1, 0, "VMAP2", "keep old labels");
-  opts.add("update_tag",   1, 0, "VMAP2", "only update objects with a tag");
-  opts.add("fix_rounding", 1, 0,
-     "VMAP2", "fix rounding errors (slow, use when copying from fig format)");
-  opts.add("rounding_acc", 1, 0, "VMAP2",
-     "accuracy for fixing rounding errors (m). "
-     "Fig accuracy is 1/450 cm, 2.2 m for 1:100'000 maps. Default: 5");
-
-  ms2opt_add_mp_o(opts);  // MP group, writing mp files
-}
-
-// both input and output
-void
-ms2opt_add_vmap2io(GetOptSet & opts){
-  ms2opt_add_vmap2i(opts);
-  opts.remove("mp_enc");
-  ms2opt_add_vmap2o(opts);
-  opts.remove("mp_enc");
-  ms2opt_add_vmap2c(opts);
-  ms2opt_add_mp_io(opts);
+    ms2opt_add_fig(opts); // FIG group, reading/writing fig files
+    opts.remove("fig_header");
+  }
+  if (read) {
+    opts.add("def_label_type",  1, 0, "VMAP",
+        "When reading VMAP file, set type for labels which are not "
+        " defined in typeinfo file. Use 0 to skip unknown labels (default)."
+        " If skip_unknown is set then labels are skipped with unknown objects.");
+    if (!write) ms2opt_add_mp_i(opts);// MP group, reading mp files
+  }
+  if (write) {
+    opts.add("mp_ip",        1, 0, "MP", "override MP ID");
+    opts.add("mp_name",      1, 0, "MP", "override MP Name");
+    opts.add("keep_labels",  1, 0, "VMAP2", "keep old labels");
+    opts.add("update_tag",   1, 0, "VMAP2", "only update objects with a tag");
+    opts.add("fix_rounding", 1, 0,
+       "VMAP2", "fix rounding errors (slow, use when copying from fig format)");
+    opts.add("rounding_acc", 1, 0, "VMAP2",
+       "accuracy for fixing rounding errors (m). "
+       "Fig accuracy is 1/450 cm, 2.2 m for 1:100'000 maps. Default: 5");
+    if (!read) ms2opt_add_mp_o(opts);  // MP group, writing mp files
+  }
+  if (read && write)  ms2opt_add_mp_io(opts);
 }
 
 void

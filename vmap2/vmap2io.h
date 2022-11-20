@@ -15,11 +15,9 @@
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add VMAP2I, VMAP2O, VMAP2IO, VMAP2T groups of options
-void ms2opt_add_vmap2i(GetOptSet & opts);  // options for reading files
-void ms2opt_add_vmap2o(GetOptSet & opts);  // options for writing files
-void ms2opt_add_vmap2io(GetOptSet & opts); // common options for reading/writing
-void ms2opt_add_vmap2t(GetOptSet & opts);  // --type option (does not used directly)
+// add VMAP2, MP, FIG, VMAP groups of options
+void ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write);
+void ms2opt_add_vmap2t(GetOptSet & opts);  // --type option (not used directly)
 
 /********************************************************************/
 
