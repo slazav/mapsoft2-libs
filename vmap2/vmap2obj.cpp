@@ -64,7 +64,7 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
   if (obj.comm!="") string_write_str(s, "comm", obj.comm);
 
   // tags
-  for (auto const & t: obj.tags) string_write_str(s, "tags", t);
+  if (obj.tags.size()>0) string_write_str(s, "tags", obj.get_tags());
 
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF){
@@ -129,7 +129,7 @@ VMap2obj::read(std::istream & s) {
     else if (tag == "algn") ret.align = parse_align(string_read_str(s));
     else if (tag == "name") ret.name  = string_read_str(s);
     else if (tag == "comm") ret.comm  = string_read_str(s);
-    else if (tag == "tags") ret.tags.insert(string_read_str(s));
+    else if (tag == "tags") ret.add_tags(string_read_str(s));
     else if (tag == "reft") ret.ref_type = make_type(string_read_str(s));
     else if (tag == "refp") ret.ref_pt   = string_read_pt(s);
     else if (tag == "crds") ret.push_back(string_read_crds(s));
