@@ -107,6 +107,12 @@ struct VMap2obj: public dMultiLine {
   static std::string print_align(const VMap2objAlign align);
   static VMap2objAlign parse_align(const std::string & str);
 
+  // get tags as a string with space-separated words
+  std::string get_tags() const;
+
+  // add tags from a string with space-separated words
+  void add_tags(const std::string & s);
+
   /***********************************************/
 
   // Set object coordinates from a string.

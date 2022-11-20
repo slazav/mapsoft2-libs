@@ -237,6 +237,25 @@ VMap2obj::parse_align(const std::string & str){
   return align_tab_s2i.find(str)->second;
 }
 
+std::string
+VMap2obj::get_tags() const{
+  std::string s;
+  for (const auto & t:tags)
+    s += (s.size()?" ":"") + t;
+  return s;
+}
+
+void
+VMap2obj::add_tags(const std::string & s){
+  std::istringstream ss(s);
+  std::string tag;
+  while (ss) {
+    ss >> tag;
+    if (tag!="") tags.insert(tag);
+  }
+}
+
+
 /**********************************************************/
 
 uint16_t
