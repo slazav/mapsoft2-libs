@@ -1,7 +1,7 @@
 MOD_SOURCES := fig_data.cpp fig_io.cpp fig_utils.cpp
 MOD_HEADERS := fig.h fig_utils.h
 
-SIMPLE_TESTS := fig_data
+SIMPLE_TESTS := fig_data fig_utils
 PROGRAMS := catfig
 
 include ../Makefile.inc
