@@ -121,6 +121,9 @@ fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
         if (tag!="") o1.tags.insert(tag);
       }
     }
+    // old-style Source option - add as a tag
+    if (o_opts.exists("Source"))
+      o1.tags.insert(o_opts.get("Source"));
 
     // scale
     o1.scale = o_opts.get("Scale", 1.0);
