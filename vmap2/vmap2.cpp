@@ -296,3 +296,14 @@ VMap2::find_refs(const double & dist1, const double & dist2){
   }
   return tab;
 }
+
+std::set<uint32_t>
+VMap2::find_class(const VMap2objClass cl){
+  std::set<uint32_t> ret;
+  for (auto const t: geohash->get_types()){
+    if (t>>24 != cl) continue;
+    auto p = geohash->get(t);
+    ret.insert(p.begin(), p.end());
+  }
+  return ret;
+}
