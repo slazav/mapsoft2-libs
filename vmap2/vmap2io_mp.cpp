@@ -43,15 +43,13 @@ mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2){
     if (o.Opts.exists("Scale")) o1.scale = o.Opts.get("Scale", 1.0);
     if (o.Opts.exists("Align")) o1.align = (VMap2objAlign)o.Opts.get("Align", 0);
 
-    // choose data level (move to MP?)
-    int l = -1;
-    if (level < (int)o.Data.size() && o.Data[level].size()>0) l = level;
-    if (level <= o.EndLevel){
-      for (int i = level; i>0; i--){
-        if (i<(int)o.Data.size() && o.Data[i].size()>0) {l=i; break;}
-      }
-    }
-    if (l==-1) continue; // no data for the requested level
+    // MP object can contain different data levels.
+    // When writing MP file we use typeinfo.mp_start parameter (default:0)
+    // and fill only this data level.
+    // When reading we use lowest non empty level.
+    size_t l;
+    for (l=0; l<o.Data.size() && o.Data[l].size()==0; l++) {}
+    if (l>=o.Data.size()) continue; // empty object
 
     // set coordinates
     o1.dMultiLine::operator=(o.Data[l]);
