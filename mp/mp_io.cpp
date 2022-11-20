@@ -317,6 +317,8 @@ void read_mp(istream & f, MP & data, const Opt & opts){
       continue;
     }
 
+    o.Opts.put(key, val);
+
   }
 }
 
