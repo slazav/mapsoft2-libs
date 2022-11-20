@@ -14,6 +14,10 @@ void fig_make_comp(std::list<FigObj> & objects);
 void fig_rotate(std::list<FigObj> & objects,
     const double a, const iPoint & p0 = iPoint(0,0));
 
+// Scale objects
+void fig_scale(std::list<FigObj> & objects,
+    const double scale, const iPoint & p0 = iPoint(0,0));
+
 // Shift objects
 void fig_shift(std::list<FigObj> & objects, const iPoint & sh);
 

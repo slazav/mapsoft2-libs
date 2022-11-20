@@ -37,6 +37,14 @@ fig_rotate(list<FigObj> & objects, const double a, const iPoint & p0){
 }
 
 void
+fig_scale(list<FigObj> & objects, const double scale, const iPoint & p0){
+  for (auto & o:objects){
+    o = (o-p0)*scale + p0;
+    // todo: circles, text, line widths...
+  }
+}
+
+void
 fig_shift(list<FigObj> & objects, const iPoint & sh){
   for (auto & o:objects){
     o += sh;
