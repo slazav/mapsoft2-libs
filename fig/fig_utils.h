@@ -17,4 +17,7 @@ void fig_rotate(std::list<FigObj> & objects,
 // Shift objects
 void fig_shift(std::list<FigObj> & objects, const iPoint & sh);
 
+// Remove empty compounds
+void fig_remove_empty_comp(std::list<FigObj> & objects);
+
 #endif

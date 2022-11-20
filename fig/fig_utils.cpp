@@ -1,4 +1,5 @@
 #include "fig_utils.h"
+#include <stack>
 
 using namespace std;
 
@@ -41,3 +42,35 @@ fig_shift(list<FigObj> & objects, const iPoint & sh){
     o += sh;
   }
 }
+
+
+void fig_remove_empty_comp(std::list<FigObj> & objects){
+
+  // links to compound start objects:
+  std::stack<std::list<FigObj>::iterator> st;
+  // number of non-compound objects in compounds
+  std::stack<size_t> nn;
+
+  auto i = objects.begin();
+  while (i!=objects.end()){
+    if (i->is_compound()) {
+      st.push(i);
+      nn.push(0);
+      ++i; continue;
+    }
+
+    if (i->is_compound_end()){
+      if (st.empty() || nn.empty()){ ++i; continue; }
+      auto i0 = st.top();
+      auto n0 = nn.top();
+      st.pop(); nn.pop();
+      ++i;
+      if (n0==0) i=objects.erase(i0,i);
+      if (!nn.empty()) nn.top()+=n0;
+      continue;
+    }
+    if (!nn.empty()) nn.top()+=1;
+    ++i; continue;
+  }
+}
+
