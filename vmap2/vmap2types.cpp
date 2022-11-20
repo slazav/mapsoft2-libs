@@ -10,6 +10,7 @@ VMap2types::load(const std::string & fname){
 
   std::ifstream ff(fname);
   if (!ff) throw Err() << "can't open file: " << fname;
+  auto path = file_get_prefix(fname);
 
   int line_num[2] = {0,0}; // line counter for read_words
   read_words_defs defs;    // variables
@@ -65,7 +66,7 @@ VMap2types::load(const std::string & fname){
         }
         if (vs[1] == "fig_pic"){
           if (vs.size()!=3) throw Err() << "+ fig_pic: argument expected: <fig path>";
-          o->second.fig_pic = vs[2];
+          read_fig(path + vs[2], o->second.fig_pic);
           continue;
         }
         if (vs[1] == "mp_start"){

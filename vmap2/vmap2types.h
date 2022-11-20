@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include "geo_data/geo_data.h"
+#include "fig/fig.h"
 
 // Information about object type.
 // Used for converting objects to different vector formats.
@@ -13,7 +14,7 @@ public:
   std::string name;     // type short name
   std::string comm;     // type description
   std::string fig_mask; // mask for FIG format
-  std::string fig_pic;  // picture for FIG format
+  Fig         fig_pic;  // picture for FIG format
   int mp_start, mp_end; // start/end level for MP format
   int label_type;       // type for related lables
 

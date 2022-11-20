@@ -1,6 +1,9 @@
 #include "vmap2io.h"
 #include "fig_geo/fig_geo.h"
+#include "fig_opt/fig_opt.h"
+#include "fig/fig_utils.h"
 #include "geo_data/conv_geo.h"
+#include "geom/poly_tools.h"
 
 /****************************************************************************/
 
@@ -11,6 +14,8 @@ fig_to_type (const FigObj & o, const VMap2types & types) {
   if (!o.is_polyline() && !o.is_spline() && !o.is_text()) return 0;
 
   for (const auto & type:types){
+    if (type.second.fig_mask == "") continue;
+
     auto t = figobj_template(type.second.fig_mask); // template object
     int c1 = o.pen_color;
     int c2 = t.pen_color;
@@ -74,127 +79,95 @@ fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
 
   std::vector<std::string> cmp_comm;
   for (const auto & o:fig){
+
     // keep compound comments:
     if (o.is_compound())  { cmp_comm = o.comment; continue; }
-    if (o.is_compound_end()) cmp_comm.clear(); continue; }
-/*
-    // find normal labels
-    if (o.opts.get("MapType")=="label" &&
-        o.opts.exists("RefPt") &&
-        o.is_text() && o.size()>0 ){
+    if (o.is_compound_end()) { cmp_comm.clear(); continue; }
 
-      auto t = // ...
-      VMap2obj l1(VMAP2_TEXT, t);
+    // TODO: select depth range!
 
-      l1.pos = (*i)[0]; cnv.frw(l.pos);
-      l1.ref_pt = i->opts.get("RefPt", l.pos); cnv.frw(l.ref);
-      l1.dir   = i->sub_type;
-      l1.fsize = i->font_size; // now it is absolute value
-      l1.text  = i->text;
-      if (i1->angle!=0){
-        // angle is inverted because of y inversion
-        l1.ang = -cnv.angd_frw((*i)[0], 180/M_PI*i->angle, 1000);
-      }
-      else {
-        l1.ang = std::nan("");
-      }
-      vmap2.add(l1);
-      continue;
-    }
+    // get object type
+    auto type = fig_to_type(o, types);
+    if (type==0) continue;
 
-    // normal objects
-    VMap2obj o1;
-    o1.type = type;
-    set_source(o.opts, i->opts.get<string>("Source"));
+    // fig comment without options
+    auto comm = o.comment;
+    Opt o_opts = fig_get_opts(o);
+    fig_del_opts(comm);
 
-    if (comm.size()>0){
-      o.text = comm[0];
-      o.comm.insert(o.comm.begin(),
-          comm.begin()+1, comm.end());
-    }
-    dLine pts = cnv.line_frw(*i);
+    VMap2obj o1(type);
+
+    // coordinates
+    if (o.size()<1) continue; // skip empty objects
+    dLine pts(o);
+    cnv.frw(pts); // point-to-point conversion
+    dPoint pt0 = pts[0];
+
     // if closed polyline -> add one more point
-    if ((o.get_class() == POLYLINE) &&
-        (i->is_closed()) &&
-        (i->size()>0) &&
-        ((*i)[0]!=(*i)[i->size()-1])) pts.push_back(pts[0]);
-    o.push_back(pts);
-    o.dir=zn::fig_arr2dir(*i);
+    if (o1.get_class()==VMAP2_LINE && o.is_closed() &&
+        o.size()>0 && o[0]!=o[o.size()-1]) pts.push_back(pts[0]);
 
-    if (o.size()>0) ret.push_back(o);
+    // Look at arrows, invert line if needed
+    if (o.forward_arrow==0 && o.backward_arrow==1) pts.invert();
 
-    // read map objects
-    if (!zconverter.is_map_depth(*i)) continue;
+    o1.push_back(pts);
 
-    int type = zconverter.get_type(*i);
-    if (!type) continue;
-
-    // copy comment from compound to the first object:
-    if (cmp_comm.size()>0){
-      comm=cmp_comm;
-      cmp_comm.clear();
-    }
-    else{
-      comm=i->comment;
-    }
-
-    // special type -- border
-    if (type==border_type){.
-      ret.brd = cnv.line_frw(*i);
-      continue;
-    }
-
-    // special type -- label objects
-    if (type==label_type){
-      if (i->size()<2) continue;
-      if (comm.size()<1) continue;
-      lpos_full l;
-      l.text = comm[0];
-      l.ref = (*i)[0]; cnv.frw(l.ref);
-      l.pos = (*i)[1]; cnv.frw(l.pos);
-      l.dir = zn::fig_arr2dir(*i, true);
-//      if (i->size()>=3){
-//        dPoint dp=(*i)[2]-(*i)[1];
-//        l.ang=cnv.angd_frw((*i)[0], 180/M_PI*atan2(dp.y, dp.x), 1000);
-//        l.hor=false;
-//      }
-      if (i->opts.exists("TxtAngle")){
-        double angle = i->opts.get<double>("TxtAngle", 0);
-        l.ang=cnv.angd_frw((*i)[0], angle, 1000);
-        l.hor=false;
+    // tags - space-separated list of words
+    if (o_opts.exists("Tags")){
+      std::istringstream s(o_opts.get("Tags"));
+      std::string tag;
+      while (s) {
+        s >> tag;
+        if (tag!="") o1.tags.insert(tag);
       }
-      else{
-        l.ang=0;
-        l.hor=true;
+    }
+
+    // scale
+    o1.scale = o_opts.get("Scale", 1.0);
+
+    // == Labels ==
+    if (o_opts.get("MapType")=="label" &&
+        o_opts.exists("RefType") && o.is_text()){
+
+      // Default reference point - text position
+      o1.ref_pt   = o_opts.get("RefPt", pt0); cnv.frw(o1.ref_pt);
+      o1.ref_type = VMap2obj::make_type(o_opts.get("RefType"));
+
+      // Get alignment from text orientation.
+      switch (o.sub_type){
+        case 0: o1.align = VMAP2_ALIGN_SW; break; // left: 0 -> SW;
+        case 1: o1.align = VMAP2_ALIGN_S;  break; // center: 1 -> S;
+        case 2: o1.align = VMAP2_ALIGN_SE; break; // right: 2 -> SE;
       }
-      ret.lbuf.push_back(l);
-      continue;
+
+      // name -- from label text
+      o1.name = o.text;
+      for (size_t i=0; i<comm.size(); i++)
+        o1.comm += (i>0?"\n":"") + comm[i];
+
+      // angle -- from text angle
+      // angle is inverted because of y inversion
+      if (o.angle!=0) o1.angle = -cnv.frw_angd(pt0, 180/M_PI*o.angle, 1000);
+      else o1.angle = std::nan("");
+    }
+    // == Other objects ==
+    else {
+      // name and comment
+      // copy comment from compound to the first object:
+      if (cmp_comm.size()>0){
+        comm=cmp_comm;
+        cmp_comm.clear();
+      }
+      if (comm.size()>0){
+        o1.name = comm[0];
+        for (size_t i = 1; i<comm.size(); i++)
+          o1.comm += (i>1?"\n":"") + comm[i];
+      }
+
     }
 
-    // normal objects
-    VMap2obj o;
-    o.type = type;
-    set_source(o.opts, i->opts.get<string>("Source"));
-
-    if (comm.size()>0){
-      o.text = comm[0];
-      o.comm.insert(o.comm.begin(),
-          comm.begin()+1, comm.end());
-    }
-    dLine pts = cnv.line_frw(*i);
-    // if closed polyline -> add one more point
-    if ((o.get_class() == POLYLINE) &&
-        (i->is_closed()) &&
-        (i->size()>0) &&
-        ((*i)[0]!=(*i)[i->size()-1])) pts.push_back(pts[0]);
-    o.push_back(pts);
-    o.dir=zn::fig_arr2dir(*i);
-
-    if (o.size()>0) vmap2.push_back(o);
+    vmap2.add(o1);
   }
-  return ret;
-*/
-
 }
 
 /****************************************************************************/
@@ -203,94 +176,157 @@ fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
 void
 vmap2_to_fig(VMap2 & vmap2, const VMap2types & types, Fig & fig){
 
+  bool quiet = false; // by quiet (by default types of skipped objects are printed)
+
   // get fig reference
   GeoMap ref = fig_get_ref(fig);
   ConvMap cnv(ref); // conversion fig->wgs
+
+  std::set<uint32_t> skipped_types;
 
   // Loop through VMap2 objects:
   vmap2.iter_start();
   while (!vmap2.iter_end()){
     VMap2obj o = vmap2.iter_get_next().second;
-    if (o.size()==0) continue;
+    if (o.size()==0 || o[0].size()==0) continue; // skip empty objects
+    dPoint pt0 = o[0][0];
 
-    // Get type info
-    if (types.count(o.type)<1) throw Err()
-      << "unknown type: " << VMap2obj::print_type(o.type);
+    if (!types.count(o.type)){
+      if (!quiet) skipped_types.insert(o.type);
+      continue;
+    }
     auto info = types.find(o.type)->second;
+    if (info.fig_mask == ""){
+      if (!quiet) skipped_types.insert(o.type);
+      continue;
+    }
 
     FigObj o1 = figobj_template(info.fig_mask);
 
-    o1.comment.push_back(o.name);
-    o1.comment.push_back(o.comm);
+    // convert angle
+    double angle = o.angle;
+    if (!std::isnan(o.angle)){
+      angle=-cnv.bck_angd(pt0, -o.angle, 0.01);
+    }
 
-//    Opt opts;
-//    opts.put("Source", o.opts.get("Source"));
+    // Tags, space-separated words
+    if (o.tags.size()>0){
+      std::string s;
+      for (const auto & t:o.tags)
+        s += (s.size()?" ":"") + t;
+      fig_add_opt(o1, "Tags", s);
+    }
 
-//    if (o.opts.exists("Angle")){
-//      double a = o.opts.get<double>("Angle");
-//      a=-cnv.angd_bck((*o)[0].center(), -a, 0.01);
-//      opts.put<double>("Angle", a);
-//    }
-/*
+    // Scale
+    if (o.scale!=1.0)
+      fig_add_opt(o1, "Scale", type_to_str(o.scale));
+
+
+    if (o.get_class() != VMAP2_TEXT) {
+      // We use text direction to keep (and edit) alignment
+      if (o.align!=0)
+        fig_add_opt(o1, "Align", type_to_str<int>(o.align));
+
+      // We use text angle to keep (and edit) angle
+      if (!std::isnan(angle))
+        fig_add_opt(o1, "Angle", type_to_str(angle));
+
+      if (o.name!="" || o.comm!="")
+        o1.comment.push_back(o.name);
+      if (o.comm!="")
+        o1.comment.push_back(o.comm);
+    }
+
+    dMultiLine pts(o);
+    cnv.bck(pts);
+    cnv.bck(pt0);
+
+    // Polygon: combine all segments to a single one
+    // (TODO: some better solution is needed)
     if (o.get_class() == VMAP2_POLYGON){
-      o1.set_points(cnv.line_bck(join_polygons(*o)));
-      fig.push_back(fig);
-    } else {
-      dMultiLine::const_iterator l;
-      for (l=o->begin(); l!=o->end(); l++){
+      o1.type=2;
+      o1.set_points(join_polygons(pts));
+      fig.push_back(o1);
+      continue;
+    }
+
+    // Line: one fig object for each segment
+    // closed/open lines if needed
+    if (o.get_class() == VMAP2_LINE){
+      o1.type=2;
+      for (const auto & l:pts){
         o1.clear();
-        o1.open(); // previous part can be closed!
-        o1.set_points(cnv.line_bck(*l));
-        // closed polyline
-        if ((o->get_class() == VMAP2_LINE) &&
-            (o1.size()>2) && (o1[0]==o1[o1.size()-1])){
-          o1.resize(fig.size()-1);
+        o1.set_points(l);
+        if (o1.size()>2 && o1[0]==o1[o1.size()-1]){
+          o1.resize(o1.size()-1);
           o1.close();
         }
-*/
-//        zn::fig_dir2arr(fig, o->dir); // arrows
-//        // pictures
-//        std::list<fig::fig_object> tmp=zconverter.make_pic(fig, o->type);
-//        F.insert(F.end(), tmp.begin(), tmp.end());
-//      }
-//    }
-/*
-    // labels connected to the object
-    if (keep_labels || (o->text == "")) continue;
-    std::list<lpos>::const_iterator l;
-    for (l=o->labels.begin(); l!=o->labels.end(); l++){
-      dPoint ref;  dist_pt_l(l->pos, *o, ref);
-      cnv.bck(ref);
-      dPoint pos = l->pos;
-      cnv.bck(pos);
-
-      double angle = l->hor ? 0 : cnv.angd_bck(l->pos, -l->ang, 0.01);
-
-      fig::fig_object txt;
-      if (fig_text_labels){
-        txt=zconverter.get_label_template(o->type);
-        txt.text=conv_label(o->text);
-        txt.sub_type=l->dir;
-        txt.angle=M_PI/180*angle;
-        txt.font_size += l->fsize;
-        txt.push_back(pos);
-        txt.opts.put<iPoint>("RefPt", ref);
-        txt.opts.put<string>("MapType", "label");
+        else {
+          o1.open();
+        }
+        fig.push_back(o1);
       }
-      else {
-        txt.clear();
-        txt=zconverter.get_fig_template(label_type);
-        zn::fig_dir2arr(txt, l->dir, true);
-        txt.push_back(ref);
-        txt.push_back(pos);
-        if (!l->hor) txt.opts.put<double>("TxtAngle", angle);
-        txt.comment.push_back(o->text);
-      }
-      F.push_back(txt);
+      continue;
     }
-*/
+
+    // Points
+    if (o.get_class() == VMAP2_POINT){
+      o1.type=2;
+      o1.sub_type=1;
+      o1.push_back(pt0);
+
+      // Pictures
+      if (info.fig_pic.size()){
+        std::list<FigObj> pic = info.fig_pic;
+        for (auto & o:pic) fig_add_opt(o, "MapType", "pic");
+        if (!std::isnan(angle)) fig_rotate(pic, angle);
+        fig_shift(pic, pt0);
+        pic.push_back(o1);
+        fig_make_comp(pic);
+        fig.insert(fig.end(), pic.begin(), pic.end());
+      }
+      else{
+        fig.push_back(o1);
+      }
+      continue;
+    }
+
+    // Text
+    if (o.get_class() == VMAP2_TEXT){
+      o1.type=4;
+      o1.text = o.name;
+      dPoint ref_pt(o.ref_pt); cnv.bck(ref_pt);
+      fig_add_opt(o1, "RefPt",   type_to_str(ref_pt));
+      fig_add_opt(o1, "RefType", VMap2obj::print_type(o.ref_type));
+      fig_add_opt(o1, "MapType", "label");
+      switch (o.align){
+        case VMAP2_ALIGN_SW:
+        case VMAP2_ALIGN_W:
+        case VMAP2_ALIGN_NW: o1.sub_type=0; break;
+        case VMAP2_ALIGN_N:
+        case VMAP2_ALIGN_S:
+        case VMAP2_ALIGN_C:  o1.sub_type=1; break;
+        case VMAP2_ALIGN_NE:
+        case VMAP2_ALIGN_E:
+        case VMAP2_ALIGN_SE: o1.sub_type=2; break;
+      }
+      o1.angle = std::isnan(angle)? 0 : M_PI/180*angle;
+
+      o1.font_size = o.scale * o1.font_size;
+      o1.push_back(pt0);
+      fig.push_back(o1);
+      continue;
+    }
   }
-  // TODO: write detached labels (lbuf)!
+
+  if (skipped_types.size()){
+    std::cerr <<
+       "Writing FIG file: some types were skipped because "
+       "fig_mask parameter is not set in the typeinfo file:\n";
+    for (const auto & t:skipped_types)
+      std::cerr << VMap2obj::print_type(t) << "\n";
+  }
+
 }
 
 /****************************************************************************/

@@ -54,11 +54,14 @@ vmap2_convert(const std::vector<std::string> & ifiles, const Opt & opts){
     types.load(opts.get("types"));
 
   // options
-  bool headers = opts.get("headers", 0);
+  bool headers = opts.get("headers", 1);
   bool old_objects = opts.get("old_objects", 0);
   bool old_labels  = opts.get("old_labels", 0);
   bool new_objects = opts.get("new_objects", 1);
   bool new_labels  = opts.get("new_labels", 1);
+
+  //  keep_labels = false
+  //  update_tag = <name>
 
   // Read output file, convert to vmap2.
   // Keep original format too (we may want to keep mp headers,
