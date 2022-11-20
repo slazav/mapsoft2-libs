@@ -37,11 +37,14 @@ void vmap2_export(VMap2 & vmap2, const VMap2types & types,
 /********************************************************************/
 // Decoding different formats.
 
-void vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2);
+void vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
+                   VMap2 & vmap2, const Opt & opts);
 
-void fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2);
+void fig_to_vmap2(const std::string & ifile, const VMap2types & types,
+                  VMap2 & vmap2, const Opt & opts);
 
-void mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2);
+void mp_to_vmap2(const std::string & ifile, const VMap2types & types,
+                 VMap2 & vmap2, const Opt & opts);
 
 
 /********************************************************************/
@@ -49,14 +52,17 @@ void mp_to_vmap2(const MP & mp, const VMap2types & types, VMap2 & vmap2);
 
 // Convert vmap2 objects to vmap format and add to vmap storage.
 // <types> parameter is not used.
-void vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types, VMap & vmap);
+void vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types,
+                   const std::string & ofile, const Opt & opts);
 
 // Convert vmap2 objects to mp format and add to mp storage
 // <types> parameter is optional, it's used for mp_start/mp_stop vaules.
-void vmap2_to_mp(VMap2 & vmap2, const VMap2types & types, MP & mp);
+void vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
+                 const std::string & ofile, const Opt & opts);
 
 // Convert vmap2 objects to fig format and add to Fig
-void vmap2_to_fig(VMap2 & vmap2, const VMap2types & types, Fig & fig);
+void vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
+                  const std::string & ofile, const Opt & opts);
 
 
 #endif

@@ -69,13 +69,47 @@ fig_to_type (const FigObj & o, const VMap2types & types) {
   return 0;
 }
 
+// Map parts to be removed when rewriting fig file
+bool
+fig_is_map_part(const FigObj & o, const int min_depth, const int max_depth){
+  // keep compounds
+  if (o.type==6 || o.type==-6) return false;
+
+  // Keep reference and border?
+  // This is not needed if these objects are outside min_depth..max_depth.
+  // If they are inside some other troubles can happen...
+//  if (o.comment.size()>0 && o.comment[0].substr(0,3) == "REF") return false;
+//  if (o.comment.size()>0 && o.comment[0].substr(0,3) == "BRD") return false;
+
+  // skip everything between min_depth and max_depth
+  if (o.depth >= min_depth && o.depth <= max_depth) return true;
+
+  // skip all objects with MapType parameter
+  Opt oo = fig_get_opts(o);
+  if (oo.exists("MapType")) return true;
+
+  return false;
+}
 
 /****************************************************************************/
 
 void
-fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
+fig_to_vmap2(const std::string & ifile, const VMap2types & types,
+             VMap2 & vmap2,  const Opt & opts){
+
+  Fig fig;
+  read_fig(ifile, fig, opts);
+
   GeoMap ref = fig_get_ref(fig);
+  if (ref.empty()) throw Err()
+    << "no reference in FIG file: " << ifile;
   ConvMap cnv(ref);
+
+  if (types.empty()) throw Err()
+    << "typeinfo is empty, nothing can be converted (use -t option)";
+
+  size_t min_depth = opts.get("min_depth", 40);
+  size_t max_depth = opts.get("max_depth", 200);
 
   std::vector<std::string> cmp_comm;
   for (const auto & o:fig){
@@ -84,7 +118,8 @@ fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
     if (o.is_compound())  { cmp_comm = o.comment; continue; }
     if (o.is_compound_end()) { cmp_comm.clear(); continue; }
 
-    // TODO: select depth range!
+    // Select depth range
+    if (o.depth < min_depth || o.depth > max_depth) continue;
 
     // get object type
     auto type = fig_to_type(o, types);
@@ -113,14 +148,9 @@ fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
     o1.push_back(pts);
 
     // tags - space-separated list of words
-    if (o_opts.exists("Tags")){
-      std::istringstream s(o_opts.get("Tags"));
-      std::string tag;
-      while (s) {
-        s >> tag;
-        if (tag!="") o1.tags.insert(tag);
-      }
-    }
+    if (o_opts.exists("Tags"))
+      o1.add_tags(o_opts.get("Tags"));
+
     // old-style Source option - add as a tag
     if (o_opts.exists("Source"))
       o1.tags.insert(o_opts.get("Source"));
@@ -177,13 +207,34 @@ fig_to_vmap2(const Fig & fig, const VMap2types & types, VMap2 & vmap2){
 
 // Convert vmap2 object to fig format and add to Fig
 void
-vmap2_to_fig(VMap2 & vmap2, const VMap2types & types, Fig & fig){
+vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
+             const std::string & ofile, const Opt & opts){
 
-  bool quiet = false; // by quiet (by default types of skipped objects are printed)
+  // be quiet (by default types of skipped objects are printed)
+  bool quiet = opts.get("quite", false);
+
+  size_t min_depth = opts.get("min_depth", 40);
+  size_t max_depth = opts.get("max_depth", 200);
+
+  // Read fig file (wee need reference and non-map objects)
+  Fig fig;
+  read_fig(ofile, fig, opts);
 
   // get fig reference
   GeoMap ref = fig_get_ref(fig);
+  if (ref.empty()) throw Err()
+    << "no reference in FIG file, create if with "
+    << "ms2geofig program before: " << ofile;
   ConvMap cnv(ref); // conversion fig->wgs
+
+  // Cleanup fig: remove objects, labels, pictures
+  auto i = fig.begin();
+  while (i!=fig.end()){
+    if (fig_is_map_part(*i, min_depth, max_depth)) i=fig.erase(i);
+    else i++;
+  }
+  // Remove empty compounds
+  fig_remove_empty_comp(fig);
 
   std::set<uint32_t> skipped_types;
 
@@ -213,12 +264,8 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types, Fig & fig){
     }
 
     // Tags, space-separated words
-    if (o.tags.size()>0){
-      std::string s;
-      for (const auto & t:o.tags)
-        s += (s.size()?" ":"") + t;
-      fig_add_opt(o1, "Tags", s);
-    }
+    if (o.tags.size()>0)
+      fig_add_opt(o1, "Tags", o.get_tags());
 
     // Scale
     if (o.scale!=1.0)
@@ -330,6 +377,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types, Fig & fig){
       std::cerr << VMap2obj::print_type(t) << "\n";
   }
 
+  write_fig(ofile, fig);
 }
 
 /****************************************************************************/

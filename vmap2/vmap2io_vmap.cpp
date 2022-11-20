@@ -23,12 +23,20 @@ angle_from_vmap(const double a, const double lat){
 /****************************************************************************/
 
 void
-vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
+vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
+              VMap2 & vmap2, const Opt & opts){
+
+  VMap vmap = read_vmap(ifile);
 
   // this should go to options:
-  bool skip_unknown = false;   // skip objects which are not in typeinfo file
-  bool quiet = false;          // by quiet (by default types of skipped objects are printed)
-  uint32_t def_label_type = 0; // default type for unknown labels (use 0 to skip them)
+  // default type for unknown labels (use 0 to skip them)
+  uint32_t def_label_type = opts.get<uint32_t>("def_label_type", 0);
+
+  // be quiet (by default types of skipped objects are printed)
+  bool quiet = opts.get("quite", false);
+
+  // skip objects which are not in typeinfo file
+  bool skip_unknown = opts.get("skip_unknown", false);
 
   std::set<uint32_t> skipped_types;
   std::set<uint32_t> skipped_labels;
@@ -143,11 +151,23 @@ vmap_to_vmap2(const VMap & vmap, const VMap2types & types, VMap2 & vmap2){
 /****************************************************************************/
 
 void
-vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types, VMap & vmap){
-  double dist1 = 1.0; // move to options?
+vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types,
+              const std::string & ofile, const Opt & opts){
+  VMap vmap;
+
+  double dist1 = 10.0; // move to options?
   double dist2 = 1000.0; // move to options?
 
+  // Build multimap object_id -> label_id
   auto ref_tab = vmap2.find_refs(dist1,dist2);
+
+  // be quiet (by default types of skipped objects are printed)
+  bool quiet = opts.get("quite", false);
+
+  // skip objects which are not in typeinfo file
+  bool skip_unknown = opts.get("skip_unknown", false);
+
+  std::set<uint32_t> skipped_types;
 
   // Loop through VMap2 objects:
   vmap2.iter_start();
@@ -166,6 +186,13 @@ vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types, VMap & vmap){
       case VMAP2_TEXT:    continue;
       default: throw Err() << "vmap2_to_vmap: unsupported object class: " << c;
     }
+
+    // skip unknown types if needed.
+    if (!types.count(o.type) && !quiet){
+      skipped_types.insert(o.type);
+      continue;
+    }
+
     // name, comment
     o1.text = o.name;
     o1.comm = o.comm;
@@ -231,5 +258,16 @@ vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types, VMap & vmap){
     }
     vmap.push_back(o1);
   }
+
+  if (skipped_types.size()){
+    std::cerr <<
+       "Writing VMAP file: some types were skipped because "
+       "skip_unknown parameter is set and there is no information in "
+       "the typeinfo file:\n";
+    for (const auto & t:skipped_types)
+      std::cerr << VMap2obj::print_type(t) << "\n";
+  }
+
+  write_vmap(ofile, vmap);
 }
 
