@@ -112,7 +112,9 @@ struct MP : std::list<MPObj>{
 #include "getopt/getopt.h"
 
 // add MP group of options
-void ms2opt_add_mp(GetOptSet & opts);
+void ms2opt_add_mp_i(GetOptSet & opts);  // for programs which only read MP
+void ms2opt_add_mp_o(GetOptSet & opts);  // for programs which only write MP
+void ms2opt_add_mp_io(GetOptSet & opts); // for programs which do both
 
 /// Read mp-file from a stream <f> into <data>. If some data
 /// already exists in <data> then objects are appended and the header

@@ -11,7 +11,22 @@ using namespace std;
 
 /*********************************************************/
 void
-ms2opt_add_mp(GetOptSet & opts){
+ms2opt_add_mp_i(GetOptSet & opts){
+  const char *g = "MP";
+  opts.add("mp_enc", 1,0,g,
+    "Override encoding for reading MP-files (does not change CodePage setting)");
+}
+
+void
+ms2opt_add_mp_o(GetOptSet & opts){
+  const char *g = "MP";
+  opts.add("mp_enc", 1,0,g,
+    "Override encoding for writing MP-files (does not change CodePage setting)");
+}
+
+void
+ms2opt_add_mp_io(GetOptSet & opts){
+  // should be possible to read file in one encoding and write in another
   const char *g = "MP";
   opts.add("mp_in_enc", 1,0,g,
     "Override input encoding for MP-files (does not change CodePage setting)");
@@ -177,6 +192,7 @@ void read_mp(istream & f, MP & data, const Opt & opts){
   std::string enc = "UTF-8"; // default
   if (data.Codepage != "")   enc = "CP" + data.Codepage; // from file
   if (opts.exists("mp_in_enc")) enc = opts.get("mp_in_enc"); // from opts
+  if (opts.exists("mp_enc"))    enc = opts.get("mp_enc");
 
   IConv cnv(enc, "UTF-8");
   data.Name = cnv(data.Name);
@@ -311,6 +327,7 @@ void write_mp(ostream & out, const MP & data, const Opt & opts){
   string enc = "UTF-8";
   if (data.Codepage != "")   enc = "CP" + data.Codepage; // from data
   if (opts.exists("mp_out_enc")) enc = opts.get("mp_out_enc"); // from opts
+  if (opts.exists("mp_enc"))     enc = opts.get("mp_enc");
   IConv cnv("UTF-8", enc);
 
   write_comm(out, cnv(data.Comment));
