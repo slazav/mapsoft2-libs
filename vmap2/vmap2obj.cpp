@@ -148,6 +148,7 @@ VMap2obj::make_type(const uint16_t cl, const uint16_t tnum){
     case VMAP2_LINE:    return (1<<24) | tnum;
     case VMAP2_POLYGON: return (2<<24) | tnum;
     case VMAP2_TEXT:    return (3<<24) | tnum;
+    case VMAP2_NONE:    return 0xFFFFFFFF;
     default: throw Err() << "unknown object class: " << cl;
   }
 }
@@ -156,6 +157,7 @@ uint32_t
 VMap2obj::make_type(const std::string & s){
   try{
     if (s == "") throw Err() << "empty string";
+    if (s == "none") return 0xFFFFFFFF;
     size_t n = s.find(':');
     if (n==std::string::npos) throw Err() << "':' separator not found";
     int tnum = str_to_type<int>(s.substr(n+1));
@@ -181,6 +183,7 @@ VMap2obj::print_type(const uint32_t t){
     case 1: s << "line:";  break;
     case 2: s << "area:";  break;
     case 3: s << "text:";  break;
+    case 0xFF: return "none";
     default: s << "unknown:";
   }
   s << "0x" << std::hex << (t&0xFFFF);
@@ -189,12 +192,13 @@ VMap2obj::print_type(const uint32_t t){
 
 
 VMap2objClass
-VMap2obj::get_class() const {
+VMap2obj::get_class(const uint32_t type) {
   switch (type>>24){
     case 0: return VMAP2_POINT;
     case 1: return VMAP2_LINE;
     case 2: return VMAP2_POLYGON;
     case 3: return VMAP2_TEXT;
+    case 0xFF: return VMAP2_NONE;
     default: throw Err() << "unknown object class: " << (type>>24);
   }
 }
@@ -258,9 +262,6 @@ VMap2obj::add_tags(const std::string & s){
 
 /**********************************************************/
 
-uint16_t
-VMap2obj::get_tnum()  const {
-  return type & 0xFFFF; }
 
 void
 VMap2obj::set_coords(const std::string & s){

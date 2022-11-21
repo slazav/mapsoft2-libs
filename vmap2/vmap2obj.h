@@ -16,7 +16,8 @@ typedef enum{
   VMAP2_POINT    = 0,
   VMAP2_LINE     = 1,
   VMAP2_POLYGON  = 2,
-  VMAP2_TEXT     = 3
+  VMAP2_TEXT     = 3,
+  VMAP2_NONE     = 0xFF
 } VMap2objClass;
 
 typedef enum{
@@ -77,6 +78,7 @@ struct VMap2obj: public dMultiLine {
       scale(1.0), align(VMAP2_ALIGN_SW), ref_type(0xFFFFFFFF) {}
 
   /***********************************************/
+  // type and ref_type operations:
 
   // assemble object type:
   static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
@@ -84,20 +86,43 @@ struct VMap2obj: public dMultiLine {
   // parse object type from string (point|line|area|text):<number>
   static uint32_t make_type(const std::string & s);
 
-  // convert type to string
-  static std::string print_type(const uint32_t t);
-
   // set object type
   void set_type(const uint16_t cl, const uint16_t tnum){ type = make_type(cl, tnum);}
+
+  // set object ref_type
+  void set_ref_type(const uint16_t cl, const uint16_t tnum){ ref_type = make_type(cl, tnum);}
 
   // set object type from string
   void set_type(const std::string & s) {type = make_type(s);}
 
+  // set object ref_type from string
+  void set_ref_type(const std::string & s) {ref_type = make_type(s);}
+
+
+  // convert type to string
+  static std::string print_type(const uint32_t t);
+
+
+  // get classification for a type t
+  static VMap2objClass get_class(const uint32_t t);
+
   // get object classification (VMap2objClass)
-  VMap2objClass get_class() const;
+  VMap2objClass get_class() const {return get_class(type);}
+
+  // get ref_type classification (VMap2objClass)
+  VMap2objClass get_ref_class() const {return get_class(ref_type);}
+
+
+  // get type number for type t
+  static uint16_t get_tnum(const uint32_t t) {return t & 0xFFFF;}
 
   // get object type number
-  uint16_t get_tnum()  const;
+  uint16_t get_tnum() const {return get_tnum(type);}
+
+  // get ref_type type number
+  uint16_t get_ref_tnum() const {return get_tnum(ref_type);}
+
+  /***********************************************/
 
   VMap2obj(const uint16_t cl, const uint16_t tnum): VMap2obj(make_type(cl,tnum)) {}
   VMap2obj(const std::string & s): VMap2obj(make_type(s)) { }
