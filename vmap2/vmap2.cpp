@@ -290,7 +290,6 @@ VMap2::find_refs(const double & dist1, const double & dist2){
     for (auto const i: geohash->get(t)){
       auto l = get(i);
       auto j = find_ref(l.ref_pt, l.ref_type, dist1, dist2);
-      if (j==0xFFFFFFFF) continue;
       tab.emplace(j,i);
     }
   }

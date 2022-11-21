@@ -112,7 +112,8 @@ public:
   uint32_t find_ref(const dPoint & pt, const uint32_t type,
      const double & dist1=1, const double & dist2=1000);
 
-  // build a table object ID -> label IDs
+  // Build a table "object ID -> label IDs".
+  // For unconnected labels object ID will be 0xFFFFFFFF.
   std::multimap<uint32_t, uint32_t> find_refs(const double & dist1, const double & dist2);
 
   // find all objects with a given class
