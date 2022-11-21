@@ -178,7 +178,7 @@ vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types,
   while (!vmap2.iter_end()){
     auto p = vmap2.iter_get_next();
     auto id = p.first;
-    auto o = p.second;
+    auto & o = p.second;
     VMapObj o1;
 
     // Convert type to vmap format
