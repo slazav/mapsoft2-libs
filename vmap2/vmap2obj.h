@@ -144,6 +144,16 @@ struct VMap2obj: public dMultiLine {
   // For point and text objects point expected, for lines and areas - line/multilines.
   void set_coords(const std::string & s);
 
+  void set_coords(const dMultiLine & ml){
+    dMultiLine::operator=(ml);}
+
+  void set_coords(const dLine & l){
+    clear(); push_back(l);}
+
+  void set_coords(const dPoint & pt){
+    clear(); dLine l; l.push_back(pt); push_back(l);}
+
+
   /***********************************************/
 
 
