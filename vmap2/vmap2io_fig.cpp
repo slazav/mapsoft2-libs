@@ -418,7 +418,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       o1.type=4;
       o1.text = o.name;
       dPoint ref_pt(o.ref_pt); cnv.bck(ref_pt);
-      fig_add_opt(o1, "RefPt",   type_to_str(ref_pt));
+      fig_add_opt(o1, "RefPt",   type_to_str(rint(ref_pt)));
       fig_add_opt(o1, "RefType", VMap2obj::print_type(o.ref_type));
       fig_add_opt(o1, "MapType", "label");
       switch (o.align){
