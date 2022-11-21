@@ -6,9 +6,6 @@
 #include "geo_nom/geo_nom.h"
 
 #include "mapdb.h"
-#include "vmap2/vmap2bdb.h"
-#include "vmap2/vmap2mem.h"
-#include "mapdb_storage_io.h"
 
 void
 MapDB::load(const std::string & fname){

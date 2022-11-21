@@ -22,7 +22,7 @@ private:
   struct VmapPage {
     std::string file;
     dRect bbox; // wgs84 bbox
-    std::shared_ptr<MapDBStorage> storage;
+    std::shared_ptr<VMap2> storage;
   };
 
   std::map<std::string, VmapPage> pages;

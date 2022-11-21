@@ -16,19 +16,10 @@ using namespace std;
 GetOptSet options;
 
 // all actions
-std::vector<std::shared_ptr<MapAction> > actions = {
-  std::shared_ptr<MapAction>(new MapActionList),
-  std::shared_ptr<MapAction>(new MapActionImport),
-  std::shared_ptr<MapAction>(new MapActionExport),
-//  std::shared_ptr<MapAction>(new MapActionDelete),
-//  std::shared_ptr<MapAction>(new MapActionAddObj),
-//  std::shared_ptr<MapAction>(new MapActionTypes),
-//  std::shared_ptr<MapAction>(new MapActionBBox),
-//  std::shared_ptr<MapAction>(new MapActionImportMP),
-//  std::shared_ptr<MapAction>(new MapActionExportMP),
-//  std::shared_ptr<MapAction>(new MapActionImportVMAP),
-//  std::shared_ptr<MapAction>(new MapActionExportVMAP),
-//  std::shared_ptr<MapAction>(new MapActionRender),
+std::vector<std::shared_ptr<Action> > actions = {
+  std::shared_ptr<Action>(new ActionList),
+  std::shared_ptr<Action>(new ActionImport),
+  std::shared_ptr<Action>(new ActionExport),
 };
 
 /**********************************************************/
