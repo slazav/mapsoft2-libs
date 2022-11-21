@@ -132,6 +132,7 @@ GeoHashStorage::join_type(const uint32_t type, const std::string & hash){
 }
 
 uint32_t
-GeoHashStorage::extract_type(char *data){
-  return (data[0]<<24) | (data[1]<<16) | (data[2]<<8) | data[3];
+GeoHashStorage::extract_type(const char *data){
+  auto d = (uint8_t*)data; // unsigned type needed!
+  return (d[0]<<24) | (d[1]<<16) | (d[2]<<8) | d[3];
 }

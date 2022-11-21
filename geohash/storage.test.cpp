@@ -9,6 +9,20 @@
 int
 main(){
   try{
+
+      //join/extract type
+      {
+        std::string s;
+        s = GeoHashStorage::join_type(0x1000FFFF, "");
+        assert_eq(GeoHashStorage::extract_type(s.data()), 0x1000FFFF);
+
+        s = GeoHashStorage::join_type(0x1000FFFF, "abc");
+        assert_eq(GeoHashStorage::extract_type(s.data()), 0x1000FFFF);
+
+        s = GeoHashStorage::join_type(0x12345678, "abc");
+        assert_eq(GeoHashStorage::extract_type((char*)s.data()), 0x12345678);
+      }
+
       // In-memory database
       GeoHashStorage db;
 

@@ -41,7 +41,7 @@ class GeoHashStorage {
 
     // we use type+geohash key; type should be written in big endian order
     static std::string join_type(const uint32_t type, const std::string & hash);
-    static uint32_t extract_type(char *data);
+    static uint32_t extract_type(const char *data);
 
     // set bbox for coordinate transformation
     virtual void set_db_range(const dRect & range_){ BB = range_; }
