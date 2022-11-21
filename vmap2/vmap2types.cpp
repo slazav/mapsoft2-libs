@@ -80,8 +80,8 @@ VMap2types::load(const std::string & fname){
           continue;
         }
         if (vs[1] == "label_type"){
-          if (vs.size()!=3) throw Err() << "+ label_type: argument expected: <integer type>";
-          o->second.label_type = VMap2obj::make_type(VMAP2_TEXT, str_to_type<int>(vs[2]));
+          if (vs.size()!=3) throw Err() << "+ label_type: argument expected: <type number or -1>";
+          o->second.label_type = str_to_type<int>(vs[2]);
           continue;
         }
         if (vs[1] == "label_def_scale"){

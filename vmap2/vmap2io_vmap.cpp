@@ -30,7 +30,7 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
 
   // this should go to options:
   // default type for unknown labels (use -1 to skip them)
-  uint32_t def_label_type = opts.get<uint32_t>("def_label_type", -1);
+  int def_label_type = opts.get<uint32_t>("def_label_type", -1);
 
   // be quiet (by default types of skipped objects are printed)
   bool quiet = opts.get("quite", false);
@@ -52,7 +52,7 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
     uint32_t type = (cl<<24) + tnum;
 
     // find type information if any.
-    uint32_t label_type = def_label_type;
+    int label_type = def_label_type;
     float label_def_scale = 1.0;
     if (types.count(type)){
       auto t = types.find(type)->second;

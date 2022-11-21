@@ -28,7 +28,7 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
   }
   if (read) {
     opts.add("def_label_type",  1, 0, "VMAP",
-        "When reading VMAP file, set type for labels which are not "
+        "When reading VMAP file, set type number for labels which are not "
         " defined in typeinfo file. Use -1 to skip unknown labels (default)."
         " If skip_unknown is set then labels are skipped with unknown objects.");
     if (!write) ms2opt_add_mp_i(opts);// MP group, reading mp files

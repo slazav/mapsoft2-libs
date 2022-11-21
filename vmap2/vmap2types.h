@@ -16,7 +16,7 @@ public:
   std::string fig_mask; // mask for FIG format
   Fig         fig_pic;  // picture for FIG format
   int mp_start, mp_end; // start/end level for MP format
-  int label_type;       // type for related lables
+  int    label_type;    // type number for related labels, -1 for none
   float  label_def_scale; // initial scale for labels
 
   VMap2type(): mp_start(0), mp_end(0), label_type(-1), label_def_scale(1.0) {}
