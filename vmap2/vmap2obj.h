@@ -61,7 +61,7 @@ struct VMap2obj: public dMultiLine {
   // - second byte: reserved;
   // - two last bytes: type number (= MP type)
   uint32_t        type;
-  float           angle;   // object angle, deg (default is NaN!)
+  float           angle;   // object angle, CW, deg, (default is NaN)
   float           scale;   // object scale (default is 1.0)
   VMap2objAlign   align;   // align
   std::string     name;    // object name (to be printed on map labels)

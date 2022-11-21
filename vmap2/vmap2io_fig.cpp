@@ -7,6 +7,64 @@
 
 /****************************************************************************/
 
+// Check if a fig object matches template.
+// This is used to find vmap2 type for a fig object
+// using templates in typeinfo.fig_mask.
+bool
+fig_match_template(const FigObj & o, const std::string & tmpl){
+  FigObj t = figobj_template(tmpl); // make template object
+  int c1 = o.pen_color;
+  int c2 = t.pen_color;
+
+  // lines
+  if ((o.is_polyline() || o.is_spline()) && (o.size()>1)){
+    // depth and thickness should match:
+    if ((o.depth != t.depth) ||
+        (o.thickness != t.thickness)) return false;
+    // if thickness > 0 color and line style should match:
+    if (o.thickness!=0 &&
+        (c1!=c2 || o.line_style!=t.line_style)) return false;
+
+    // fill
+    int af1 = o.area_fill;
+    int af2 = t.area_fill;
+    int fc1 = o.fill_color;
+    int fc2 = t.fill_color;
+    // there are two types of white fill
+    if ((fc1!=0xffffff)&&(af1==40)) {fc1=0xffffff; af1=20;}
+    if ((fc2!=0xffffff)&&(af2==40)) {fc2=0xffffff; af2=20;}
+
+    // fill type should match:
+    if (af1 != af2) return false;
+    // if fill is not transparent, fill color should match:
+    if (af1!=-1 && fc1!=fc2) return false;
+
+    // for hatch filling pen_color should match (even if thickness=0)
+    if (af1>41 && c1!=c2) return false;
+
+    // After all tests we assume that object has this type!
+    return true;
+  }
+
+  // points
+  if ((o.is_polyline() || o.is_spline()) && o.size()==1){
+    //depth, thickness, color, cap_style should match:
+    if (o.depth != t.depth || o.thickness != t.thickness ||
+        c1 != c2 || (o.cap_style%2)!=(t.cap_style%2)) return false;
+    return true;
+  }
+
+  // text
+  if (o.is_text()){
+    // depth, color, font should match:
+    if (o.depth!=t.depth || c1!=c2 || o.font!=t.font) return false;
+    return true;
+  }
+
+  return false;
+}
+
+// find vmap2 type for a fig object
 uint32_t
 fig_to_type (const FigObj & o, const VMap2types & types) {
 
@@ -15,59 +73,58 @@ fig_to_type (const FigObj & o, const VMap2types & types) {
 
   for (const auto & type:types){
     if (type.second.fig_mask == "") continue;
-
-    auto t = figobj_template(type.second.fig_mask); // template object
-    int c1 = o.pen_color;
-    int c2 = t.pen_color;
-
-    // lines
-    if ((o.is_polyline() || o.is_spline()) && (o.size()>1)){
-      // depth and thickness should match:
-      if ((o.depth != t.depth) ||
-          (o.thickness != t.thickness)) continue;
-      // if thickness > 0 color and line style should match:
-      if (o.thickness!=0 &&
-          (c1!=c2 || o.line_style!=t.line_style)) continue;
-
-      // fill
-      int af1 = o.area_fill;
-      int af2 = t.area_fill;
-      int fc1 = o.fill_color;
-      int fc2 = t.fill_color;
-      // there are two types of white fill
-      if ((fc1!=0xffffff)&&(af1==40)) {fc1=0xffffff; af1=20;}
-      if ((fc2!=0xffffff)&&(af2==40)) {fc2=0xffffff; af2=20;}
-
-      // fill type should match:
-      if (af1 != af2) continue;
-      // if fill is not transparent, fill color should match:
-      if (af1!=-1 && fc1!=fc2) continue;
-
-      // for hatch filling pen_color should match (even if thickness=0)
-      if (af1>41 && c1!=c2) continue;
-
-      // After all tests we assume that object has this type!
-      return type.first;
-    }
-
-    // points
-    if ((o.is_polyline() || o.is_spline()) && o.size()==1){
-      //depth, thickness, color, cap_style should match:
-      if (o.depth != t.depth || o.thickness != t.thickness ||
-          c1 != c2 || (o.cap_style%2)!=(t.cap_style%2)) continue;
-      return type.first;
-    }
-
-    // text
-    if (o.type==4){
-      // depth, color, font should match:
-      // должны совпасть глубина, цвет, и шрифт
-      if (o.depth!=t.depth || c1!=c2 || o.font!=t.font) continue;
-      return type.first;
-    }
+    if (fig_match_template(o, type.second.fig_mask)) return type.first;
   }
   return 0;
 }
+
+// check typeinfo fig templates
+void
+fig_check_typeinfo(const VMap2types & types,
+                   const int min_depth, const int max_depth){
+
+  // Check that typeinfo is not empty.
+  if (types.empty()) throw Err()
+    << "typeinfo is empty, nothing can be converted (use -t option)";
+
+  for (const auto & type1:types){
+    if (type1.second.fig_mask == "") continue;
+
+    FigObj o = figobj_template(type1.second.fig_mask);
+
+    // Check that fig_mask can not be matched by any other fig_mask.
+    // (object can not match two types).
+    for (const auto & type2:types){
+      if (type2.first <= type1.first) continue; // each pair only once
+      if (type2.second.fig_mask == "") continue;
+      if (fig_match_template(o, type2.second.fig_mask)) throw Err()
+        << "typeinfo: fig templates for two types can match one object: "
+        << VMap2obj::print_type(type1.first) << " and "
+        << VMap2obj::print_type(type2.first);
+    }
+
+    // Check that fig_mask contains object with depth inside
+    // min_depth - max_depth range.
+    if (o.depth < min_depth) throw Err()
+        << "typeinfo: fig depth is smaller then min_depth setting: "
+        << VMap2obj::print_type(type1.first)
+        << ": " << o.depth << " < " << min_depth;
+    if (o.depth > max_depth) throw Err()
+        << "typeinfo: fig depth is bigger then max_depth setting: "
+        << VMap2obj::print_type(type1.first)
+        << ": " << o.depth << " > " << max_depth;
+
+    // Check that label_type contains existing type number.
+    if (type1.second.label_type>=0){
+      auto t = VMap2obj::make_type(VMAP2_TEXT, type1.second.label_type);
+      if (types.count(t)==0) throw Err()
+        << "typeinfo: " << VMap2obj::print_type(type1.first)
+        << " has label_type = " << type1.second.label_type
+        << " but " << VMap2obj::print_type(t) << " does not exists";
+    }
+  }
+}
+
 
 // Map parts to be removed when rewriting fig file
 bool
@@ -105,11 +162,10 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     << "no reference in FIG file: " << ifile;
   ConvMap cnv(ref);
 
-  if (types.empty()) throw Err()
-    << "typeinfo is empty, nothing can be converted (use -t option)";
-
   size_t min_depth = opts.get("min_depth", 40);
   size_t max_depth = opts.get("max_depth", 200);
+
+  fig_check_typeinfo(types, min_depth, max_depth);
 
   std::vector<std::string> cmp_comm;
   for (const auto & o:fig){
@@ -178,9 +234,13 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
       for (size_t i=0; i<comm.size(); i++)
         o1.comm += (i>0?"\n":"") + comm[i];
 
-      // angle -- from text angle
-      // angle is inverted because of y inversion
-      if (o.angle!=0) o1.angle = -cnv.frw_angd(pt0, 180/M_PI*o.angle, 1000);
+      // Text angle in fig, rad, CCW
+      if (o.angle!=0){
+        dPoint pt1(pt0), pt2(pt0+dPoint(0,1e-4)); // up direction, deg
+        cnv.bck(pt1); cnv.bck(pt2);  pt1-=pt2;
+        double da = atan2(pt1.y, pt1.x) - M_PI/2;
+        o1.angle = - 180/M_PI*(o.angle - da);
+      }
       else o1.angle = std::nan("");
     }
     // == Other objects ==
@@ -196,6 +256,9 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
         for (size_t i = 1; i<comm.size(); i++)
           o1.comm += (i>1?"\n":"") + comm[i];
       }
+      // Angle and Align for non-text objects
+      if (o_opts.exists("Angle")) o1.angle = o_opts.get<float>("Angle");
+      if (o_opts.exists("Align")) o1.align = VMap2obj::parse_align(o_opts.get("Align"));
 
     }
 
@@ -219,6 +282,8 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
   // Read fig file (wee need reference and non-map objects)
   Fig fig;
   read_fig(ofile, fig, opts);
+
+  fig_check_typeinfo(types, min_depth, max_depth);
 
   // get fig reference
   GeoMap ref = fig_get_ref(fig);
@@ -257,11 +322,6 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
 
     FigObj o1 = figobj_template(info.fig_mask);
 
-    // convert angle
-    double angle = o.angle;
-    if (!std::isnan(o.angle)){
-      angle=-cnv.bck_angd(pt0, -o.angle, 0.01);
-    }
 
     // Tags, space-separated words
     if (o.tags.size()>0)
@@ -272,19 +332,30 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       fig_add_opt(o1, "Scale", type_to_str(o.scale));
 
 
+    // For non-text objects keep original angle and
+    // align in options. Put name and comments to obejct comments.
     if (o.get_class() != VMAP2_TEXT) {
-      // We use text direction to keep (and edit) alignment
       if (o.align!=0)
-        fig_add_opt(o1, "Align", type_to_str<int>(o.align));
+        fig_add_opt(o1, "Align", VMap2obj::print_align(o.align));
 
-      // We use text angle to keep (and edit) angle
-      if (!std::isnan(angle))
-        fig_add_opt(o1, "Angle", type_to_str(angle));
+      if (!std::isnan(o.angle))
+        fig_add_opt(o1, "Angle", type_to_str(o.angle));
 
       if (o.name!="" || o.comm!="")
         o1.comment.push_back(o.name);
       if (o.comm!="")
         o1.comment.push_back(o.comm);
+    }
+
+    // Convert angle. It will be needed to rotate text and
+    // point pictures. Value is CCW, radians.
+    // see also GObjVMap2::DrawingStep::convert_coords()
+    double angle = o.angle;
+    if (!std::isnan(o.angle)){
+      dPoint pt1(pt0), pt2(pt0+dPoint(0,1e-4)); // up direction, deg
+      cnv.bck(pt1); cnv.bck(pt2);  pt1-=pt2;
+      double da = atan2(pt1.y, pt1.x) - M_PI/2;
+      angle=-M_PI/180*o.angle + da;
     }
 
     dMultiLine pts(o);
@@ -329,7 +400,8 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       if (info.fig_pic.size()){
         std::list<FigObj> pic = info.fig_pic;
         for (auto & o:pic) fig_add_opt(o, "MapType", "pic");
-        if (!std::isnan(angle)) fig_rotate(pic, angle);
+        if (o.scale!=1.0) fig_scale(pic, o.scale);
+        if (!std::isnan(angle)) fig_rotate(pic, -angle);
         fig_shift(pic, pt0);
         pic.push_back(o1);
         fig_make_comp(pic);
@@ -360,8 +432,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
         case VMAP2_ALIGN_E:
         case VMAP2_ALIGN_SE: o1.sub_type=2; break;
       }
-      o1.angle = std::isnan(angle)? 0 : M_PI/180*angle;
-
+      o1.angle = std::isnan(angle)? 0:angle;
       o1.font_size = o.scale * o1.font_size;
       o1.push_back(pt0);
       fig.push_back(o1);
