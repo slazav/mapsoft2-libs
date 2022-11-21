@@ -29,8 +29,8 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
   VMap vmap = read_vmap(ifile);
 
   // this should go to options:
-  // default type for unknown labels (use 0 to skip them)
-  uint32_t def_label_type = opts.get<uint32_t>("def_label_type", 0);
+  // default type for unknown labels (use -1 to skip them)
+  uint32_t def_label_type = opts.get<uint32_t>("def_label_type", -1);
 
   // be quiet (by default types of skipped objects are printed)
   bool quiet = opts.get("quite", false);
@@ -63,7 +63,7 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
       if (!quiet) skipped_types.insert(type);
       continue;
     }
-    if (o.labels.size()>0 && label_type == 0 && !quiet)
+    if (o.labels.size()>0 && label_type<0 && !quiet)
       skipped_labels.insert(type);
 
     // make object
@@ -93,7 +93,7 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
     vmap2.add(o1);
 
     // lables attached to the object:
-    if (label_type > 0){
+    if (label_type >= 0){
       auto tt = VMap2obj::make_type(VMAP2_TEXT, label_type);
       for (auto const & l:o.labels){
         VMap2obj l1(tt);
@@ -145,8 +145,8 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
   if (skipped_labels.size()){
     std::cerr <<
        "Reading VMAP file: labels for following types were skipped because "
-       "label_type in the typeinfo file is 0, or type is unknown and "
-       "def_label_type parameter is 0:\n";
+       "label_type in the typeinfo file is -1, or type is unknown and "
+       "def_label_type parameter is -1:\n";
     for (const auto & t:skipped_labels)
       std::cerr << VMap2obj::print_type(t) << "\n";
   }
