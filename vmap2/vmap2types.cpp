@@ -84,7 +84,11 @@ VMap2types::load(const std::string & fname){
           o->second.label_type = VMap2obj::make_type(VMAP2_TEXT, str_to_type<int>(vs[2]));
           continue;
         }
-
+        if (vs[1] == "label_def_scale"){
+          if (vs.size()!=3) throw Err() << "+ label_def_scale: argument expected: <scale>";
+          o->second.label_def_scale = str_to_type<float>(vs[2]);
+          continue;
+        }
 
         throw Err() << "unknown feature: " << vs[1];
       }
