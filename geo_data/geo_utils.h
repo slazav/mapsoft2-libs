@@ -53,6 +53,9 @@ extern std::map<std::string, std::pair<int, int> > os_codes;
 // Convert OS grid reference to a x,y point
 dPoint os_to_pt(const std::string & s);
 
+// Convert extended nomenclature name to WGS rectangle.
+dRect nom_to_wgs(const std::string & name);
+
 /********************************************************************/
 
 #endif

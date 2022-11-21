@@ -162,3 +162,13 @@ os_to_pt(const std::string & str){
   return dPoint(x,y);
 }
 
+#include "conv_geo.h"
+#include "geo_nom/geo_nom.h"
+dRect
+nom_to_wgs(const std::string & name){
+  nom_scale_t sc;
+  auto r = nom_to_range(name, sc, true);
+  ConvGeo cnv("SU_LL");
+  // Default accuracy in frw_acc is 0.5, convert only corners:
+  return cnv.frw_acc(r);
+}
