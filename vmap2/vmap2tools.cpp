@@ -23,12 +23,12 @@ do_keep_labels(VMap2 & mapo, VMap2 & mapn){
 // except ones with the given tag
 void
 do_update_tag(VMap2 & mapo, VMap2 & mapn, const std::string & tag){
-  // remove objects without the tag in mapn
+  // add the tag to all objects in mapn
   mapn.iter_start();
   while (!mapn.iter_end()){
     auto p = mapn.iter_get_next();
-    if (!p.second.tags.count(tag)>0)
-      mapn.del(p.first);
+    p.second.tags.insert(tag);
+    mapn.put(p.first, p.second);
   }
   // transfer objects without the tag from mapo to mapn
   mapo.iter_start();
