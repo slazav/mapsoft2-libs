@@ -122,13 +122,13 @@ GeoHashStorage::get_hash(const std::string & hash0, bool exact) const{
 // we use type+geohash key
 std::string
 GeoHashStorage::join_type(const uint32_t type, const std::string & hash){
-  std::ostringstream ss;
-  ss << (char)((type>>24)&0xFF);
-  ss << (char)((type>>16)&0xFF);
-  ss << (char)((type>>8)&0xFF);
-  ss << (char)(type&0xFF);
-  ss.write(hash.data(), hash.size());
-  return ss.str();
+  std::string t;
+  t.resize(4);
+  t[0] = (char)((type>>24)&0xFF);
+  t[1] = (char)((type>>16)&0xFF);
+  t[2] = (char)((type>>8)&0xFF);
+  t[3] = (char)(type&0xFF);
+  return t + hash;
 }
 
 uint32_t
