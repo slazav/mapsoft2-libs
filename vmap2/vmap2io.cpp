@@ -4,6 +4,7 @@
 #include "geo_mkref/geo_mkref.h"
 #include "fig_geo/fig_geo.h"
 #include "fig_opt/fig_opt.h"
+#include "geo_data/geo_utils.h"
 
 /****************************************************************************/
 
@@ -36,6 +37,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
   if (write) {
     opts.add("mp_ip",        1, 0, "MP", "override MP ID");
     opts.add("mp_name",      1, 0, "MP", "override MP Name");
+    opts.add("crop_nom",     1, 0, "VMAP2", "crop map to nomenclature region");
+    opts.add("crop_rect",    1, 0, "VMAP2", "crop map to a rectangle");
+    opts.add("update_labels",1, 0, "VMAP2", "update labels");
     opts.add("keep_labels",  1, 0, "VMAP2", "keep old labels");
     opts.add("update_tag",   1, 0, "VMAP2", "only update objects with a tag");
     opts.add("fix_rounding", 1, 0,
@@ -91,11 +95,13 @@ void
 vmap2_export(VMap2 & vmap2, const VMap2types & types,
              const std::string & ofile, const Opt & opts){
 
+  bool update_labels = opts.get("update_labels", false);
   bool keep_labels = opts.get("keep_labels", false);
   std::string update_tag = opts.get("update_tag");
   bool fix_rounding = opts.get("fix_rounding", false);
   double rounding_acc = opts.get("rounding_acc", 5); // m
-
+  std::string crop_nom = opts.get("crop_nom");
+  std::string crop_rect = opts.get("crop_rect");
 
   // Merge with old data if needed
   if ((keep_labels || update_tag!="" || fix_rounding) &&
@@ -112,8 +118,16 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
 
     if (fix_rounding)
       do_fix_rounding(vmap2o, vmap2, rounding_acc);
-
   }
+
+  if (update_labels)
+      do_update_labels(vmap2, types);
+
+  if (crop_nom.size())
+     do_crop_rect(vmap2, nom_to_wgs(crop_nom));
+
+  if (crop_rect.size())
+    do_crop_rect(vmap2, dRect(crop_rect));
 
   // Save files
   if (file_ext_check(ofile, ".vmap2db")){

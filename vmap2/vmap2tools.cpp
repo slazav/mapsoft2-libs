@@ -1,6 +1,7 @@
 #include "vmap2tools.h"
 #include <map>
 #include "geo_data/geo_utils.h"
+#include "geom/line_rectcrop.h"
 
 /****************************************************************************/
 
@@ -166,3 +167,117 @@ do_fix_rounding(VMap2 & mapo, VMap2 & mapn, double D){
 }
 
 /****************************************************************************/
+
+// make a new label for object
+VMap2obj
+do_make_label(const VMap2obj & o, const VMap2type & t){
+  if (t.label_type<0) throw Err()
+    << "can't make label: no label type";
+  VMap2obj label(VMAP2_TEXT, t.label_type);
+
+  dRect r = o.bbox();
+  if (r.is_empty()) throw Err()
+    << "can't make label: empty object";
+
+  // Label position.
+  dPoint pt0 = r.cnt();
+
+  dLine pts;
+  pts.push_back(pt0);
+  label.push_back(pts);
+
+  label.name = o.name;
+  label.ref_type = o.type;
+  label.ref_pt = geo_nearest_pt(o, pt0);
+  label.scale = t.label_def_scale;
+  return label;
+}
+
+void
+do_update_labels(VMap2 & map, const VMap2types & types){
+  double dist1 = 10.0; // move to options?
+  double dist2 = 1000.0; // move to options?
+  // Build multimap object_id -> label_id
+  auto ref_tab = map.find_refs(dist1,dist2);
+
+  std::set<uint32_t> ids_to_del;
+
+  // Loop through VMap2 objects:
+  map.iter_start();
+  while (!map.iter_end()){
+    auto p = map.iter_get_next();
+    auto id = p.first;
+    auto & o = p.second;
+
+    // check that it's not types.end() before use!
+    auto t = types.find(o.type);
+
+    // create label if needed
+    if (ref_tab.count(id)==0){
+
+      // find label type in typeinfo
+      if (t==types.end()) continue;
+      if (t->second.label_type<0) continue;
+
+      // create label object
+      map.add(do_make_label(o, t->second));
+      continue;
+    }
+
+    // for each existing label
+    for (auto i=ref_tab.lower_bound(id);
+              i!=ref_tab.upper_bound(id); ++i){
+      auto id_l = i->second;
+      auto label = map.get(id_l);
+
+      // update label type
+      if (t!=types.end()){
+        if (t->second.label_type<0){
+          ids_to_del.insert(id_l);
+          continue;
+        }
+        label.set_type(VMAP2_TEXT, t->second.label_type);
+      }
+
+      // update label type, name and ref_pt
+      label.name = o.name;
+      if (label.size()==0 || label[0].size()==0) continue;
+      label.ref_pt = geo_nearest_pt(o, label[0][0]);
+      map.put(id_l, label);
+    }
+  }
+
+  // delete unconnected labels
+  uint32_t noid = 0xFFFFFFFF;
+  for (auto i=ref_tab.lower_bound(noid);
+            i!=ref_tab.upper_bound(noid); ++i)
+    map.del(i->second);
+
+  // delete labels connected to objects with empty label_type
+  for (const auto & i:ids_to_del) map.del(i);
+}
+
+void
+do_crop_rect(VMap2 & map, const dRect & r){
+  // Loop through VMap2 objects:
+  map.iter_start();
+  while (!map.iter_end()){
+    auto p = map.iter_get_next();
+    auto id = p.first;
+    auto & o = p.second;
+    bool closed = (o.get_class() == VMAP2_POLYGON);
+
+    dMultiLine pts;
+    for (auto & line:o){
+      rect_crop(r, line, closed);
+      auto ml = rect_split_cropped(r, line, closed);
+      pts.insert(pts.end(), ml.begin(), ml.end());
+    }
+    if (pts.empty()){
+      map.del(id);
+      continue;
+    }
+    o.set_coords(pts);
+    map.put(id, o);
+  }
+}
