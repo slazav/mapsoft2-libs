@@ -1,6 +1,9 @@
 ## Mapsoft2 can read and write MP files.
 
 
+Format documentation:
+http://magex.sourceforge.net/doc/cGPSmapper-UsrMan-v02.4.pdf
+
 #### Reading:
 
 - Section names and keywords are case insensitive.
