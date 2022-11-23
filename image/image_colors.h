@@ -7,7 +7,7 @@
 #include "geom/line.h"
 #include "opt/opt.h"
 
-// add IMAGE group of options
+// add IMAGE_CMAP group of options
 #include "getopt/getopt.h"
 void ms2opt_add_image_cmap(GetOptSet & opts);
 
