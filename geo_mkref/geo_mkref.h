@@ -33,6 +33,19 @@ void ms2opt_add_mkref_data(GetOptSet & opts);
 
 /********************************************************************/
 
+/*
+Example of using all three functions (from ms2render.cpp):
+
+  GeoMap ref = geo_mkref_opts(O);  // create ref from options if possible
+  if (ref.empty())
+    ref = geo_mkref_data(data, O); // if not, create from geo_data
+  if (ref.empty())
+    ref=ref_v;                     // if not, use some external default
+  geo_mkref_brd(ref, O);           // update border from options
+
+*/
+
+
 // Make map reference from --mkref options, return empty
 // map if --mkref does not exist.
 GeoMap geo_mkref_opts(const Opt & o);
