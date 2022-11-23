@@ -89,6 +89,11 @@ VMap2types::load(const std::string & fname){
           o->second.label_def_scale = str_to_type<float>(vs[2]);
           continue;
         }
+        if (vs[1] == "label_mkpt"){
+          if (vs.size()!=3) throw Err() << "+ label_mkpt: argument expected: <type number or -1>";
+          o->second.label_mkpt = str_to_type<int>(vs[2]);
+          continue;
+        }
 
         throw Err() << "unknown feature: " << vs[1];
       }

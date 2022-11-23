@@ -202,7 +202,6 @@ do_update_labels(VMap2 & map, const VMap2types & types){
 
   std::set<uint32_t> ids_to_del;
 
-
   // Create labels
   map.iter_start();
   while (!map.iter_end()){
@@ -212,14 +211,40 @@ do_update_labels(VMap2 & map, const VMap2types & types){
 
     auto t = types.find(obj.type);
     if (t==types.end()) continue;
-
     // create label if needed
     if (ref_tab.count(id)==0 &&
         t->second.label_type>=0 &&
+        obj.get_class() != VMAP2_TEXT &&
         obj.name!=""){
       auto id_l = map.add(do_make_label(obj, t->second));
       ref_tab.emplace(id, id_l);
     }
+
+    // Reconnect label to a point (if label_mkpt>=0)
+    if (t->second.label_mkpt >=0 &&
+        obj.name!="" &&
+        obj.get_class() != VMAP2_TEXT &&
+        ref_tab.count(id)>0){
+      // create point, move object name to it
+      VMap2obj pt(VMAP2_POINT, t->second.label_mkpt);
+      dPoint p0 = obj.bbox().cnt();
+      pt.set_coords(p0);
+      pt.name.swap(obj.name);
+      auto id_pt = map.add(pt);
+      // reconnect all labels to the point
+      for (auto i = ref_tab.lower_bound(id);
+                i != ref_tab.upper_bound(id); ++i) {
+        auto id_l = i->second;
+        auto lab = map.get(id_l);
+        lab.ref_pt = p0;
+        lab.ref_type = pt.type;
+        map.put(id_l, lab);
+        ref_tab.emplace(id_pt, id_l);
+      }
+      ref_tab.erase(ref_tab.lower_bound(id),
+                    ref_tab.upper_bound(id));
+    }
+
   }
 
   // Update existing labels
