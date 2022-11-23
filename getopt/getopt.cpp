@@ -12,17 +12,18 @@ using namespace std;
 /**********************************************/
 
 void
-ms2opt_add_std(GetOptSet & opts){
-  const char *g = "STD";
-  opts.add("help",    0,'h', g, "Show help message.");
-  opts.add("pod",     0, 0 , g, "Show help message as POD template.");
-  opts.add("verbose", 0,'v', g, "Be verbose.\n");
-}
-
-void
-ms2opt_add_out(GetOptSet & opts){
-  const char *g = "OUT";
-  opts.add("out", 1, 'o', g, "Output file.");
+ms2opt_add_std(GetOptSet & opts, const std::set<std::string> & groups){
+  for (const auto & g:groups){
+    if (g=="HELP")
+      opts.add("help", 0,'h', g, "Show help message.");
+    else if (g=="POD")
+      opts.add("pod", 0, 0 , g, "Show help message as POD template.");
+    else if (g=="VERB")
+      opts.add("verbose", 0,'v', g, "Be verbose.\n");
+    else if (g=="OUT")
+      opts.add("out", 1, 'o', g, "Output file.");
+    else throw Err() << "ms2opt_add_std: unknown option group: " << g;
+  }
 }
 
 /**********************************************/

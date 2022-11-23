@@ -5,9 +5,7 @@
 // Action interface:
 Action::Action(const std::string & name, const std::string & descr):
     name(name), descr(descr){
-  ms2opt_add_std(options);
-  options.remove("verbose");
-  options.remove("pod");
+  ms2opt_add_std(options, {"HELP"});
 }
 
 void
@@ -15,9 +13,7 @@ Action::help(bool pod){
   std::string fullname = std::string("ms2vmap ") + name;
   HelpPrinter pr(pod, options, fullname);
   pr.head(1, name + " -- " + descr);
-  // We do not want to show it in the help message.
-  // Now MS2OPT_STD should be empty. If not, HelpPrinter will
-  // print an error.
+  // We do not want to show -h in the help message:
   options.remove("help");
   help_impl(pr);
 }
@@ -44,7 +40,7 @@ usage(const ActionList & actions, const GetOptSet & options,
   pr.usage("<action> [<action arguments and options>]");
 
   pr.head(1, "General options:");
-  pr.opts({"STD"});
+  pr.opts({"HELP", "POD"});
   pr.head(1, "Actions:");
 
   // print list of actions
@@ -65,8 +61,7 @@ ActionProg(int argc, char *argv[],
   try{
 
     GetOptSet options;
-    ms2opt_add_std(options);
-    options.remove("verbose");
+    ms2opt_add_std(options, {"HELP", "POD"});
 
     // general options -- up to first non-option argument
     Opt O = parse_options(&argc, &argv, options, {}, NULL);

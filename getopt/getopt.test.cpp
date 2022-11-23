@@ -31,7 +31,7 @@ usage(bool pod=false){
      << "output file according with output options.\n"
   ;
   pr.head(1, "General options:");
-  pr.opts({"STD", "OUT"});
+  pr.opts({"HELP", "POD", "VERB", "OUT"});
   pr.head(1, "Input options:");
   pr.opts({"MY_INP"});
   pr.head(1, "Common options (can be used as input and output options):");
@@ -68,14 +68,11 @@ main(int argc, char *argv[]){
     // do nothing, duplicated option in the same group
     options.add("out2",  0,'P', "MY_OUT", "this description will not be used");
 
-    // standard options: "STD", "OUT"
-    ms2opt_add_std(options);
-    ms2opt_add_out(options);
-
+    ms2opt_add_std(options, {"HELP", "POD", "VERB", "OUT"});
     if (argc<2) usage();
 
     Opt O = parse_options(&argc, &argv, options,
-      {"STD", "OUT", "MY_INP", "MY_CMN"}, "out");
+      {"HELP", "POD", "VERB", "OUT", "MY_INP", "MY_CMN"}, "out");
     if (O.exists("help")) usage();
     if (O.exists("pod"))  usage(true);
     bool verb = O.exists("verbose");

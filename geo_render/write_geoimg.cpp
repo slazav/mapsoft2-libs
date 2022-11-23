@@ -12,7 +12,7 @@
 
 void
 ms2opt_add_geoimg(GetOptSet & opts){
-  ms2opt_add_out(opts);
+  ms2opt_add_std(opts, {"OUT"});
   ms2opt_add_image(opts);
   ms2opt_add_ozimap_o(opts);
 

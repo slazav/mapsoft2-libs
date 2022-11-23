@@ -12,11 +12,9 @@ class Action {
     GetOptSet options;
   public:
 
-    // constructor: add standard options
+    // constructor: add help option
     Action(){
-      ms2opt_add_std(options);
-      options.remove("verbose");
-      options.remove("pod");
+      ms2opt_add_std(options, {"HELP"});
     }
 
     // action name
@@ -30,7 +28,7 @@ class Action {
       std::string fullname = std::string("ms2vmap ") + get_name();
       HelpPrinter pr(pod, options, fullname);
       pr.head(1, get_name() + " -- " + get_descr());
-      // We do not want to show it in the help message.
+      // We do not want to show -h in the help message.
       // Now MS2OPT_STD should be empty. If not, HelpPrinter will
       // print an error.
       options.remove("help");

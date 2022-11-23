@@ -33,7 +33,7 @@ void usage(bool pod=false){
   pr.usage("<action> [<action arguments and options>]");
 
   pr.head(1, "General options:");
-  pr.opts({"STD"});
+  pr.opts({"HELP", "POD"});
   pr.head(1, "Actions:");
 
   // print list of actions
@@ -54,8 +54,7 @@ int
 main(int argc, char *argv[]){
   try{
 
-    ms2opt_add_std(options);
-    options.remove("verbose");
+    ms2opt_add_std(options, {"HELP", "POD"});
 
     // general options -- up to first non-option argument
     Opt O = parse_options(&argc, &argv, options, {}, NULL);

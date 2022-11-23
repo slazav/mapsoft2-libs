@@ -106,11 +106,12 @@ public:
 
 /********************************************************************/
 
-// add STD group of options
-void ms2opt_add_std(GetOptSet & opts);
-
-// add OUT group of options
-void ms2opt_add_out(GetOptSet & opts);
+// Add some standard groups of options (one option per group):
+//   HELP --help -h
+//   POD  --pod
+//   VERB --verbose -v
+//   OUT  --out -o
+void ms2opt_add_std(GetOptSet & opts, const std::set<std::string> & groups);
 
 /********************************************************************/
 

@@ -17,7 +17,7 @@ void usage(bool pod=false){
   pr.name("draw_trk test program");
   pr.usage("[<options>] <input files>");
   pr.head(1, "General options:");
-  pr.opts(MS2OPT_STD);
+  pr.opts("HELP", "POD", "VERB", "OUT");
   pr.head(1, "Options for making map reference:");
   pr.opts(MS2OPT_MKREF);
   pr.head(1, "Options for drawing tracks:");
@@ -41,8 +41,7 @@ main(int argc, char **argv){
     options.add("map",  1,'m', MS2OPT_GEO_O, "write map file in OziExprorer format");
     options.add("map",  1,'m', MS2OPT_GEO_O, "output file, or \"view\"");
 
-    ms2opt_add_std(options);
-    ms2opt_add_out(options);
+    ms2opt_add_std(options, {"HELP", "POD", "VERB", "OUT"});
     ms2opt_add_geo_i(options);
     ms2opt_add_geo_io(options);
 
