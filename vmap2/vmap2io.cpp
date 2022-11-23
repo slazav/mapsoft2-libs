@@ -35,7 +35,7 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     if (!write) ms2opt_add_mp_i(opts);// MP group, reading mp files
   }
   if (write) {
-    opts.add("mp_ip",        1, 0, "MP", "override MP ID");
+    opts.add("mp_id",        1, 0, "MP", "override MP ID");
     opts.add("mp_name",      1, 0, "MP", "override MP Name");
     opts.add("crop_nom",     1, 0, "VMAP2", "crop map to nomenclature region");
     opts.add("crop_rect",    1, 0, "VMAP2", "crop map to a rectangle");
