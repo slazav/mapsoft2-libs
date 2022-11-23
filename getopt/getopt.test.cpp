@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "getopt.h"
+#include "help_printer.h"
 #include <cstring>
 #include "err/assert_err.h"
 

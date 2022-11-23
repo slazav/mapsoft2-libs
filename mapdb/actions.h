@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "mapdb/mapdb.h"
+#include "getopt/help_printer.h"
 
 // abstract class
 class Action {
