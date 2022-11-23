@@ -15,8 +15,10 @@ ms2opt_add_fig(GetOptSet & opts){
   const char *g = "FIG";
   opts.add("fig_enc", 1,0,g,
     "Encoding for reading/writing fig files (default: KOI8-R).");
-  opts.add("fig_header", 1,0,g,
-    "Read/write fig headers (default: true).");
+// // Fig_header option is needed only for tests,
+// // I do not believe it is useful for any programs.
+//  opts.add("fig_header", 1,0,g,
+//    "Read/write fig headers (default: true).");
 }
 
 /******************************************************************/
