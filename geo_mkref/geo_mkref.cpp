@@ -249,7 +249,7 @@ geo_mkref_opts(const Opt & o){
 
     // here tile_range should be set to non-zero rectangle
     if (tile_range.is_zsize())
-      throw Err() << "geo_mkref: empty tile range, use coords or tiles opotions";
+      throw Err() << "geo_mkref: empty tile range, use coords_* or tiles options";
 
     // z-index should be set here
     if (z<0) throw Err() << "geo_mkref: z-index not set";
