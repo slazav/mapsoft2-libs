@@ -51,10 +51,14 @@ get_ptsize(ConvBase & cnv, const dRect & r) {
 void
 GObjVMap2::set_ref(const GeoMap & r, bool set_ptsize) {
   ref = r;
-  if (ref.empty()) return;
-  ConvMap cnv(ref);
-  border = cnv.frw_acc(ref.border);
-  if (set_ptsize) ptsize0 = get_ptsize(cnv, r.bbox());
+  if (ref.empty()){
+    if (set_ptsize) ptsize0 = 0;
+  }
+  else {
+    ConvMap cnv(ref);
+    border = cnv.frw_acc(ref.border);
+    if (set_ptsize) ptsize0 = get_ptsize(cnv, r.bbox());
+  }
 }
 
 // set WGS border
@@ -180,7 +184,12 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
           o.put("dpi", vs[3]);
           set_ref( geo_mkref_opts(o), true );
         }
-        else throw Err() << "set_ref command: 'file' or 'nom' word is expected";
+        else if (vs[1] == "none") {
+          if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: set_ref none";
+          set_ref(GeoMap());
+        }
+        else throw Err() << "set_ref command: 'file', 'nom', or 'none' word expected";
         continue;
       }
 
@@ -197,7 +206,21 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
             << "set_brd: can't read any track from file: " << fname;
           border = *d.trks.begin();
         }
-        else throw Err() << "set_brd command: 'file' word is expected";
+        else if (vs[1] == "nom") {
+          if (vs.size()!=4) throw Err()
+            << "wrong number of arguments: set_ref nom <name> <dpi>";
+          Opt o;
+          o.put("mkref", "nom");
+          o.put("name", vs[2]);
+          o.put("dpi", vs[3]);
+          border = geo_mkref_opts(o).border;
+        }
+        else if (vs[1] == "none") {
+          if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: set_brd none";
+          border.clear();
+        }
+        else throw Err() << "set_brd command: 'file', 'nom', or 'none' word expected";
         continue;
       }
 
