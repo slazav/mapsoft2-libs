@@ -17,7 +17,6 @@
 
 // add VMAP2, MP, FIG, VMAP groups of options
 void ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write);
-void ms2opt_add_vmap2t(GetOptSet & opts);  // --type option (not used directly)
 
 /********************************************************************/
 

@@ -5,7 +5,15 @@
 #include <list>
 #include <map>
 #include "geo_data/geo_data.h"
+#include "read_words/read_words.h"
 #include "fig/fig.h"
+
+/********************************************************************/
+#include "getopt/getopt.h"
+
+void ms2opt_add_vmap2t(GetOptSet & opts);  // --type, --define options
+/********************************************************************/
+
 
 // Information about object type.
 // Used for converting objects to different vector formats.
@@ -26,8 +34,12 @@ public:
 // All object types
 class VMap2types : public std::map<int, VMap2type> {
 public:
+  // Constuctor: read configuration file
+  VMap2types(const Opt & o);
+
+private:
   // load from a file
-  void load(const std::string & fname);
+  void load(const std::string & fname, read_words_defs & defs);
 };
 
 #endif

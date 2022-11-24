@@ -1,20 +1,33 @@
 #include <fstream>
+#include <deque>
 #include "filename/filename.h"
-#include "read_words/read_words.h"
 #include "vmap2types.h"
 #include "vmap2obj.h"
 
 void
-VMap2types::load(const std::string & fname){
-  clear();
+ms2opt_add_vmap2t(GetOptSet & opts){
+  const char *g = "VMAP2";
+  opts.add("types",  1, 't', g, "File with type information.");
+  opts.add("define", 1, 'D', g, "Define variables for type information file.");
+}
+
+VMap2types::VMap2types(const Opt & o){
+  std::string file = o.get("types", "");
+  if (file == "") return;
+  read_words_defs defs(o.get("define", Opt()));
+  load(file, defs);
+}
+
+void
+VMap2types::load(const std::string & fname, read_words_defs & defs){
 
   std::ifstream ff(fname);
   if (!ff) throw Err() << "can't open file: " << fname;
   auto path = file_get_prefix(fname);
 
   int line_num[2] = {0,0}; // line counter for read_words
-  read_words_defs defs;    // variables
   int type = -1;           // current type
+  std::deque<bool> ifs;  // for if/endif commands
 
   while (1){
     auto vs = read_words(ff, line_num, false);
@@ -24,6 +37,51 @@ VMap2types::load(const std::string & fname){
     try{
       // definitions
       defs.apply(vs);
+
+      // include command
+      if (vs[0] == "include"){
+        if (vs.size()!=2) throw Err() << "include: filename expected";
+        auto fn = vs[1];
+        // should not happend, but lets check before accessing fn[0]:
+        if (fn.size() == 0) throw Err() << "include: empty filename";
+
+        if (fn[0] != '/') fn = path + fn;
+        load(fn, defs);
+        continue;
+      }
+
+      // endif command
+      if (vs[0] == "endif"){
+        if (ifs.size()<1) throw Err() << "unexpected endif command";
+        ifs.pop_back();
+        continue;
+      }
+      // else command
+      if (vs[0] == "else"){
+        if (ifs.size()<1) throw Err() << "unexpected else command";
+        ifs.back() = !ifs.back();
+        continue;
+      }
+      // if command
+      if (vs[0] == "if"){
+        if (vs.size() == 4 && vs[2] == "=="){
+          ifs.push_back(vs[1] == vs[3]);
+        }
+        else if (vs.size() == 4 && vs[2] == "!="){
+          ifs.push_back(vs[1] != vs[3]);
+        }
+        else
+          throw Err() << "wrong if syntax";
+        continue;
+      }
+
+      // check if conditions
+      bool skip = false;
+      for (auto const & c:ifs)
+        if (c == false) {skip = true; break;}
+      if (skip) continue;
+
+
 
       // define <key> <value> -- define a variable
       if (vs[0] == "define") {

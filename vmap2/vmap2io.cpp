@@ -55,12 +55,6 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
   if (read && write)  ms2opt_add_mp_io(opts);
 }
 
-void
-ms2opt_add_vmap2t(GetOptSet & opts){
-  const char *g = "VMAP2";
-  opts.add("types", 1, 't', g, "File with type information.");
-}
-
 /****************************************************************************/
 void vmap2_import(const std::vector<std::string> & ifiles, const VMap2types & types,
                  VMap2 & vmap2, const Opt & opts){
