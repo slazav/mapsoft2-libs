@@ -102,10 +102,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
         std::string f = ImageT::make_url(fname, tile);
         for (const auto & d: file_get_dirs(f, 1)) {
           if (dirs.count(d)>0) continue;
-          if (!file_exists(d)){
-            if (mkdir(d.c_str(), 0777)!=0)
-              throw Err() << "can't create directory: " << d << ": " << strerror(errno);
-          }
+          file_mkdir(d);
           dirs.insert(d);
         }
 
