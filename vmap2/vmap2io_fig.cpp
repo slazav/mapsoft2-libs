@@ -92,6 +92,16 @@ fig_check_typeinfo(const VMap2types & types,
 
     FigObj o = figobj_template(type1.second.fig_mask);
 
+    // Check that fig_mask contains fig object of correct type
+    auto cl = VMap2obj::get_class(type1.first);
+    if ((cl==VMAP2_POINT   && (o.type!=2 || o.sub_type!=1)) ||
+        (cl==VMAP2_LINE    && (o.type!=2 || (o.sub_type!=1 && o.sub_type!=3))) ||
+        (cl==VMAP2_POLYGON && (o.type!=2 || o.sub_type!=3)) ||
+        (cl==VMAP2_TEXT    && o.type!=4) )
+      throw Err() << "typeinfo: wrong type of fig template for object "
+                  << VMap2obj::print_type(type1.first)
+                  << ": " << type1.second.fig_mask;
+
     // Check that fig_mask can not be matched by any other fig_mask.
     // (object can not match two types).
     for (const auto & type2:types){
@@ -365,7 +375,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
     // Polygon: combine all segments to a single one
     // (TODO: some better solution is needed)
     if (o.get_class() == VMAP2_POLYGON){
-      o1.type=2;
+      o1.type=2; o1.sub_type=3;
       o1.set_points(join_polygons(pts));
       fig.push_back(o1);
       continue;
@@ -392,8 +402,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
 
     // Points
     if (o.get_class() == VMAP2_POINT){
-      o1.type=2;
-      o1.sub_type=1;
+      o1.type=2; o1.sub_type=1;
       o1.push_back(pt0);
 
       // Pictures
