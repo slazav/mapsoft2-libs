@@ -53,6 +53,7 @@ GObjVMap2::set_ref(const GeoMap & r, bool set_ptsize) {
   ref = r;
   if (ref.empty()){
     if (set_ptsize) ptsize0 = 0;
+    border.clear();
   }
   else {
     ConvMap cnv(ref);
@@ -162,65 +163,50 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         if (c == false) {skip = true; break;}
       if (skip) continue;
 
-      // set_ref command
-      if (vs.size() > 1 && vs[0] == "set_ref") {
+      // set_ref, set_brd commands
+      if (vs.size() > 1 &&
+         (vs[0] == "set_ref" || vs[0] == "set_brd")) {
         st.reset(); // "+" should not work after the command
-        if (vs[1] == "file") {
-          if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: set_ref file <filename>";
-          GeoData d;
-          std::string fname = cfgdir + vs[2];
-          read_geo(fname, d);
-          if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
-            << "set_ref: can't read any reference from file: " << fname;
-          set_ref( (*d.maps.begin())[0], true );
-        }
-        else if (vs[1] == "nom") {
-          if (vs.size()!=4) throw Err()
-            << "wrong number of arguments: set_ref nom <name> <dpi>";
-          Opt o;
-          o.put("mkref", "nom");
-          o.put("name", vs[2]);
-          o.put("dpi", vs[3]);
-          set_ref( geo_mkref_opts(o), true );
-        }
-        else if (vs[1] == "none") {
-          if (vs.size()!=2) throw Err()
-            << "wrong number of arguments: set_ref none";
-          set_ref(GeoMap());
-        }
-        else throw Err() << "set_ref command: 'file', 'nom', or 'none' word expected";
-        continue;
-      }
+        GeoMap r;
 
-      // set_brd command
-      if (vs.size() > 1 && vs[0] == "set_brd") {
-        st.reset(); // "+" should not work after the command
         if (vs[1] == "file") {
           if (vs.size()!=3) throw Err()
-            << "wrong number of arguments: set_brd file <filename>";
+            << "wrong number of arguments: " << vs[0] << " file <filename>";
           GeoData d;
           std::string fname = cfgdir + vs[2];
           read_geo(fname, d);
-          if (d.trks.size()<1) throw Err()
-            << "set_brd: can't read any track from file: " << fname;
-          border = *d.trks.begin();
+          if (vs[0] == "set_ref"){
+            if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
+              << "set_ref: can't read any reference from file: " << fname;
+             r = (*d.maps.begin())[0];
+          }
+          if (vs[0] == "set_brd"){
+            if (d.trks.size()<1) throw Err()
+              << "set_brd: can't read any track from file: " << fname;
+            border = *d.trks.begin();
+            continue; // no need to convert border and modify ref
+          }
         }
         else if (vs[1] == "nom") {
           if (vs.size()!=4) throw Err()
-            << "wrong number of arguments: set_ref nom <name> <dpi>";
+            << "wrong number of arguments: " << vs[0] << " nom <name> <dpi>";
           Opt o;
           o.put("mkref", "nom");
           o.put("name", vs[2]);
           o.put("dpi", vs[3]);
-          border = geo_mkref_opts(o).border;
+          r = geo_mkref_opts(o);
         }
         else if (vs[1] == "none") {
           if (vs.size()!=2) throw Err()
-            << "wrong number of arguments: set_brd none";
-          border.clear();
+            << "wrong number of arguments: " << vs[0] << " none";
+          // do nothing, r is empty
         }
-        else throw Err() << "set_brd command: 'file', 'nom', or 'none' word expected";
+        else throw Err() << vs[0] << "command: 'file', 'nom', or 'none' word expected";
+
+        if (vs[0] == "set_ref") ref = r;
+        if (vs[0] == "set_brd") ref.border = r.border;
+        set_ref(ref, true); // convert border, update ptsize0
+
         continue;
       }
 
