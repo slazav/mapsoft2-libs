@@ -165,9 +165,10 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
           if (vs.size()!=3) throw Err()
             << "wrong number of arguments: set_ref file <filename>";
           GeoData d;
-          read_geo(vs[2], d);
+          std::string fname = cfgdir + vs[2];
+          read_geo(fname, d);
           if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
-            << "set_ref: can't read any reference from file: " << vs[2];
+            << "set_ref: can't read any reference from file: " << fname;
           set_ref( (*d.maps.begin())[0], true );
         }
         else if (vs[1] == "nom") {
@@ -190,9 +191,10 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
           if (vs.size()!=3) throw Err()
             << "wrong number of arguments: set_brd file <filename>";
           GeoData d;
-          read_geo(vs[2], d);
+          std::string fname = cfgdir + vs[2];
+          read_geo(fname, d);
           if (d.trks.size()<1) throw Err()
-            << "set_brd: can't read any track from file: " << vs[2];
+            << "set_brd: can't read any track from file: " << fname;
           border = *d.trks.begin();
         }
         else throw Err() << "set_brd command: 'file' word is expected";
