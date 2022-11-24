@@ -107,6 +107,13 @@ int main() {
     assert_eq(file_rel_path("/d1/a.png",   "/d1/b.map"),   "/d1/a.png");
     assert_eq(file_rel_path("a.png",       "/d1/b.map"),    std::string(getcwd(0,0)) + "/a.png");
     assert_eq(file_rel_path("a.png",       "a/b/c/d/b.map"),  "../../../../a.png");
+
+    file_mkdir("."); // no need to do anything
+    assert_err(file_mkdir("filename.test.cpp"), "not a directory: filename.test.cpp");
+    assert_eq(file_exists("test_dir"), 0);
+    file_mkdir("test_dir"); // no need to do anything
+    assert_eq(file_exists("test_dir"), 1);
+    remove("test_dir");
 }
 
 ///\endcond

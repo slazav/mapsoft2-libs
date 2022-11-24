@@ -127,3 +127,14 @@ file_newer(const std::string & file_src, const std::string & file_dst){
   if (ts1==ts2) return tn1 > tn2;
   return ts1 > ts2;
 }
+
+void
+file_mkdir(const std::string & dir_name){
+  struct stat st;
+  if (stat(dir_name.c_str(), &st)!=0){
+    if (mkdir(dir_name.c_str(), 0755)!=0)
+      throw Err() << "can't make dir: " << dir_name;
+  }
+  else if (!S_ISDIR(st.st_mode))
+    throw Err() << "not a directory: " << dir_name;
+}

@@ -57,4 +57,7 @@ bool file_exists(const std::string & fname);
 //  - file_dst does not exist.
 bool file_newer(const std::string & file_src, const std::string & file_dst);
 
+// make directory if it does not exist
+void file_mkdir(const std::string & name);
+
 #endif
