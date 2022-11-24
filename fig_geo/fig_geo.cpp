@@ -2,6 +2,7 @@
 #include "fig_opt/fig_opt.h"
 #include "geo_data/geo_utils.h"
 #include "geo_data/conv_geo.h"
+#include "filename/filename.h"
 
 #include "image/io.h"
 
@@ -349,13 +350,7 @@ fig_add_maps(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   range.expand(marg);
 
   // create directory
-  struct stat st;
-  if (stat(dir_name.c_str(), &st)!=0){
-    if (mkdir(dir_name.c_str(), 0755)!=0)
-      throw Err() << "can't make dir: " << dir_name;
-  }
-  else if (!S_ISDIR(st.st_mode))
-    throw Err() << "not a directory: " << dir_name;
+  file_mkdir(dir_name);
 
   int nx = int(range.w)/(tsize-1)+1; // number of tiles
   int ny = int(range.h)/(tsize-1)+1;
