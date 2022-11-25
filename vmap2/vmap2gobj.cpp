@@ -24,12 +24,12 @@ ms2opt_add_vmap2_render(GetOptSet & opts){
   opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
   opts.add("define",      1,0,g, "Definitions for vector map rendering (json object)");
   opts.add("obj_scale",   1,0,g, "Rescaling factor for all objects, default 1.0.");
-  opts.add("vmap2_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
+  opts.add("vmap_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
            "reference). Below it the map is drawn by with color "
            "(see --vmap2_minsc_color option). Default is 0.01");
   opts.add("fit_patt_size", 0,0,g, "Adjust pattern size to fit image size. "
            "This option is useful for generating tiled images. Default: false.");
-  opts.add("vmap2_minsc_color", 1,0,g, "Color to draw maps below minimum scale (see --vmap2_minsc). "
+  opts.add("vmap_minsc_color", 1,0,g, "Color to draw maps below minimum scale (see --vmap2_minsc). "
            "Default is 0xFFDB5A00).");
 }
 /**********************************************************/
@@ -78,8 +78,8 @@ GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
 
   ptsize0 = 0;
   sc = 1.0;
-  minsc       = o.get<double>("vmap2_minsc", 0.01);
-  minsc_color = o.get<uint32_t>("vmap2_minsc_color", 0xFFDB5A00);
+  minsc       = o.get<double>("vmap_minsc", 0.01);
+  minsc_color = o.get<uint32_t>("vmap_minsc_color", 0xFFDB5A00);
   obj_scale   = o.get<double>("obj_scale", 1.0);
   max_text_size = 1024;
   clip_border = true;
