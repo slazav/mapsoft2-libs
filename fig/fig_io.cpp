@@ -513,14 +513,22 @@ read_fig(const std::string & fname, Fig & w, const Opt & ropts){
 /// write comments
 void
 write_comments(std::ostream & s, const vector<string> & comment, const IConv & cnv){
-  for (size_t n=0; n<comment.size(); n++){
+  size_t n=0;
+  for (const auto & c:comment){
     if (n>99) {cerr << "fig comment contains > 100 lines! Cutting...\n"; break;}
-    string str = comment[n];
-    if (str.size()>1022){
-      cerr << "fig comment line is > 1022 chars! Cutting...\n";
-      str.resize(1022);
+    size_t n1=0;
+    while (n1!=std::string::npos) {
+      size_t n2 = c.find('\n', n1);
+      size_t len = (n2==std::string::npos)? n2:n2-n1;
+      auto str = c.substr(n1,len);
+      n1  = (n2==std::string::npos)? n2:n2+1;
+      if (str.size()>1022){
+        cerr << "fig comment line is > 1022 chars! Cutting...\n";
+        str.resize(1022);
+      }
+      s << "# " << cnv(str) << "\n";
+      n++;
     }
-    s << "# " << cnv(str) << "\n";
   }
 }
 
