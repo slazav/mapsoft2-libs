@@ -1,4 +1,3 @@
-# This file should be included from Makefiles inside
 # module subdirs.
 #
 # Module name equals to the subdir name. Module h-file should
@@ -72,7 +71,7 @@ override LDLIBS_   += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                         pkg-config --libs '$(PKG_CONFIG)')
 
-override CXXFLAGS_ += -std=gnu++11 -Werror=return-type -O2 -fPIC -I$(MODDIR)
+override CXXFLAGS_ += -std=gnu++11 -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
 
 CXXFLAGS := $(CXXFLAGS_) $(CXXFLAGS)
 LDLIBS   := $(LDLIBS_) $(LDLIBS)
