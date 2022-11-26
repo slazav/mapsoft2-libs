@@ -229,9 +229,13 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     if (opts.exists("add") && file_exists(fname)){
       Opt o;
       o.put("img_in_fmt", fmt);
-      img = image_to_argb(image_load(fname, 1, o));
-      if (img.height()!=h || img.width()!=w)
-        throw Err() << "Wrong image dimensions: " << fname << ": " << img;
+      try {
+        img = image_to_argb(image_load(fname, 1, o));
+        if (img.height()!=h || img.width()!=w) throw Err();
+      } catch (const Err & e) {
+        img = ImageR(w,h,IMAGE_32ARGB);
+        img.fill32(bg);
+      }
     }
     else {
       img = ImageR(w,h,IMAGE_32ARGB);
