@@ -118,10 +118,7 @@ string_unpack_tag(istream & s){
 
 std::string
 string_read_tag(istream & s){
-  if (s.peek()=='\n') {
-    s>>std::ws; // if there is eof we want to reach it here
-    return std::string();
-  }
+  if (s.peek()=='\n') return std::string();
   std::string tag;
   s >> tag;
   if (s.get()=='\n') s.unget(); // skip space

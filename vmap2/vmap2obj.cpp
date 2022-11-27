@@ -116,7 +116,6 @@ VMap2obj::read(std::istream & s) {
 
   // read type
   std::string str;
-  s >> std::ws;
   std::getline(s, str, '\n');
   ret.type = make_type(str);
   // other fields
@@ -135,6 +134,7 @@ VMap2obj::read(std::istream & s) {
     else if (tag == "crds") ret.push_back(string_read_crds(s));
     else throw Err() << "Unknown tag: " << tag;
   }
+  s >> std::ws; // reach eof or next object
   return ret;
 }
 

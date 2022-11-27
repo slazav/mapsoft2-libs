@@ -216,6 +216,7 @@ VMap2::iter_end(){
 
 void
 VMap2::read(std::istream & s){
+  s >> std::ws; // reach eof or next object
   while (!s.eof()) add(VMap2obj::read(s));
 }
 
