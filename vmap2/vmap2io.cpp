@@ -32,9 +32,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
         "When reading VMAP file, set type number for labels which are not "
         " defined in typeinfo file. Use -1 to skip unknown labels (default)."
         " If skip_unknown is set then labels are skipped with unknown objects.");
-    opts.add("osm_conf",  1, 0, g,
+    opts.add("osm_conf",  1, 0, "OSM",
         "Configuration file for OSM XML -> VMAP2 conversion");
-    opts.add("osm_min_size",  1, 0, g,
+    opts.add("osm_min_size",  1, 0, "OSM",
         "Default minimum size (in m) for OSM lines and"
         " objects (default value: 10).");
 

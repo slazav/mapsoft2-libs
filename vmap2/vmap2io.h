@@ -15,7 +15,7 @@
 /********************************************************************/
 #include "getopt/getopt.h"
 
-// add VMAP2, MP, FIG, VMAP groups of options
+// add VMAP2, MP, FIG, VMAP, OSM groups of options
 void ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write);
 
 // VMAP2OSM group
