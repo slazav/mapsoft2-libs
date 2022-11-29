@@ -32,6 +32,12 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
         "When reading VMAP file, set type number for labels which are not "
         " defined in typeinfo file. Use -1 to skip unknown labels (default)."
         " If skip_unknown is set then labels are skipped with unknown objects.");
+    opts.add("osm_conf",  1, 0, g,
+        "Configuration file for OSM XML -> VMAP2 conversion");
+    opts.add("osm_min_size",  1, 0, g,
+        "Default minimum size (in m) for OSM lines and"
+        " objects (default value: 10).");
+
     if (!write) ms2opt_add_mp_i(opts);// MP group, reading mp files
   }
   if (write) {
@@ -78,6 +84,9 @@ void vmap2_import(const std::vector<std::string> & ifiles, const VMap2types & ty
     }
     else if (file_ext_check(ifile, ".fig")){
       fig_to_vmap2(ifile, types, vmap2, opts);
+    }
+    else if (file_ext_check(ifile, ".osm")){
+      osm_to_vmap2(ifile, vmap2, opts);
     }
     else throw Err() << "unsupported file extension: " << ifile;
   }

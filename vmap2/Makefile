@@ -4,7 +4,7 @@ MOD_HEADERS := vmap2obj.h vmap2.h vmap2io.h\
 
 
 MOD_SOURCES := vmap2obj.cpp vmap2.cpp vmap2io.cpp\
-               vmap2io_vmap.cpp vmap2io_mp.cpp vmap2io_fig.cpp\
+               vmap2io_vmap.cpp vmap2io_mp.cpp vmap2io_fig.cpp vmap2io_osm.cpp\
                db_tools.cpp db_simple.cpp db_geohash.cpp string_pack.cpp\
                vmap2types.cpp vmap2gobj.cpp vmap2tools.cpp
 

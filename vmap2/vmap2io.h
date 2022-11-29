@@ -18,6 +18,9 @@
 // add VMAP2, MP, FIG, VMAP groups of options
 void ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write);
 
+// VMAP2OSM group
+void ms2opt_add_vmap2osm(GetOptSet & opts);
+
 /********************************************************************/
 
 // Read files (format is determined from file extension), add all
@@ -43,6 +46,9 @@ void fig_to_vmap2(const std::string & ifile, const VMap2types & types,
 void mp_to_vmap2(const std::string & ifile, const VMap2types & types,
                  VMap2 & vmap2, const Opt & opts);
 
+// Reading OSM is different: it uses a separate configuration file
+// (Do we want to have everything in typeinfo?)
+void osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts);
 
 /********************************************************************/
 // Encoding different formats.
@@ -60,6 +66,5 @@ void vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
 // Convert vmap2 objects to fig format and add to Fig
 void vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
                   const std::string & ofile, const Opt & opts);
-
 
 #endif
