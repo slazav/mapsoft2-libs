@@ -18,8 +18,8 @@
 int
 read_nod(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
   osm_id_t id  = str_to_type<osm_id_t>(GETATTR("id"));
-  dPoint p(str_to_type<double>(GETATTR("lat")),
-           str_to_type<double>(GETATTR("lon")));
+  dPoint p(str_to_type<double>(GETATTR("lon")),
+           str_to_type<double>(GETATTR("lat")));
 
   data.nodes.emplace(id, p);
   if (xmlTextReaderIsEmptyElement(reader)) return 1;
