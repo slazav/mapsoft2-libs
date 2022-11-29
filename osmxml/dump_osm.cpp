@@ -44,6 +44,11 @@ main(int argc, char* argv[]){
         std::cout << "    " << m.ref << " " << m.type << " " << m.role << "\n";
     }
 
+    std::cout << "nodes:  " << osm.nodes.size() << "\n";
+    std::cout << "points: " << osm.points.size() << "\n";
+    std::cout << "ways:   " << osm.ways.size() << "\n";
+    std::cout << "rel-ns: " << osm.relations.size() << "\n";
+
   }
   catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
