@@ -95,6 +95,18 @@ load_osm_conf(const std::string & fname,
 }
 
 
+// get points of OSM way object:
+dLine get_way_points(const OSMXML & data_in, const OSMXML::OSM_Way & way){
+  dLine ret;
+  for (auto const i:way.nodes){
+    if (data_in.nodes.count(i)==0)
+      throw Err() << "OSM node does not exist: " << i;
+    ret.push_back(data_in.nodes.find(i)->second);
+  }
+  return ret;
+}
+
+// convert OSM to vmap
 void
 osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
 
@@ -168,19 +180,12 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       auto cl = VMap2obj::get_class(conf.second);
       if (cl==VMAP2_NONE) {done=true; break;}
 
-      // extract coordinates
-      dLine pts;
-      for (auto const i:e.second.nodes){
-        if (data_in.nodes.count(i)==0)
-          throw Err() << "OSM node does not exist: " << i;
-        pts.push_back(data_in.nodes.find(i)->second);
-      }
-
       // make object
       VMap2obj obj(conf.second);
       obj.name = e.second.get("name", "");
 
-      // fill coordinates
+      // convert coordinates
+      dLine pts = get_way_points(data_in, e.second);
       switch (cl){
         case VMAP2_POINT: 
           obj.set_coords(pts.bbox().cnt());
@@ -201,4 +206,58 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       << "osm object doen not match any rule:\n"
       << "way " << e.first << ": " << e.second << "\n";
   }
+
+  // Convert OSM multipolygon relations
+  // (with outer/inner member roles)
+  for (auto const & e:data_in.relations){
+    bool done=false;
+    for (auto const & conf:osm_conf){
+      bool match = true;
+      // match tags
+      for (auto const & o:conf.first){
+        if (!e.second.exists(o.first) ||
+           (o.second!="*" &&
+            e.second.get(o.first, "")!=o.second)) match=false;
+      }
+      if (!match) continue;
+      auto cl = VMap2obj::get_class(conf.second);
+      if (cl==VMAP2_NONE) {done=true; break;}
+
+      // make object
+      VMap2obj obj(conf.second);
+      obj.name = e.second.get("name", "");
+
+      // extract coordinates
+      dMultiLine pts;
+      for (const auto & m:e.second.members){
+        if (m.role != "outer" && m.role != "inner") continue;
+        if (data_in.ways.count(m.ref)==0) continue;
+        pts.push_back(get_way_points(data_in,
+          data_in.ways.find(m.ref)->second));
+      }
+      if (pts.empty()) continue;
+
+      // fill coordinates
+      switch (cl){
+        case VMAP2_POINT: 
+          obj.set_coords(pts.bbox().cnt());
+          break;
+        case VMAP2_LINE: 
+        case VMAP2_POLYGON:
+          obj.set_coords(pts);
+          break;
+        default:
+          if (cl!=VMAP2_POINT) throw Err()
+              << "Bad object type in configuration file: "
+              << VMap2obj::print_type(conf.second);
+      }
+      data.add(obj);
+      done=true; break;
+    }
+    if (!done) std::cerr
+      << "osm object doen not match any rule:\n"
+      << "rel " << e.first << ": " << e.second << "\n";
+  }
+
+
 }
