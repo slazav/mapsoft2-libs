@@ -124,8 +124,9 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       bool match = true;
       // match tags
       for (auto const & o:conf.first){
-        if (!e.exists(o.first) ||
-           (o.second!="*" && e.get(o.first, "")!=o.second)) match=false;
+        if (!e.second.exists(o.first) ||
+           (o.second!="*" &&
+            e.second.get(o.first, "")!=o.second)) match=false;
       }
       if (!match) continue;
 
@@ -140,16 +141,16 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
 
       // make object
       VMap2obj obj(conf.second);
-      obj.name = e.get("name", "");
-      if (data_in.nodes.count(e.id)==0)
-        throw Err() << "OSM node does not exist: " << e.id;
-      obj.set_coords(data_in.nodes.find(e.id)->second);
+      obj.name = e.second.get("name", "");
+      if (data_in.nodes.count(e.first)==0)
+        throw Err() << "OSM node does not exist: " << e.first;
+      obj.set_coords(data_in.nodes.find(e.first)->second);
       data.add(obj);
       done=true; break;
     }
     if (!done) std::cerr
-      << "osm object doen not match any rule: id="
-      << e.id << " tags=" << e << "\n";
+      << "osm object doen not match any rule:\n"
+      << "node " << e.first << ": " << e.second << "\n";
   }
 
   // convert OSM ways
@@ -159,8 +160,9 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       bool match = true;
       // match tags
       for (auto const & o:conf.first){
-        if (!e.exists(o.first) ||
-           (o.second!="*" && e.get(o.first, "")!=o.second)) match=false;
+        if (!e.second.exists(o.first) ||
+           (o.second!="*" &&
+            e.second.get(o.first, "")!=o.second)) match=false;
       }
       if (!match) continue;
       auto cl = VMap2obj::get_class(conf.second);
@@ -168,7 +170,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
 
       // extract coordinates
       dLine pts;
-      for (auto const i:e.nds){
+      for (auto const i:e.second.nodes){
         if (data_in.nodes.count(i)==0)
           throw Err() << "OSM node does not exist: " << i;
         pts.push_back(data_in.nodes.find(i)->second);
@@ -176,7 +178,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
 
       // make object
       VMap2obj obj(conf.second);
-      obj.name = e.get("name", "");
+      obj.name = e.second.get("name", "");
 
       // fill coordinates
       switch (cl){
@@ -196,8 +198,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       done=true; break;
     }
     if (!done) std::cerr
-      << "osm object doen not match any rule: id="
-      << e.id << " tags=" << e << "\n";
+      << "osm object doen not match any rule:\n"
+      << "way " << e.first << ": " << e.second << "\n";
   }
-
 }
