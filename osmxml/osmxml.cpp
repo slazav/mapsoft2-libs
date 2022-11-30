@@ -17,7 +17,7 @@
 // read <node> tag
 int
 read_nod(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
-  osm_id_t id  = str_to_type<osm_id_t>(GETATTR("id"));
+  auto id  = str_to_type<osm_id_t>(GETATTR("id"));
   dPoint p(str_to_type<double>(GETATTR("lon")),
            str_to_type<double>(GETATTR("lat")));
 
@@ -26,7 +26,6 @@ read_nod(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
 
   // if node is not empty (have tags) create point object
   OSMXML::OSM_Point pt;
-  pt.id = id;
 
   while(1){
     int ret =xmlTextReaderRead(reader);
@@ -44,7 +43,7 @@ read_nod(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
     std::cerr << "Warning: Unknown node \"" << name
               << "\" in <node> (type: " << type << ")\n";
   }
-  data.points.push_back(pt);
+  data.points.emplace(id, pt);
   return 1;
 }
 
@@ -52,7 +51,7 @@ read_nod(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
 int
 read_way(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
   OSMXML::OSM_Way way;
-  way.id  = str_to_type<osm_id_t>(GETATTR("id"));
+  auto id = str_to_type<osm_id_t>(GETATTR("id"));
 
   while(1){
     int ret =xmlTextReaderRead(reader);
@@ -63,7 +62,7 @@ read_way(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
 
     if (type == TYPE_SWS || type == TYPE_COMM) continue;
     if (type == TYPE_ELEM && NAMECMP("nd")) {
-      way.nds.emplace_back(str_to_type<osm_id_t>(GETATTR("ref")));
+      way.nodes.emplace_back(str_to_type<osm_id_t>(GETATTR("ref")));
       continue;
     }
     if (type == TYPE_ELEM && NAMECMP("tag")) {
@@ -74,7 +73,7 @@ read_way(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
     std::cerr << "Warning: Unknown node \"" << name
               << "\" in <way> (type: " << type << ")\n";
   }
-  data.ways.push_back(way);
+  data.ways.emplace(id, way);
   return 1;
 }
 
@@ -82,7 +81,7 @@ read_way(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
 int
 read_rel(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
   OSMXML::OSM_Rel rel;
-  rel.id  = str_to_type<osm_id_t>(GETATTR("id"));
+  auto id  = str_to_type<osm_id_t>(GETATTR("id"));
 
   while(1){
     int ret =xmlTextReaderRead(reader);
@@ -108,7 +107,7 @@ read_rel(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){
     std::cerr << "Warning: Unknown node \"" << name
               << "\" in <relation> (type: " << type << ")\n";
   }
-  data.relations.push_back(rel);
+  data.relations.emplace(id, rel);
   return 1;
 }
 

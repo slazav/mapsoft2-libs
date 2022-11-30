@@ -18,35 +18,34 @@ struct OSMXML {
   // bounds
   dRect bbox;
 
-  // Nodes: id -> coords, no tags
+  // Nodes:
+  // id -> coords, no tags
   std::map<osm_id_t, dPoint> nodes;
 
   // Point objects created from nodes with tags:
-  // tags + Node ID
-  struct OSM_Point: public Opt {
-    osm_id_t id;
-  };
-  std::list<OSM_Point> points;
+  // id -> tags
+  typedef Opt OSM_Point;
+  std::map<osm_id_t, OSM_Point> points;
 
-  // OSM way object: tags + id + vector<Node ID>
+  // OSM way objects:
+  // id -> tags + vector<Node ID>
   struct OSM_Way: public Opt {
-    osm_id_t id;
-    std::vector<osm_id_t> nds;
+    std::vector<osm_id_t> nodes;
   };
-  std::list<OSM_Way> ways;
+  std::map<osm_id_t, OSM_Way> ways;
 
-  // OSM relation member
+  // OSM relation member: ref, type, role
   struct OSM_Memb{
     osm_id_t ref;
     std::string type, role;
   };
 
-  // OSM relation object: tags + vector<Members>
+  // OSM relations
+  // id -> tags + list<members>
   struct OSM_Rel: public Opt {
-    osm_id_t id;
     std::list<OSM_Memb> members;
   };
-  std::list<OSM_Rel> relations;
+  std::map<osm_id_t, OSM_Rel> relations;
 
 };
 
