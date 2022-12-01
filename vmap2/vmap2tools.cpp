@@ -168,6 +168,73 @@ do_fix_rounding(VMap2 & mapo, VMap2 & mapn, double D){
 
 /****************************************************************************/
 
+void
+do_join_lines(VMap2 & map, const double D, const double A){
+
+  // approx distance in degrees, for finding objects
+  double Dd = D * 180/M_PI/6380000;
+
+  // Work separately for each type:
+  for (auto const t: map.get_types()){
+    // lines only
+    if (VMap2obj::get_class(t) != VMAP2_LINE) continue;
+
+    // Get set of all objects of this type:
+    auto objs = map.find(t);
+    auto it = objs.begin();
+    while (it!=objs.end()){
+      auto i = *it; // object id
+      auto o=map.get(i);
+      bool mod=false;
+      // for all line segments:
+      for (auto & l:o){
+        // find end point and angle
+        if (l.size()<2) continue;
+        dPoint pt = l[l.size()-1];
+        dPoint dpt = l[l.size()-1] - l[l.size()-2];
+        double a = 180.0/2/M_PI*atan2(dpt.y,dpt.x);
+        dRect r(pt,pt); r.expand(Dd);
+
+        // Find all lines of same type near the end point.
+        for (const auto & j:map.find(t,r)){
+          auto o1=map.get(j);
+          // skip same object,
+          // name, comm, tags should match
+          if (i==j || o1.name!=o.name ||
+              o1.comm!=o.comm || o1.tags!=o.tags) continue;
+          // for all segments:
+          auto l1=o1.begin();
+          while (l1!=o1.end()){
+            // find strting point and angle
+            if (l1->size()<2) {++l1; continue;}
+            dPoint pt1 = (*l1)[0];
+            dPoint dpt1 = (*l1)[1]-(*l1)[0];
+            double a1 = 180.0/2/M_PI*atan2(dpt1.y,dpt1.x);
+            double da = fabs(a1-a); // positive angle difference
+            while (da>180) da-=360;   // -180..180
+            if (geo_dist_2d(pt,pt1) > D || fabs(da) > A) {++l1; continue;}
+
+            // join segment
+            mod=true;
+            l.insert(l.end(), l1->begin()+1, l1->end());
+            l1 = o1.erase(l1);
+          }
+          if (o1.size()==0){
+            map.del(j);
+            objs.erase(j);
+          }
+          else map.put(j, o1);
+        }
+      }
+      // stay on the object if it was modified
+      if (!mod) ++it;
+      else map.put(i, o);
+    }
+  }
+}
+
+/****************************************************************************/
+
 // make a new label for object
 VMap2obj
 do_make_label(const VMap2obj & o, const VMap2type & t){

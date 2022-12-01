@@ -53,6 +53,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("rounding_acc", 1, 0, "VMAP2",
        "accuracy for fixing rounding errors (m). "
        "Fig accuracy is 1/450 cm, 2.2 m for 1:100'000 maps. Default: 5");
+    opts.add("join_lines",0, 0, "VMAP2", "join similar line objects (same type, name, comment, tags)");
+    opts.add("join_lines_d",1, 0, "VMAP2", "Max distance for joining lines in meters. Default 5.");
+    opts.add("join_lines_a",1, 0, "VMAP2", "Max angle for joining lines in degrees. Default 45.");
     if (!read) ms2opt_add_mp_o(opts);  // MP group, writing mp files
   }
   if (read && write)  ms2opt_add_mp_io(opts);
@@ -100,6 +103,9 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   std::string update_tag = opts.get("update_tag");
   bool fix_rounding = opts.get("fix_rounding", false);
   double rounding_acc = opts.get("rounding_acc", 5); // m
+  bool join_lines = opts.exists("join_lines");
+  double join_lines_d = opts.get("join_lines_d", 5); // m
+  double join_lines_a = opts.get("join_lines_a", 45); // deg
   std::string crop_nom = opts.get("crop_nom");
   std::string crop_rect = opts.get("crop_rect");
 
@@ -120,6 +126,8 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
       do_fix_rounding(vmap2o, vmap2, rounding_acc);
   }
 
+  if (join_lines)
+      do_join_lines(vmap2, join_lines_d, join_lines_a);
   if (update_labels)
       do_update_labels(vmap2, types);
 
