@@ -91,10 +91,12 @@ struct MP : std::list<MPObj>{
       Opts["Transparent"]     = "N";
       Opts["PolygonEvaluate"] = "Y";
       Opts["MG"]              = "Y";
+      Levels.push_back(24);
       Levels.push_back(22);
-      Levels.push_back(21);
-      Levels.push_back(19);
+      Levels.push_back(20);
+      Levels.push_back(18);
       Levels.push_back(17);
+      Levels.push_back(15);
       TreSize=6000;
       RgnLimit=1024;
     }
