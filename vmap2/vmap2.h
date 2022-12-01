@@ -80,6 +80,10 @@ public:
   std::set<uint32_t> find(uint32_t type, const dRect & range) {
     return geohash->get(range,type); }
 
+  /// Find objects with given type
+  std::set<uint32_t> find(uint32_t type) {
+    return geohash->get(type); }
+
   /// get all object types in the database
   std::set<uint32_t> get_types() { return geohash->get_types();}
 
