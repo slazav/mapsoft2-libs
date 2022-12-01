@@ -9,7 +9,7 @@
 
 void
 load_osm_conf(const std::string & fname,
-              std::list<std::pair<Opt, uint32_t> > & osm_conf,
+              std::list<std::pair<Opt, std::vector<uint32_t> > > & osm_conf,
               read_words_defs & defs){
 
   // read configuration
@@ -81,11 +81,13 @@ load_osm_conf(const std::string & fname,
       }
 
       // All other lines are "Opt -> VMap2type" pairs
-      if (vs.size()!=2) throw Err() << "tags - type pair expected";
+      if (vs.size()<2) throw Err() << "argument expected: <tags> <type1> ...";
 
-      // fail if objects can not be parsed
-      osm_conf.emplace_back(
-         Opt(vs[0]), VMap2obj::make_type(vs[1]));
+      std::vector<uint32_t> types;
+      for (int i=1; i<vs.size(); i++)
+        types.push_back(VMap2obj::make_type(vs[i]));
+
+      osm_conf.emplace_back(Opt(vs[0]), types);
 
     }
     catch (Err & e) {
@@ -106,6 +108,18 @@ dLine get_way_points(const OSMXML & data_in, const OSMXML::OSM_Way & way){
   return ret;
 }
 
+// Match object tags using mask
+// Mask can contain <tag>=<value> or <tag>=*
+bool match_tags(const Opt & obj, const Opt & mask){
+  for (auto const & m:mask){
+    if (!obj.exists(m.first) ||
+       (m.second!="*" &&
+        obj.get(m.first, "")!=m.second)) return false;
+  }
+  return true;
+}
+
+
 // convert OSM to vmap
 void
 osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
@@ -115,7 +129,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
   if (conf=="")
     throw Err() << "empty configuration file, use --osm_conf option";
 
-  std::list<std::pair<Opt, uint32_t> > osm_conf;
+  std::list<std::pair<Opt, std::vector<uint32_t> > > osm_conf;
   read_words_defs defs;
   load_osm_conf(conf, osm_conf, defs);
 
@@ -133,32 +147,30 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
   for (auto const & e:data_in.points){
     bool done=false;
     for (auto const & conf:osm_conf){
-      bool match = true;
-      // match tags
-      for (auto const & o:conf.first){
-        if (!e.second.exists(o.first) ||
-           (o.second!="*" &&
-            e.second.get(o.first, "")!=o.second)) match=false;
-      }
-      if (!match) continue;
+      if (!match_tags(e.second, conf.first)) continue;
 
-      // we can't convert point to lines or areas:
-      auto cl = VMap2obj::get_class(conf.second);
-      if (cl==VMAP2_LINE || cl==VMAP2_POLYGON) continue;
-      if (cl==VMAP2_NONE) {done=true; break;}
-
-      if (cl!=VMAP2_POINT) throw Err()
-        << "Bad object type in configuration file: "
-        << VMap2obj::print_type(conf.second);
-
-      // make object
-      VMap2obj obj(conf.second);
-      obj.name = e.second.get("name", "");
+      // extract coordinates
       if (data_in.nodes.count(e.first)==0)
         throw Err() << "OSM node does not exist: " << e.first;
-      obj.set_coords(data_in.nodes.find(e.first)->second);
-      data.add(obj);
-      done=true; break;
+      dPoint pt = data_in.nodes.find(e.first)->second;
+
+      for (const auto t:conf.second){
+        // we can't convert point to lines or areas:
+        auto cl = VMap2obj::get_class(t);
+        if (cl==VMAP2_LINE || cl==VMAP2_POLYGON) continue;
+        if (cl==VMAP2_NONE) {done=true; continue;}
+        if (cl!=VMAP2_POINT) throw Err()
+          << "Bad object type in configuration file: "
+          << VMap2obj::print_type(t);
+
+        // make object
+        VMap2obj obj(t);
+        obj.name = e.second.get("name", "");
+        obj.set_coords(pt);
+        data.add(obj);
+        done=true;
+      }
+      if (done) break;
     }
     if (!done) std::cerr
       << "osm object doen not match any rule:\n"
@@ -169,38 +181,37 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
   for (auto const & e:data_in.ways){
     bool done=false;
     for (auto const & conf:osm_conf){
-      bool match = true;
-      // match tags
-      for (auto const & o:conf.first){
-        if (!e.second.exists(o.first) ||
-           (o.second!="*" &&
-            e.second.get(o.first, "")!=o.second)) match=false;
-      }
-      if (!match) continue;
-      auto cl = VMap2obj::get_class(conf.second);
-      if (cl==VMAP2_NONE) {done=true; break;}
+      if (!match_tags(e.second, conf.first)) continue;
 
-      // make object
-      VMap2obj obj(conf.second);
-      obj.name = e.second.get("name", "");
-
-      // convert coordinates
+      // extract coordinates
       dLine pts = get_way_points(data_in, e.second);
-      switch (cl){
-        case VMAP2_POINT: 
-          obj.set_coords(pts.bbox().cnt());
-          break;
-        case VMAP2_LINE: 
-        case VMAP2_POLYGON:
-          obj.set_coords(pts);
-          break;
-        default:
-          if (cl!=VMAP2_POINT) throw Err()
-              << "Bad object type in configuration file: "
-              << VMap2obj::print_type(conf.second);
+
+      for (const auto t:conf.second){
+        auto cl = VMap2obj::get_class(t);
+        if (cl==VMAP2_NONE) {done=true; continue;}
+
+        // make object
+        VMap2obj obj(t);
+        obj.name = e.second.get("name", "");
+
+        // convert coordinates
+        switch (cl){
+          case VMAP2_POINT: 
+            obj.set_coords(pts.bbox().cnt());
+            break;
+          case VMAP2_LINE: 
+          case VMAP2_POLYGON:
+            obj.set_coords(pts);
+            break;
+          default:
+            throw Err()
+                << "Bad object type in configuration file: "
+                << VMap2obj::print_type(t);
+        }
+        data.add(obj);
+        done=true;
       }
-      data.add(obj);
-      done=true; break;
+      if (done) break;
     }
     if (!done) std::cerr
       << "osm object doen not match any rule:\n"
@@ -212,20 +223,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
   for (auto const & e:data_in.relations){
     bool done=false;
     for (auto const & conf:osm_conf){
-      bool match = true;
-      // match tags
-      for (auto const & o:conf.first){
-        if (!e.second.exists(o.first) ||
-           (o.second!="*" &&
-            e.second.get(o.first, "")!=o.second)) match=false;
-      }
-      if (!match) continue;
-      auto cl = VMap2obj::get_class(conf.second);
-      if (cl==VMAP2_NONE) {done=true; break;}
-
-      // make object
-      VMap2obj obj(conf.second);
-      obj.name = e.second.get("name", "");
+      if (!match_tags(e.second, conf.first)) continue;
 
       // extract coordinates
       dMultiLine pts;
@@ -237,22 +235,32 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       }
       if (pts.empty()) continue;
 
-      // fill coordinates
-      switch (cl){
-        case VMAP2_POINT: 
-          obj.set_coords(pts.bbox().cnt());
-          break;
-        case VMAP2_LINE: 
-        case VMAP2_POLYGON:
-          obj.set_coords(pts);
-          break;
-        default:
-          if (cl!=VMAP2_POINT) throw Err()
-              << "Bad object type in configuration file: "
-              << VMap2obj::print_type(conf.second);
+      for (const auto t:conf.second){
+        auto cl = VMap2obj::get_class(t);
+        if (cl==VMAP2_NONE) {done=true; continue;}
+
+        // make object
+        VMap2obj obj(t);
+        obj.name = e.second.get("name", "");
+
+        // fill coordinates
+        switch (cl){
+          case VMAP2_POINT:
+            obj.set_coords(pts.bbox().cnt());
+            break;
+          case VMAP2_LINE:
+          case VMAP2_POLYGON:
+            obj.set_coords(pts);
+            break;
+          default:
+            throw Err()
+                << "Bad object type in configuration file: "
+                << VMap2obj::print_type(t);
+        }
+        data.add(obj);
+        done=true;
       }
-      data.add(obj);
-      done=true; break;
+      if (done) break;
     }
     if (!done) std::cerr
       << "osm object doen not match any rule:\n"
