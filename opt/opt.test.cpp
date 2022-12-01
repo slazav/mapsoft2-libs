@@ -195,6 +195,23 @@ try{
    assert_eq(type_to_str_ip4(0x7f000001u), "127.0.0.1");
    assert_eq(type_to_str_ip4(0), "0.0.0.0");
 
+   // ivec
+   assert_eq(str_to_type_ivec("") == std::vector<int>(), true);
+   assert_eq(str_to_type_ivec(" ") == std::vector<int>(), true);
+   assert_eq(str_to_type_ivec("1") == std::vector<int>({1}), true);
+   assert_eq(str_to_type_ivec(" 1 ") == std::vector<int>({1}), true);
+   assert_eq(str_to_type_ivec("1, 2,3") == std::vector<int>({1,2,3}), true);
+   assert_eq(str_to_type_ivec(" 1, 2,3") == std::vector<int>({1,2,3}), true);
+   assert_eq(str_to_type_ivec("1,3:5,7") == std::vector<int>({1,3,4,5,7}), true);
+   assert_eq(str_to_type_ivec("1,5:3,7") == std::vector<int>({1,5,4,3,7}), true);
+   assert_eq(str_to_type_ivec("1,5:6,-7,+7") == std::vector<int>({1,5,6,-7,7}), true);
+
+   assert_err(str_to_type_ivec("1,5a"), "can't parse integer list: 1,5a");
+   assert_err(str_to_type_ivec("1a,5"), "can't parse integer list: 1a,5");
+   assert_err(str_to_type_ivec(",1,5"), "can't parse integer list: ,1,5");
+   assert_err(str_to_type_ivec("1,5,"), "can't parse integer list: 1,5,");
+   assert_err(str_to_type_ivec("1,5:5,-2"), "can't parse empty range: 1,5:5,-2");
+
 }
 catch (Err & e) {
   std::cerr << "Error: " << e.str() << "\n";

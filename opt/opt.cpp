@@ -23,6 +23,43 @@ T str_to_type_hex(const std::string & s){
   return val;
 }
 
+std::vector<int>
+str_to_type_ivec(const std::string & s){
+  std::istringstream ss(s);
+  std::vector<int> ret;
+  bool range=false;
+  while (1){
+    char sep;
+    int n;
+    ss >> std::ws;
+    if (ss.eof()) break;
+
+    ss >> n >> std::ws;
+    if (ss.bad()) throw Err()
+      << "can't parse integer list: " << s;
+
+    if (range && ret.size()>0){
+      auto p = *ret.rbegin();
+      if (p==n) throw Err()
+        << "can't parse empty range: " << s;
+      auto st = n>p? +1:-1;
+      for (int i=p+st; i!=n; i+=st) ret.push_back(i);
+    }
+    ret.push_back(n);
+    if (ss.eof()) break;
+
+    ss >> sep >> std::ws;
+    if (!ss || ss.eof()) throw Err()
+      << "can't parse integer list: " << s;
+    if (sep==',') {range=false; continue; }
+    if (sep==':') {range=true;  continue; }
+    throw Err()
+      << "can't parse integer list: " << s;
+  }
+  return ret;
+}
+
+
 // parse IP4, e.g. 127.0.0.1
 uint32_t
 str_to_type_ip4(const std::string & s){

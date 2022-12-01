@@ -70,6 +70,10 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 -----------------
 ## Changelog:
 
+2021.12.01 V.Zavjalov 1.11:
+- add str_to_type_ivec() - parsing lists of integers ("1,2, -3, 5:10, 12:1").
+  Using ',' as separator, ':' as range separator
+
 2020.09.30 V.Zavjalov 1.10:
 - add str_to_type_ip4(), type_to_str_ip4() - parsing IP4
 
