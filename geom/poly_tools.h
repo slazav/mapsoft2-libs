@@ -339,6 +339,8 @@ Rect<T> figure_bbox(const::std::string &str) {
   return figure_line<T>(str).bbox();
 }
 
+/****************************************************/
+
 /// Find distance to the nearest point of a Line
 template <typename T>
 double
@@ -401,5 +403,73 @@ nearest_pt(const MultiLine<T> & ml, const Point<T> & pt){
   return ret;
 }
 
+///  For point p0 find nearest point on the segment p1,p2
+template<typename T>
+dPoint nearest_pt(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2){
+  if (p1==p2) return p1;
+  double ll = dist(p1,p2);
+  dPoint v = dPoint(p2-p1)/ll;
+
+  double prl = pscal(dPoint(p0-p1), v);
+  if ((prl>=0)&&(prl<=ll))  // point is inside a segment
+    return (dPoint)p1 + v*prl;
+
+  return dist2d(p0,p1) < dist(p0,p2)? p1:p2;
+}
+
+template<typename T>
+dPoint nearest_pt2d(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2){
+  if (p1==p2) return p1;
+  double  ll = dist2d(p1,p2);
+  dPoint v = dPoint(p2-p1)/ll;
+
+  double prl = pscal2d(dPoint(p0-p1), v);
+
+  if ((prl>=0)&&(prl<=ll))  // point is inside a segment
+    return (dPoint)p1 + v*prl;
+
+  return dist2d(p0,p1) < dist2d(p0,p2)? p1:p2;
+}
+
+/*
+ Find the minimum distance between a line and a point <pt>.
+
+ If the distance is less then <maxdist> then the distance is returned,
+ the nearest point in the line is returned in <pt> and direction in <vec>.
+
+ If the distance is larger then <maxdist> then <maxdist> is returned and
+ <pt> and <vec> are not modified.
+*/
+template<typename T>
+double nearest_pt(const Line<T> & line, dPoint & vec, Point<T> & pt, double maxdist){
+
+  Point<T> pm = pt;
+
+  for (size_t j=1; j<line.size(); j++){
+    Point<T> p1(line[j-1]);
+    Point<T> p2(line[j]);
+    if (p1==p2) continue;
+
+    auto pc = nearest_pt2d(pt,p1,p2);
+    auto lc = dist(pt,pc);
+    if (lc<maxdist) { maxdist=lc; pm=pc; vec = dPoint(p2-p1)/dist2d(p1,p2); }
+  }
+  pt=pm;
+  return maxdist;
+}
+
+// same for MultiLine
+template<typename T>
+double nearest_pt(const MultiLine<T> & lines, dPoint & vec, Point<T> & pt, double maxdist){
+  dPoint pm=pt;
+  typename MultiLine<T>::const_iterator i;
+  for (i = lines.begin(); i != lines.end(); i++){
+    Point<T> p = pt;
+    maxdist = nearest_pt(*i, vec, p, maxdist);
+    if ( p != pt) { pm = p;}
+  }
+  pt=pm;
+  return maxdist;
+}
 
 #endif
