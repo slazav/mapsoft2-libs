@@ -563,9 +563,6 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
     cnv->frw(pt); cnv->frw(pt1);  pt1-=pt;
     O.angle = O.angle*M_PI/180 + atan2(pt1.y, pt1.x) - M_PI/2; // from north, cw, rad
   }
-  else {
-    O.angle = 0;
-  }
 
   if (cnv) cnv->bck(O);
 
@@ -599,6 +596,8 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
     auto ftr = (FeatureRotate *)features.find(FEATURE_ROTATE)->second.get();
     O.angle += ftr->val;
   }
+  // Should be always finite for Cairo:
+  if (std::isnan(O.angle)) O.angle = 0;
 }
 
 
