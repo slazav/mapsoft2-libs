@@ -219,13 +219,17 @@ do_join_lines(VMap2 & map, const double D, const double A){
             l.insert(l.end(), l1->begin()+1, l1->end());
             l1 = o1.erase(l1);
           }
-          if (o1.size()==0){
-            map.del(j);
-            objs.erase(j);
+          if (mod){
+            if (o1.size()==0){
+              map.del(j);
+              objs.erase(j);
+            }
+            else map.put(j, o1);
           }
-          else map.put(j, o1);
-        }
-      }
+          if (mod) break; // we want to re-write object and re-calculate it's end point and angle
+        } // segments of second object
+        if (mod) break;
+      } // second objects
       // stay on the object if it was modified
       if (!mod) ++it;
       else map.put(i, o);
