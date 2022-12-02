@@ -80,8 +80,9 @@ void
 vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
             const std::string & ofile, const Opt & opts){
   MP mp;
-  if (opts.exists("mp_id"))   mp.ID = opts.get<int>("mp_id");
-  if (opts.exists("mp_name")) mp.Name = opts.get("mp_name");
+  if (opts.exists("mp_id"))     mp.ID = opts.get<int>("mp_id");
+  if (opts.exists("mp_name"))   mp.Name = opts.get("mp_name");
+  if (opts.exists("mp_levels")) mp.Levels = str_to_type_ivec(opts.get("mp_levels"));
 
   // be quiet (by default types of skipped objects are printed)
   bool quiet = opts.get("quite", false);
