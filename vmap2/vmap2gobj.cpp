@@ -614,7 +614,7 @@ GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const d
   auto txt = O.name;
   dRect ext = cr->get_text_extents(txt.c_str());
   // To allow any rotated/align text do be in the range use diagonal
-  dRect rng = expand(dRect(pt,pt), hypot(ext.w, ext.h));
+  dRect rng = expand(dRect(pt,pt), hypot(ext.w, ext.h)*(double)O.scale);
   if (!intersect(rng, range)) return;
 
   dPoint sh;
