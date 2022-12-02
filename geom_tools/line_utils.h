@@ -62,6 +62,7 @@ double nearest_pt(const Line<T> & line, dPoint & vec, Point<T> & pt, double maxd
   for (size_t j=1; j<line.size(); j++){
     Point<T> p1(line[j-1]);
     Point<T> p2(line[j]);
+    if (p1==p2) continue;
 
     auto pc = nearest_pt2d(pt,p1,p2);
     auto lc = dist(pt,pc);
