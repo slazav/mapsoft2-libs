@@ -253,6 +253,28 @@ main(){
       assert_err(nearest_vertex(dMultiLine("[[], []]"), dPoint(1,2), &p0d), "Can't find nearest point: empty line");
     }
 
+    // line_filter_v1
+    {
+      iLine l1("[[0,0],[1,1],[2,2],[5,3],[8,3],[10,4]]"), l2;
+
+      l2=l1; line_filter_v1(l2, -1, 5);
+      assert_eq(l2, iLine("[[0,0],[2,2],[5,3],[8,3],[10,4]]"));
+
+      l2=l1; line_filter_v1(l2, 0.01, -1);
+      assert_eq(l2, iLine("[[0,0],[2,2],[5,3],[8,3],[10,4]]"));
+
+      l2=l1; line_filter_v1(l2, -1, 4);
+      assert_eq(l2, iLine("[[0,0],[2,2],[8,3],[10,4]]"));
+
+      l2=l1; line_filter_v1(l2, 1000, 4);
+      assert_eq(l2, iLine("[[0,0],[10,4]]"));
+
+      l2=l1; line_filter_v1(l2, -1, 2);
+      assert_eq(l2, iLine("[[0,0],[10,4]]"));
+
+      l2=l1; line_filter_v1(l2, 1000, -1);
+      assert_eq(l2, iLine("[[0,0],[10,4]]"));
+    }
 
   }
   catch (Err & e) {

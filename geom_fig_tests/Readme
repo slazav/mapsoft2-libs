@@ -1,0 +1,5 @@
+Tests for some functions from geom/.
+
+These tests use fig library and should be in a seperate folder to avoid
+include loops.
+

@@ -1,6 +1,5 @@
 #include "point_int.h"
 #include <cmath>
-//#include "line_utils.h"
 
 iPoint
 adjacent(const iPoint &p, int dir){

@@ -542,7 +542,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
 /**********************************************************/
 
-#include "geom_tools/line_utils.h"
+#include "geom/poly_tools.h"
 // change object coordinates according to features
 // change object angle to radians
 void

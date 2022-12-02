@@ -3,13 +3,6 @@
 #include <string>
 #include <map>
 #include <iostream>
-
-//#include "2d/line_utils.h"
-//#include "2d/line_rectcrop.h"
-//#include "geo_io/geofig.h"
-//#include "geo/geo_convs.h"
-//#include "geo/geo_nom.h"
-//#include "vmap/zn.h"
 #include "vmap.h"
 
 using namespace std;
