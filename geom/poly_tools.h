@@ -341,66 +341,38 @@ Rect<T> figure_bbox(const::std::string &str) {
 
 /****************************************************/
 
-/// Find distance to the nearest point of a Line
+/// Find distance to the nearest vertex of a Line.
+/// If ptp!=NULL then the vertex point will be stored there.
+/// If line is empty exception is thrown.
 template <typename T>
 double
-nearest_dist(const Line<T> & l, const Point<T> & pt){
+nearest_vertex(const Line<T> & l, const Point<T> & pt, Point<T> * ptp=NULL){
   double d = INFINITY;
   for (const auto & p:l){
     double d1 = dist(p, pt);
     if (d1>=d) continue;
     d = d1;
+    if (ptp) *ptp=p;
   }
   if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
   return d;
 }
 
-/// Find distance to the nearest point of a MultiLine
+/// Same for MultiLine
 template <typename T>
 double
-nearest_dist(const MultiLine<T> & ml, const Point<T> & pt){
+nearest_vertex(const MultiLine<T> & ml, const Point<T> & pt, Point<T> * ptp=NULL){
   double d =  INFINITY;
   for (const auto & l:ml){
     for (const auto & p:l){
       double d1 = dist(p, pt);
       if (d1>=d) continue;
       d = d1;
+      if (ptp) *ptp=p;
     }
   }
   if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
   return d;
-}
-
-/// Find a point of a Line which is nearest to pt.
-template <typename T>
-Point<T>
-nearest_pt(const Line<T> & l, const Point<T> & pt){
-  Point<T> ret;
-  double d = INFINITY;
-  for (const auto & p:l){
-    double d1 = dist(p, pt);
-    if (d1>=d) continue;
-    d = d1; ret=p;
-  }
-  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
-  return ret;
-}
-
-/// Find a point of a MultiLine which is nearest to pt.
-template <typename T>
-Point<T>
-nearest_pt(const MultiLine<T> & ml, const Point<T> & pt){
-  Point<T> ret;
-  double d =  INFINITY;
-  for (const auto & l:ml){
-    for (const auto & p:l){
-      double d1 = dist(p, pt);
-      if (d1>=d) continue;
-      d = d1; ret=p;
-    }
-  }
-  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
-  return ret;
 }
 
 ///  For point p0 find nearest point on the segment p1,p2

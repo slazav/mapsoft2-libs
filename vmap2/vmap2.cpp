@@ -259,7 +259,7 @@ VMap2::find_ref(const dPoint & pt, const uint32_t type, const double & dist1, co
   uint32_t mi;
   for (auto const & i:find(type, r)){
     auto o1 = get(i);
-    auto d1 = geo_nearest_dist(o1, pt);
+    auto d1 = geo_nearest_vertex(o1, pt);
     if (d1<m) {m=d1, mi=i;}
   }
   // Note that here we can have objects which are really far away.
@@ -272,7 +272,7 @@ VMap2::find_ref(const dPoint & pt, const uint32_t type, const double & dist1, co
   m = INFINITY;
   for (auto const & i:find(type, r)){
     auto o1 = get(i);
-    auto d1 = geo_nearest_dist(o1, pt);
+    auto d1 = geo_nearest_vertex(o1, pt);
     if (d1<m) {m=d1, mi=i;}
   }
   if (m<dist2) return mi;

@@ -125,7 +125,7 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
 
         // Reference point and type
         l1.ref_type = type;
-        l1.ref_pt = geo_nearest_pt(o, l.pos);
+        geo_nearest_vertex(o, l.pos, &l1.ref_pt);
 
         vmap2.add(l1);
       }

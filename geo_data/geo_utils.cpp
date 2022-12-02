@@ -18,59 +18,32 @@ double geo_dist_2d(const dPoint &p1, const dPoint &p2){
 }
 
 double
-geo_nearest_dist(const dLine & l, const dPoint & pt){
+geo_nearest_vertex(const dLine & l, const dPoint & pt, dPoint * ptp){
   double d =  INFINITY;
   for (const auto & p:l){
     double d1 = geo_dist_2d(p, pt);
     if (d1>=d) continue;
     d = d1;
+    if (ptp) *ptp = p;
   }
   if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
   return d;
 }
 
 double
-geo_nearest_dist(const dMultiLine & ml, const dPoint & pt){
+geo_nearest_vertex(const dMultiLine & ml, const dPoint & pt, dPoint * ptp){
   double d =  INFINITY;
   for (const auto & l:ml){
     for (const auto & p:l){
       double d1 = geo_dist_2d(p, pt);
       if (d1>=d) continue;
       d = d1;
+      if (ptp) *ptp = p;
     }
   }
   if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
   return d;
 }
-
-dPoint
-geo_nearest_pt(const dLine & l, const dPoint & pt){
-  dPoint ret;
-  double d =  INFINITY;
-  for (const auto & p:l){
-    double d1 = geo_dist_2d(p, pt);
-    if (d1>=d) continue;
-    d = d1; ret=p;
-  }
-  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
-  return ret;
-}
-
-dPoint
-geo_nearest_pt(const dMultiLine & ml, const dPoint & pt){
-  dPoint ret;
-  double d =  INFINITY;
-  for (const auto & l:ml){
-    for (const auto & p:l){
-      double d1 = geo_dist_2d(p, pt);
-      if (d1>=d) continue;
-      d = d1; ret=p;
-    }
-  }
-  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
-  return ret;
-}
-
 
 /**********************/
 

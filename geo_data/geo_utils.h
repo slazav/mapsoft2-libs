@@ -9,15 +9,13 @@
 double geo_dist_2d(const dPoint &p1, const dPoint &p2);
 
 /// Haversine distance to the nearest point of a dLine or dMultiLine.
+
+/// Find Haversine distance to the nearest vertex of a Line or dMultiLine.
 /// Similar to nearest_dist() from geom/poly_tools.h
-double geo_nearest_dist(const dLine & l, const dPoint & pt);
-double geo_nearest_dist(const dMultiLine & ml, const dPoint & pt);
-
-/// Nearest point of a dLine or dMultiLine (Haversine distance).
-/// Similar to nearest_pt() from geom/poly_tools.h
-dPoint geo_nearest_pt(const dLine & l, const dPoint & pt);
-dPoint geo_nearest_pt(const dMultiLine & ml, const dPoint & pt);
-
+/// If ptp!=NULL then the vertex point will be stored there.
+/// If line is empty exception is thrown.
+double geo_nearest_vertex(const dLine & l, const dPoint & pt, dPoint * ptp=NULL);
+double geo_nearest_vertex(const dMultiLine & ml, const dPoint & pt, dPoint * ptp=NULL);
 
 /// Read a figure from the string and get its bounding box.
 /// Same as figure_line from poly_tools.h, but can also read data from a file (tracks and waypoints).

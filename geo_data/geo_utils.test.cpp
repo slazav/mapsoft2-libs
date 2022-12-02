@@ -50,13 +50,13 @@ main(){
       dMultiLine ml1("[[],[[0,0],[2,1],[4,2]]]");
       dMultiLine ml0("[[],[]]");
 
-      assert_eq(geo_nearest_pt(l1, dPoint(1,2)), dPoint(2,1));
-      assert_eq(geo_nearest_pt(ml1, dPoint(1,2)), dPoint(2,1));
-      assert_err(geo_nearest_pt(ml0, dPoint(1,2)), "Can't find nearest point: empty line");
-
-      assert_feq(geo_nearest_dist(l1, dPoint(1,2)), 157448, 1);  // ~111km*sqrt(2)
-      assert_feq(geo_nearest_dist(ml1, dPoint(1,2)), 157448, 1);
-      assert_err(geo_nearest_dist(ml0, dPoint(1,2)), "Can't find nearest point: empty line");
+      dPoint p0;
+      assert_feq(geo_nearest_vertex(l1, dPoint(1,2), &p0), 157448, 1);  // ~111km*sqrt(2)
+      assert_eq(p0, dPoint(2,1));
+      assert_feq(geo_nearest_vertex(ml1, dPoint(1,2), &p0), 157448, 1);
+      assert_eq(p0, dPoint(2,1));
+      assert_feq(geo_nearest_vertex(ml1, dPoint(1,2)), 157448, 1);
+      assert_err(geo_nearest_vertex(ml0, dPoint(1,2), &p0), "Can't find nearest point: empty line");
 
     }
   /****************************/
