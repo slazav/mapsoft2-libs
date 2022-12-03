@@ -1,0 +1,11 @@
+#!/bin/sh -eu
+
+for i in test_data/line_filter_v1*.fig; do
+  base="${i##*/}"
+  ./line_filter_v1.test "test_data/$base" "results/$base"
+  if [ -s "expected/$base" ]; then
+    diff -- "results/$base" "expected/$base"
+  else
+    cp -f -- "results/$base" "expected/$base"
+  fi
+done

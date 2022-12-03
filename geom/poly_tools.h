@@ -451,28 +451,23 @@ double nearest_pt(const MultiLine<T> & lines, dPoint & vec, Point<T> & pt, doubl
 /// Filter out some points (up to number np, or distance from original line e)
 template<typename T>
 void line_filter_v1(Line<T> & line, double e, int np){
-  // points to skip:
-  std::vector<bool> skip(line.size(), false);
-
   while (1) {
     // Calculate distance from each non-end point to line between its neighbours.
     // Find minimum of this value.
     double min=-1;
-    auto i1 = line.begin()+1;
-    auto i2 = i1 + (line.end()-i1-1);
-    auto mini = line.end(); // index of point with minimal deviation
-    for (auto & i = i1; i!=i2; i++){
-      dPoint p1 = *(i-1);
-      dPoint p2 = *i;
-      dPoint p3 = *(i+1);
+    size_t mini = 0; // index of point with minimal deviation, or 0
+    for (size_t i=1; i+1<line.size(); i++){
+      dPoint p1 = line[i-1];
+      dPoint p2 = line[i];
+      dPoint p3 = line[i+1];
       auto pc = nearest_pt<double>(p2,p1,p3);
       double dp = dist(p2,pc);
       if ((min<0) || (min>dp)) {min = dp; mini=i;}
     }
-    if (mini == line.end()) break;
+    if (mini == 0) break;
     // skip point if needed
     if ( ((e>=0) && (min<e)) ||
-         ((np>=0) && (line.size()>np))) line.erase(mini);
+         ((np>=0) && (line.size()>np))) line.erase(line.begin()+mini);
     else break;
   }
 }
