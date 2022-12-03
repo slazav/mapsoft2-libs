@@ -1,0 +1,11 @@
+#!/bin/sh -eu
+
+for i in test_data/convex_border*.fig; do
+  base="${i##*/}"
+  ./convex_border.test "test_data/$base" "results/$base"
+  if [ -s "expected/$base" ]; then
+    diff -- "results/$base" "expected/$base"
+  else
+    cp -f -- "results/$base" "expected/$base"
+  fi
+done
