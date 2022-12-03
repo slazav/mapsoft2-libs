@@ -28,7 +28,7 @@ GeoTrk::clear_alt() {
 double
 GeoTrk::length() const {
   double ret=0;
-  for (int i=0; i<(int)size()-1; i++)
+  for (int i=0; i+1<size(); i++)
     ret += geo_dist_2d((*this)[i], (*this)[i+1]);
   return ret;
 }
