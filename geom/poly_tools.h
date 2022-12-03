@@ -450,7 +450,8 @@ double nearest_pt(const MultiLine<T> & lines, dPoint & vec, Point<T> & pt, doubl
 
 /// Filter out some points (up to number np, or distance from original line e)
 template<typename T>
-void line_filter_v1(Line<T> & line, double e, int np){
+void line_filter_v1(Line<T> & line, double e, int np,
+                    double (*dist_func)(const Point<T> &, const Point<T> &) = NULL){
   while (1) {
     // Calculate distance from each non-end point to line between its neighbours.
     // Find minimum of this value.
@@ -461,7 +462,7 @@ void line_filter_v1(Line<T> & line, double e, int np){
       dPoint p2 = line[i];
       dPoint p3 = line[i+1];
       auto pc = nearest_pt<double>(p2,p1,p3);
-      double dp = dist(p2,pc);
+      double dp = dist_func? dist_func(p2,pc) : dist(p2,pc);
       if ((min<0) || (min>dp)) {min = dp; mini=i;}
     }
     if (mini == 0) break;
@@ -474,9 +475,10 @@ void line_filter_v1(Line<T> & line, double e, int np){
 
 // Same for MultiLine. Remove also segments shorter then e.
 template<typename T>
-void line_filter_v1(MultiLine<T> & lines, double e){
+void line_filter_v1(MultiLine<T> & lines, double e,
+                    double (*dist_func)(const Point<T> &, const Point<T> &) = NULL){
   for (auto l = lines.begin(); l!=lines.end(); l++){
-    line_filter_v1(*l, e, -1);
+    line_filter_v1(*l, e, -1, dist_func);
     if ((l->size() == 2) && e>0 && (dist((*l)[0],(*l)[1]) < e))
       lines.erase(l--);
   }
