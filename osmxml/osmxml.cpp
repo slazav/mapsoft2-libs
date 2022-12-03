@@ -14,6 +14,29 @@
 #define GETATTR(x) (const char *)xmlTextReaderGetAttribute(reader, (const xmlChar *)x)
 #define GETVAL     (const char *)xmlTextReaderConstValue(reader)
 
+/********************************************************************/
+
+dPoint
+OSMXML::get_node_coords(const osm_id_t id){
+  if (nodes.count(id)==0)
+    throw Err() << "OSM node does not exist: " << id;
+  return nodes.find(id)->second;
+}
+
+dLine
+OSMXML::get_way_coords(const OSMXML::OSM_Way & way){
+  dLine ret;
+  for (auto const i:way.nodes){
+    if (nodes.count(i)==0)
+      throw Err() << "OSM node does not exist: " << i;
+    ret.push_back(nodes.find(i)->second);
+  }
+  return ret;
+}
+
+
+/********************************************************************/
+
 // read <node> tag
 int
 read_nod(xmlTextReaderPtr reader, OSMXML & data, const Opt & opts){

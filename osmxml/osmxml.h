@@ -5,6 +5,7 @@
 
 #include "opt/opt.h"
 #include "geom/point.h"
+#include "geom/line.h"
 #include "geom/rect.h"
 #include <cstdint>
 #include <vector>
@@ -46,6 +47,15 @@ struct OSMXML {
     std::list<OSM_Memb> members;
   };
   std::map<osm_id_t, OSM_Rel> relations;
+
+  /***************************/
+  // functions
+
+  // get coordinates of OSM node object:
+  dPoint get_node_coords(const osm_id_t id);
+
+  // get coordinates of OSM way object:
+  dLine get_way_coords(const OSMXML::OSM_Way & way);
 
 };
 

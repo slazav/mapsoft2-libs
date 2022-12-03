@@ -97,17 +97,6 @@ load_osm_conf(const std::string & fname,
 }
 
 
-// get points of OSM way object:
-dLine get_way_points(const OSMXML & data_in, const OSMXML::OSM_Way & way){
-  dLine ret;
-  for (auto const i:way.nodes){
-    if (data_in.nodes.count(i)==0)
-      throw Err() << "OSM node does not exist: " << i;
-    ret.push_back(data_in.nodes.find(i)->second);
-  }
-  return ret;
-}
-
 // Match object tags using mask
 // Mask can contain <tag>=<value> or <tag>=*
 bool match_tags(const Opt & obj, const Opt & mask){
@@ -150,9 +139,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       if (!match_tags(e.second, conf.first)) continue;
 
       // extract coordinates
-      if (data_in.nodes.count(e.first)==0)
-        throw Err() << "OSM node does not exist: " << e.first;
-      dPoint pt = data_in.nodes.find(e.first)->second;
+      dPoint pt = data_in.get_node_coords(e.first);
 
       for (const auto t:conf.second){
         // we can't convert point to lines or areas:
@@ -184,7 +171,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       if (!match_tags(e.second, conf.first)) continue;
 
       // extract coordinates
-      dLine pts = get_way_points(data_in, e.second);
+      dLine pts = data_in.get_way_coords(e.second);
 
       for (const auto t:conf.second){
         auto cl = VMap2obj::get_class(t);
@@ -230,8 +217,8 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       for (const auto & m:e.second.members){
         if (m.role != "outer" && m.role != "inner") continue;
         if (data_in.ways.count(m.ref)==0) continue;
-        pts.push_back(get_way_points(data_in,
-          data_in.ways.find(m.ref)->second));
+        pts.push_back(data_in.get_way_coords(
+           data_in.ways.find(m.ref)->second));
       }
       if (pts.empty()) continue;
 
