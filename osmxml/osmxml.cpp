@@ -1,5 +1,6 @@
 #include "osmxml.h"
 #include <libxml/xmlreader.h>
+#include <set>
 
 
 // same as in io_gpx.cpp, io_kml.cpp
@@ -26,10 +27,64 @@ OSMXML::get_node_coords(const osm_id_t id){
 dLine
 OSMXML::get_way_coords(const OSMXML::OSM_Way & way){
   dLine ret;
-  for (auto const i:way.nodes){
-    if (nodes.count(i)==0)
-      throw Err() << "OSM node does not exist: " << i;
-    ret.push_back(nodes.find(i)->second);
+  for (auto const i:way.nodes)
+    ret.push_back(get_node_coords(i));
+  return ret;
+}
+
+dMultiLine
+OSMXML::get_rel_coords(const OSMXML::OSM_Rel & rel){
+  dMultiLine ret;
+
+  // multipolygons should have type=multipolygon|boundary
+  if (rel.get("type")!="multipolygon" && rel.get("type")!="boundary")
+    return ret;
+
+  // Collect all members with type=way, role=inner|outer
+  // Also check that way ID exists, and that each way contains >1 points.
+  std::set<osm_id_t> parts;
+  for (auto const & p:rel.members){
+    if (p.type!="way") continue;
+    if (p.role!="inner" && p.role!="outer") continue;
+    if (ways.count(p.ref)==0) continue;
+//      throw Err() << "way does not exist: " << p.ref;
+    if (ways.find(p.ref)->second.nodes.size()<2)
+      throw Err() << "way is too short: " << p.ref;
+    parts.insert(p.ref);
+  }
+
+  // build rings
+  while (parts.size()>0){
+    // take first part
+    auto i = parts.begin();
+    auto ring = ways.find(*i)->second.nodes;
+    parts.erase(i);
+
+    while (ring[0]!=ring[ring.size()-1]){
+      bool mod=false;
+      auto j = parts.begin();
+      while (j!=parts.end()){
+        auto seg = ways.find(*j)->second.nodes;
+        if (seg[0] == ring[ring.size()-1]){
+          ring.insert(ring.end(), seg.begin()+1, seg.end());
+          mod=true;
+        }
+        else if (seg[seg.size()-1] == ring[ring.size()-1]){
+          ring.insert(ring.end(), seg.rbegin()+1, seg.rend());
+          mod=true;
+        }
+        if (mod){
+          j=parts.erase(j);
+          break;
+        }
+        else ++j;
+      }
+      if (!mod) break;
+    }
+    dLine crd;
+    for (auto const i:ring)
+      crd.push_back(get_node_coords(i));
+    ret.push_back(crd);
   }
   return ret;
 }

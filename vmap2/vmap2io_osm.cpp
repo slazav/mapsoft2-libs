@@ -213,13 +213,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       if (!match_tags(e.second, conf.first)) continue;
 
       // extract coordinates
-      dMultiLine pts;
-      for (const auto & m:e.second.members){
-        if (m.role != "outer" && m.role != "inner") continue;
-        if (data_in.ways.count(m.ref)==0) continue;
-        pts.push_back(data_in.get_way_coords(
-           data_in.ways.find(m.ref)->second));
-      }
+      dMultiLine pts = data_in.get_rel_coords(e.second);
       if (pts.empty()) continue;
 
       for (const auto t:conf.second){

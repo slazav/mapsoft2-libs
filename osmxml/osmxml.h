@@ -6,6 +6,7 @@
 #include "opt/opt.h"
 #include "geom/point.h"
 #include "geom/line.h"
+#include "geom/multiline.h"
 #include "geom/rect.h"
 #include <cstdint>
 #include <vector>
@@ -56,6 +57,11 @@ struct OSMXML {
 
   // get coordinates of OSM way object:
   dLine get_way_coords(const OSMXML::OSM_Way & way);
+
+  // Get coordinates of multipolygon relation object:
+  // See: https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm
+  // https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm
+  dMultiLine get_rel_coords(const OSMXML::OSM_Rel & rel);
 
 };
 
