@@ -511,7 +511,7 @@ SRTM::find_contours(const dRect & range, int step, int kx){
         // first try to append it to existing line in ret[h]
         bool done=false;
         for (auto & l:ret[h]){
-          int e=l.size()-1;
+          int e = (int)l.size()-1;
           if (e<=0) continue; // we have no 1pt lines!
           if (dist(l[0], p1)<E){ l.insert(l.begin(), p2); done=true; break;}
           if (dist(l[0], p2)<E){ l.insert(l.begin(), p1); done=true; break;}
@@ -611,7 +611,7 @@ SRTM::find_slope_contours(const dRect & range, double val, int kx){
         // first try to append it to existing line in ret[h]
         bool done=false;
         for (auto & l:ret){
-          int e=l.size()-1;
+          int e = (int)l.size()-1;
           if (e<=0) continue; // we have no 1pt lines!
           if (dist(l[0], p1) < E){ l.insert(l.begin(), p2); done=true; break;}
           if (dist(l[0], p2) < E){ l.insert(l.begin(), p1); done=true; break;}
