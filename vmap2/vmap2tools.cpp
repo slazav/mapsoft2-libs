@@ -2,6 +2,7 @@
 #include <map>
 #include "geo_data/geo_utils.h"
 #include "geom/line_rectcrop.h"
+#include "geom/poly_tools.h"
 
 /****************************************************************************/
 
@@ -234,6 +235,22 @@ do_join_lines(VMap2 & map, const double D, const double A){
       if (!mod) ++it;
       else map.put(i, o);
     }
+  }
+}
+
+/****************************************************************************/
+
+void
+do_filter_pts(VMap2 & map, const double D){
+  map.iter_start();
+  while (!map.iter_end()){
+    auto p = map.iter_get_next();
+    auto & obj(p.second);
+    auto cl = obj.get_class();
+    if (cl!=VMAP2_LINE && cl!=VMAP2_POLYGON) continue;
+    line_filter_v1((dMultiLine&)obj, D, &geo_dist_2d);
+    if (obj.size()==0) map.del(p.first);
+    else map.put(p.first, obj);
   }
 }
 

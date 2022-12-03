@@ -16,6 +16,9 @@ void do_fix_rounding(VMap2 & mapo, VMap2 & mapn, double D);
 // join angle in degrees.
 void do_join_lines(VMap2 & map, const double D, const double A);
 
+// Reduce number of points in lines and polygons
+void do_filter_pts(VMap2 & map, const double D);
+
 // Update labels
 void do_update_labels(VMap2 & map, const VMap2types & types);
 

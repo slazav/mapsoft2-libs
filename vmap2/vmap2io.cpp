@@ -58,6 +58,8 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("join_lines",0, 0, "VMAP2", "join similar line objects (same type, name, comment, tags)");
     opts.add("join_lines_d",1, 0, "VMAP2", "Max distance for joining lines in meters. Default 5.");
     opts.add("join_lines_a",1, 0, "VMAP2", "Max angle for joining lines in degrees. Default 45.");
+    opts.add("filter_pts",0, 0,   "VMAP2", "Reduce number of points in lines and polygons.");
+    opts.add("filter_pts_d",1, 0, "VMAP2", "Accuracy for point filtering in meters. Default: 10");
     if (!read) ms2opt_add_mp_o(opts);  // MP group, writing mp files
   }
   if (read && write)  ms2opt_add_mp_io(opts);
@@ -108,6 +110,8 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   bool join_lines = opts.exists("join_lines");
   double join_lines_d = opts.get("join_lines_d", 5); // m
   double join_lines_a = opts.get("join_lines_a", 45); // deg
+  bool filter_pts = opts.exists("filter_pts");
+  double filter_pts_d = opts.get("filter_pts_d", 10); // m
   std::string crop_nom = opts.get("crop_nom");
   std::string crop_rect = opts.get("crop_rect");
 
@@ -130,6 +134,10 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
 
   if (join_lines)
       do_join_lines(vmap2, join_lines_d, join_lines_a);
+
+  if (filter_pts)
+      do_filter_pts(vmap2, filter_pts_d);
+
   if (update_labels)
       do_update_labels(vmap2, types);
 
