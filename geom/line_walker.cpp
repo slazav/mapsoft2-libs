@@ -2,6 +2,9 @@
 
 LineWalker::LineWalker(const dLine & _line, bool close) {
   line = flatten(_line);
+  if (line.size()==0) throw Err()
+    << "LineWalker: empty line";
+
   if (close && line.size()>0) line.push_back(*line.begin());
   current_l=0;
   current_n=0;

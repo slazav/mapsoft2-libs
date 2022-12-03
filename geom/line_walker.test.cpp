@@ -108,6 +108,9 @@ main(){
     assert_deq(lw.get_points(6), dLine("[[2,1],[2,2],[3,2],[4,3],[5,4]]"), 1e-6);
     assert_eq(lw.is_end(), true);
 
+    dLine el;
+    assert_err(LineWalker elw(el), "LineWalker: empty line");
+
   }
   catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
