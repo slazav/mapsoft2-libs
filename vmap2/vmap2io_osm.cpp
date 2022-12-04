@@ -159,7 +159,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       }
       if (done) break;
     }
-    if (!done) std::cerr
+    if (!done && e.second.size()>0) std::cerr
       << "osm object doen not match any rule:\n"
       << "node " << e.first << ": " << e.second << "\n";
   }
@@ -200,7 +200,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       }
       if (done) break;
     }
-    if (!done) std::cerr
+    if (!done && e.second.size()>0) std::cerr
       << "osm object doen not match any rule:\n"
       << "way " << e.first << ": " << e.second << "\n";
   }
@@ -243,7 +243,7 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
       }
       if (done) break;
     }
-    if (!done) std::cerr
+    if (!done && e.second.size()>0) std::cerr
       << "osm object doen not match any rule:\n"
       << "rel " << e.first << ": " << e.second << "\n";
   }
