@@ -65,11 +65,25 @@ OSMXML::get_rel_coords(const OSMXML::OSM_Rel & rel){
       auto j = parts.begin();
       while (j!=parts.end()){
         auto seg = ways.find(*j)->second.nodes;
+
+        // Try to connect segment to the ring in all possible ways.
+        // Do not double the connection point.
+        // Note that ring can be broken (when downloading finite area).
         if (seg[0] == ring[ring.size()-1]){
           ring.insert(ring.end(), seg.begin()+1, seg.end());
           mod=true;
         }
         else if (seg[seg.size()-1] == ring[ring.size()-1]){
+          ring.insert(ring.end(), seg.rbegin()+1, seg.rend());
+          mod=true;
+        }
+        else if (seg[0] == ring[0]){
+          std::reverse(ring.begin(), ring.end());
+          ring.insert(ring.end(), seg.begin()+1, seg.end());
+          mod=true;
+        }
+        else if (seg[seg.size()-1] == ring[0]){
+          std::reverse(ring.begin(), ring.end());
           ring.insert(ring.end(), seg.rbegin()+1, seg.rend());
           mod=true;
         }
