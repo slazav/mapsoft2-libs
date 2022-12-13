@@ -4,6 +4,7 @@
 #include "am.h"
 #include "dlg_trk.h"
 #include "dlg_wpt.h"
+#include "dlg_tpt.h"
 
 /* Edit Geodata mode.
 
@@ -41,6 +42,7 @@ dLine pts; // points for adding track parts
 
 DlgTrk dlg_trk;
 DlgWpt dlg_wpt;
+DlgTpt dlg_tpt;
 Opt o;
 
 Glib::RefPtr<Gtk::ActionGroup> actions;
@@ -65,6 +67,9 @@ public:
     actions->add(
       Gtk::Action::create("EditData:wpt:edit", "Edit waypoint parameters", ""),
       sigc::mem_fun(this, &AMEditData::edit_wpt));
+    actions->add(
+      Gtk::Action::create("EditData:tpt:edit", "Edit trackpoint parameters", ""),
+      sigc::mem_fun(this, &AMEditData::edit_tpt));
 
     actions->add(
       Gtk::Action::create("EditData:wpt:move", "Move waypoint", ""),
@@ -110,6 +115,7 @@ public:
       "  </popup>"
       "  <popup name='EditData:tpt'>"
       "    <menuitem action='EditData:edittrk'/>"
+      "    <menuitem action='EditData:tpt:edit'/>"
       "    <menuitem action='EditData:tpt:move'/>"
       "    <menuitem action='EditData:tpt:del'/>"
       "    <menuitem action='EditData:contseg'/>"
@@ -145,6 +151,13 @@ public:
       sigc::mem_fun (this, &AMEditData::dlg_wpt_res));
     dlg_wpt.set_title(get_name());
     dlg_wpt.signal_jump().connect(
+          sigc::mem_fun (this, &AMEditData::on_jump));
+
+    dlg_tpt.set_transient_for(*mapview);
+    dlg_tpt.signal_response().connect(
+      sigc::mem_fun (this, &AMEditData::dlg_tpt_res));
+    dlg_tpt.set_title(get_name());
+    dlg_tpt.signal_jump().connect(
           sigc::mem_fun (this, &AMEditData::on_jump));
 
   }
@@ -419,6 +432,32 @@ private:
     dlg_trk.trk2dlg(&(trk->get_data()));
     dlg_trk.set_info(&(trk->get_data()));
     dlg_trk.show_all();
+  }
+
+  /**************************/
+
+  void dlg_tpt_res(int r){
+    if (r==Gtk::RESPONSE_OK){
+      if (!trk) return;
+      auto lk = trk->get_lock();
+      auto & t = trk->get_data();
+      if (idx < t.size()) {
+        dlg_tpt.dlg2tpt(t[idx]);
+        trk->update_opt();
+        trk->redraw_me();
+      }
+    }
+    dlg_tpt.hide();
+    abort();
+  }
+
+  void edit_tpt() {
+    if (!trk) return;
+    auto lk = trk->get_lock();
+    auto & t = trk->get_data();
+    if (idx < t.size())
+      dlg_tpt.tpt2dlg(t[idx]);
+    dlg_tpt.show_all();
   }
 
   /**************************/
