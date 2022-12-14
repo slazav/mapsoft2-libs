@@ -118,6 +118,9 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
   if (conf=="")
     throw Err() << "empty configuration file, use --osm_conf option";
 
+  bool keep_id   = opts.get("osm_ids", false);
+  bool keep_tags = opts.get("osm_tags", false);
+
   std::list<std::pair<Opt, std::vector<uint32_t> > > osm_conf;
   read_words_defs defs;
   load_osm_conf(conf, osm_conf, defs);
@@ -153,6 +156,10 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
         // make object
         VMap2obj obj(t);
         obj.name = e.second.get("name", "");
+        if (keep_id)
+          obj.comm += 'n' + type_to_str(e.first) + '\n';
+        if (keep_tags) for (const auto & t:e.second)
+          obj.comm += t.first + ": " + t.second + '\n';
         obj.set_coords(pt);
         data.add(obj);
         done=true;
@@ -180,6 +187,10 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
         // make object
         VMap2obj obj(t);
         obj.name = e.second.get("name", "");
+        if (keep_id)
+          obj.comm += 'w' + type_to_str(e.first) + '\n';
+        if (keep_tags) for (const auto & t:e.second)
+          obj.comm += t.first + ": " + t.second + '\n';
 
         // convert coordinates
         switch (cl){
@@ -223,6 +234,10 @@ osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts){
         // make object
         VMap2obj obj(t);
         obj.name = e.second.get("name", "");
+        if (keep_id)
+          obj.comm += 'r' + type_to_str(e.first) + '\n';
+        if (keep_tags) for (const auto & t:e.second)
+          obj.comm += t.first + ": " + t.second + '\n';
 
         // fill coordinates
         switch (cl){

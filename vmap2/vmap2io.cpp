@@ -32,8 +32,13 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
         "When reading VMAP file, set type number for labels which are not "
         " defined in typeinfo file. Use -1 to skip unknown labels (default)."
         " If skip_unknown is set then labels are skipped with unknown objects.");
+
     opts.add("osm_conf",  1, 0, "OSM",
         "Configuration file for OSM XML -> VMAP2 conversion");
+    opts.add("osm_ids",  0, 0, "OSM",
+        "Put OSM IDs in object comments");
+    opts.add("osm_tags",  0, 0, "OSM",
+        "Put OSM tags in object comments");
 
     if (!write) ms2opt_add_mp_i(opts);// MP group, reading mp files
   }
