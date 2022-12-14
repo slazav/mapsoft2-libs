@@ -479,8 +479,12 @@ void line_filter_v1(MultiLine<T> & lines, double e,
                     double (*dist_func)(const Point<T> &, const Point<T> &) = NULL){
   for (auto l = lines.begin(); l!=lines.end(); l++){
     line_filter_v1(*l, e, -1, dist_func);
-    if ((l->size() == 2) && e>0 && (dist((*l)[0],(*l)[1]) < e))
-      lines.erase(l--);
+    // remove 2-point lines shorter then e
+    if (l->size() != 2 || e<=0) continue;
+    dPoint p1 = (*l)[0];
+    dPoint p2 = (*l)[1];
+    double d = dist_func? dist_func(p1,p2) : dist(p1,p2);
+    if (d<e) lines.erase(l--);
   }
 }
 
