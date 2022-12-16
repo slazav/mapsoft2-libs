@@ -198,10 +198,11 @@ do_join_lines(VMap2 & map, const double D, const double A){
 
         // Find all lines of same type near the end point.
         for (const auto & j:map.find(t,r)){
+          // skip same object
+          if (i==j) continue;
           auto o1=map.get(j);
-          // skip same object,
           // name, comm, tags should match
-          if (i==j || o1.name!=o.name ||
+          if (o1.name!=o.name ||
               o1.comm!=o.comm || o1.tags!=o.tags) continue;
           // for all segments:
           auto l1=o1.begin();
