@@ -24,6 +24,8 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("min_depth",  1, 0, "FIG", "minimum depth of map object (default 40)");
     opts.add("max_depth",  1, 0, "FIG", "minimum depth of map object (default 200)");
 
+    opts.add("type",  1, 0, g, "select type for GPX import/export");
+
     ms2opt_add_fig(opts); // FIG group, reading/writing fig files
     opts.remove("fig_header");
   }
@@ -96,6 +98,9 @@ void vmap2_import(const std::vector<std::string> & ifiles, const VMap2types & ty
     }
     else if (file_ext_check(ifile, ".osm")){
       osm_to_vmap2(ifile, vmap2, opts);
+    }
+    else if (file_ext_check(ifile, ".gpx")){
+      gpx_to_vmap2(ifile, vmap2, opts);
     }
     else throw Err() << "unsupported file extension: " << ifile;
   }
@@ -174,6 +179,9 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   }
   else if (file_ext_check(ofile, ".fig")){
     vmap2_to_fig(vmap2, types, ofile, opts);
+  }
+  else if (file_ext_check(ofile, ".gpx")){
+    vmap2_to_gpx(vmap2, ofile, opts);
   }
   else throw Err() << "unsupported file extension: " << ofile;
 }

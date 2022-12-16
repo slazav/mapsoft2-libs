@@ -50,6 +50,8 @@ void mp_to_vmap2(const std::string & ifile, const VMap2types & types,
 // (Do we want to have everything in typeinfo?)
 void osm_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts);
 
+void gpx_to_vmap2(const std::string & fname, VMap2 & data, const Opt & opts);
+
 /********************************************************************/
 // Encoding different formats.
 
@@ -66,5 +68,7 @@ void vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
 // Convert vmap2 objects to fig format and add to Fig
 void vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
                   const std::string & ofile, const Opt & opts);
+
+void vmap2_to_gpx(VMap2 & vmap2, const std::string & ofile, const Opt & opts);
 
 #endif
