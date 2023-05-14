@@ -24,7 +24,8 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("min_depth",  1, 0, "FIG", "minimum depth of map object (default 40)");
     opts.add("max_depth",  1, 0, "FIG", "minimum depth of map object (default 200)");
 
-    opts.add("type",  1, 0, g, "select type for GPX import/export");
+    opts.add("wpt_type",  1, 0, g, "select type for GPX track import/export");
+    opts.add("trk_type",  1, 0, g, "select type for GPX waypoint import/export");
 
     ms2opt_add_fig(opts); // FIG group, reading/writing fig files
     opts.remove("fig_header");
