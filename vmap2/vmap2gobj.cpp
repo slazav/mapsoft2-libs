@@ -21,7 +21,7 @@ using namespace std;
 void
 ms2opt_add_vmap2_render(GetOptSet & opts){
   const char *g = "VMAP2_RENDER";
-  opts.add("config", 1,'c',g, "Configuration file for vector map rendering.");
+  opts.add("config", 1,'c',g, "Configuration file for vector map rendering. Default: /usr/share/mapsoft2/render.cfg");
   opts.add("define",      1,0,g, "Definitions for vector map rendering (json object)");
   opts.add("obj_scale",   1,0,g, "Rescaling factor for all objects, default 1.0.");
   opts.add("vmap_minsc", 1,0,g, "Minimum map scale (calculated from the 'natural' "
@@ -91,8 +91,8 @@ GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
   read_words_defs defs(o.get("define", Opt()));
 
   int depth = 0;
-  std::string def_cfg = file_get_prefix(map.get_dbname()) + "render.cfg";
-  load_conf(opt.get<string>("config", def_cfg), defs, depth);
+  std::string cfg = opt.get<string>("config", "/usr/share/mapsoft2/render.cfg");
+  load_conf(cfg, defs, depth);
 }
 
 void

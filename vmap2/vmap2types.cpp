@@ -7,12 +7,12 @@
 void
 ms2opt_add_vmap2t(GetOptSet & opts){
   const char *g = "VMAP2";
-  opts.add("types",  1, 't', g, "File with type information.");
+  opts.add("types",  1, 't', g, "File with type information. Default: /usr/share/mapsoft2/types.cfg");
   opts.add("define", 1, 'D', g, "Define variables for type information file.");
 }
 
 VMap2types::VMap2types(const Opt & o){
-  std::string file = o.get("types", "");
+  std::string file = o.get("types", "/usr/share/mapsoft2/types.cfg");
   if (file == "") return;
   read_words_defs defs(o.get("define", Opt()));
   load(file, defs);
