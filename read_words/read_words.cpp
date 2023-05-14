@@ -212,3 +212,71 @@ read_words_defs::apply(std::string & str) const{
     str.replace(n1,n2-n1+1, v->second);
   }
 }
+
+bool
+read_words_stdcmds(std::vector<std::string> & words, read_words_defs & defs, std::deque<bool> & ifs){
+
+  // endif command
+  if (words[0] == "endif"){
+    if (ifs.size()<1) throw Err() << "unexpected endif command";
+    ifs.pop_back();
+    return 1;
+  }
+  // else command
+  if (words[0] == "else"){
+    if (ifs.size()<1) throw Err() << "unexpected else command";
+    ifs.back() = !ifs.back();
+    return 1;
+  }
+
+  // check if conditions
+  bool skip = false;
+  for (auto const & c:ifs)
+    if (c == false) {skip = true; break;}
+  if (skip) return 1;
+
+  // apply definitions
+  defs.apply(words);
+
+  // if command
+  if (words[0] == "if"){
+    if (words.size() == 4 && words[2] == "=="){
+      ifs.push_back(words[1] == words[3]);
+    }
+    else if (words.size() == 4 && words[2] == "!="){
+      ifs.push_back(words[1] != words[3]);
+    }
+    else
+      throw Err() << "wrong if syntax";
+    return 1;
+  }
+  // ifdef command
+  if (words[0] == "ifdef"){
+    if (words.size() != 2)
+      throw Err() << "wrong ifdef syntax";
+    ifs.push_back(defs.count(words[1])>0);
+    return 1;
+  }
+  // ifndef command
+  if (words[0] == "ifndef"){
+    if (words.size() != 2)
+      throw Err() << "wrong ifndef syntax";
+    ifs.push_back(defs.count(words[1])==0);
+    return 1;
+  }
+
+  // define <key> <value> -- define a variable
+  if (words[0] == "define") {
+    if (words.size()!=3) throw Err() << "define: arguments expected: <key> <value>";
+    defs.define(words[1], words[2]);
+    return 1;
+  }
+  // define_if_undef <key> <value> -- define a variable if it is not defined
+  if (words[0] == "define_if_undef") {
+    if (words.size()!=3) throw Err() << "define_if_undef: arguments expected: <key> <value>";
+    if (defs.count(words[1])==0) defs.define(words[1], words[2]);
+    return 1;
+  }
+
+  return 0;
+}

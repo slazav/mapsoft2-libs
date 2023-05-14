@@ -1,0 +1,64 @@
+#!/bin/sh -efu
+
+prog=${1:-./read_words2.test}
+
+assert(){
+  res="$1"
+  exp="$2"
+  if [ "$res" != "$exp" ]; then
+    printf "ERROR:\n"
+    printf "  exp:  %s\n" "$exp"
+    printf "  res:  %s\n" "$res"
+    return 1
+  fi
+  return 0
+}
+
+i='
+define a 5
+ifdef a
+  print a=${a}
+else
+  print a undefined
+endif
+ifndef b
+  print b undefined
+else
+  print b=${b}
+endif
+if ${a} == 5
+  print ${a} == 5
+else
+  print ${a} != 5
+endif
+if ${a} == 4
+  print ${a} == 4
+else
+  print ${a} != 4
+endif
+if ${a} == 5
+  ifdef a
+    ifndef b
+      ok
+    endif
+  endif
+endif
+define_if_undef a 4
+define_if_undef b 4
+if ${a} == 5
+  ok
+  if ${b} == 4
+    ok
+  endif
+endif
+'
+
+o=' print a=5
+ print b undefined
+ print 5 == 5
+ print 5 != 4
+ ok
+ ok
+ ok'
+
+assert "$(echo "$i" | "$prog")" "$o"

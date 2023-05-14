@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <deque>
 #include <iostream>
 
 ///\addtogroup libmapsoft
@@ -66,6 +67,19 @@ public:
   void apply(std::vector<std::string> & vs) const {
      for (auto &s:vs) apply(s); }
 };
+
+// Process standard commands in the read_words output:
+// - define
+// - define_if_undef
+// - if/ifdef/ifindef/else/endif
+// Arduments:
+// - words -- output of read_words
+// - defs  -- read_words_defs class, variable definitions
+// - ifs   -- state queue for if commands
+// Return true if line is consumed, false if thurther processing is needed.
+bool
+read_words_stdcmds(std::vector<std::string> & words,
+   read_words_defs & defs, std::deque<bool> & ifs);
 
 ///@}
 #endif
