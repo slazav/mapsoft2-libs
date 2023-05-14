@@ -5,9 +5,15 @@
 // Replace labels in mapn with labels from mapo
 void do_keep_labels(VMap2 & mapo, VMap2 & mapn);
 
-// Replace all objects in mapn with objects from mapo
-// except ones with the given tag
+// Assign a tag to all objects in mapn. Add all objects from mapo without this tag
 void do_update_tag(VMap2 & mapo, VMap2 & mapn, const std::string & tag);
+
+// Replace all objects in mapn with objects from mapo
+// except ones with the given type
+void do_update_type(VMap2 & mapo, VMap2 & mapn, const uint32_t type);
+
+// Keep all objects in mapn, transfer objects of other types from mapo
+void do_update_types(VMap2 & mapo, VMap2 & mapn);
 
 // Try to fix rounding errors in mapn using information from mapo.
 void do_fix_rounding(VMap2 & mapo, VMap2 & mapn, double D);

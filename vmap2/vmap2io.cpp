@@ -54,7 +54,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("crop_rect",    1, 0, "VMAP2", "crop map to a rectangle");
     opts.add("update_labels",1, 0, "VMAP2", "update labels");
     opts.add("keep_labels",  1, 0, "VMAP2", "keep old labels");
-    opts.add("update_tag",   1, 0, "VMAP2", "only update objects with a tag");
+    opts.add("update_tag",   1, 0, "VMAP2", "update objects with a tag");
+    opts.add("update_type",  1, 0, "VMAP2", "update objects with a given type");
+    opts.add("update_types", 1, 0, "VMAP2", "update all types which exist on input (0|1)");
     opts.add("fix_rounding", 1, 0,
        "VMAP2", "Fix rounding errors using information from the output file."
                 " This should be used when editing map in fig format and then returning"
@@ -116,6 +118,8 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   bool update_labels = opts.get("update_labels", false);
   bool keep_labels = opts.get("keep_labels", false);
   std::string update_tag = opts.get("update_tag");
+  uint32_t update_type = VMap2obj::make_type(opts.get("update_type", "none"));
+  bool update_types = opts.get("update_types", false);
   bool fix_rounding = opts.get("fix_rounding", false);
   double rounding_acc = opts.get("rounding_acc", 5); // m
   bool join_lines = opts.exists("join_lines");
@@ -126,8 +130,11 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   std::string crop_nom = opts.get("crop_nom");
   std::string crop_rect = opts.get("crop_rect");
 
+  opts.check_conflict({"update_tag", "update_type", "update_types"});
+
   // Merge with old data if needed
-  if ((keep_labels || update_tag!="" || fix_rounding) &&
+  if ((keep_labels || update_tag!="" || fix_rounding ||
+      update_types || VMap2obj::get_class(update_type)!=VMAP2_NONE) &&
       file_exists(ofile)){
 
     VMap2 vmap2o;
@@ -138,6 +145,12 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
 
     if (update_tag!="")
       do_update_tag(vmap2o, vmap2, update_tag);
+
+    if (update_types)
+      do_update_types(vmap2o, vmap2);
+
+    if (VMap2obj::get_class(update_type)!=VMAP2_NONE)
+      do_update_type(vmap2o, vmap2, update_type);
 
     if (fix_rounding)
       do_fix_rounding(vmap2o, vmap2, rounding_acc);

@@ -20,8 +20,7 @@ do_keep_labels(VMap2 & mapo, VMap2 & mapn){
 
 /****************************************************************************/
 
-// Replace all objects in mapn with objects from mapo
-// except ones with the given tag
+// Assign a tag to all objects in mapn. Add all objects from mapo without this tag
 void
 do_update_tag(VMap2 & mapo, VMap2 & mapn, const std::string & tag){
   // add the tag to all objects in mapn
@@ -37,6 +36,43 @@ do_update_tag(VMap2 & mapo, VMap2 & mapn, const std::string & tag){
     auto p = mapo.iter_get_next();
     if (!p.second.tags.count(tag)>0)
       mapn.add(p.second);
+  }
+}
+
+/****************************************************************************/
+
+// Replace all objects in mapn with objects from mapo
+// except ones with the given type
+void
+do_update_type(VMap2 & mapo, VMap2 & mapn, const uint32_t type){
+  // delete objects of other types in mapn
+  mapn.iter_start();
+  while (!mapn.iter_end()){
+    auto p = mapn.iter_get_next();
+    if (p.second.type!=type) mapn.del(p.first);
+  }
+
+  // transfer objects of other types from mapo to mapn
+  mapo.iter_start();
+  while (!mapo.iter_end()){
+    auto p = mapo.iter_get_next();
+    if (!p.second.type!=type)
+      mapn.add(p.second);
+  }
+}
+
+/****************************************************************************/
+
+// Keep all objects in mapn, transfer objects of other types from mapo
+void
+do_update_types(VMap2 & mapo, VMap2 & mapn){
+
+  // transfer objects of other types from mapo to mapn
+  mapo.iter_start();
+  auto types = mapn.get_types();
+  while (!mapo.iter_end()){
+    auto p = mapo.iter_get_next();
+    if (types.count(p.second.type)==0) mapn.add(p.second);
   }
 }
 
