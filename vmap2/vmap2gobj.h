@@ -76,7 +76,8 @@ other commands in the configuration file
     set_brd file <filename> -- set map border from track file
     max_text_size <value> -- set max_text_size value for selecting text objects in the database
     define <name> <definition> -- define a variable which can be used as ${name} later
-    if <word1> (==|!=) <word2>, else, endif --  if statement. If condition is true/false
+    define_if_undef <name> <definition> -- define a variable if it is not defined
+    if <word1> (==|!=) <word2>, ifdef <word>, ifndef <word>, else, endif --  if statement. If condition is true/false
        text between if and endif is is processed/ignored. One can use nested if-endif commands.
        Command else just inverts condition of the last if command.
     include <file> -- Read another configuration file.

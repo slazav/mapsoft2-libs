@@ -33,10 +33,9 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
     auto vs = read_words(ff, line_num, false);
     if (vs.size()==0) break;
 
-
     try{
-      // definitions
-      defs.apply(vs);
+      if (read_words_stdcmds(vs, defs, ifs)){
+        type=-1; continue; }
 
       // include command
       if (vs[0] == "include"){
@@ -47,47 +46,7 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
 
         if (fn[0] != '/') fn = path + fn;
         load(fn, defs);
-        continue;
-      }
-
-      // endif command
-      if (vs[0] == "endif"){
-        if (ifs.size()<1) throw Err() << "unexpected endif command";
-        ifs.pop_back();
-        continue;
-      }
-      // else command
-      if (vs[0] == "else"){
-        if (ifs.size()<1) throw Err() << "unexpected else command";
-        ifs.back() = !ifs.back();
-        continue;
-      }
-      // if command
-      if (vs[0] == "if"){
-        if (vs.size() == 4 && vs[2] == "=="){
-          ifs.push_back(vs[1] == vs[3]);
-        }
-        else if (vs.size() == 4 && vs[2] == "!="){
-          ifs.push_back(vs[1] != vs[3]);
-        }
-        else
-          throw Err() << "wrong if syntax";
-        continue;
-      }
-
-      // check if conditions
-      bool skip = false;
-      for (auto const & c:ifs)
-        if (c == false) {skip = true; break;}
-      if (skip) continue;
-
-
-
-      // define <key> <value> -- define a variable
-      if (vs[0] == "define") {
         type=-1;
-        if (vs.size()!=3) throw Err() << "define: arguments expected: <key> <value>";
-        defs.define(vs[1], vs[2]);
         continue;
       }
 

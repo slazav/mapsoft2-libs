@@ -116,9 +116,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
     ftr = "";
     try{
-
-      // apply definitions
-      defs.apply(vs);
+      if (read_words_stdcmds(vs, defs, ifs)) continue;
 
       // include command
       if (vs[0] == "include"){
@@ -131,37 +129,6 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         load_conf(fn, defs, depth);
         continue;
       }
-
-      // endif command
-      if (vs[0] == "endif"){
-        if (ifs.size()<1) throw Err() << "unexpected endif command";
-        ifs.pop_back();
-        continue;
-      }
-      // else command
-      if (vs[0] == "else"){
-        if (ifs.size()<1) throw Err() << "unexpected else command";
-        ifs.back() = !ifs.back();
-        continue;
-      }
-      // if command
-      if (vs[0] == "if"){
-        if (vs.size() == 4 && vs[2] == "=="){
-          ifs.push_back(vs[1] == vs[3]);
-        }
-        else if (vs.size() == 4 && vs[2] == "!="){
-          ifs.push_back(vs[1] != vs[3]);
-        }
-        else
-          throw Err() << "wrong if syntax";
-        continue;
-      }
-
-      // check if conditions
-      bool skip = false;
-      for (auto const & c:ifs)
-        if (c == false) {skip = true; break;}
-      if (skip) continue;
 
       // set_ref, set_brd commands
       if (vs.size() > 1 &&

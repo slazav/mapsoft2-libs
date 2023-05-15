@@ -319,7 +319,7 @@ do_make_label(const VMap2obj & o, const VMap2type & t){
 }
 
 void
-do_update_labels(VMap2 & map, const VMap2types & types){
+do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names){
   double dist1 = 10.0; // move to options?
   double dist2 = 1000.0; // move to options?
   // Build multimap object_id -> label_id
@@ -390,8 +390,16 @@ do_update_labels(VMap2 & map, const VMap2types & types){
       lab.set_type(VMAP2_TEXT, t->second.label_type);
     }
 
-    // update label name and ref_pt
-    lab.name = obj.name;
+    // update name
+    if (label_names) {
+      obj.name = lab.name;
+      map.put(id_o, obj);
+    }
+    else {
+      lab.name = obj.name;
+    }
+
+    // update ref_pt
     if (lab.size()==0 || lab[0].size()==0) continue;
     geo_nearest_vertex(obj, lab[0][0], &lab.ref_pt);
     map.put(id_l, lab);

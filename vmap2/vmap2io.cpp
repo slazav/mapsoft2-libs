@@ -24,8 +24,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("min_depth",  1, 0, "FIG", "minimum depth of map object (default 40)");
     opts.add("max_depth",  1, 0, "FIG", "minimum depth of map object (default 200)");
 
-    opts.add("wpt_type",  1, 0, g, "select type for GPX track import/export");
     opts.add("trk_type",  1, 0, g, "select type for GPX waypoint import/export");
+    opts.add("wpt_type",  1, 0, g, "select type for GPX track import/export");
+    opts.add("wpt_pref",  1, 0, g, "prefix for waypoint names (names w/o prefix are skipped). Default: \"=\"");
 
     ms2opt_add_fig(opts); // FIG group, reading/writing fig files
     opts.remove("fig_header");
@@ -52,8 +53,18 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
                                          " default: \"24,22,20,18,17,15\".");
     opts.add("crop_nom",     1, 0, "VMAP2", "crop map to nomenclature region");
     opts.add("crop_rect",    1, 0, "VMAP2", "crop map to a rectangle");
-    opts.add("update_labels",1, 0, "VMAP2", "update labels");
-    opts.add("keep_labels",  1, 0, "VMAP2", "keep old labels");
+
+    opts.add("update_labels",1, 0, "VMAP2",
+      "Update labels (0|1): find labels for each object, add missing labels, "
+      "remove labels without objects, update label type, name, and reference. "
+      "Values: 0 or 1, default: 0.");
+
+    opts.add("label_names", 1, 0, "VMAP2",
+      "When updating labels, get names from labels, not from objects. "
+      "Useful for updating map from a source (e.g. gpx) where names are missing."
+      "Values: 0 or 1, default: 0.");
+
+    opts.add("keep_labels",  1, 0, "VMAP2", "Keep old labels. Values: 0 or 1, default: 0.");
     opts.add("update_tag",   1, 0, "VMAP2", "update objects with a tag");
     opts.add("update_type",  1, 0, "VMAP2", "update objects with a given type");
     opts.add("update_types", 1, 0, "VMAP2", "update all types which exist on input (0|1)");
@@ -116,6 +127,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
              const std::string & ofile, const Opt & opts){
 
   bool update_labels = opts.get("update_labels", false);
+  bool label_names = opts.get("label_names", false);
   bool keep_labels = opts.get("keep_labels", false);
   std::string update_tag = opts.get("update_tag");
   uint32_t update_type = VMap2obj::make_type(opts.get("update_type", "none"));
@@ -163,7 +175,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
       do_filter_pts(vmap2, filter_pts_d);
 
   if (update_labels)
-      do_update_labels(vmap2, types);
+      do_update_labels(vmap2, types, label_names);
 
   if (crop_nom.size())
      do_crop_rect(vmap2, nom_to_wgs(crop_nom));

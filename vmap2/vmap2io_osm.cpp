@@ -27,8 +27,7 @@ load_osm_conf(const std::string & fname,
     if (vs.size()==0) break;
 
     try{
-      // definitions
-      defs.apply(vs);
+      if (read_words_stdcmds(vs, defs, ifs)) continue;
 
       // include command
       if (vs[0] == "include"){
@@ -41,37 +40,6 @@ load_osm_conf(const std::string & fname,
         load_osm_conf(fn, osm_conf, defs);
         continue;
       }
-
-      // endif command
-      if (vs[0] == "endif"){
-        if (ifs.size()<1) throw Err() << "unexpected endif command";
-        ifs.pop_back();
-        continue;
-      }
-      // else command
-      if (vs[0] == "else"){
-        if (ifs.size()<1) throw Err() << "unexpected else command";
-        ifs.back() = !ifs.back();
-        continue;
-      }
-      // if command
-      if (vs[0] == "if"){
-        if (vs.size() == 4 && vs[2] == "=="){
-          ifs.push_back(vs[1] == vs[3]);
-        }
-        else if (vs.size() == 4 && vs[2] == "!="){
-          ifs.push_back(vs[1] != vs[3]);
-        }
-        else
-          throw Err() << "wrong if syntax";
-        continue;
-      }
-
-      // check if conditions
-      bool skip = false;
-      for (auto const & c:ifs)
-        if (c == false) {skip = true; break;}
-      if (skip) continue;
 
       // define <key> <value> -- define a variable
       if (vs[0] == "define") {
