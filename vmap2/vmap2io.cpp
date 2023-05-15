@@ -65,9 +65,10 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
       "Values: 0 or 1, default: 0.");
 
     opts.add("keep_labels",  1, 0, "VMAP2", "Keep old labels. Values: 0 or 1, default: 0.");
-    opts.add("update_tag",   1, 0, "VMAP2", "update objects with a tag");
-    opts.add("update_type",  1, 0, "VMAP2", "update objects with a given type");
-    opts.add("update_types", 1, 0, "VMAP2", "update all types which exist on input (0|1)");
+    opts.add("replace_tag",   1, 0, "VMAP2", "Replace objects with a given tag.");
+    opts.add("replace_type",  1, 0, "VMAP2", "Replace objects with a given type.");
+    opts.add("replace_types", 1, 0, "VMAP2", "Replace objects with all types which exist in input files. "
+      "Values: 0 or 1, default: 0.");
     opts.add("fix_rounding", 1, 0,
        "VMAP2", "Fix rounding errors using information from the output file."
                 " This should be used when editing map in fig format and then returning"
@@ -129,9 +130,9 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   bool update_labels = opts.get("update_labels", false);
   bool label_names = opts.get("label_names", false);
   bool keep_labels = opts.get("keep_labels", false);
-  std::string update_tag = opts.get("update_tag");
-  uint32_t update_type = VMap2obj::make_type(opts.get("update_type", "none"));
-  bool update_types = opts.get("update_types", false);
+  std::string replace_tag = opts.get("replace_tag");
+  uint32_t replace_type = VMap2obj::make_type(opts.get("replace_type", "none"));
+  bool replace_types = opts.get("replace_types", false);
   bool fix_rounding = opts.get("fix_rounding", false);
   double rounding_acc = opts.get("rounding_acc", 5); // m
   bool join_lines = opts.exists("join_lines");
@@ -142,11 +143,11 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   std::string crop_nom = opts.get("crop_nom");
   std::string crop_rect = opts.get("crop_rect");
 
-  opts.check_conflict({"update_tag", "update_type", "update_types"});
+  opts.check_conflict({"replace_tag", "replace_type", "replace_types"});
 
   // Merge with old data if needed
-  if ((keep_labels || update_tag!="" || fix_rounding ||
-      update_types || VMap2obj::get_class(update_type)!=VMAP2_NONE) &&
+  if ((keep_labels || replace_tag!="" || fix_rounding ||
+      replace_types || VMap2obj::get_class(replace_type)!=VMAP2_NONE) &&
       file_exists(ofile)){
 
     VMap2 vmap2o;
@@ -155,14 +156,14 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
     if (keep_labels)
       do_keep_labels(vmap2o, vmap2);
 
-    if (update_tag!="")
-      do_update_tag(vmap2o, vmap2, update_tag);
+    if (replace_tag!="")
+      do_replace_tag(vmap2o, vmap2, replace_tag);
 
-    if (update_types)
-      do_update_types(vmap2o, vmap2);
+    if (replace_types)
+      do_replace_types(vmap2o, vmap2);
 
-    if (VMap2obj::get_class(update_type)!=VMAP2_NONE)
-      do_update_type(vmap2o, vmap2, update_type);
+    if (VMap2obj::get_class(replace_type)!=VMAP2_NONE)
+      do_replace_type(vmap2o, vmap2, replace_type);
 
     if (fix_rounding)
       do_fix_rounding(vmap2o, vmap2, rounding_acc);
