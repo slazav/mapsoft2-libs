@@ -10,6 +10,7 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
     "Use --trk_type or --wpt_type for importing gpx data";
   auto trk_type = VMap2obj::make_type(opts.get("trk_type", "none"));
   auto wpt_type = VMap2obj::make_type(opts.get("wpt_type", "none"));
+  auto wpt_pref = opts.get("wpt_pref", "=");
 
   GeoData data;
   read_gpx(ifile, data, opts);
@@ -18,12 +19,12 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
   // - one segment -> one object
   // - no names
   if (VMap2obj::get_class(trk_type)!=VMAP2_NONE){
-    VMap2obj o1(trk_type);
+    VMap2obj o(trk_type);
     for (auto const & tr:data.trks){
       for (auto const & l:(dMultiLine)tr){
         if (l.size()==0) continue;
-        o1.set_coords(l);
-        vmap2.add(o1);
+        o.set_coords(l);
+        vmap2.add(o);
       }
     }
   }
@@ -32,12 +33,15 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
   // - one point - one object
   // - set object name from waypoint name
   if (VMap2obj::get_class(wpt_type)!=VMAP2_NONE){
-    VMap2obj o1(wpt_type);
+    VMap2obj o(wpt_type);
     for (auto const & wptl:data.wpts){
-      for (auto const & wpt:wptl){
-        o1.set_coords(wpt);
-        o1.name = wpt.name;
-        vmap2.add(o1);
+      for (auto const & w:wptl){
+        o.set_coords(w);
+        if (w.name.size() > wpt_pref.size() &&
+            w.name.substr(0,wpt_pref.size()) == wpt_pref)
+          o.name = w.name.substr(wpt_pref.size());
+        else o.name = "";
+        vmap2.add(o);
       }
     }
   }
@@ -53,6 +57,7 @@ vmap2_to_gpx(VMap2 & vmap2, const std::string & ofile, const Opt & opts){
     "Use --trk_type or --wpt_type for exporting gpx data";
   auto trk_type = VMap2obj::make_type(opts.get("trk_type", "none"));
   auto wpt_type = VMap2obj::make_type(opts.get("wpt_type", "none"));
+  auto wpt_pref = opts.get("wpt_pref", "=");
 
   GeoData data;
 
@@ -66,14 +71,14 @@ vmap2_to_gpx(VMap2 & vmap2, const std::string & ofile, const Opt & opts){
     data.trks.push_back(GeoTrk(ml));
   }
 
-  // Convert tracks:
+  // Convert waypoints:
   if (VMap2obj::get_class(wpt_type)!=VMAP2_NONE){
     GeoWptList wpts;
     for (const auto i: vmap2.find(wpt_type)){
       auto o = vmap2.get(i);
       if (o.size()<1 || o[0].size()<1) continue;
       GeoWpt w((dPoint)o[0][0]);
-      w.name = o.name;
+      if (o.name!="") w.name = wpt_pref + o.name;
       wpts.push_back(w);
     }
     data.wpts.push_back(wpts);
