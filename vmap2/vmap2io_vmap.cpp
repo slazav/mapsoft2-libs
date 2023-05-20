@@ -53,11 +53,9 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
 
     // find type information if any.
     int label_type = def_label_type;
-    float label_def_scale = 1.0;
     if (types.count(type)){
       auto t = types.find(type)->second;
       label_type = t.label_type;
-      label_def_scale = t.label_def_scale;
     }
     else if (skip_unknown) {
       if (!quiet) skipped_types.insert(type);
@@ -120,8 +118,7 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
         // as a correction to font size: -1, 0, +1, etc.
         // Convert it to scaling factor using some
         // "natural" font size.
-        // Then apply label_def_scale.
-        if (l.fsize) l1.scale = (8.0 + l.fsize)/8.0 * label_def_scale;
+        if (l.fsize) l1.scale = (8.0 + l.fsize)/8.0;
 
         // Reference point and type
         l1.ref_type = type;
