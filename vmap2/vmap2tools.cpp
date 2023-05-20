@@ -315,6 +315,7 @@ do_make_label(const VMap2obj & o, const VMap2type & t){
   label.ref_type = o.type;
   geo_nearest_vertex(o, pt0, &label.ref_pt);
   label.scale = t.label_def_scale;
+  label.align = t.label_def_align;
   return label;
 }
 

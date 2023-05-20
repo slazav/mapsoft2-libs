@@ -7,6 +7,7 @@
 #include "geo_data/geo_data.h"
 #include "read_words/read_words.h"
 #include "fig/fig.h"
+#include "vmap2obj.h"
 
 /********************************************************************/
 #include "getopt/getopt.h"
@@ -26,9 +27,10 @@ public:
   int mp_start, mp_end; // start/end level for MP format
   int    label_type;    // type number for related labels, -1 for none
   float  label_def_scale; // initial scale for labels
+  VMap2objAlign  label_def_align; // initial align for labels
   int    label_mkpt;    // reconnact labels to point objects, type number or -1 for none
   VMap2type(): mp_start(0), mp_end(0), label_type(-1),
-               label_def_scale(1.0), label_mkpt(-1) {}
+               label_def_scale(1.0), label_def_align(VMAP2_ALIGN_SW), label_mkpt(-1) {}
 };
 
 // All object types
