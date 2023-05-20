@@ -82,3 +82,12 @@ void fig_remove_empty_comp(std::list<FigObj> & objects){
   }
 }
 
+void fig_remove_comp(std::list<FigObj> & objects){
+  auto i = objects.begin();
+  while (i!=objects.end()){
+    if (i->is_compound() || i->is_compound_end())
+      i=objects.erase(i);
+    else ++i;
+  }
+}
+

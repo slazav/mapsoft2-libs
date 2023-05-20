@@ -96,6 +96,25 @@ main(){
       "-6\n"
     ;
 
+   std::string fig_text_out2 =
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 2\n"
+      "\t1350 2115 2700 2160\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 2\n"
+      "\t5355 5175 6435 4635\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 2\n"
+      "\t5265 4320 6660 3870\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 2\n"
+      "\t1485 3870 2925 3105\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 3\n"
+      "\t4455 3870 4950 2880 5220 2295\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 3\n"
+      "\t4455 3870 4950 2880 5220 2295\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 3\n"
+      "\t4455 3870 4950 2880 5220 2295\n"
+      "2 1 0 1 0 7 50 -1 -1 0.000 0 0 -1 0 0 3\n"
+      "\t4455 3870 4950 2880 5220 2295\n"
+    ;
+
     Fig fig;
     Opt opts;
     opts.put("fig_header", false);
@@ -103,10 +122,18 @@ main(){
     read_fig(ss, fig, opts);
 
     fig_remove_empty_comp(fig);
+    {
+      std::ostringstream so;
+      write_fig(so, fig, opts);
+      assert_eq(so.str(), fig_text_out);
+    }
 
-    std::ostringstream so;
-    write_fig(so, fig, opts);
-    assert_eq(so.str(), fig_text_out);
+    fig_remove_comp(fig);
+    {
+      std::ostringstream so;
+      write_fig(so, fig, opts);
+      assert_eq(so.str(), fig_text_out2);
+    }
 
   }
   catch (Err & E){

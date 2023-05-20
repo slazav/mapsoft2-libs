@@ -24,4 +24,7 @@ void fig_shift(std::list<FigObj> & objects, const iPoint & sh);
 // Remove empty compounds
 void fig_remove_empty_comp(std::list<FigObj> & objects);
 
+// Remove all compounds
+void fig_remove_comp(std::list<FigObj> & objects);
+
 #endif
