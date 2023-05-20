@@ -145,16 +145,17 @@ fig_is_map_part(const FigObj & o, const int min_depth, const int max_depth){
   // Keep reference and border?
   // This is not needed if these objects are outside min_depth..max_depth.
   // If they are inside some other troubles can happen...
-//  if (o.comment.size()>0 && o.comment[0].substr(0,3) == "REF") return false;
-//  if (o.comment.size()>0 && o.comment[0].substr(0,3) == "BRD") return false;
+  //  if (o.comment.size()>0 && o.comment[0].substr(0,3) == "REF") return false;
+  //  if (o.comment.size()>0 && o.comment[0].substr(0,3) == "BRD") return false;
 
-  // skip everything between min_depth and max_depth
+  // remove everything between min_depth and max_depth
   if (o.depth >= min_depth && o.depth <= max_depth) return true;
 
-  // skip all objects with MapType parameter
+  // remove all objects with MapType parameter
   Opt oo = fig_get_opts(o);
   if (oo.exists("MapType")) return true;
 
+  // keep everything else
   return false;
 }
 
@@ -289,7 +290,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
   size_t min_depth = opts.get("min_depth", 40);
   size_t max_depth = opts.get("max_depth", 200);
 
-  // Read fig file (wee need reference and non-map objects)
+  // Read fig file (we need reference and non-map objects)
   Fig fig;
   read_fig(ofile, fig, opts);
 
