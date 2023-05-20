@@ -193,7 +193,7 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     if (type==0) continue;
 
     // fig comment without options
-    auto comm = o.comment;
+    auto comm = cmp_comm.size()>0? cmp_comm : o.comment;
     Opt o_opts = fig_get_opts(o);
     fig_del_opts(comm);
 
@@ -408,13 +408,21 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
 
       // Pictures
       if (info.fig_pic.size()){
+        // Read pictures, remove all compounds
         std::list<FigObj> pic = info.fig_pic;
+        fig_remove_comp(pic);
+        // Add "MapType=pic" comment
         for (auto & o:pic) fig_add_opt(o, "MapType", "pic");
+        // Scale, rotate, shift the picture
         if (o.scale!=1.0) fig_scale(pic, o.scale);
         if (!std::isnan(angle)) fig_rotate(pic, -angle);
         fig_shift(pic, pt0);
+        // Add main object, make compound
         pic.push_back(o1);
         fig_make_comp(pic);
+        // transfer comment to the compound
+        if (o1.comment.size()>0) pic.front().comment = o1.comment;
+        // put picture
         fig.insert(fig.end(), pic.begin(), pic.end());
       }
       else{
