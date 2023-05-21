@@ -194,7 +194,7 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
 
     // fig comment without options
     auto comm = cmp_comm.size()>0? cmp_comm : o.comment;
-    Opt o_opts = fig_get_opts(o);
+    Opt o_opts = fig_get_opts(comm);
     fig_del_opts(comm);
 
     VMap2obj o1(type);
@@ -257,11 +257,6 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     // == Other objects ==
     else {
       // name and comment
-      // copy comment from compound to the first object:
-      if (cmp_comm.size()>0){
-        comm=cmp_comm;
-        cmp_comm.clear();
-      }
       if (comm.size()>0){
         o1.name = comm[0];
         for (size_t i = 1; i<comm.size(); i++)
@@ -270,7 +265,6 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
       // Angle and Align for non-text objects
       if (o_opts.exists("Angle")) o1.angle = o_opts.get<float>("Angle");
       if (o_opts.exists("Align")) o1.align = VMap2obj::parse_align(o_opts.get("Align"));
-
     }
 
     vmap2.add(o1);
@@ -333,6 +327,22 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
 
     FigObj o1 = figobj_template(info.fig_mask);
 
+    // For non-text objects keep original angle and
+    // align in options. Put name and comments to object comments.
+    if (o.get_class() != VMAP2_TEXT) {
+
+      if (o.name!="" || o.comm!="")
+        o1.comment.push_back(o.name);
+      if (o.comm!="")
+        o1.comment.push_back(o.comm);
+
+      if (o.align!=0)
+        fig_add_opt(o1, "Align", VMap2obj::print_align(o.align));
+
+      if (!std::isnan(o.angle))
+        fig_add_opt(o1, "Angle", type_to_str(o.angle));
+
+    }
 
     // Tags, space-separated words
     if (o.tags.size()>0)
@@ -342,21 +352,6 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
     if (o.scale!=1.0)
       fig_add_opt(o1, "Scale", type_to_str(o.scale));
 
-
-    // For non-text objects keep original angle and
-    // align in options. Put name and comments to obejct comments.
-    if (o.get_class() != VMAP2_TEXT) {
-      if (o.align!=0)
-        fig_add_opt(o1, "Align", VMap2obj::print_align(o.align));
-
-      if (!std::isnan(o.angle))
-        fig_add_opt(o1, "Angle", type_to_str(o.angle));
-
-      if (o.name!="" || o.comm!="")
-        o1.comment.push_back(o.name);
-      if (o.comm!="")
-        o1.comment.push_back(o.comm);
-    }
 
     // Convert angle. It will be needed to rotate text and
     // point pictures. Value is CCW, radians.
