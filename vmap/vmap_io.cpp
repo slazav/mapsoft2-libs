@@ -20,10 +20,7 @@ using namespace std;
 int vmap_get_kv(const string &s, string &key, string &val){
   if (s=="") return 1;
   int tab=s.find('\t', 0);
-  if (tab==-1){
-    cerr << "skipping bad line: " << s << "\n";
-    return 1;
-  }
+  if (tab==-1) throw Err() << "can't find key-value pair";
   int st=0;
   while (s[st]==' ') st++;
   key=s.substr(st, tab-st);
@@ -37,10 +34,7 @@ dPoint vmap_read_pt(istream & IN){
   char sep;
   IN >> p.x >> sep >> p.y;
   if (!IN.eof()) IN >> std::ws;
-  if (sep!=','){
-    cerr << "bad point: " << IN.rdbuf() << "\n";
-    return dPoint();
-  }
+  if (sep!=',') throw Err() << "can't read point";
   p/=vmap_point_scale;
   return p;
 }
@@ -100,10 +94,8 @@ dLine
 read_vmap_points(istream & IN, string & s){
   dLine ret;
   string key,val;
-  if (vmap_get_kv(s, key, val)!=0){
-    cerr << "wrong call of read_vmap_points()!\n";
-    return ret;
-  }
+  if (vmap_get_kv(s, key, val)!=0)
+    throw Err() << "wrong call of read_vmap_points()";
   s=val;
   do {
     istringstream IN1(s);
@@ -112,7 +104,6 @@ read_vmap_points(istream & IN, string & s){
     }
     getline(IN, s);
   } while (s[0]=='\t');
-
   return ret;
 }
 
@@ -123,10 +114,8 @@ read_vmap_object(istream & IN, string & s, double ver){
   string key,val;
   bool read_ahead=false;
 
-  if ((vmap_get_kv(s, key, val)!=0) || (key!="OBJECT")){
-    cerr << "wrong call of read_vmap_object()!\n";
-    return ret;
-  }
+  if ((vmap_get_kv(s, key, val)!=0) || (key!="OBJECT"))
+    throw Err() << "wrong call of read_vmap_object()";
 
   istringstream IN1(val);
   IN1 >> setbase(16) >> ret.type >> ws;
@@ -136,40 +125,43 @@ read_vmap_object(istream & IN, string & s, double ver){
   while (!IN.eof() || read_ahead){
     if (!read_ahead) getline(IN, s);
     else read_ahead=false;
-    if (vmap_get_kv(s, key, val)!=0) continue;
 
-    if (ver<3.1 && key=="TEXT"){  // backward comp
-      ret.text=val;
-      continue;
-    }
-    if (key=="DIR"){
-      inv = (atoi(val.c_str()) == 2);
-      continue;
-    }
-    if (key=="OPT"){
-      string k,v;
-      if (vmap_get_kv(val, k, v)!=0){
-        cerr << "bad options in: " << s << "\n";
+    try{
+      if (vmap_get_kv(s, key, val)!=0) continue;
+        if (ver<3.1 && key=="TEXT"){  // backward comp
+        ret.text=val;
         continue;
       }
-      ret.opts.put(k,v);
-      continue;
+      if (key=="DIR"){
+        inv = (atoi(val.c_str()) == 2);
+        continue;
+      }
+      if (key=="OPT"){
+        string k,v;
+        if (vmap_get_kv(val, k, v)!=0)
+          throw Err() << "bad options";
+        ret.opts.put(k,v);
+        continue;
+      }
+      if (key=="COMM"){
+        if (ret.comm.size()>0) ret.comm+="\n";
+         ret.comm+=val;
+        continue;
+      }
+      if (key=="LABEL"){
+        ret.labels.push_back(vmap_read_lab_pos(val, ver));
+        continue;
+      }
+      if (key=="DATA"){
+        ret.push_back(read_vmap_points(IN, s));
+        read_ahead=true;
+        continue;
+      }
+      break; // end of object
     }
-    if (key=="COMM"){
-      if (ret.comm.size()>0) ret.comm+="\n";
-       ret.comm+=val;
-      continue;
+    catch (const Err & e){
+      std::cerr << "read_vmap_object" << e.str() << ": " << s << "\n";
     }
-    if (key=="LABEL"){
-      ret.labels.push_back(vmap_read_lab_pos(val, ver));
-      continue;
-    }
-    if (key=="DATA"){
-      ret.push_back(read_vmap_points(IN, s));
-      read_ahead=true;
-      continue;
-    }
-    break; // end of object
   }
   if (inv)
     for (auto & i:ret) i.invert();
@@ -203,39 +195,45 @@ read_vmap(istream & IN){
 
     if (!read_ahead) getline(IN, s);
     else read_ahead=false;
-    if (vmap_get_kv(s, key, val)!=0) continue;
 
-    if (key=="NAME"){
-      ret.name=val;
-      continue;
+    try {
+      if (vmap_get_kv(s, key, val)!=0) continue;
+
+      if (key=="NAME"){
+        ret.name=val;
+        continue;
+      }
+      if (key=="RSCALE"){
+        ret.rscale=atof(val.c_str());
+        continue;
+      }
+      if (key=="STYLE"){
+        ret.style=val;
+        continue;
+      }
+      if (key=="MP_ID"){
+        ret.mp_id=atoi(val.c_str());
+        continue;
+      }
+      if (key=="BRD"){
+        ret.brd = read_vmap_points(IN, s);
+        read_ahead=true;
+        continue;
+      }
+      if (key=="LBUF"){
+        ret.lbuf.push_back(vmap_read_lbuf(val, ver));
+        continue;
+      }
+      if (key=="OBJECT"){
+        ret.push_back(read_vmap_object(IN, s, ver));
+        read_ahead=true;
+        continue;
+      }
+      throw Err() << "unknown key";
     }
-    if (key=="RSCALE"){
-      ret.rscale=atof(val.c_str());
-      continue;
+    catch (const Err & e){
+      std::cerr << "read_vmap" << e.str() << ": " << s << "\n";
     }
-    if (key=="STYLE"){
-      ret.style=val;
-      continue;
-    }
-    if (key=="MP_ID"){
-      ret.mp_id=atoi(val.c_str());
-      continue;
-    }
-    if (key=="BRD"){
-      ret.brd = read_vmap_points(IN, s);
-      read_ahead=true;
-      continue;
-    }
-    if (key=="LBUF"){
-      ret.lbuf.push_back(vmap_read_lbuf(val, ver));
-      continue;
-    }
-    if (key=="OBJECT"){
-      ret.push_back(read_vmap_object(IN, s, ver));
-      read_ahead=true;
-      continue;
-    }
-    cerr << "skipping bad line: " << s << "\n";
   }
   return ret;
 }
