@@ -126,6 +126,10 @@ rect_split_cropped(const dRect & cutter,
   dMultiLine ret;
   dLine rl;
 
+  // Skip empty lines
+  if (cropped.size()==0)
+    return ret;
+
   // Keep single points.
   if (cropped.size()==1){
     ret.push_back(cropped);
