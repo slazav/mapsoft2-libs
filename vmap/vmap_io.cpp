@@ -91,7 +91,7 @@ VMapLfull vmap_read_lbuf(const string & s, double ver){
 }
 
 dLine
-read_vmap_points(istream & IN, string & s){
+read_vmap_points(istream & IN, string & s, size_t & nline){
   dLine ret;
   string key,val;
   if (vmap_get_kv(s, key, val)!=0)
@@ -102,18 +102,18 @@ read_vmap_points(istream & IN, string & s){
     while (IN1.good()){
       ret.push_back(vmap_read_pt(IN1));
     }
-    getline(IN, s);
+    getline(IN, s); nline++;
   } while (s[0]=='\t');
   return ret;
 }
 
 
 VMapObj
-read_vmap_object(istream & IN, string & s, double ver){
+read_vmap_object(istream & IN, string & s, double ver, size_t & nline){
   VMapObj ret;
   string key,val;
   bool read_ahead=false;
-
+  auto s0 = s; // save object header string for error message
   if ((vmap_get_kv(s, key, val)!=0) || (key!="OBJECT"))
     throw Err() << "wrong call of read_vmap_object()";
 
@@ -123,8 +123,9 @@ read_vmap_object(istream & IN, string & s, double ver){
 
   bool inv = false;
   while (!IN.eof() || read_ahead){
-    if (!read_ahead) getline(IN, s);
+    if (!read_ahead) { getline(IN, s); nline++;}
     else read_ahead=false;
+    auto s1 = s; // save string for error message
 
     try{
       if (vmap_get_kv(s, key, val)!=0) continue;
@@ -153,14 +154,15 @@ read_vmap_object(istream & IN, string & s, double ver){
         continue;
       }
       if (key=="DATA"){
-        ret.push_back(read_vmap_points(IN, s));
+        ret.push_back(read_vmap_points(IN, s, nline));
         read_ahead=true;
         continue;
       }
       break; // end of object
     }
     catch (const Err & e){
-      std::cerr << "read_vmap_object" << e.str() << ": " << s << "\n";
+      std::cerr << "read_vmap_object[" << nline << "]: "
+                << e.str() << ": \"" << s1 << "\"\n";
     }
   }
   if (inv)
@@ -175,9 +177,10 @@ read_vmap(istream & IN){
   string s, key, val;
   bool read_ahead=false;
   if (!IN) throw Err() << "can't read VMAP file";
+  size_t nline = 0; // line number
 
   double ver;
-  IN >> s >> ver;
+  IN >> s >> ver; nline++;
   if (s!="VMAP"){
     cerr << "error: not a VMAP file\n";
     return ret;
@@ -193,8 +196,9 @@ read_vmap(istream & IN){
 
   while (IN || read_ahead){
 
-    if (!read_ahead) getline(IN, s);
+    if (!read_ahead) { getline(IN, s); nline++; }
     else read_ahead=false;
+    auto s1=s; // save string for error message
 
     try {
       if (vmap_get_kv(s, key, val)!=0) continue;
@@ -216,7 +220,7 @@ read_vmap(istream & IN){
         continue;
       }
       if (key=="BRD"){
-        ret.brd = read_vmap_points(IN, s);
+        ret.brd = read_vmap_points(IN, s, nline);
         read_ahead=true;
         continue;
       }
@@ -225,14 +229,15 @@ read_vmap(istream & IN){
         continue;
       }
       if (key=="OBJECT"){
-        ret.push_back(read_vmap_object(IN, s, ver));
+        ret.push_back(read_vmap_object(IN, s, ver, nline));
         read_ahead=true;
         continue;
       }
       throw Err() << "unknown key";
     }
     catch (const Err & e){
-      std::cerr << "read_vmap" << e.str() << ": " << s << "\n";
+      std::cerr << "read_vmap[" << nline << "]: "
+                << e.str() << ": \"" << s1 << "\"\n";
     }
   }
   return ret;
