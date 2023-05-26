@@ -32,4 +32,4 @@ void do_filter_pts(VMap2 & map, const double D);
 void do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names=false);
 
 // Crop map with a rectangleUpdate labels
-void do_crop_rect(VMap2 & map, const dRect & r);
+void do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels);

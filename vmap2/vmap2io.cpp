@@ -51,8 +51,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("mp_name",      1, 0, "MP", "override MP Name");
     opts.add("mp_levels",    1, 0, "MP", "set mp data levels (comma-separated integers),"
                                          " default: \"24,22,20,18,17,15\".");
-    opts.add("crop_nom",     1, 0, "VMAP2", "crop map to nomenclature region");
-    opts.add("crop_rect",    1, 0, "VMAP2", "crop map to a rectangle");
+    opts.add("crop_nom",     1, 0, "VMAP2", "Crop map to nomenclature region.");
+    opts.add("crop_rect",    1, 0, "VMAP2", "Crop map to a rectangle.");
+    opts.add("crop_labels",  1, 0, "VMAP2", "By default crop_* commands are not applied to labels. This option can change it. Values: 0 or 1, default: 0.");
 
     opts.add("update_labels",1, 0, "VMAP2",
       "Update labels (0|1): find labels for each object, add missing labels, "
@@ -142,6 +143,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   double filter_pts_d = opts.get("filter_pts_d", 10); // m
   std::string crop_nom = opts.get("crop_nom");
   std::string crop_rect = opts.get("crop_rect");
+  bool crop_labels = opts.get("crop_labels", false);
 
   opts.check_conflict({"replace_tag", "replace_type", "replace_types"});
 
@@ -179,10 +181,10 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
       do_update_labels(vmap2, types, label_names);
 
   if (crop_nom.size())
-     do_crop_rect(vmap2, nom_to_wgs(crop_nom));
+     do_crop_rect(vmap2, nom_to_wgs(crop_nom), crop_labels);
 
   if (crop_rect.size())
-    do_crop_rect(vmap2, dRect(crop_rect));
+    do_crop_rect(vmap2, dRect(crop_rect), crop_labels);
 
   // Save files
   if (file_ext_check(ofile, ".vmap2db")){

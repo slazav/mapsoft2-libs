@@ -417,13 +417,15 @@ do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names){
 }
 
 void
-do_crop_rect(VMap2 & map, const dRect & r){
+do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels){
   // Loop through VMap2 objects:
   map.iter_start();
   while (!map.iter_end()){
     auto p = map.iter_get_next();
     auto id = p.first;
     auto & o = p.second;
+    if (!crop_labels && o.get_class() == VMAP2_TEXT) continue;
+
     bool closed = (o.get_class() == VMAP2_POLYGON);
 
     dMultiLine pts;
