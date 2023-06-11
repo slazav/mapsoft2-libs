@@ -2,12 +2,19 @@
 #include <string>
 #include <vector>
 #include "err/err.h"
+#include "filename.h"
 
 bool
 file_ext_check(const std::string &fname, const char *ext){
   int lf=fname.size();
   int le=strlen(ext);
   return (lf>=le) && (strncasecmp(fname.c_str() + (lf-le), ext, le)==0);
+}
+
+bool
+file_ext_check(const std::string &fname, const std::list<const char *> & ext){
+  for (const auto e: ext) {if (file_ext_check(fname, e)) return true;}
+  return false;
 }
 
 std::string

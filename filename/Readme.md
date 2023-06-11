@@ -3,12 +3,14 @@
 * Check if the file has specified extension (case insensitive).
 ```
 bool file_ext_check(const std::string &fname, const char *ext);
+bool file_ext_check(const std::string &fname, const std::list<const char *> & ext);
 ```
 
 Example:
 ``` c++
 file_ext_check("file.jpg", ".jpg") => true
-```
+file_ext_check("file.jpg", {".jpg", ".jpeg"}) => true
+*```
 
 * Replace last file extension (if any) with a new one.
 Example: file_ext_repl("file.jpg", ".gif") => "file.gif"

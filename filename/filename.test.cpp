@@ -15,6 +15,10 @@ int main() {
     assert_eq(file_ext_check("FILE.JPG",   ".jpg"), 1);
     assert_eq(file_ext_check("FILE.JPG",   ".gif"), 0);
 
+    assert_eq(file_ext_check("FILE.JPG",   {".jpg", ".jpeg"}), 1);
+    assert_eq(file_ext_check("FILE.JPEG",  {".jpg", ".jpeg"}), 1);
+    assert_eq(file_ext_check("FILE.JPG1",  {".jpg", ".jpeg"}), 0);
+
     assert_eq(file_ext_repl("file.jpg", ".gif"), "file.gif");
     assert_eq(file_ext_repl("file.j", ".gif"), "file.gif");
     assert_eq(file_ext_repl("file", ".gif"), "file.gif");
