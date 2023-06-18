@@ -41,7 +41,7 @@ void start_element(xmlTextWriterPtr & writer, const char *name){
 
 void end_element(xmlTextWriterPtr & writer, const char *name){
   if (xmlTextWriterEndElement(writer) < 0)
-    throw string("cloing <") + name + "> element";
+    throw string("closing <") + name + "> element";
 }
 
 void write_cdata_element(xmlTextWriterPtr & writer, const char *name, const string & value){
