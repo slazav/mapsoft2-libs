@@ -1,5 +1,6 @@
 ///\cond HIDDEN (do not show this in Doxyden)
 
+#include <proj.h>
 #include <cassert>
 #include "err/assert_err.h"
 #include "conv_geo.h"
@@ -215,7 +216,13 @@ main(){
       // assert_eq(p1, dPoint(27,90)); // strange PROJ feature (different in proj 5.0 and 6.2)
 
       p1 = dPoint(nan(""), 60.976941);
+// proj 9.1.0 -> 9.2.1 returns [nan, nan] instead of "Point outside of projection domain"
+#if PROJ_AT_LEAST_VERSION(9, 2, 1)
+      cnv1.frw(p1);
+      assert_eq(std::isnan(p1.x) && std::isnan(p1.y), true);
+#else
       assert_err(cnv1.frw(p1), "Can't convert coordinates: Point outside of projection domain");
+#endif
     }
 
     // bad coordinates (with datum conversion)
@@ -228,7 +235,13 @@ main(){
       assert_err(cnv1.frw(p1), "Can't convert coordinates: Invalid coordinate");
 
       p1 = dPoint(nan(""), 60.976941);
+// proj 9.1.0 -> 9.2.1 returns [nan, nan] instead of "Point outside of projection domain"
+#if PROJ_AT_LEAST_VERSION(9, 2, 1)
+      cnv1.frw(p1);
+      assert_eq(std::isnan(p1.x) && std::isnan(p1.y), true);
+#else
       assert_err(cnv1.frw(p1), "Can't convert coordinates: Point outside of projection domain");
+#endif
 
     }
 
