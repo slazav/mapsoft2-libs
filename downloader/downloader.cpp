@@ -26,8 +26,10 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 /**********************************/
 Downloader::Downloader(const int cache_size, const int max_conn, const int log_level):
        max_conn(max_conn), num_conn(0), log_level(log_level), worker_needed(true),
-       worker_thread(&Downloader::worker, this), data(cache_size) {
+       data(cache_size) {
   set_opt(Opt());
+  // worker_thread must not be started from initializer list
+  worker_thread = std::thread(&Downloader::worker, this);
 }
 
 Downloader::~Downloader(){
@@ -152,8 +154,10 @@ Downloader::worker(){
   do {
 
     // Add urls from queue for downloading
-    while (num_conn<max_conn && urls.size()>0) {
+    while (num_conn<max_conn) {
+
       lk.lock();
+      if (urls.size() < 1) { lk.unlock(); break; }
       std::string &u = urls.front();
 
       // do nothing if
@@ -215,9 +219,9 @@ Downloader::worker(){
         //          << " <" << url << ">\n";
 
         // data have not been deleted with del()
+        lk.lock();
         if (data.contains(url)){
           auto & d = data.get(url);
-          lk.lock();
           if (msg->data.result==0 && (code==200 || code==0)) {
             d.first  = 2; // OK
             d.second = dat_store[url];
@@ -240,9 +244,9 @@ Downloader::worker(){
               std::cerr << "Downloader: " << url
                         << " (failed: " << d.second << ")\n";
           }
-          lk.unlock();
         }
 
+        lk.unlock();
         ready_cond.notify_one();
         curl_multi_remove_handle(cm, e);
         curl_easy_cleanup(e);
