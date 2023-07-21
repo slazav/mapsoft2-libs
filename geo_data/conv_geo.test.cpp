@@ -217,7 +217,7 @@ main(){
 
       p1 = dPoint(nan(""), 60.976941);
 // proj 9.1.0 -> 9.2.1 returns [nan, nan] instead of "Point outside of projection domain"
-#if PROJ_AT_LEAST_VERSION(9, 2, 1)
+#if PROJ_AT_LEAST_VERSION(9, 2, 0)
       cnv1.frw(p1);
       assert_eq(std::isnan(p1.x) && std::isnan(p1.y), true);
 #else
@@ -236,7 +236,7 @@ main(){
 
       p1 = dPoint(nan(""), 60.976941);
 // proj 9.1.0 -> 9.2.1 returns [nan, nan] instead of "Point outside of projection domain"
-#if PROJ_AT_LEAST_VERSION(9, 2, 1)
+#if PROJ_AT_LEAST_VERSION(9, 2, 0)
       cnv1.frw(p1);
       assert_eq(std::isnan(p1.x) && std::isnan(p1.y), true);
 #else
