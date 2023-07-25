@@ -22,7 +22,7 @@ void ms2opt_add_drawgrd(GetOptSet & opts);
 /********************************************************************/
 
 void
-draw_pulk_grid(CairoWrapper & cr, const iPoint & origin,
-               std::shared_ptr<ConvBase> cnv, const Opt & opt);
+draw_pulk_grid(const CairoWrapper & cr, const iPoint & origin,
+               ConvBase & cnv, const Opt & opt);
 
 #endif
