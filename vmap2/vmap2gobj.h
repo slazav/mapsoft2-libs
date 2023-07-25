@@ -154,6 +154,7 @@ public:
     FEATURE_WRITE,      // write a text object
     FEATURE_GROUP,      // set drawing step group
     FEATURE_NAME,       // set drawing step name
+    FEATURE_PULK_GRID,  // draw Pulkovo grid
  };
 
 
@@ -218,6 +219,20 @@ public:
   struct FeatureClip : Feature {
     FeatureClip(const std::vector<std::string> & vs){
       check_args(vs, {});
+    }
+  };
+
+  struct FeaturePulkGrid : Feature {
+    //uint32_t col;
+    //double wid;
+    Opt opts;
+    FeaturePulkGrid(const std::vector<std::string> & vs){
+      check_args(vs, {"<step>", "<color>", "<line width>"});
+      //col = str_to_type<uint32_t>(vs[0]);
+      //wid = str_to_type<double>(vs[1]);
+      opts["grid_step"]  = vs[0];
+      opts["grid_color"] = vs[1];
+      opts["grid_thick"] = vs[2];
     }
   };
 

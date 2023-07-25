@@ -13,6 +13,7 @@
 #include "geo_data/geo_io.h"
 #include "geo_mkref/geo_mkref.h"
 #include "filename/filename.h"
+#include "geo_render/draw_pulk_grid.h"
 //#include "conv_label.h"
 
 using namespace std;
@@ -470,6 +471,14 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         st->check_type(STEP_DRAW_TEXT);
         st->features.emplace(FEATURE_WRITE,
           std::shared_ptr<Feature>(new FeatureWrite(vs)));
+        continue;
+      }
+
+      // pulk_grid <color> <line width>
+      if (ftr == "pulk_grid"){
+        st->check_type(STEP_DRAW_MAP);
+        st->features.emplace(FEATURE_PULK_GRID,
+          std::shared_ptr<Feature>(new FeaturePulkGrid(vs)));
         continue;
       }
 
@@ -983,6 +992,13 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     }
     // Fill feature
     if (features.count(FEATURE_FILL)) cr->paint();
+
+    // PulkGrid feature
+    if (features.count(FEATURE_PULK_GRID)){
+      auto data = (FeaturePulkGrid *)features.find(FEATURE_PULK_GRID)->second.get();
+      draw_pulk_grid(cr, dPoint(), *cnv, data->opts);
+    }
+
 
     // Clip feature
     if (features.count(FEATURE_CLIP))
