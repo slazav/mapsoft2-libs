@@ -7,6 +7,7 @@
 #include <sstream>
 #include <list>
 #include <vector>
+#include <cstdint>
 #include "err/err.h"
 
 ///\addtogroup libmapsoft
