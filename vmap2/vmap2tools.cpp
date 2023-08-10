@@ -346,6 +346,30 @@ do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names){
       ref_tab.emplace(id, id_l);
     }
 
+    // remove extra labels
+    auto maxnum = t->second.label_maxnum;
+    if (maxnum == -2) {
+      if (obj.get_class() == VMAP2_POINT) maxnum=1;
+      else if (obj.get_class() == VMAP2_TEXT) maxnum=0;
+    }
+    if (maxnum >= 0) {
+      while (ref_tab.count(id) > maxnum){
+        // remove label with max.dist between pt and ref_pt
+        auto it = ref_tab.lower_bound(id);
+        auto m_it = it;
+        double m_dist=0;
+        while (it!=ref_tab.upper_bound(id)){
+          auto l = map.get(it->second);
+          auto d = geo_nearest_vertex(l, l.ref_pt);
+          if (m_dist < d){ m_dist=d; m_it=it; }
+          ++it;
+        }
+        auto id_l = m_it->second;
+        ref_tab.erase(m_it);
+        ref_tab.emplace(0xFFFFFFFF, id_l);
+      }
+    }
+
     // Reconnect label to a point (if label_mkpt>=0)
     if (t->second.label_mkpt >=0 &&
         obj.name!="" &&

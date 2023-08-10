@@ -116,6 +116,11 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
           o->second.label_mkpt = str_to_type<int>(vs[2]);
           continue;
         }
+        if (vs[1] == "label_maxnum"){
+          if (vs.size()!=3) throw Err() << "+ label_maxnum: argument expected: <number, -1 for inf, -2 for auto>";
+          o->second.label_maxnum = str_to_type<int>(vs[2]);
+          continue;
+        }
 
         throw Err() << "unknown feature: " << vs[1];
       }
