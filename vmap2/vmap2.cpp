@@ -250,50 +250,76 @@ VMap2::write(const std::string & file){
 /**********************************************************/
 
 #include "geo_data/geo_utils.h"
-uint32_t
-VMap2::find_ref(const dPoint & pt, const uint32_t type, const double & dist1, const double & dist2){
-  // First pass, try to find exact coordinate
-  // with same or different name.
-  dRect r(pt, pt);
-  double m = INFINITY;
-  uint32_t mi;
-  for (auto const & i:find(type, r)){
-    auto o1 = get(i);
-    auto d1 = geo_nearest_vertex(o1, pt);
-    if (d1<m) {m=d1, mi=i;}
-  }
-  // Note that here we can have objects which are really far away.
-  // We need to find minimum and check that distance is less then dist1
-  if (m<dist1) return mi;
-
-  // Pass 2 with bigger distance. It's slower, but here we have only
-  // objects which were moved. Should we check that name is same?
-  r.expand(dist2);
-  m = INFINITY;
-  for (auto const & i:find(type, r)){
-    auto o1 = get(i);
-    auto d1 = geo_nearest_vertex(o1, pt);
-    if (d1<m) {m=d1, mi=i;}
-  }
-  if (m<dist2) return mi;
-  return 0xFFFFFFFF;
-}
 
 std::multimap<uint32_t, uint32_t>
 VMap2::find_refs(const double & dist1, const double & dist2){
   std::multimap<uint32_t, uint32_t> tab;
 
-  // Iterate through all text objects.
+  // Find all labels (text objects).
   // It's better to use geohash, because there we have
   // objects sorted by type.
-  for (auto const t: geohash->get_types()){
+
+  // We work with every type independently:
+  for (const auto & t:  geohash->get_types()){
     if (t>>24 != VMAP2_TEXT) continue;
-    for (auto const i: geohash->get(t)){
-      auto l = get(i);
-      auto j = find_ref(l.ref_pt, l.ref_type, dist1, dist2);
-      tab.emplace(j,i);
+
+    // all labels
+    auto labels = geohash->get(t);
+
+    // Pass 1. For each label try to find object with
+    // same name within distance dist1.
+    // Pass 2. Repeat same with distance dist2.
+    for (auto pass=0; pass<2; pass++){
+      auto & dist = pass==0? dist1:dist2;
+      auto it = labels.begin();
+      while (it != labels.end()){
+        auto l = get(*it);
+
+        dRect r(l.ref_pt, l.ref_pt);
+        r.expand(dist);
+        double md = INFINITY;
+        uint32_t mi = 0xFFFFFFFF;
+        for (auto const & i:find(l.ref_type, r)){
+          auto o1 = get(i);
+          if (o1.name != l.name) continue;
+          auto d1 = geo_nearest_vertex(o1, l.ref_pt);
+          if (d1<md) {md=d1, mi=i;}
+        }
+
+        if (md<dist) {
+          tab.emplace(mi,*it);
+          it = labels.erase(it);
+        }
+        else ++it;
+      }
     }
+
+    // Pass 3. Find object within dist2, with any name but without
+    // other connected labels.
+    // For unconnected labels put 0x0xFFFFFFFF into the tab.
+    for (auto const i: labels){
+      auto & dist = dist2;
+      auto l = get(i);
+
+      dRect r(l.ref_pt, l.ref_pt);
+      r.expand(dist);
+      double md = INFINITY;
+      uint32_t mi = 0xFFFFFFFF;
+      for (auto const & i:find(l.ref_type, r)){
+        if (tab.count(i)>0) continue;
+        auto o1 = get(i);
+        auto d1 = geo_nearest_vertex(o1, l.ref_pt);
+        if (d1<md) {md=d1, mi=i;}
+      }
+
+      if (md>=dist) mi=0xFFFFFFFF;
+      tab.emplace(mi,i);
+    }
+
   }
+
+
+
   return tab;
 }
 
