@@ -13,9 +13,10 @@ class IConv::Impl {
   public:
 
   Impl(const std::string & from, const std::string & to){
-    cdp = std::shared_ptr<void>(iconv_open(to.c_str(), from.c_str()), iconv_close);
-    if ((iconv_t)(cdp.get()) == ERR) throw Err() <<
+    auto i = iconv_open(to.c_str(), from.c_str());
+    if ((iconv_t)i == ERR) throw Err() <<
       "can't do iconv conversion from " << from << " to " << to;
+    cdp = std::shared_ptr<void>(i, iconv_close);
   }
 
   ~Impl() {}
