@@ -4,6 +4,12 @@
 #include "err/err.h"
 #include "filename.h"
 
+#if defined(__APPLE__)
+#define st_atim st_atimespec
+#define st_ctim st_ctimespec
+#define st_mtim st_mtimespec
+#endif
+
 bool
 file_ext_check(const std::string &fname, const char *ext){
   int lf=fname.size();
