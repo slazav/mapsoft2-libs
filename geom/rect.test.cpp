@@ -301,7 +301,7 @@ main(){
     assert_eq(str_to_type<dRect>(" [ 1e-10 , 1e5 , 0.1 , 1.23 ] "), dRect(1e-10,1e5,0.1,1.23));
 
     assert_err(str_to_type<dRect>(" [ 0 , 1 "),
-      "can't parse rectangle: \"[ 0 , 1 \": ']' expected near end of file");
+      "can't parse rectangle: \" [ 0 , 1 \": ']' expected near end of file");
 
     assert_err(str_to_type<dRect>("[0,1]"),
       "can't parse rectangle: \"[0,1]\": a four-element JSON array expected");

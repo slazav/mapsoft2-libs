@@ -214,7 +214,7 @@ main(){
     assert_deq(str_to_type<dPoint>(" [ 0 , 1 ] "), dPoint(0,1), 1e-6);
 
     assert_err(str_to_type<dPoint>(" [ 0 , 1 "),
-      "can't parse point: \"[ 0 , 1 \": ']' expected near end of file");
+      "can't parse point: \" [ 0 , 1 \": ']' expected near end of file");
 
     assert_err(str_to_type<dPoint>("0,1"),
       "can't parse point: \"0,1\": '[' or '{' expected near '0'");
@@ -264,7 +264,7 @@ main(){
     assert_deq(str_to_type<dPoint>(" [ 0 , 1 , 2 ] "), dPoint(0,1,2), 1e-6);
 
     assert_err(str_to_type<dPoint>(" [ 0 , 1 ,1"),
-      "can't parse point: \"[ 0 , 1 ,1\": ']' expected near end of file");
+      "can't parse point: \" [ 0 , 1 ,1\": ']' expected near end of file");
 
     assert_err(str_to_type<dPoint>("0,1,1"),
       "can't parse point: \"0,1,1\": '[' or '{' expected near '0'");

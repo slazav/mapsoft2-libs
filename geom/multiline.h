@@ -356,7 +356,7 @@ template <typename T>
 std::istream & operator>> (std::istream & s, MultiLine<T> & ml){
   // read the whole stream into a string
   std::ostringstream os;
-  s>>os.rdbuf();
+  s >> std::noskipws >> os.rdbuf();
   ml=str_to_mline(os.str());
   return s;
 }

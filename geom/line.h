@@ -428,7 +428,7 @@ template <typename T>
 std::istream & operator>> (std::istream & s, Line<T> & l){
   // read the whole stream into a string
   std::ostringstream os;
-  s>>os.rdbuf();
+  s >> std::noskipws >> os.rdbuf();
   l=str_to_line(os.str());
   return s;
 }

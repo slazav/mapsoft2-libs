@@ -311,7 +311,7 @@ dPoint str_to_point(const std::string & str);
 template <typename T>
 std::istream & operator>> (std::istream & s, Point<T> & p){
   std::ostringstream os;
-  s>>os.rdbuf();
+  s >> std::noskipws >> os.rdbuf();
   p=str_to_point(os.str());
   return s;
 }

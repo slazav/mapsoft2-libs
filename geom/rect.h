@@ -439,7 +439,7 @@ template <typename T>
 std::istream & operator>> (std::istream & s, Rect<T> & r){
   // read the whole stream into a string
   std::ostringstream os;
-  s>>os.rdbuf();
+  s >> std::noskipws >> os.rdbuf();
   r=str_to_rect(os.str());
   return s;
 }
