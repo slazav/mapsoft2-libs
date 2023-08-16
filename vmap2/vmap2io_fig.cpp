@@ -7,62 +7,6 @@
 
 /****************************************************************************/
 
-// Check if a fig object matches template.
-// This is used to find vmap2 type for a fig object
-// using templates in typeinfo.fig_mask.
-bool
-fig_match_template(const FigObj & o, const std::string & tmpl){
-  FigObj t = figobj_template(tmpl); // make template object
-  int c1 = o.pen_color;
-  int c2 = t.pen_color;
-
-  // lines
-  if ((o.is_polyline() || o.is_spline()) && (o.size()>1)){
-    // depth and thickness should match:
-    if ((o.depth != t.depth) ||
-        (o.thickness != t.thickness)) return false;
-    // if thickness > 0 color and line style should match:
-    if (o.thickness!=0 &&
-        (c1!=c2 || o.line_style!=t.line_style)) return false;
-
-    // fill
-    int af1 = o.area_fill;
-    int af2 = t.area_fill;
-    int fc1 = o.fill_color;
-    int fc2 = t.fill_color;
-    // there are two types of white fill
-    if ((fc1!=0xffffff)&&(af1==40)) {fc1=0xffffff; af1=20;}
-    if ((fc2!=0xffffff)&&(af2==40)) {fc2=0xffffff; af2=20;}
-
-    // fill type should match:
-    if (af1 != af2) return false;
-    // if fill is not transparent, fill color should match:
-    if (af1!=-1 && fc1!=fc2) return false;
-
-    // for hatch filling pen_color should match (even if thickness=0)
-    if (af1>41 && c1!=c2) return false;
-
-    // After all tests we assume that object has this type!
-    return true;
-  }
-
-  // points
-  if ((o.is_polyline() || o.is_spline()) && o.size()==1){
-    //depth, thickness, color, cap_style should match:
-    if (o.depth != t.depth || o.thickness != t.thickness ||
-        c1 != c2 || (o.cap_style%2)!=(t.cap_style%2)) return false;
-    return true;
-  }
-
-  // text
-  if (o.is_text()){
-    // depth, color, font should match:
-    if (o.depth!=t.depth || c1!=c2 || o.font!=t.font) return false;
-    return true;
-  }
-
-  return false;
-}
 
 // find vmap2 type for a fig object
 uint32_t

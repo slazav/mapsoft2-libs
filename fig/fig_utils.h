@@ -27,4 +27,17 @@ void fig_remove_empty_comp(std::list<FigObj> & objects);
 // Remove all compounds
 void fig_remove_comp(std::list<FigObj> & objects);
 
+// Check if a fig object matches template.
+// It compares only properties which are visually different:
+// for example if line width is 0 then no need to compare color.
+
+// Lines: depth and thickness should match;
+//   if thickness > 0 color and line style should match;
+//   fill type should match, if fill is not transparent fill color should match;
+//   for hatch filling pen_color should match (even if thickness=0);
+// Points: depth, thickness, color, cap_style should match
+// Text: depth, color, font should match
+// TODO: other types.
+bool fig_match_template(const FigObj & o, const std::string & tmpl);
+
 #endif
