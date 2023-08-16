@@ -20,16 +20,16 @@ main(){
     assert_eq(S.get_val(x0, y0-1, false), SRTM_VAL_NOFILE);
 
     assert_eq(S.get_val(x0+10, y0+10, false), 0);
-    assert_eq(S.get_val(x0+700, y0+1100, false), 17);
+    assert_eq(S.get_val(x0+700, y0+1100, false), 20);
 
     // wgs coordinates
     assert_eq(S.get_val_int4(dPoint(x0+10, y0+10)/1200.0), 0);
-    assert_eq(S.get_val_int4(dPoint(x0+700, y0+1100)/1200.0), 17);
+    assert_eq(S.get_val_int4(dPoint(x0+700, y0+1100)/1200.0), 20);
 
     // set value
     assert_eq(S.set_val(x0, y0-1, 100), SRTM_VAL_NOFILE);
-    assert_eq(S.set_val(x0, y0, 100), 100);
-    assert_eq(S.get_val(x0, y0, false), 100);
+    assert_eq(S.set_val(x0, y0+1, 100), 100);
+    assert_eq(S.get_val(x0, y0+1, false), 100);
 
     Opt o1 = S.get_def_opt();
     assert_eq(o1.size(), 2);

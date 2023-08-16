@@ -247,22 +247,44 @@ SRTM::plane_and_border(const iPoint& p,
   }
 }
 
+/*
+   -1     0      1      2deg
+ 1 |------|------|------|
+   |      |      |      |
+   |      |      |      |
+   |      |      |      |
+   |      |      |      |
+ 0 |------0------|------|
+   |      |1     |      |
+   |      | 2    |      |
+   |      |  ..  |      |
+   |      |   w-2|      |
+-1 |------|------|------|
+
+srtm_width=1201 mean 1200 point period!
+
+*/
+
 // Find tile number and coordinate on the tile
 // (used in get_val/set_val).
 inline void
-get_crd(int x, int w, int &k, int &c){
-  if (x>=0) k=x/(w-1);
-  else      k=(x+1)/(w-1)-1;
-  c = x - k*(w-1);
+get_crd(int x, int w, int &k, int &c, bool inv){
+  auto ww=w-1;
+  if (x>=0) k=x/ww;
+  else      k=(x+1)/ww-1;
+  c = x - k*ww;
+  if (inv){
+    if (c>0) c = ww - c;
+    else k--;
+  }
 }
 
 short
 SRTM::get_val(const int x, const int y, const bool interp){
   // find tile number and coordinate on the tile
   iPoint key, crd;
-  get_crd(x, srtm_width, key.x, crd.x);
-  get_crd(y, srtm_width, key.y, crd.y);
-  crd.y = srtm_width-crd.y-2;
+  get_crd(x, srtm_width, key.x, crd.x, false);
+  get_crd(y, srtm_width, key.y, crd.y, true);
 
   int h;
   {
@@ -383,9 +405,8 @@ short
 SRTM::set_val(const int x, const int y, const short h){
   // find tile number and coordinate on the tile
   iPoint key, crd;
-  get_crd(x, srtm_width, key.x, crd.x);
-  get_crd(y, srtm_width, key.y, crd.y);
-  crd.y = srtm_width-crd.y-2;
+  get_crd(x, srtm_width, key.x, crd.x, false);
+  get_crd(y, srtm_width, key.y, crd.y, true);
 
   if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
   auto & im = srtm_cache.get(key);
