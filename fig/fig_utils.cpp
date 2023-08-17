@@ -163,3 +163,12 @@ bool
 fig_match_templates(const std::string & tmpl1, const std::string & tmpl2){
   return fig_match_template(figobj_template(tmpl1), tmpl2);
 }
+
+void
+fig_remove_templ(std::list<FigObj> & objects, const std::string & tmpl){
+  auto i = objects.begin();
+  while (i!=objects.end()){
+    if (fig_match_template(*i, tmpl)) i=objects.erase(i);
+    else ++i;
+  }
+}

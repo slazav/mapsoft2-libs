@@ -44,5 +44,7 @@ bool fig_match_template(const FigObj & o, const std::string & tmpl);
 // lines is lost (no point numbers)
 bool fig_match_templates(const std::string & tmpl1, const std::string & tmpl2);
 
+// Remove all objects matching template
+void fig_remove_templ(std::list<FigObj> & objects, const std::string & tmpl);
 
 #endif
