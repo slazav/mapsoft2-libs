@@ -99,6 +99,18 @@ fig_match_template(const FigObj & o, const std::string & tmpl){
   int c1 = o.pen_color;
   int c2 = t.pen_color;
 
+  // compounds are always equal:
+  if (o.is_compound() && t.is_compound()) return true;
+  if (o.is_compound_end() && t.is_compound_end()) return true;
+
+  // text and compound is not equal to any other types
+  if (o.is_text() && !t.is_text()) return false;
+  if (t.is_text() && !o.is_text()) return false;
+  if (o.is_compound() && !t.is_compound()) return false;
+  if (t.is_compound() && !o.is_compound()) return false;
+  if (o.is_compound_end() && !t.is_compound_end()) return false;
+  if (t.is_compound_end() && !o.is_compound_end()) return false;
+
   // lines
   if ((o.is_polyline() || o.is_spline()) && (o.size()>1)){
     // depth and thickness should match:
@@ -147,3 +159,7 @@ fig_match_template(const FigObj & o, const std::string & tmpl){
   return false;
 }
 
+bool
+fig_match_templates(const std::string & tmpl1, const std::string & tmpl2){
+  return fig_match_template(figobj_template(tmpl1), tmpl2);
+}

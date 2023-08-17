@@ -40,4 +40,9 @@ void fig_remove_comp(std::list<FigObj> & objects);
 // TODO: other types.
 bool fig_match_template(const FigObj & o, const std::string & tmpl);
 
+// Same but match two templates. Note that here difference between points and
+// lines is lost (no point numbers)
+bool fig_match_templates(const std::string & tmpl1, const std::string & tmpl2);
+
+
 #endif
