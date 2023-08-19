@@ -502,6 +502,22 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // short_expand <length>
+      if (ftr == "short_expand"){
+        st->check_type(STEP_DRAW_LINE);
+        st->features.emplace(FEATURE_SHORT_EXP,
+          std::shared_ptr<Feature>(new FeatureLen(vs)));
+        continue;
+      }
+
+      // short_skip <length>
+      if (ftr == "short_skip"){
+        st->check_type(STEP_DRAW_LINE);
+        st->features.emplace(FEATURE_SHORT_SKP,
+          std::shared_ptr<Feature>(new FeatureLen(vs)));
+        continue;
+      }
+
       throw Err() << "unknown feature";
     }
     catch (Err & e) {
@@ -635,6 +651,11 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     exp_dist = gobj->max_text_size*osc;
   }
   else {
+    // expand by line expand length
+    if (features.count(FEATURE_SHORT_EXP)){
+      auto ftr = (FeatureLen *)features.find(FEATURE_SHORT_EXP)->second.get();
+      exp_dist = std::max(exp_dist, ftr->len/2*osc);
+    }
     // expand by line width
     if (features.count(FEATURE_STROKE)){
       auto ftr = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
@@ -794,6 +815,33 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     auto O = gobj->map.get(i);
     if (!intersect(O.bbox(), sel_range)) continue;
     convert_coords(O);
+
+    // skip short lines
+    if (features.count(FEATURE_SHORT_SKP)){
+      auto ftr = (FeatureLen *)features.find(FEATURE_SHORT_SKP)->second.get();
+      for (auto l = O.begin(); l!=O.end();){
+        if (l->length2d() < ftr->len) l=O.erase(l);
+        else ++l;
+      }
+    }
+
+    // expand short lines
+    if (features.count(FEATURE_SHORT_EXP)){
+      auto ftr = (FeatureLen *)features.find(FEATURE_SHORT_EXP)->second.get();
+      for (auto l = O.begin(); l!=O.end(); ++l){
+        if (l->length2d() < ftr->len && l->size()>0) {
+          auto n = l->size()-1;
+          auto p0 = (*l)[0], p1=(*l)[1]; // saving points (line could have 1 segment)
+          auto p2 = (*l)[n-1], p3=(*l)[n];
+          auto l1 = dist2d(p0,p1);   // first segment
+          auto l2 = dist2d(p2,p3); // last segment
+          auto dl = ftr->len - l->length2d();
+          (*l)[0] = p0 + (p0-p1) * dl/(l1+l2);
+          (*l)[n] = p3 + (p3-p2) * dl/(l1+l2);
+        }
+      }
+    }
+
     cr->begin_new_path();
 
     // Make drawing path for points, lines, areas

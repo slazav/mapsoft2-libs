@@ -61,10 +61,13 @@ where possible features are:
     move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
     rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
     rotate <angle>         -- rotate object pictures (img, lines, circles), degrees, cw
+    short_expand <len>     -- expand short lines to the length by extending end segments (TODO: polygons?)
+    short_skip <len>       -- skip short lines (TODO: polygons?)
     font <size> <font>     -- set font (fontconfig pattern)
     write <color>          -- render the text (a bit different from `fill`)
     group <name>           -- set group name for a drawing step
     name  <name>           -- set name for a drawing step
+    pulk_grid <step> <color> <line width> -- dray Pulkovo-1942 grid
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.
@@ -155,6 +158,8 @@ public:
     FEATURE_GROUP,      // set drawing step group
     FEATURE_NAME,       // set drawing step name
     FEATURE_PULK_GRID,  // draw Pulkovo grid
+    FEATURE_SHORT_EXP,  // expand short lines
+    FEATURE_SHORT_SKP,  // skip short lines
  };
 
 
@@ -488,6 +493,14 @@ public:
     FeatureName(const std::vector<std::string> & vs){
       check_args(vs, {"<name>"});
       name = vs[0];
+    }
+  };
+
+  struct FeatureLen : Feature {
+    double len;
+    FeatureLen(const std::vector<std::string> & vs){
+      check_args(vs, {"<length>"});
+      len = str_to_type<double>(vs[0]);
     }
   };
 
