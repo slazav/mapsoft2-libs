@@ -294,32 +294,42 @@ VMap2::find_refs(const double & dist1, const double & dist2){
       }
     }
 
-    // Pass 3. Find object within dist2, with any name but without
-    // other connected labels.
-    // For unconnected labels put 0x0xFFFFFFFF into the tab.
-    for (auto const i: labels){
-      auto & dist = dist2;
-      auto l = get(i);
+    // Pass 3. Find object within dist1, without
+    // other connected labels OR with a label of same name.
+    // Pass 4. Repeat same with dist2.
+    for (auto pass=0; pass<2; pass++){
+      auto & dist = pass==0? dist1:dist2;
+      auto it = labels.begin();
+      while (it != labels.end()){
+        auto l = get(*it);
 
-      dRect r(l.ref_pt, l.ref_pt);
-      r.expand(dist);
-      double md = INFINITY;
-      uint32_t mi = 0xFFFFFFFF;
-      for (auto const & i:find(l.ref_type, r)){
-        if (tab.count(i)>0) continue;
-        auto o1 = get(i);
-        auto d1 = geo_nearest_vertex(o1, l.ref_pt);
-        if (d1<md) {md=d1, mi=i;}
+        dRect r(l.ref_pt, l.ref_pt);
+        r.expand(dist);
+        double md = INFINITY;
+        uint32_t mi = 0xFFFFFFFF;
+        for (auto const & i:find(l.ref_type, r)){
+          if (tab.count(i)>0){
+            auto l1 = get(tab.find(i)->second);
+            if (l1.name != l.name) continue;
+          }
+          auto o1 = get(i);
+          auto d1 = geo_nearest_vertex(o1, l.ref_pt);
+          if (d1<md) {md=d1, mi=i;}
+        }
+        if (md<dist) {
+          tab.emplace(mi,*it);
+          it = labels.erase(it);
+        }
+        else ++it;
       }
+    }
 
-      if (md>=dist) mi=0xFFFFFFFF;
-      tab.emplace(mi,i);
+    // For unconnected labels put 0x0xFFFFFFFF into the tab.
+    for (auto & i:labels){
+      tab.emplace(0xFFFFFFFF, i);
     }
 
   }
-
-
-
   return tab;
 }
 
