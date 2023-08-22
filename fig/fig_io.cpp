@@ -308,6 +308,9 @@ figobj_template(const std::string & templ){
          >> o.pen_style >> o.area_fill >> o.style_val >> o.cap_style
          >> o.direction >> o.forward_arrow >> o.backward_arrow;
       break;
+    case FIG_COMPOUND:
+    case FIG_END_COMPOUND:
+      break;
     default:
       throw Err() << "FigObj: unknown template type: [" << templ << "]";
   }
