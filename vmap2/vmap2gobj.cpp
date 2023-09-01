@@ -1002,11 +1002,11 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // clip feature for areas: make a single path for all objects:
   if ((action == STEP_DRAW_AREA) &&
         features.count(FEATURE_CLIP)) {
+    cr->begin_new_path();
     for (auto const i: ids){
       auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       convert_coords(O);
-      cr->begin_new_path();
       cr->mkpath_smline(O, close, sm);
     }
     cr->clip();
@@ -1014,11 +1014,11 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // clip feature for text: make a single path for all objects:
   if ((action == STEP_DRAW_TEXT) && features.count(FEATURE_CLIP)) {
+    cr->begin_new_path();
     for (auto const i: ids){
       auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       convert_coords(O);
-      cr->begin_new_path();
       draw_text(O, cr, range, true, pix_al);
     }
     cr->clip();
