@@ -60,7 +60,9 @@ public:
   read_words_defs() {}
 
   void define(const std::string & name, const std::string & value){
-    emplace(name, value); }
+    if (count(name)) erase(name);
+    emplace(name, value);
+  }
 
   void apply(std::string & str) const;
 

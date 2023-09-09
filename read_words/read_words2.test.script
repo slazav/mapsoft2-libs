@@ -15,6 +15,7 @@ assert(){
 }
 
 i='
+define a 4
 define a 5
 ifdef a
   print a=${a}
