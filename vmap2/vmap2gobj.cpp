@@ -85,6 +85,7 @@ GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
   max_text_size = 1024;
   clip_border = true;
   fit_patt_size = o.get<bool>("fit_patt_size", false);
+  nsaved=0;
 
   opt = o;
 
@@ -694,7 +695,17 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       action == STEP_DRAW_TEXT){
 
     ids = gobj->map.find(etype, sel_range);
-    if (ids.size()==0) return GObj::FILL_NONE;
+    if (ids.size()==0){
+      // set empty clipping range if needed
+      if ((action == STEP_DRAW_AREA) &&
+           features.count(FEATURE_CLIP)) {
+        if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
+        cr->save(); gobj->nsaved++;
+        cr->begin_new_path();
+        cr->clip();
+      }
+      return GObj::FILL_NONE;
+    }
   }
 
   // if SEL_RANGE feature exists, draw rectangles
@@ -1002,6 +1013,8 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   // clip feature for areas: make a single path for all objects:
   if ((action == STEP_DRAW_AREA) &&
         features.count(FEATURE_CLIP)) {
+    if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
+    cr->save(); gobj->nsaved++;
     cr->begin_new_path();
     for (auto const i: ids){
       auto O = gobj->map.get(i);
@@ -1014,6 +1027,8 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
   // clip feature for text: make a single path for all objects:
   if ((action == STEP_DRAW_TEXT) && features.count(FEATURE_CLIP)) {
+    if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
+    cr->save(); gobj->nsaved++;
     cr->begin_new_path();
     for (auto const i: ids){
       auto O = gobj->map.get(i);
@@ -1047,14 +1062,19 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       draw_pulk_grid(cr, dPoint(), *cnv, data->opts);
     }
 
-
-    // Clip feature
+    // Clip feature - just restore previous clip
     if (features.count(FEATURE_CLIP))
-      cr->reset_clip();
+      if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
   }
 
   // BRD drawing step:
   if (action == STEP_DRAW_BRD && gobj->border.size()>0) {
+
+    if (features.count(FEATURE_CLIP)){
+      if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
+      cr->save(); gobj->nsaved++;
+    }
+
     dMultiLine brd(gobj->border);
     if (cnv) brd = cnv->bck_acc(brd);
     cr->begin_new_path();
@@ -1127,8 +1147,11 @@ GObjVMap2::draw(const CairoWrapper & cr, const dRect & draw_range) {
     return GObj::FILL_PART;
   }
 
-  cr->save();
+  // In draw nsaved should start from 0 to prevent
+  // GObjVMap2::clip() from restoring original state
+  cr->save(); nsaved=0;
   auto ret = GObjMulti::draw(cr, draw_range);
+  while (nsaved>0){ cr->restore(); nsaved--; }
   cr->restore();
   return ret;
 }

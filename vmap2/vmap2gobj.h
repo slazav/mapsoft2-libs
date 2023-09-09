@@ -117,6 +117,7 @@ private:
                          // Could be 0 (no rescaling).
   double minsc;          // Min scale (ptsize/ptsize0), below this map is just filled with minsc_color.
   uint32_t minsc_color;  // Color for drawing too small scales.
+  size_t nsaved;         // how many times cairo context has been saved (fr clipping)
 
 public:
 
@@ -584,7 +585,6 @@ public:
 
   // Draw all objects
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
-
 
 };
 
