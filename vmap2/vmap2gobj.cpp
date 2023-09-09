@@ -389,6 +389,14 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // outer
+      if (ftr == "outer"){
+        st->check_type( STEP_DRAW_BRD);
+        st->features.emplace(FEATURE_OUTER,
+          std::shared_ptr<Feature>(new Feature(vs)));
+        continue;
+      }
+
       // lines <lines> ...
       if (ftr == "lines"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
@@ -1070,10 +1078,14 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->begin_new_path();
     cr->mkpath_smline(brd, true, sm);
 
+    // outer path
+    if (features.count(FEATURE_OUTER))
+      cr->mkpath(rect_to_line(expand(range,1.0)));
+
+    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+
     // Pattern feature
     if (features.count(FEATURE_PATT)){
-      cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
-      cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
       auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
       double scx = osc, scy = osc;
       if (gobj->fit_patt_size) {
@@ -1090,8 +1102,6 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // fill+stroke+draw features with different colors
     if (features.count(FEATURE_FILL)){
       auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
-      cr->mkpath(rect_to_line(expand(range,1.0))); // outer path
-      cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
       cr->set_color_a(data->col);
       cr->fill_preserve();
     }

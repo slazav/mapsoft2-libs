@@ -146,6 +146,7 @@ public:
     FEATURE_JOIN,       // set line join
     FEATURE_OP,         // set drawing operator
     FEATURE_PIXAL,      // set pix_al
+    FEATURE_OUTER,      // use outer region (border only)
     FEATURE_LINES,      // lines to be drawn instead of the object
     FEATURE_CIRCLES,    // circles to be drawn instead of the object
     FEATURE_DRAW_POS,   // position for lines/circles
@@ -172,6 +173,12 @@ public:
   // string arguments.
 
   struct Feature {
+    Feature() {}
+
+    Feature(const std::vector<std::string> & vs){
+      check_args(vs, {});
+    }
+
     // check number of arguments
     // args -- given arguments
     // templ -- argument template: name, ?name, ...
