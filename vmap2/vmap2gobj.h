@@ -106,7 +106,6 @@ private:
   double max_text_size;  // for selecting text objects
   double obj_scale;      // object scale
   dMultiLine border;     // border (WGS84) from set_ref
-  bool clip_border;      // Clip objects to the border (default: true unless brd drawing step is used)
   bool fit_patt_size;    // Adjust pattern size to fit image size (useful for tiles). Default: false.
   double ptsize0;        // 1pt size in meters for linewidths, font size etc.
                          // Set when a "natural" reference is set with set_ref configuration command.

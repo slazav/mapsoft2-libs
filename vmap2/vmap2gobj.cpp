@@ -83,7 +83,6 @@ GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
   minsc_color = o.get<uint32_t>("vmap_minsc_color", 0xFFDB5A00);
   obj_scale   = o.get<double>("obj_scale", 1.0);
   max_text_size = 1024;
-  clip_border = true;
   fit_patt_size = o.get<bool>("fit_patt_size", false);
   nsaved=0;
 
@@ -221,15 +220,6 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         if (vs.size()!=3) throw Err()
             << "wrong number of arguments: define <name> <definition>";
         defs.define(vs[1],vs[2]);
-        continue;
-      }
-
-      // clip_border
-      if (vs[0] == "clip_border") {
-        st.reset(); // "+" should not work after the command
-        if (vs.size()!=2) throw Err()
-            << "wrong number of arguments: clip_border (1|0)";
-        clip_border = str_to_type<bool>(vs[1]);
         continue;
       }
 
@@ -1128,17 +1118,6 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 GObj::ret_t
 GObjVMap2::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
-  // clip to border
-  if (clip_border && border.size()) {
-    dMultiLine brd(border);
-    if (cnv) brd = cnv->bck_acc(brd); // wgs -> points
-    if (!rect_in_polygon(draw_range, brd)) return GObj::FILL_NONE;
-
-    cr->begin_new_path();
-    cr->mkpath_smline(brd, true, 0);
-    cr->clip();
-  }
-
   // calculate scaling for this range
   sc = ptsize0/get_ptsize(*cnv, draw_range);
   if (sc!=0 && sc < minsc){
@@ -1147,11 +1126,9 @@ GObjVMap2::draw(const CairoWrapper & cr, const dRect & draw_range) {
     return GObj::FILL_PART;
   }
 
-  // In draw nsaved should start from 0 to prevent
-  // GObjVMap2::clip() from restoring original state
-  cr->save(); nsaved=0;
+  // we want to track save/restore pairs here
+  nsaved=0;
   auto ret = GObjMulti::draw(cr, draw_range);
   while (nsaved>0){ cr->restore(); nsaved--; }
-  cr->restore();
   return ret;
 }
