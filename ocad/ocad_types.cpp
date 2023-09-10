@@ -3,7 +3,7 @@
 #include <string>
 #include <cassert>
 #include "ocad_types.h"
-#include "utils/iconv_utils.h"
+#include "iconv/iconv.h"
 
 using namespace std;
 
@@ -46,8 +46,10 @@ str_str2pas(char * pas, const string & str, size_t maxlen){
   for (int i=0; i<size; i++) pas[i+1]=str[i];
 }
 
-const IConv iconv_uni("UTF-16");
-const IConv iconv_win("CP1251");
+const IConv iconv_from_uni("UTF-16", "UTF8");
+const IConv iconv_from_win("CP1251", "UTF8");
+const IConv iconv_to_uni("UTF-16", "UTF8");
+const IConv iconv_to_win("CP1251", "UTF8");
 
 ocad_coord::ocad_coord(){
   assert ( sizeof(*this) == 8);

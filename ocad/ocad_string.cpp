@@ -44,7 +44,7 @@ ocad_string::read(FILE * F, ocad_string::index idx, int v){
   data=string(buf, (char *)memchr(buf, 0, idx.len));
   delete[] buf;
 
-  data = iconv_win.to_utf8(data);
+  data = iconv_from_win(data);
   type = idx.type;
   obj = idx.obj;
 }
@@ -54,7 +54,7 @@ ocad_string::write(FILE * F, int v) const{
   ocad_string::index idx;
   idx.type = type;
   idx.obj = obj;
-  string str = iconv_win.from_utf8(data);
+  string str = iconv_to_win(data);
   idx.len = str.length() + 1;
 
   char * buf = new char [idx.len];

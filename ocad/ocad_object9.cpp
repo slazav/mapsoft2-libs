@@ -71,7 +71,7 @@ ocad9_object::read(FILE * F, ocad9_object::index idx, int v){
   read_coords(F, o.n);
   read_text(F, o.nt);
 
-  text=iconv_uni.to_utf8(text);
+  text=iconv_from_uni(text);
 }
 
 
@@ -86,7 +86,7 @@ ocad9_object::write(FILE * F, int v) const{
   o.width = width;
   o.flags = flags;
 
-  string txt = iconv_uni.from_utf8(text);
+  string txt = iconv_to_uni(text);
 
   o.n  = coords.size();
   o.nt = txt_blocks(txt);

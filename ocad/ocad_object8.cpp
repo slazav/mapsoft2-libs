@@ -95,8 +95,8 @@ ocad8_object::read(FILE * F, ocad8_object::index idx, int v){
   read_coords(F, o.n);
   read_text(F, o.nt);
 
-  if (o.unicode) text=iconv_uni.to_utf8(text);
-  else           text=iconv_win.to_utf8(text);
+  if (o.unicode) text=iconv_from_uni(text);
+  else           text=iconv_from_win(text);
 }
 
 
@@ -120,10 +120,10 @@ ocad8_object::write(FILE * F, int v) const{
   string txt;
   if (v>7){
     o.unicode=1;
-    txt = iconv_uni.from_utf8(text);
+    txt = iconv_to_uni(text);
   }
   else{
-    txt = iconv_win.from_utf8(text);
+    txt = iconv_to_win(text);
   }
 
   o.n  = coords.size();

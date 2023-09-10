@@ -6,9 +6,9 @@
 #include <vector>
 #include <string>
 
-#include "2d/point.h"
-#include "2d/rect.h"
-#include "2d/line.h"
+#include "geom/point.h"
+#include "geom/rect.h"
+#include "geom/line.h"
 
 namespace ocad{
 

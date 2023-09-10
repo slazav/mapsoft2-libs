@@ -82,7 +82,7 @@ ocad9_symbol::read(FILE * F, ocad9_symbol::index idx, int v){
   sym = s.sym;
   type = s.type;
   extent = s.extent;
-  desc = iconv_win.to_utf8(str_pas2str(s.desc, 32));
+  desc = iconv_from_win(str_pas2str(s.desc, 32));
 
   blob_version = v;
   if (fseek(F, pos, SEEK_SET)!=0)

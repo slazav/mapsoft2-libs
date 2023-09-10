@@ -171,9 +171,8 @@ ocad_file::add_object(int sym, iLine pts, double ang,
 iRect
 ocad_file::range() const{
   iRect ret;
-  ocad_objects::const_iterator o;
-  for (o=objects.begin(); o!=objects.end(); o++){
-    ret = rect_bounding_box(ret, o->range());
+  for (const auto & o: objects){
+    ret.expand(o.range());
   }
   return ret;
 }

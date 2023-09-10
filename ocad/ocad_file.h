@@ -14,7 +14,7 @@
 #include "ocad_index.h"
 #include "ocad_fname.h"
 
-#include "2d/rect.h"
+#include "geom/rect.h"
 
 namespace ocad{
 

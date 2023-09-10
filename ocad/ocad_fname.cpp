@@ -20,13 +20,13 @@ ocad_fname::read(FILE *F, int addr, int size){
   string s(buf, buf+size);
   delete[] buf;
 
-  data = iconv_win.to_utf8(s);
+  data = iconv_from_win(s);
 }
 
 int
 ocad_fname::write(FILE *F) const{
   int pos = ftell(F);
-  string s = iconv_win.from_utf8(data);
+  string s = iconv_to_win(data);
   if (fwrite(s.data(), 1, s.size(), F)!=s.size())
     throw Err() << "error while writing fname";
   return pos;

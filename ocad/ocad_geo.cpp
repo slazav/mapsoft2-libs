@@ -1,7 +1,8 @@
 #include "ocad_geo.h"
 
-#include "2d/line_utils.h"
-#include "geo/geo_convs.h"
+//#include "geom/line_utils.h"
+#include "geo_data/conv_geo.h"
+#include "geo_data/geo_utils.h"
 #include <sstream>
 
 using namespace std;
@@ -10,10 +11,10 @@ namespace ocad{
 
 #define OCAD_SCALE_PAR 1039
 
-g_map
+GeoMap
 get_ref(const ocad_file & O){
 
-  dLine pts = rect2line(O.range());
+  dLine pts = rect_to_line(O.range());
 
   vector<ocad_string>::const_iterator s;
   for (s=O.strings.begin(); s!=O.strings.end(); s++){
@@ -27,30 +28,29 @@ get_ref(const ocad_file & O){
         double a = s->get<double>('a');
         int zone    = s->get<int>('i'); // grid and zone - "2037"
 
-        Options opts;
-        opts.put<int>("lon0", (zone%1000-30)*6-3);
-        convs::pt2wgs cnv(Datum("pulkovo"), Proj("tmerc"), opts);
+        auto proj = GEO_PROJ_SU((zone%1000-30)*6-3);
+        ConvGeo cnv(proj, "WGS");
 
         dLine pts0(pts);
-        lrotate(pts, -a * M_PI/180);
+        pts.rotate2d(dPoint(), -a * M_PI/180);
         pts*=rscale / 100000; // 1point = 0.01mm
         pts+=p0;
-        cnv.line_frw_p2p(pts);
-        g_map ret;
-        for (int i = 0; i < pts.size(); i++){
-          ret.push_back(g_refpoint(pts[i], pts0[i]));
-        }
-        ret.map_proj=Proj("tmerc");
-        ret.border=pts0;
+        cnv.frw(pts);
+
+        GeoMap ret;
+        for (int i = 0; i < pts.size(); i++)
+          ret.ref.emplace(pts[i], pts0[i]);
+        ret.proj=proj;
+        ret.border.push_back(pts0);
         return ret;
       }
       catch(boost::bad_lexical_cast x){
         std::cerr << "can't get reference: " << x.what() << "\n";
-        return g_map();
+        return GeoMap();
       }
     }
   }
-  return g_map();
+  return GeoMap();
 }
 
 void
@@ -63,9 +63,7 @@ set_ref(ocad_file & O, double rscale, const dPoint & p0){
     else si++;
   }
 
-  Options opts;
-  opts.put<int>("lon0", convs::lon2lon0(p0.x));
-  convs::pt2wgs cnv(Datum("pulkovo"), Proj("tmerc"), opts);
+  ConvGeo cnv(GEO_PROJ_SU(p0.x), "WGS");
   dPoint pc(p0);
   cnv.bck(pc);
 
@@ -79,7 +77,7 @@ set_ref(ocad_file & O, double rscale, const dPoint & p0){
       << "\ty" << int(pc.y)
       << "\ta" << "0"      // angle, deg
       << "\td" << (grid*rscale)/100000 // grid, 1m units
-      << "\ti" << convs::lon2pref(p0.x) + 2030;
+      << "\ti" << lon2pref(p0.x) + 2030;
                   // I don't know that is 2030...
 
   ocad_string s;

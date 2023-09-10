@@ -4,8 +4,8 @@
 #include <string>
 #include <stdint.h>
 #include <cstring>
-#include "utils/iconv_utils.h"
-#include "2d/point.h"
+#include "iconv/iconv.h"
+#include "geom/point.h"
 namespace ocad{
 
 /// convert pascal-string to c-string
@@ -21,8 +21,10 @@ std::string str_pas2str(const char * str, int maxlen);
 ///  maxlen includes first byte
 void str_str2pas(char * pas, const std::string & str, size_t maxlen);
 
-extern const IConv iconv_uni;
-extern const IConv iconv_win;
+extern const IConv iconv_from_uni;
+extern const IConv iconv_from_win;
+extern const IConv iconv_to_uni;
+extern const IConv iconv_to_win;
 
 /// OCAD6-7-8-9 data types
 

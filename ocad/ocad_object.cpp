@@ -30,12 +30,11 @@ ocad_object::set_coords(const iLine & l){
 iRect
 ocad_object::range() const{
   iRect ret;
-  for (int i=0; i<coords.size(); i++){
-    iPoint p(coords[i].getx(),coords[i].gety());
-    if (i==0) ret=iRect(p,p);
-    else ret = rect_pump(ret, p);
-  }
-  return rect_pump(ret, (int)extent);
+  for (const auto & c:coords)
+    ret.expand(iPoint(c.getx(),c.gety()));
+
+  ret.expand((int)extent);
+  return ret;
 }
 
 void
