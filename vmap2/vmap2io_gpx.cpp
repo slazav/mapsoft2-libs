@@ -1,5 +1,6 @@
 #include "vmap2io.h"
 #include "geo_data/geo_io.h"
+#include "geom/poly_tools.h"
 
 /****************************************************************************/
 
@@ -14,17 +15,50 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
 
   GeoData data;
   read_gpx(ifile, data, opts);
+  auto cl = VMap2obj::get_class(trk_type);
 
   // Convert tracks.
   // - one segment -> one object
   // - no names
-  if (VMap2obj::get_class(trk_type)!=VMAP2_NONE){
-    VMap2obj o(trk_type);
+  if (cl!=VMAP2_NONE){
+    VMap2obj o1(trk_type);
     for (auto const & tr:data.trks){
-      for (auto const & l:(dMultiLine)tr){
-        if (l.size()==0) continue;
-        o.set_coords(l);
-        vmap2.add(o);
+      for (auto const & pts:(dMultiLine)tr){
+        if (pts.size()==0) continue;
+        o1.set_coords(pts);
+
+        // for polygons try to find holes
+        if (cl == VMAP2_POLYGON) {
+          for (auto const i:vmap2.find(trk_type, pts.bbox())){
+            auto o2 = vmap2.get(i);
+            if (o2.size()<1) continue;
+            auto & pts2 = o2[0];
+
+            // If other object o2 with one segment and empty
+            // name and comment is inside o1, merge it to o1.
+            // Note that we should check name and comment,
+            // because o2 can belong to old data.
+            if (check_hole(pts, pts2) && o2.size()==1 &&
+              o2.name == "" && o2.comm == ""){
+              o1.push_back(pts2);
+              vmap2.del(i);
+            }
+
+            // If o1 has no name and comment and inside
+            // some other oobject o2, merge it to o2. Note that
+            // name and comments are not transfered to
+            // o1 yet, we should check comm.size()
+            if (check_hole(pts2, pts) &&
+              o1.name == "" && o1.comm == ""){
+              o2.push_back(pts);
+              vmap2.put(i, o2);
+              o1.clear();
+              break;
+            }
+          }
+        }
+        if (o1.size()==0) continue;
+        vmap2.add(o1);
       }
     }
   }

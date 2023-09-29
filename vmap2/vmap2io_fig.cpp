@@ -154,6 +154,34 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
 
     o1.push_back(pts);
 
+    // for polygons try to find holes
+    if (o1.get_class() == VMAP2_POLYGON) {
+      for (auto const i:vmap2.find(type, pts.bbox())){
+        auto o2 = vmap2.get(i);
+        if (o2.size()<1) continue;
+        auto & pts2 = o2[0];
+
+        // If other object o2 with one segment and empty
+        // name and comment is inside o1, merge it to o1:
+        if (o2.size()==1 && o2.name == "" && o2.comm == "" &&
+            check_hole(pts, pts2)){
+          o1.push_back(pts2);
+          vmap2.del(i);
+        }
+        // If o1 has no name and comment and inside
+        // some other oobject o2, merge it to o2. Note that
+        // name and comments are not transfered to
+        // o1 yet, we should check comm.size()
+        if (comm.size()==0 && check_hole(pts2, pts)){
+         o2.push_back(pts);
+         vmap2.put(i, o2);
+         o1.clear();
+         break;
+        }
+      }
+    }
+    if (o1.size()==0) continue;
+
     // tags - space-separated list of words
     if (o_opts.exists("Tags"))
       o1.add_tags(o_opts.get("Tags"));
