@@ -602,4 +602,27 @@ margin_classifier(const Line<T> & L1, const Line<T> & L2,
   return maxdist;
 }
 
+
+// Check if pts2 is a hole inside pts1:
+// all points of pts1 are outside pts2,
+// all points of pts2 are inside pts1.
+// This is not a very good definition of a hole,
+// but should be OK for real maps.
+template <typename T>
+bool
+check_hole(const Line<T> & pts1, const Line<T> & pts2){
+  // see poly_tools.h
+  bool brd = false;
+  PolyTester<T> pt1(pts1);
+  for (const auto & p2:pts2){
+    if (!pt1.test_pt(p2, brd)) return false;
+  }
+  PolyTester<T> pt2(pts2);
+  for (const auto & p1:pts1){
+    if (pt2.test_pt(p1, brd)) return false;
+  }
+  return true;
+}
+
+
 #endif
