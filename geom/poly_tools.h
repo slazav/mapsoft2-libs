@@ -134,6 +134,10 @@ public:
     return k%2==1;
   }
 
+  bool test_pt(const Point<T> & P, const bool borders = true){
+    return PolyTester<T>::test_cr(get_cr(P.y), P.x, borders);
+  }
+
 };
 typedef PolyTester<double> dPolyTester;
 typedef PolyTester<int>    iPolyTester;
@@ -145,8 +149,7 @@ template <typename T>
 bool
 point_in_polygon(const Point<T> & P, const Line<T> & L, const bool borders = true){
   PolyTester<T> lt(L, true);
-  auto cr = lt.get_cr(P.y);
-  return PolyTester<T>::test_cr(cr, P.x, borders);
+  return lt.test_pt(P, borders);
 }
 
 // Same for multi-segment polygon
@@ -154,8 +157,7 @@ template <typename T>
 bool
 point_in_polygon(const Point<T> & P, const MultiLine<T> & L, const bool borders = true){
   PolyTester<T> lt(L, true);
-  auto cr = lt.get_cr(P.y);
-  return PolyTester<T>::test_cr(cr, P.x, borders);
+  return lt.test_pt(P, borders);
 }
 
 
