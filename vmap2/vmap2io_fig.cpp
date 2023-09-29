@@ -149,10 +149,6 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     cnv.frw(pts); // point-to-point conversion
     dPoint pt0 = pts[0];
 
-    // if closed polyline -> add one more point
-    if (o1.get_class()==VMAP2_LINE && o.is_closed() &&
-        o.size()>0 && o[0]!=o[o.size()-1]) pts.push_back(pts[0]);
-
     // Look at arrows, invert line if needed
     if (o.forward_arrow==0 && o.backward_arrow==1) pts.invert();
 
@@ -269,7 +265,9 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       continue;
     }
 
+    // prepare fig template, collect options
     FigObj o1 = figobj_template(info.fig_mask);
+    Opt fig_opts;
 
     // For non-text objects keep original angle and
     // align in options. Put name and comments to object comments.
@@ -281,21 +279,22 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
         o1.comment.push_back(o.comm);
 
       if (o.align!=0)
-        fig_add_opt(o1, "Align", VMap2obj::print_align(o.align));
+        fig_opts.put("Align", VMap2obj::print_align(o.align));
 
       if (!std::isnan(o.angle))
-        fig_add_opt(o1, "Angle", type_to_str(o.angle));
+        fig_opts.put("Angle", type_to_str(o.angle));
 
     }
 
     // Tags, space-separated words
     if (o.tags.size()>0)
-      fig_add_opt(o1, "Tags", o.get_tags());
+      fig_opts.put("Tags", o.get_tags());
 
     // Scale
     if (o.scale!=1.0)
-      fig_add_opt(o1, "Scale", type_to_str(o.scale));
+      fig_opts.put("Scale", type_to_str(o.scale));
 
+    fig_set_opts(o1, fig_opts);
 
     // Convert angle. It will be needed to rotate text and
     // point pictures. Value is CCW, radians.
@@ -312,30 +311,22 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
     cnv.bck(pts);
     cnv.bck(pt0);
 
-    // Polygon: combine all segments to a single one
-    // (TODO: some better solution is needed)
-    if (o.get_class() == VMAP2_POLYGON){
-      o1.type=2; o1.sub_type=3;
-      o1.set_points(join_polygons(pts));
-      fig.push_back(o1);
-      continue;
-    }
-
-    // Line: one fig object for each segment
-    // closed/open lines if needed
-    if (o.get_class() == VMAP2_LINE){
+    // Lines/Polygons: one fig object for each segment
+    if (o.get_class() == VMAP2_LINE ||
+        o.get_class() == VMAP2_POLYGON){
       o1.type=2;
+      if (o.get_class() == VMAP2_POLYGON)
+        o1.close();
+      else
+        o1.open();
       for (const auto & l:pts){
         o1.clear();
         o1.set_points(l);
-        if (o1.size()>2 && o1[0]==o1[o1.size()-1]){
-          o1.resize(o1.size()-1);
-          o1.close();
-        }
-        else {
-          o1.open();
-        }
         fig.push_back(o1);
+        // remove name and comment in all segments
+        // except the first one:
+        o1.comment.clear();
+        fig_set_opts(o1, fig_opts);
       }
       continue;
     }
