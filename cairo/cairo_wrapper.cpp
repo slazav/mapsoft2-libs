@@ -68,6 +68,57 @@ svg_to_pattern(const std::string & fname, double scx, double scy, double dx, dou
   }
 }
 
+template<>
+Cairo::Operator
+str_to_type<Cairo::Operator>(const std::string & s){
+  if (s == "clear")     return Cairo::OPERATOR_CLEAR;
+  if (s == "source")    return Cairo::OPERATOR_SOURCE;
+  if (s == "over")      return Cairo::OPERATOR_OVER;
+  if (s == "in")        return Cairo::OPERATOR_IN;
+  if (s == "out")       return Cairo::OPERATOR_OUT;
+  if (s == "atop")      return Cairo::OPERATOR_ATOP;
+  if (s == "dest")      return Cairo::OPERATOR_DEST;
+  if (s == "dest_over") return Cairo::OPERATOR_DEST_OVER;
+  if (s == "dest_in")   return Cairo::OPERATOR_DEST_IN;
+  if (s == "dest_out")  return Cairo::OPERATOR_DEST_OUT;
+  if (s == "dest_atop") return Cairo::OPERATOR_DEST_ATOP;
+  if (s == "xor")       return Cairo::OPERATOR_XOR;
+  if (s == "add")       return Cairo::OPERATOR_ADD;
+  if (s == "saturate")  return Cairo::OPERATOR_SATURATE;
+  throw Err() << "Wrong operator value: " << s << ": "
+              << "expected one of clear, source, over, in, out, atop, dest, "
+              << "dest_over, dest_in, dest_out, dest_atop, xor, add, saturate.";
+}
+
+template<>
+Cairo::LineJoin
+str_to_type<Cairo::LineJoin>(const std::string & s){
+  if (s == "miter") return Cairo::LINE_JOIN_MITER;
+  if (s == "round") return Cairo::LINE_JOIN_ROUND;
+  throw Err() << "Wrong line_join value: " << s << ": "
+              << "expected round or miter";
+}
+
+template<>
+Cairo::LineCap str_to_type<Cairo::LineCap>(const std::string & s){
+  if (s == "round")  return Cairo::LINE_CAP_ROUND;
+  if (s == "butt")   return Cairo::LINE_CAP_BUTT;
+  if (s == "square") return Cairo::LINE_CAP_SQUARE;
+  throw Err() << "wrong line_cap value: " << s << ": "
+              << "expected round, butt, or square";
+}
+
+template<>
+Cairo::Filter str_to_type<Cairo::Filter>(const std::string & s){
+  if (s == "fast") return Cairo::FILTER_FAST;
+  if (s == "good") return Cairo::FILTER_GOOD;
+  if (s == "best") return Cairo::FILTER_BEST;
+  if (s == "nearest")  return Cairo::FILTER_NEAREST;
+  if (s == "bilinear") return Cairo::FILTER_BILINEAR;
+  throw Err() << "wrong filter value: " << s << ": "
+              << "expected fast, good, best, nearest, or bilinear";
+}
+
 
 void
 CairoExtra::mkpath_smline(const dMultiLine & o, bool close, double curve_l){

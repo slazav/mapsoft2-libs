@@ -306,12 +306,7 @@ public:
     Cairo::Filter flt;
     FeatureImgFilter(const std::vector<std::string> & vs){
       check_args(vs, {"fast|good|best|nearest|bilinear"});
-      if      (vs[0] == "fast") flt = Cairo::FILTER_FAST;
-      else if (vs[0] == "good") flt = Cairo::FILTER_GOOD;
-      else if (vs[0] == "best") flt = Cairo::FILTER_BEST;
-      else if (vs[0] == "nearest")  flt = Cairo::FILTER_NEAREST;
-      else if (vs[0] == "bilinear") flt = Cairo::FILTER_BILINEAR;
-      else throw Err() << "wrong value: fast, good, best, nearest, or bilinear expected";
+      flt = str_to_type<Cairo::Filter>(vs[0]);
     }
   };
 
@@ -336,10 +331,7 @@ public:
     Cairo::LineCap cap;
     FeatureCap(const std::vector<std::string> & vs){
       check_args(vs, {"round|butt|square"});
-      if      (vs[0] == "round")  cap = Cairo::LINE_CAP_ROUND;
-      else if (vs[0] == "butt")   cap = Cairo::LINE_CAP_BUTT;
-      else if (vs[0] == "square") cap = Cairo::LINE_CAP_SQUARE;
-      else throw Err() << "wrong value: round, butt, or square expected";
+      cap = str_to_type<Cairo::LineCap>(vs[0]);
     }
   };
 
@@ -347,9 +339,7 @@ public:
     Cairo::LineJoin join;
     FeatureJoin(const std::vector<std::string> & vs){
       check_args(vs, {"miter|round"});
-      if      (vs[0] == "miter")  join = Cairo::LINE_JOIN_MITER;
-      else if (vs[0] == "round")  join = Cairo::LINE_JOIN_ROUND;
-      else throw Err() << "wrong value: round or miter expected";
+      join = str_to_type<Cairo::LineJoin>(vs[0]);
     }
   };
 
@@ -358,23 +348,7 @@ public:
     FeatureOp(const std::vector<std::string> & vs){
       check_args(vs, {"clear|source|over|in|out|atop|dest|"
           "dest_over|dest_in|dest_out|dest_atop|xor|add|saturate"});
-      if      (vs[0] == "clear")     op = Cairo::OPERATOR_CLEAR;
-      else if (vs[0] == "source")    op = Cairo::OPERATOR_SOURCE;
-      else if (vs[0] == "over")      op = Cairo::OPERATOR_OVER;
-      else if (vs[0] == "in")        op = Cairo::OPERATOR_IN;
-      else if (vs[0] == "out")       op = Cairo::OPERATOR_OUT;
-      else if (vs[0] == "atop")      op = Cairo::OPERATOR_ATOP;
-      else if (vs[0] == "dest")      op = Cairo::OPERATOR_DEST;
-      else if (vs[0] == "dest_over") op = Cairo::OPERATOR_DEST_OVER;
-      else if (vs[0] == "dest_in")   op = Cairo::OPERATOR_DEST_IN;
-      else if (vs[0] == "dest_out")  op = Cairo::OPERATOR_DEST_OUT;
-      else if (vs[0] == "dest_atop") op = Cairo::OPERATOR_DEST_ATOP;
-      else if (vs[0] == "xor")       op = Cairo::OPERATOR_XOR;
-      else if (vs[0] == "add")       op = Cairo::OPERATOR_ADD;
-      else if (vs[0] == "saturate")  op = Cairo::OPERATOR_SATURATE;
-      else throw Err() << "Wrong drawing operator. Possible values: "
-       "clear, source, over, in, out, atop, dest, "
-       "dest_over, dest_in, dest_out, dest_atop, xor, add, saturate.";
+      op = str_to_type<Cairo::Operator>(vs[0]);
     }
   };
 

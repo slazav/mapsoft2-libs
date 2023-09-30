@@ -31,6 +31,22 @@ Cairo::RefPtr<Cairo::SurfacePattern> svg_to_pattern(
   double *wret = NULL, double *hret = NULL);
 
 //////////////////////////////////////////////////////////////////
+// converting strings to cairo types
+
+template<>
+Cairo::Operator str_to_type<Cairo::Operator>(const std::string & s);
+
+template<>
+Cairo::LineJoin str_to_type<Cairo::LineJoin>(const std::string & s);
+
+template<>
+Cairo::LineCap str_to_type<Cairo::LineCap>(const std::string & s);
+
+template<>
+Cairo::Filter str_to_type<Cairo::Filter>(const std::string & s);
+
+
+//////////////////////////////////////////////////////////////////
 /// This class contains functions
 /// we want to add to the Cairo::Context
 struct CairoExtra : public Cairo::Context {
