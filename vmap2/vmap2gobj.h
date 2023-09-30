@@ -132,57 +132,150 @@ public:
     STEP_DRAW_BRD   = 1<<5
   };
 
-  // known drawing features for each step
-  enum StepFeature {
-    FEATURE_STROKE,     // draw the contour with some thickness and color
-    FEATURE_FILL,       // fill the area with some color
-    FEATURE_PATT,       // fill the area with a pattern
-    FEATURE_CLIP,       // set clipping path
-    FEATURE_IMG,        // draw an image
-    FEATURE_IMG_FILTER, // set image filter
-    FEATURE_SMOOTH,     // set line smoothing
-    FEATURE_DASH,       // set dashed line
-    FEATURE_CAP,        // set line cap
-    FEATURE_JOIN,       // set line join
-    FEATURE_OP,         // set drawing operator
-    FEATURE_PIXAL,      // set pix_al
-    FEATURE_OUTER,      // use outer region (border only)
-    FEATURE_LINES,      // lines to be drawn instead of the object
-    FEATURE_CIRCLES,    // circles to be drawn instead of the object
-    FEATURE_DRAW_POS,   // position for lines/circles
-    FEATURE_DRAW_DIST,  // distances for lines/circles (if pos = dist or edist)
-    FEATURE_SEL_RANGE,  // draw selection range instead of the object
-    FEATURE_MOVETO,     // move point to a nearest object
-    FEATURE_ROTATE,     // rotate object pictures/test
-    FEATURE_FONT,       // set font for text objects
-    FEATURE_WRITE,      // write a text object
-    FEATURE_GROUP,      // set drawing step group
-    FEATURE_NAME,       // set drawing step name
-    FEATURE_PULK_GRID,  // draw Pulkovo grid
-    FEATURE_SHORT_EXP,  // expand short lines
-    FEATURE_SHORT_SKP,  // skip short lines
- };
+  // load image from file and render it with cairo
+  // for both FEATURE_PATT and FEATURE_IMG
+  struct ImageRenderer {
+    ImageR img; // actual data for raster images
+    Cairo::RefPtr<Cairo::SurfacePattern> patt;
+    double sc0,w,h;
+    bool empty;
+    ImageRenderer(){ sc0 = w = h = 0; empty = true;}
+    ImageRenderer(const std::string & fname, double sc, double dx, double dy){
+      sc0 = sc;
+      if (file_ext_check(fname, ".svg")){
+        patt = svg_to_pattern(fname, 1.0, 1.0, dx, dy, &w, &h);
+      }
+      else {
+        img = image_load(fname);
+        if (img.is_empty()) throw Err() << "empty image: " << fname;
+        if (img.type() != IMAGE_32ARGB) img = image_to_argb(img);
+        w = img.width(); h = img.height();
+        patt = image_to_pattern(img, 1.0, 1.0, dx, dy);
+      }
+      empty = false;
+    }
+    void draw_patt(const CairoWrapper & cr,
+         const double scx, const double scy,
+         bool fill=true){
+      cr->save();
+      double sx = scx*sc0, sy = scy*sc0;
+      if (sx*w<1.0) sx = 1.0/w;
+      if (sy*h<1.0) sy = 1.0/h;
+      cr->scale(sx, sy);
+      patt->set_extend(Cairo::EXTEND_REPEAT);
+      cr->set_source(patt);
+      if (fill) cr->fill_preserve();
+      else cr->paint();
+      cr->restore();
+    }
+    void draw_img(const CairoWrapper & cr, const dPoint & p,
+                  const double angle, const double sc){
+      cr->save();
+      cr->translate(p.x, p.y);
+      cr->rotate(angle);
+      double s = sc*sc0;
+      if (s*w<1.0 || s*h<1.0) s = 1.0/std::min(w,h);
+      cr->scale(s, s);
+      cr->set_source(patt);
+      cr->paint();
+      cr->restore();
+    }
+    void set_filter(const Cairo::Filter f){
+      if (!empty) patt->set_filter(f);
+    }
 
+    bool is_empty() const {return empty;}
+    double width() const {return w;}
+    double height() const {return h;}
+  };
 
   /*******************************************/
-  // Base class for drawing features.
-  // Each drawing step may contain a number of features
-  // which describe various operations. Feature objects
-  // are used to keep data for these operations. They
-  // also fave constructors for extractind data from 
-  // string arguments.
+  // drawing step class
+  struct DrawingStep : public GObj {
+    GObjVMap2 * gobj; // back reference to the mapdb gobj
+    StepAction action;  // what to do
+    uint32_t etype;     // object extended type (type + (cl<<16) )
 
-  struct Feature {
-    Feature() {}
+    std::string step_name;  // step name
+    std::string group_name; // group name
+    bool do_clip, do_stroke, do_fill, do_write,
+         do_patt, do_img, do_pulk_grid, do_sel_range;
+    uint32_t stroke_color;
+    uint32_t fill_color;
+    uint32_t write_color;
+    double thickness;
+    Cairo::Filter img_filter;
+    double smooth;
+    std::vector<double> dash;
+    Cairo::LineCap line_cap;
+    Cairo::LineJoin line_join;
+    Cairo::Operator op;
+    double short_expand;
+    double short_skip;
+    bool pix_align;
+    enum pos_t { DRAW_POS_POINT, DRAW_POS_BEGIN,
+                 DRAW_POS_END, DRAW_POS_DIST, DRAW_POS_EDIST} draw_pos;
+    double draw_pos_dist, draw_pos_b, draw_pos_e;
+    Opt pulk_grid_opts;
+    std::string font;
+    double font_size;
+    double rotate;
+    bool outer;
+    std::set<uint32_t> move_to_targets;
+    bool move_to_rot;
+    double move_to_dist;
+    double sel_range_thickness;
+    uint32_t sel_range_color;
+    dMultiLine add_lines;
+    dLine add_circles; // (x,y,r) points
+    dRect add_bbox;
+    ImageRenderer patt, img;
 
-    Feature(const std::vector<std::string> & vs){
-      check_args(vs, {});
+    DrawingStep(GObjVMap2 * gobj): gobj(gobj), action(STEP_UNKNOWN), etype(0) {
+      do_clip = do_stroke = do_fill = do_write = false;
+      do_patt = do_img = do_pulk_grid = do_sel_range = false;
+      stroke_color = 0;
+      fill_color = 0;
+      write_color = 0;
+      thickness = 1.0;
+      img_filter = Cairo::FILTER_GOOD;
+      smooth = 0;
+      line_cap = Cairo::LINE_CAP_ROUND;
+      line_join = Cairo::LINE_JOIN_ROUND;
+      op = Cairo::OPERATOR_OVER;
+      short_expand = 0;
+      short_skip = 0;
+      pix_align = false;
+      draw_pos = DRAW_POS_POINT;
+      draw_pos_dist = draw_pos_b = draw_pos_e = 0;
+      font_size = 10;
+      rotate = 0;
+      outer = false;
+      move_to_rot = false;
+      move_to_dist = 0;
+      sel_range_thickness = 0;
+      sel_range_color = 0;
+    }
+    std::string get_name() const {return step_name;}
+    std::string get_group() const {return group_name;}
+
+    // helpers used in draw() method, see .cpp files for description
+    void convert_coords(VMap2obj & O);
+    void draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path);
+
+    // main drawing function
+    ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
+
+    // check valid step types
+    void check_type(const int step_mask){
+      if ((action & step_mask) == 0) throw Err()
+        << "can not be used for this drawing step";
     }
 
     // check number of arguments
     // args -- given arguments
     // templ -- argument template: name, ?name, ...
-    void check_args(const std::vector<std::string> & args,
+    static void check_args(const std::vector<std::string> & args,
                     const std::vector<std::string> & templ){
 
       std::string list;
@@ -209,312 +302,8 @@ public:
           << "Too few arguments. Expected arguments: " << list;
       }
     }
-  };
-
-  struct FeatureStroke : Feature {
-    uint32_t col; double th;
-    FeatureStroke(const std::vector<std::string> & vs){
-      check_args(vs, {"<color>", "<line width>"});
-      col = str_to_type<uint32_t>(vs[0]);
-      th  = str_to_type<double>(vs[1]);
-    }
-  };
-
-  struct FeatureFill : Feature {
-    uint32_t col;
-    FeatureFill(const std::vector<std::string> & vs){
-      check_args(vs, {"<fill color>"});
-      col = str_to_type<uint32_t>(vs[0]);
-    }
-  };
-
-  struct FeatureClip : Feature {
-    FeatureClip(const std::vector<std::string> & vs){
-      check_args(vs, {});
-    }
-  };
-
-  struct FeaturePulkGrid : Feature {
-    //uint32_t col;
-    //double wid;
-    Opt opts;
-    FeaturePulkGrid(const std::vector<std::string> & vs){
-      check_args(vs, {"<step>", "<color>", "<line width>"});
-      //col = str_to_type<uint32_t>(vs[0]);
-      //wid = str_to_type<double>(vs[1]);
-      opts["grid_step"]  = vs[0];
-      opts["grid_color"] = vs[1];
-      opts["grid_thick"] = vs[2];
-    }
-  };
-
-  // for both FEATURE_PATT and FEATURE_IMG
-  struct FeaturePatt : Feature {
-    ImageR img; // actual data for raster images
-    Cairo::RefPtr<Cairo::SurfacePattern> patt;
-    double sc0,w,h;
-    FeaturePatt(const std::string & imgdir,
-                const std::vector<std::string> & vs){
-      check_args(vs, {"<file>", "<scale>", "?<dx>", "?<dy>"});
-      sc0 = str_to_type<double>(vs[1]);
-      double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
-      double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
-
-      auto fn = vs[0];
-      if (fn.size()==0) throw Err() << "empty image filename";
-      if (fn[0]!='/') fn = imgdir + fn;
-
-      if (file_ext_check(vs[0], ".svg")){
-        patt = svg_to_pattern(fn, 1.0, 1.0, dx, dy, &w, &h);
-      }
-      else {
-        img = image_load(fn);
-        if (img.is_empty()) throw Err() << "empty image: " << vs[0];
-        if (img.type() != IMAGE_32ARGB) img = image_to_argb(img);
-        w = img.width(); h = img.height();
-        patt = image_to_pattern(img, 1.0, 1.0, dx, dy);
-      }
-    }
-    void draw_patt(const CairoWrapper & cr, const double scx, const double scy , bool fill=true){
-      cr->save();
-      double sx = scx*sc0, sy = scy*sc0;
-      if (sx*w<1.0) sx = 1.0/w;
-      if (sy*h<1.0) sy = 1.0/h;
-      cr->scale(sx, sy);
-      patt->set_extend(Cairo::EXTEND_REPEAT);
-      cr->set_source(patt);
-      if (fill) cr->fill_preserve();
-      else cr->paint();
-      cr->restore();
-    }
-    void draw_img(const CairoWrapper & cr, const dPoint & p,
-                  const double angle, const double sc){
-      cr->save();
-      cr->translate(p.x, p.y);
-      cr->rotate(angle);
-      double s = sc*sc0;
-      if (s*w<1.0 || s*h<1.0) s = 1.0/std::min(w,h);
-      cr->scale(s, s);
-      cr->set_source(patt);
-      cr->paint();
-      cr->restore();
-    }
 
   };
-
-  struct FeatureImgFilter : Feature {
-    Cairo::Filter flt;
-    FeatureImgFilter(const std::vector<std::string> & vs){
-      check_args(vs, {"fast|good|best|nearest|bilinear"});
-      flt = str_to_type<Cairo::Filter>(vs[0]);
-    }
-  };
-
-  struct FeatureSmooth : Feature {
-    double dist;
-    FeatureSmooth(const std::vector<std::string> & vs){
-      check_args(vs, {"<distance>"});
-      dist = str_to_type<double>(vs[0]);
-    }
-  };
-
-  struct FeatureDash : Feature {
-    std::vector<double> vd;
-    FeatureDash(const std::vector<std::string> & vs){
-      check_args(vs, {"<dist>", "..."});
-      for (auto const & s:vs)
-        vd.push_back(str_to_type<double>(s));
-    }
-  };
-
-  struct FeatureCap : Feature {
-    Cairo::LineCap cap;
-    FeatureCap(const std::vector<std::string> & vs){
-      check_args(vs, {"round|butt|square"});
-      cap = str_to_type<Cairo::LineCap>(vs[0]);
-    }
-  };
-
-  struct FeatureJoin : Feature {
-    Cairo::LineJoin join;
-    FeatureJoin(const std::vector<std::string> & vs){
-      check_args(vs, {"miter|round"});
-      join = str_to_type<Cairo::LineJoin>(vs[0]);
-    }
-  };
-
-  struct FeatureOp : Feature {
-    Cairo::Operator op;
-    FeatureOp(const std::vector<std::string> & vs){
-      check_args(vs, {"clear|source|over|in|out|atop|dest|"
-          "dest_over|dest_in|dest_out|dest_atop|xor|add|saturate"});
-      op = str_to_type<Cairo::Operator>(vs[0]);
-    }
-  };
-
-
-  struct FeatureLines : Feature {
-    dMultiLine lines;
-    dRect bbox;
-    FeatureLines(const std::vector<std::string> & vs){
-      check_args(vs, {"<lines>", "..."});
-      for (auto const & s:vs){
-        dMultiLine ml(s);
-        lines.insert(lines.end(), ml.begin(), ml.end());
-      }
-      bbox = lines.bbox();
-    }
-  };
-
-  struct FeatureCircles : Feature {
-    dLine circles; // z-coordinate = radius
-    dRect bbox;
-    FeatureCircles(const std::vector<std::string> & vs){
-      check_args(vs, {"<circle>", "..."});
-      for (auto const & s:vs){
-        dPoint p(s);
-        if (p.z<=0) throw Err() << "positive radius expected";
-        circles.push_back(p);
-        bbox.expand(p+dPoint(p.z,p.z));
-        bbox.expand(p-dPoint(p.z,p.z));
-      }
-    }
-  };
-
-  struct FeatureDrawPos : Feature {
-    enum pos_t { POINT, BEGIN, END, DIST, EDIST} pos;
-    double dist, dist_b, dist_e;
-    FeatureDrawPos(const std::vector<std::string> & vs):
-            pos(POINT), dist(0), dist_b(0), dist_e(0){
-      if (vs.size()<1) throw Err() << "argument expected";
-      if      (vs[0] == "point"){ check_args(vs, {"point"}); pos = POINT; }
-      else if (vs[0] == "begin"){ check_args(vs, {"begin"}); pos = BEGIN; }
-      else if (vs[0] == "end")  { check_args(vs, {"end"}) ;  pos = END; }
-      else if (vs[0] == "dist" || vs[0] == "edist") {
-        check_args(vs, {"(dist|edist)", "dist", "?dist_b", "?dist_e"});
-        pos = (vs[0] == "dist") ? DIST : EDIST;
-        dist = str_to_type<double>(vs[1]);
-        if (vs.size()>2) dist_b = str_to_type<double>(vs[2]);
-        else dist_b = dist/2;
-        if (vs.size()>3) dist_e = str_to_type<double>(vs[3]);
-        else dist_e = dist/2;
-      }
-      else throw Err() << "Wrong position. Possible values: "
-        "point, begin, end, dist, edist.";
-    }
-  };
-
-  struct FeatureSelRange: Feature {
-    uint32_t col; double th;
-    FeatureSelRange(const std::vector<std::string> & vs){
-      check_args(vs, {"<color>", "<line width>"});
-      col = str_to_type<uint32_t>(vs[0]);
-      th  = str_to_type<double>(vs[1]);
-    }
-  };
-
-  // for both move_to and rotate_to features
-  struct FeatureMoveTo : Feature {
-    std::set<uint32_t> targets; // target object types
-    bool rotate;
-    double dist;
-    FeatureMoveTo(const std::vector<std::string> & vs, const bool rotate):
-        rotate(rotate){
-      check_args(vs, {"<dist>", "(area|line):<type>", "..."});
-      dist   = str_to_type<double>(vs[0]);
-      for (size_t i=1; i<vs.size(); ++i)
-        targets.insert(VMap2obj::make_type(vs[i]));
-    }
-  };
-
-  struct FeaturePixAl : Feature {
-    double val;
-    FeaturePixAl(const std::vector<std::string> & vs){
-      check_args(vs, {"<val>"});
-      val = str_to_type<bool>(vs[0]);
-    }
-  };
-
-  struct FeatureRotate : Feature {
-    double val;
-    FeatureRotate(const std::vector<std::string> & vs){
-      check_args(vs, {"<val>"});
-      val = str_to_type<double>(vs[0]) * M_PI/180.0;
-    }
-  };
-
-  struct FeatureFont : Feature {
-    double   size;
-    std::string font; // target object types
-    FeatureFont(const std::vector<std::string> & vs){
-      check_args(vs, {"<font size>", "<font>"});
-      size   = str_to_type<double>(vs[0]);
-      font   = vs[1];
-    }
-  };
-
-  struct FeatureWrite : Feature {
-    uint32_t color;
-    FeatureWrite(const std::vector<std::string> & vs){
-      check_args(vs, {"<color>"});
-      color  = str_to_type<uint32_t>(vs[0]);
-    }
-  };
-
-  struct FeatureGroup : Feature {
-    std::string name;
-    FeatureGroup(const std::vector<std::string> & vs){
-      check_args(vs, {"<name>"});
-      name = vs[0];
-    }
-  };
-
-  struct FeatureName : Feature {
-    std::string name;
-    FeatureName(const std::vector<std::string> & vs){
-      check_args(vs, {"<name>"});
-      name = vs[0];
-    }
-  };
-
-  struct FeatureLen : Feature {
-    double len;
-    FeatureLen(const std::vector<std::string> & vs){
-      check_args(vs, {"<length>"});
-      len = str_to_type<double>(vs[0]);
-    }
-  };
-
-  /*******************************************/
-  // drawing step class
-  struct DrawingStep : public GObj {
-    GObjVMap2 * gobj; // back reference to the mapdb gobj
-    StepAction action;  // what to do
-    uint32_t etype;     // object extended type (type + (cl<<16) )
-    std::string step_name;  // step name
-    std::string group_name; // group name
-    std::map<StepFeature, std::shared_ptr<Feature> > features;
-
-    DrawingStep(GObjVMap2 * gobj): gobj(gobj), action(STEP_UNKNOWN), etype(0) {}
-    std::string get_name() const {return step_name;}
-    std::string get_group() const {return group_name;}
-
-    // helpers used in draw() method, see .cpp files for description
-    void convert_coords(VMap2obj & O);
-    void draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align=false);
-
-    // main drawing function
-    ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
-
-    // check valid step types
-    void check_type(const int step_mask){
-      if ((action & step_mask) == 0) throw Err()
-        << "can not be used for this drawing step";
-    }
-
-  };
-  /*******************************************/
-
 
   /*******************************************/
   std::vector<std::string> get_groups() const {return groups;}

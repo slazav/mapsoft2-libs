@@ -187,7 +187,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
-      // max_text_size command
+      // fit_patt_size command
       if (vs[0] == "fit_patt_size") {
         st.reset(); // "+" should not work after the command
         if (vs.size()!=2) throw Err()
@@ -290,8 +290,10 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "stroke"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
                        STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_STROKE,
-          std::shared_ptr<Feature>(new FeatureStroke(vs)));
+        st->check_args(vs, {"<color>", "<line width>"});
+        st->do_stroke = true;
+        st->stroke_color = str_to_type<uint32_t>(vs[0]);
+        st->thickness    = str_to_type<double>(vs[1]);
         continue;
       }
 
@@ -299,8 +301,9 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "fill"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
                        STEP_DRAW_MAP | STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_FILL,
-          std::shared_ptr<Feature>(new FeatureFill(vs)));
+        st->check_args(vs, {"<fill color>"});
+        st->do_fill = true;
+        st->fill_color = str_to_type<uint32_t>(vs[0]);
         continue;
       }
 
@@ -308,8 +311,8 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "clip"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_MAP |
                        STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_CLIP,
-          std::shared_ptr<Feature>(new FeatureClip(vs)));
+        st->check_args(vs, {});
+        st->do_clip = true;
         continue;
       }
 
@@ -317,57 +320,71 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "patt"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA | STEP_DRAW_MAP |
                        STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_PATT,
-          std::shared_ptr<Feature>(new FeaturePatt(cfgdir, vs)));
+        st->check_args(vs, {"<file>", "<scale>"});
+        auto fname = vs[0];
+        double sc = str_to_type<double>(vs[1]);
+        if (fname.size()==0) throw Err() << "empty image filename";
+        if (fname[0]!='/') fname = cfgdir + fname;
+        st->do_patt = true;
+        st->patt = ImageRenderer(fname,sc,0,0);
         continue;
       }
 
       // img <file> <scale>
       if (ftr == "img"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT);
-        st->features.emplace(FEATURE_IMG,
-          std::shared_ptr<Feature>(new FeaturePatt(cfgdir, vs)));
+        st->check_args(vs, {"<file>", "<scale>", "?<dx>", "?<dy>"});
+        auto fname = vs[0];
+        double sc = str_to_type<double>(vs[1]);
+        double dx = vs.size()>2 ? str_to_type<double>(vs[2]):0;
+        double dy = vs.size()>3 ? str_to_type<double>(vs[3]):0;
+        if (fname.size()==0) throw Err() << "empty image filename";
+        if (fname[0]!='/') fname = cfgdir + fname;
+        st->do_img = true;
+        st->img = ImageRenderer(fname, sc, dx,dy);
         continue;
       }
 
-      // img <file> <scale>
+      // img_filter fast|good|best|nearest|bilinear
       if (ftr == "img_filter"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_POINT |
                        STEP_DRAW_MAP | STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_IMG_FILTER,
-          std::shared_ptr<Feature>(new FeatureImgFilter(vs)));
+        st->check_args(vs, {"fast|good|best|nearest|bilinear"});
+        st->img_filter = str_to_type<Cairo::Filter>(vs[0]);
         continue;
       }
 
       // smooth <distance>
       if (ftr == "smooth"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_SMOOTH,
-          std::shared_ptr<Feature>(new FeatureSmooth(vs)));
+        st->check_args(vs, {"<distance>"});
+        st->smooth = str_to_type<double>(vs[0]);
         continue;
       }
 
       // dash <length1> <length2> ...
       if (ftr == "dash"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_DASH,
-          std::shared_ptr<Feature>(new FeatureDash(vs)));
+        st->check_args(vs, {"<dist>", "..."});
+        st->dash.clear();
+        for (auto const & s:vs)
+          st->dash.push_back(str_to_type<double>(s));
         continue;
       }
 
       // cap round|butt|square
       if (ftr == "cap"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_CAP,
-          std::shared_ptr<Feature>(new FeatureCap(vs)));
+        st->check_args(vs, {"round|butt|square"});
+        st->line_cap = str_to_type<Cairo::LineCap>(vs[0]);
         continue;
       }
 
       // join round|miter
       if (ftr == "join"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_JOIN,
-          std::shared_ptr<Feature>(new FeatureJoin(vs)));
+        st->check_args(vs, {"miter|round"});
+        st->line_join = str_to_type<Cairo::LineJoin>(vs[0]);
         continue;
       }
 
@@ -376,40 +393,51 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE |
                        STEP_DRAW_POINT | STEP_DRAW_TEXT |
                        STEP_DRAW_MAP | STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_OP,
-          std::shared_ptr<Feature>(new FeatureOp(vs)));
+        st->check_args(vs, {"clear|source|over|in|out|atop|dest|"
+            "dest_over|dest_in|dest_out|dest_atop|xor|add|saturate"});
+        st->op = str_to_type<Cairo::Operator>(vs[0]);
         continue;
       }
 
-      // pix_al <val>
+      // pix_align <val>
       if (ftr == "pix_align"){
         st->check_type( STEP_DRAW_TEXT);
-        st->features.emplace(FEATURE_PIXAL,
-          std::shared_ptr<Feature>(new FeaturePixAl(vs)));
+        st->check_args(vs, {"<val>"});
+        st->pix_align = str_to_type<bool>(vs[0]);
         continue;
       }
 
       // outer
       if (ftr == "outer"){
         st->check_type( STEP_DRAW_BRD);
-        st->features.emplace(FEATURE_OUTER,
-          std::shared_ptr<Feature>(new Feature(vs)));
+        st->check_args(vs, {});
+        st->outer = true;
         continue;
       }
 
       // lines <lines> ...
       if (ftr == "lines"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
-        st->features.emplace(FEATURE_LINES,
-          std::shared_ptr<Feature>(new FeatureLines(vs)));
+        st->check_args(vs, {"<lines>", "..."});
+        for (auto const & s:vs){
+          dMultiLine ml(s);
+          st->add_lines.insert(st->add_lines.end(), ml.begin(), ml.end());
+          st->add_bbox.expand(ml.bbox());
+        }
         continue;
       }
 
       // circles <circle> ...
       if (ftr == "circles"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
-        st->features.emplace(FEATURE_CIRCLES,
-          std::shared_ptr<Feature>(new FeatureCircles(vs)));
+        st->check_args(vs, {"<circle>", "..."});
+        for (auto const & s:vs){
+          dPoint p(s);
+          if (p.z<=0) throw Err() << "positive radius expected";
+          st->add_circles.push_back(p);
+          st->add_bbox.expand(p+dPoint(p.z,p.z));
+          st->add_bbox.expand(p-dPoint(p.z,p.z));
+        }
         continue;
       }
 
@@ -418,8 +446,30 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       // draw_pos edist <dist> [<dist_begin>] [<dist_end>]
       if (ftr == "draw_pos"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA);
-        st->features.emplace(FEATURE_DRAW_POS,
-          std::shared_ptr<Feature>(new FeatureDrawPos(vs)));
+        if (vs.size()<1) throw Err() << "argument expected";
+        if (vs[0] == "point"){
+           st->check_args(vs, {"point"});
+           st->draw_pos = DrawingStep::DRAW_POS_POINT;
+        }
+        else if (vs[0] == "begin"){
+          st->check_args(vs, {"begin"});
+          st->draw_pos = DrawingStep::DRAW_POS_BEGIN;
+        }
+        else if (vs[0] == "end"){
+          st->check_args(vs, {"end"});
+          st->draw_pos = DrawingStep::DRAW_POS_END;
+        }
+        else if (vs[0] == "dist" || vs[0] == "edist") {
+          st->check_args(vs, {"(dist|edist)", "dist", "?dist_b", "?dist_e"});
+          st->draw_pos = (vs[0] == "dist") ? DrawingStep::DRAW_POS_DIST : DrawingStep::DRAW_POS_EDIST;
+          st->draw_pos_dist = str_to_type<double>(vs[1]);
+          if (vs.size()>2) st->draw_pos_b = str_to_type<double>(vs[2]);
+          else st->draw_pos_b = st->draw_pos_dist/2;
+          if (vs.size()>3) st->draw_pos_e = str_to_type<double>(vs[3]);
+          else st->draw_pos_e = st->draw_pos_dist/2;
+        }
+        else throw Err() << "Wrong position. Possible values: "
+          "point, begin, end, dist, edist.";
         continue;
       }
 
@@ -427,24 +477,32 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "sel_range"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE |
                        STEP_DRAW_AREA | STEP_DRAW_TEXT);
-        st->features.emplace(FEATURE_SEL_RANGE,
-          std::shared_ptr<Feature>(new FeatureSelRange(vs)));
+        st->check_args(vs, {"<color>", "<line width>"});
+        st->do_sel_range = true;
+        st->sel_range_color = str_to_type<uint32_t>(vs[0]);
+        st->sel_range_thickness = str_to_type<double>(vs[1]);
         continue;
       }
 
       // move_to area|line <type> <max distance>
       if (ftr == "move_to"){
         st->check_type(STEP_DRAW_POINT);
-        st->features.emplace(FEATURE_MOVETO,
-          std::shared_ptr<Feature>(new FeatureMoveTo(vs, false)));
+        st->check_args(vs, {"<dist>", "(area|line):<type>", "..."});
+        st->move_to_dist = str_to_type<double>(vs[0]);
+        for (size_t i=1; i<vs.size(); ++i)
+          st->move_to_targets.insert(VMap2obj::make_type(vs[i]));
+        st->move_to_rot = false;
         continue;
       }
 
       // rotate_to area|line <type> <max distance>
       if (ftr == "rotate_to"){
         st->check_type(STEP_DRAW_POINT);
-        st->features.emplace(FEATURE_MOVETO,
-          std::shared_ptr<Feature>(new FeatureMoveTo(vs, true)));
+        st->check_args(vs, {"<dist>", "(area|line):<type>", "..."});
+        st->move_to_dist = str_to_type<double>(vs[0]);
+        for (size_t i=1; i<vs.size(); ++i)
+          st->move_to_targets.insert(VMap2obj::make_type(vs[i]));
+        st->move_to_rot = true;
         continue;
       }
 
@@ -452,68 +510,73 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "rotate"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE |
                        STEP_DRAW_AREA | STEP_DRAW_TEXT);
-        st->features.emplace(FEATURE_ROTATE,
-          std::shared_ptr<Feature>(new FeatureRotate(vs)));
+        st->check_args(vs, {"<val>"});
+        st->rotate = str_to_type<double>(vs[0]) * M_PI/180.0;
         continue;
       }
 
       // font <size> <font>
       if (ftr == "font"){
         st->check_type(STEP_DRAW_TEXT);
-        st->features.emplace(FEATURE_FONT,
-          std::shared_ptr<Feature>(new FeatureFont(vs)));
+        st->check_args(vs, {"<font size>", "<font>"});
+        st->font_size = str_to_type<double>(vs[0]);
+        st->font = vs[1];
         continue;
       }
 
       // write <color>
       if (ftr == "write"){
         st->check_type(STEP_DRAW_TEXT);
-        st->features.emplace(FEATURE_WRITE,
-          std::shared_ptr<Feature>(new FeatureWrite(vs)));
+        st->check_args(vs, {"<color>"});
+        st->do_write = true;
+        st->write_color = str_to_type<uint32_t>(vs[0]);
         continue;
       }
 
       // pulk_grid <color> <line width>
       if (ftr == "pulk_grid"){
         st->check_type(STEP_DRAW_MAP);
-        st->features.emplace(FEATURE_PULK_GRID,
-          std::shared_ptr<Feature>(new FeaturePulkGrid(vs)));
+        st->check_args(vs, {"<step>", "<color>", "<line width>"});
+        st->do_pulk_grid = true;
+        st->pulk_grid_opts["grid_step"]  = vs[0];
+        st->pulk_grid_opts["grid_color"] = vs[1];
+        st->pulk_grid_opts["grid_thick"] = vs[2];
         continue;
       }
 
       // group <name>
       if (ftr == "group"){
-        FeatureGroup f(vs); // parse parameters, but do not save feature data
-        st->group_name = f.name;
+        st->check_args(vs, {"<group>"});
+        st->group_name = vs[0];
 
         // if the group is not in the group list, add it there
         bool known_group = false;
         for (auto const & gr:groups)
-          if (gr == f.name){ known_group = true; break;}
-        if (!known_group) groups.push_back(f.name);
+          if (gr == st->group_name){ known_group = true; break;}
+        if (!known_group) groups.push_back(st->group_name);
         continue;
       }
 
       // name <name>
       if (ftr == "name"){
-        FeatureName f(vs); // parse parameters, but do not save feature data
-        st->step_name = f.name;
+        st->check_args(vs, {"<name>"});
+        st->step_name = vs[0];
         continue;
       }
 
       // short_expand <length>
       if (ftr == "short_expand"){
         st->check_type(STEP_DRAW_LINE);
-        st->features.emplace(FEATURE_SHORT_EXP,
-          std::shared_ptr<Feature>(new FeatureLen(vs)));
+        st->check_args(vs, {"<length>"});
+        st->short_expand = str_to_type<double>(vs[0]);
         continue;
       }
 
       // short_skip <length>
       if (ftr == "short_skip"){
         st->check_type(STEP_DRAW_LINE);
-        st->features.emplace(FEATURE_SHORT_SKP,
-          std::shared_ptr<Feature>(new FeatureLen(vs)));
+        st->check_args(vs, {"<length>"});
+        st->short_expand = str_to_type<double>(vs[0]);
         continue;
       }
 
@@ -557,16 +620,15 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 
   if (cnv) cnv->bck(O);
 
-  if (features.count(FEATURE_MOVETO)){
-    auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
+  if (move_to_targets.size()>0){
     for (auto & l:O){ // segments
       for (auto & p:l){ // points
         dRect r(p,p);
-        r.expand(ftr->dist);
+        r.expand(move_to_dist);
         if (cnv) r = cnv->frw_acc(r);
 
         dMultiLine lines;
-        for (auto & t: ftr->targets){
+        for (auto & t: move_to_targets){
           auto ids = gobj->map.find(t, r);
             for (int i:ids){
             auto O1 = gobj->map.get(i);
@@ -575,20 +637,43 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
               lines.push_back(l);
           }
         }
-
         dPoint t(1,0);
-        nearest_pt(lines, t, p, ftr->dist);
-        if (ftr->rotate) O.angle = atan2(t.y, t.x);
+        nearest_pt(lines, t, p, move_to_dist);
+        if (move_to_rot) O.angle = atan2(t.y, t.x);
       }
     }
   }
 
-  if (features.count(FEATURE_ROTATE)){
-    auto ftr = (FeatureRotate *)features.find(FEATURE_ROTATE)->second.get();
-    O.angle += ftr->val;
-  }
+  // additional rotation
+  O.angle += rotate;
+
   // Should be always finite for Cairo:
   if (std::isnan(O.angle)) O.angle = 0;
+
+  // skip short lines
+  if (short_skip > 0){
+    for (auto l = O.begin(); l!=O.end();){
+      if (l->length2d() < short_skip) l=O.erase(l);
+      else ++l;
+    }
+  }
+
+  // expand short lines
+  if (short_expand>0){
+    for (auto l = O.begin(); l!=O.end(); ++l){
+      if (l->length2d() < short_expand && l->size()>0) {
+        auto n = l->size()-1;
+        auto p0 = (*l)[0], p1=(*l)[1]; // saving points (line could have 1 segment)
+        auto p2 = (*l)[n-1], p3=(*l)[n];
+        auto l1 = dist2d(p0,p1);   // first segment
+        auto l2 = dist2d(p2,p3); // last segment
+        auto dl = short_expand - l->length2d();
+        (*l)[0] = p0 + (p0-p1) * dl/(l1+l2);
+        (*l)[n] = p3 + (p3-p2) * dl/(l1+l2);
+      }
+    }
+  }
+
 }
 
 
@@ -597,7 +682,7 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 // `fill`/`stroke`/`patt` features (with path=true).
 // `range` parameter is used for check if we should draw the object.
 void
-GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path, bool pix_align){
+GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path){
   if (O.size()==0 || O[0].size()==0) return; // no coordinates
   dPoint pt = O[0][0];
 //  auto txt = conv_label(O.name);
@@ -651,35 +736,23 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
   else {
     // expand by line expand length
-    if (features.count(FEATURE_SHORT_EXP)){
-      auto ftr = (FeatureLen *)features.find(FEATURE_SHORT_EXP)->second.get();
-      exp_dist = std::max(exp_dist, ftr->len/2*osc);
+    if (short_expand>0){
+      exp_dist = std::max(exp_dist, short_expand/2);
     }
     // expand by line width
-    if (features.count(FEATURE_STROKE)){
-      auto ftr = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-      exp_dist = std::max(exp_dist, ftr->th*osc);
+    if (stroke_color!=0){
+      exp_dist = std::max(exp_dist, thickness*osc);
     }
-    // expand by image size (image may be rotated and arbitrarly centered, use hypot(w,h) as size)
-    if (features.count(FEATURE_IMG)){
-      auto ftr = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-      exp_dist = std::max(exp_dist, osc*hypot(ftr->img.width(), ftr->img.height()));
+    // expand by image size (image may be rotated and arbitrarly
+    // centered, use hypot(w,h) as size)
+    if (do_img){
+      exp_dist = std::max(exp_dist, osc*hypot(img.width(), img.height()));
     }
     // expand by move_to distance
-    if (features.count(FEATURE_MOVETO)){
-      auto ftr = (FeatureMoveTo *)features.find(FEATURE_MOVETO)->second.get();
-      exp_dist = std::max(exp_dist, osc*ftr->dist);
-    }
-    // expand by lines bbox (again, can be rotated, at least for points)
-    if (features.count(FEATURE_LINES)){
-      auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
-      exp_dist = std::max(exp_dist, osc*hypot(ftr->bbox.w, ftr->bbox.h));
-    }
-    // expand by circles bbox
-    if (features.count(FEATURE_CIRCLES)){
-      auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
-      exp_dist = std::max(exp_dist, osc*hypot(ftr->bbox.w, ftr->bbox.h));
-    }
+    exp_dist = std::max(exp_dist, move_to_dist);
+
+    // expand by lines/circles bbox (again, can be rotated, at least for points)
+    exp_dist = std::max(exp_dist, osc*hypot(add_bbox.w, add_bbox.h));
   }
   sel_range.expand(exp_dist);
 
@@ -695,8 +768,7 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     ids = gobj->map.find(etype, sel_range);
     if (ids.size()==0){
       // set empty clipping range if needed
-      if ((action == STEP_DRAW_AREA) &&
-           features.count(FEATURE_CLIP)) {
+      if (do_clip && action == STEP_DRAW_AREA) {
         if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
         cr->save(); gobj->nsaved++;
         cr->begin_new_path();
@@ -707,11 +779,10 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
 
   // if SEL_RANGE feature exists, draw rectangles
-  if (features.count(FEATURE_SEL_RANGE)) {
-    auto data = (FeatureSelRange *)features.find(FEATURE_SEL_RANGE)->second.get();
+  if (do_sel_range) {
     cr->begin_new_path();
-    cr->set_color_a(data->col);
-    cr->set_line_width(data->th);
+    cr->set_color_a(sel_range_color);
+    cr->set_line_width(sel_range_thickness);
     for (auto const i: ids){
       auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
@@ -723,176 +794,81 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   }
 
   // Operator feature
-  if (features.count(FEATURE_OP)){
-    auto data = (FeatureOp *)features.find(FEATURE_OP)->second.get();
-    cr->set_operator(data->op);
-  }
-  else
-    cr->set_operator(Cairo::OPERATOR_OVER);
-
-  // pix_align feature
-  bool pix_al = false;
-  if (features.count(FEATURE_PIXAL)){
-    auto data = (FeaturePixAl *)features.find(FEATURE_PIXAL)->second.get();
-    pix_al = data->val;
-  }
+  cr->set_operator(op);
 
   // Font feature (set font + font size)
-  if (features.count(FEATURE_FONT)){
-    auto data = (FeatureFont *)features.find(FEATURE_FONT)->second.get();
-    cr->set_font_size(osc*data->size);
+  if (font!=""){
+    cr->set_font_size(osc*font_size);
     // For work with patterns see:
     // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
     // For font properties see:
     // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x19.html
     // https://www.freedesktop.org/software/fontconfig/fontconfig-user.html
     // https://wiki.archlinux.org/index.php/Font_configuration
-    FcPattern *patt = FcNameParse((const FcChar8 *)data->font.c_str());
-    cr->set_font_face( Cairo::FtFontFace::create(patt));
+    FcPattern *patt = FcNameParse((const FcChar8 *)font.c_str());
+    cr->set_font_face(Cairo::FtFontFace::create(patt));
     FcPatternDestroy(patt);
   }
 
   // Set up pattern feature
-  if (features.count(FEATURE_PATT)){
-    auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
+  if (do_patt){
+    patt.set_filter(img_filter);
   }
 
   // Set up image feature (points and areas)
-  if (features.count(FEATURE_IMG)){
-    auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
-    if (features.count(FEATURE_IMG_FILTER)){
-      auto data_f = (FeatureImgFilter *)features.find(FEATURE_IMG_FILTER)->second.get();
-      data->patt->set_filter(data_f->flt);
-    }
+  if (do_img){
+    img.set_filter(img_filter);
   }
 
   // set up smooth feature
-  double sm = 0;
+  double sm = osc*smooth;
+
+  // for building paths
   bool close = (action == STEP_DRAW_AREA);
-  if (features.count(FEATURE_SMOOTH)){
-    auto ftr = (FeatureSmooth *)features.find(FEATURE_SMOOTH)->second.get();
-    sm = osc*ftr->dist;
-  }
 
-  // Set up fill feature
-  if (features.count(FEATURE_FILL)){
-    auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
-    cr->set_color_a(data->col);
-    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
-  }
+  // Always using this rule (for fill, pattern, clip)
+  cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
 
-  // Set up stroke feature
-  if (features.count(FEATURE_STROKE)){
+  // Set up stroke
+  if (do_stroke){
     // Setup dashed line
-    if (features.count(FEATURE_DASH)){
-      auto data = (FeatureDash *)features.find(FEATURE_DASH)->second.get();
-      auto vd = data->vd;
+    if (dash.size()){
+      auto vd = dash;
       for (auto & d:vd) d*=osc;
       cr->set_dash(vd, 0);
     }
     else
       cr->unset_dash();
 
-    // Setup line cap
-    if (features.count(FEATURE_CAP)){
-      auto data = (FeatureCap *)features.find(FEATURE_CAP)->second.get();
-      cr->set_line_cap(data->cap);
-    }
-    else
-      cr->set_line_cap(Cairo::LINE_CAP_ROUND);
-
-    // Setup line join
-    if (features.count(FEATURE_JOIN)){
-      auto data = (FeatureJoin *)features.find(FEATURE_JOIN)->second.get();
-      cr->set_line_join(data->join);
-    }
-    else
-      cr->set_line_join(Cairo::LINE_JOIN_ROUND);
-
-    auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-    cr->set_color_a(data->col);
-    cr->set_line_width(osc*data->th);
+    // Setup line cap, line join, line thickness
+    cr->set_color_a(stroke_color);
+    cr->set_line_cap(line_cap);
+    cr->set_line_join(line_join);
+    cr->set_line_width(osc*thickness);
   }
-
 
   // Draw each object
   for (auto const i: ids){
     auto O = gobj->map.get(i);
     if (!intersect(O.bbox(), sel_range)) continue;
     convert_coords(O);
-
-    // skip short lines
-    if (features.count(FEATURE_SHORT_SKP)){
-      auto ftr = (FeatureLen *)features.find(FEATURE_SHORT_SKP)->second.get();
-      for (auto l = O.begin(); l!=O.end();){
-        if (l->length2d() < ftr->len) l=O.erase(l);
-        else ++l;
-      }
-    }
-
-    // expand short lines
-    if (features.count(FEATURE_SHORT_EXP)){
-      auto ftr = (FeatureLen *)features.find(FEATURE_SHORT_EXP)->second.get();
-      for (auto l = O.begin(); l!=O.end(); ++l){
-        if (l->length2d() < ftr->len && l->size()>0) {
-          auto n = l->size()-1;
-          auto p0 = (*l)[0], p1=(*l)[1]; // saving points (line could have 1 segment)
-          auto p2 = (*l)[n-1], p3=(*l)[n];
-          auto l1 = dist2d(p0,p1);   // first segment
-          auto l2 = dist2d(p2,p3); // last segment
-          auto dl = ftr->len - l->length2d();
-          (*l)[0] = p0 + (p0-p1) * dl/(l1+l2);
-          (*l)[n] = p3 + (p3-p2) * dl/(l1+l2);
-        }
-      }
-    }
-
     cr->begin_new_path();
 
     // Make drawing path for points, lines, areas
     if ((action == STEP_DRAW_POINT ||
          action == STEP_DRAW_LINE ||
          action == STEP_DRAW_AREA) &&
-        (features.count(FEATURE_STROKE) ||
-         features.count(FEATURE_FILL) ||
-         features.count(FEATURE_PATT) )){
+        (do_stroke || do_fill || do_patt )){
 
       // make path for Lines or Circles
-      if (features.count(FEATURE_LINES) ||
-          features.count(FEATURE_CIRCLES)) {
+      if (add_lines.size()>0 || add_circles.size()>0) {
 
-        dMultiLine lines;
-        if (features.count(FEATURE_LINES)){
-          auto ftr = (FeatureLines *)features.find(FEATURE_LINES)->second.get();
-          lines = osc*ftr->lines;
-        }
-
-        dLine circles;
-        if (features.count(FEATURE_CIRCLES)){
-          auto ftr = (FeatureCircles *)features.find(FEATURE_CIRCLES)->second.get();
-          circles = osc*ftr->circles;
-        }
-
-        double dist = 0, dist_b = 0, dist_e = 0;
-        FeatureDrawPos::pos_t pos = FeatureDrawPos::POINT;
-        if (features.count(FEATURE_DRAW_POS)){
-          auto ftr = (FeatureDrawPos *)features.find(FEATURE_DRAW_POS)->second.get();
-          pos = ftr->pos;
-          dist = osc*ftr->dist;
-          dist_b = osc*ftr->dist_b;
-          dist_e = osc*ftr->dist_e;
-        }
-
+        // make reference points (x,y,angle)
         dLine ref_points;
-
         for (auto const & l:O){
           LineWalker lw(l, close);
-          switch(pos){
-            case FeatureDrawPos::POINT:
+          switch(draw_pos){
+            case DRAW_POS_POINT:
               lw.move_begin();
               while (!lw.is_end()){
                 ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
@@ -901,19 +877,24 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
               if (!close)
                 ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
               break;
-            case FeatureDrawPos::BEGIN:
+            case DRAW_POS_BEGIN:
               lw.move_begin();
               ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
               break;
-            case FeatureDrawPos::END:
+            case DRAW_POS_END:
               lw.move_end();
               ref_points.push_back(dPoint(lw.pt().x, lw.pt().y, lw.ang()));
               break;
-            case FeatureDrawPos::DIST:
-            case FeatureDrawPos::EDIST:
+            case DRAW_POS_DIST:
+            case DRAW_POS_EDIST:
+            {
+              double dist = osc*draw_pos_dist;
+              double dist_b = osc*draw_pos_b;
+              double dist_e = osc*draw_pos_e;
+
               lw.move_begin();
               lw.move_frw(dist_b);
-              if (pos == FeatureDrawPos::EDIST) { // adjust distance
+              if (draw_pos == DRAW_POS_EDIST) { // adjust distance
                 double span = lw.length()- dist_b - dist_e;
                 double n = floor(span/dist);
                 dist = span/n;
@@ -926,8 +907,13 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
                 if (lw.is_end()) break;
               }
               break;
+            }
           }
         }
+
+        // make paths
+        dMultiLine lines = osc*add_lines;
+        dLine circles = osc*add_circles;
         for (auto const &p:ref_points){
           cr->save();
           cr->translate(p.x, p.y);
@@ -949,68 +935,59 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // make path for TEXT objects
     if (action == STEP_DRAW_TEXT &&
-        (features.count(FEATURE_STROKE) ||
-         features.count(FEATURE_FILL) ||
-         features.count(FEATURE_CLIP) ||
-         features.count(FEATURE_PATT)) ){
-      draw_text(O, cr, range, true, pix_al);
+        (do_stroke || do_fill || do_clip || do_patt) ){
+      draw_text(O, cr, range, true);
     }
 
     // Pattern feature
-    if (features.count(FEATURE_PATT)){
-      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+    if (do_patt){
       double scx = osc, scy = osc;
       if (gobj->fit_patt_size) {
-        double nx = range.w/data->w/data->sc0;
-        double ny = range.h/data->h/data->sc0;
+        double nx = range.w/patt.w/patt.sc0;
+        double ny = range.h/patt.h/patt.sc0;
         scx = nx/rint(nx/osc);
         scy = ny/rint(ny/osc);
       }
-      data->draw_patt(cr,scx,scy,true);
+      patt.draw_patt(cr,scx,scy,true);
     }
 
     // Fill feature
     // We want to set color for each object, because it can contain
     // fill+stroke+draw features with different colors
-    if (features.count(FEATURE_FILL)){
-      auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
-      cr->set_color_a(data->col);
+    if (do_fill){
+      cr->set_color_a(fill_color);
       cr->fill_preserve();
     }
 
     // Stroke feature
-    if (features.count(FEATURE_STROKE)){
-      auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-      cr->set_color_a(data->col);
+    if (do_stroke){
+      cr->set_color_a(stroke_color);
       cr->stroke_preserve();
     }
 
     // Image feature (points and areas)
-    if (features.count(FEATURE_IMG)){
-      auto data = (FeaturePatt *)features.find(FEATURE_IMG)->second.get();
+    if (do_img){
       for (auto const & l:O){
         if (action == STEP_DRAW_POINT) {
-          for (dPoint p:l) data->draw_img(cr,p,O.angle,osc);
+          for (dPoint p:l) img.draw_img(cr,p,O.angle,osc);
         }
         else {
           dPoint p = l.bbox().cnt();
-          data->draw_img(cr,p,O.angle,osc);
+          img.draw_img(cr,p,O.angle,osc);
         }
       }
     }
 
     // Write feature
-    if (features.count(FEATURE_WRITE)){
-      auto data = (FeatureWrite *)features.find(FEATURE_WRITE)->second.get();
+    if (do_write){
       cr->begin_new_path(); // this is needed if we have WRITE+STROKE/FILL feateres
-      cr->set_color(data->color);
-      draw_text(O, cr, range, false, pix_al);
+      cr->set_color(write_color);
+      draw_text(O, cr, range, false);
     }
   }
 
-  // clip feature for areas: make a single path for all objects:
-  if ((action == STEP_DRAW_AREA) &&
-        features.count(FEATURE_CLIP)) {
+  // clip to areas: make a single path for all objects:
+  if (do_clip && action == STEP_DRAW_AREA) {
     if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
     cr->save(); gobj->nsaved++;
     cr->begin_new_path();
@@ -1023,8 +1000,8 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->clip();
   }
 
-  // clip feature for text: make a single path for all objects:
-  if ((action == STEP_DRAW_TEXT) && features.count(FEATURE_CLIP)) {
+  // clip to text: make a single path for all objects:
+  if (do_clip && action == STEP_DRAW_TEXT) {
     if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
     cr->save(); gobj->nsaved++;
     cr->begin_new_path();
@@ -1032,43 +1009,44 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       auto O = gobj->map.get(i);
       if (!intersect(O.bbox(), sel_range)) continue;
       convert_coords(O);
-      draw_text(O, cr, range, true, pix_al);
+      draw_text(O, cr, range, true);
     }
     cr->clip();
   }
 
   // MAP drawing step:
   if (action == STEP_DRAW_MAP) {
-    // Pattern feature
-    if (features.count(FEATURE_PATT)){
-      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+
+    // Pattern
+    if (do_patt){
       double scx = osc, scy = osc;
-      if (gobj->fit_patt_size) {
-        double nx = range.w/data->w/data->sc0;
-        double ny = range.h/data->h/data->sc0;
+      if (gobj->fit_patt_size) { // move to patt.draw_patt
+        double nx = range.w/patt.w/patt.sc0;
+        double ny = range.h/patt.h/patt.sc0;
         scx = nx/rint(nx/osc);
         scy = ny/rint(ny/osc);
       }
-      data->draw_patt(cr,scx,scy,false);
+      patt.draw_patt(cr,scx,scy,false);
     }
     // Fill feature
-    if (features.count(FEATURE_FILL)) cr->paint();
+    if (do_fill){
+      cr->set_color_a(fill_color);
+      cr->paint();
+    }
 
     // PulkGrid feature
-    if (features.count(FEATURE_PULK_GRID)){
-      auto data = (FeaturePulkGrid *)features.find(FEATURE_PULK_GRID)->second.get();
-      draw_pulk_grid(cr, dPoint(), *cnv, data->opts);
+    if (do_pulk_grid){
+      draw_pulk_grid(cr, dPoint(), *cnv, pulk_grid_opts);
     }
 
     // Clip feature - just restore previous clip
-    if (features.count(FEATURE_CLIP))
-      if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
+    if (do_clip) if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
   }
 
   // BRD drawing step:
   if (action == STEP_DRAW_BRD && gobj->border.size()>0) {
 
-    if (features.count(FEATURE_CLIP)){
+    if (do_clip){
       if (gobj->nsaved>0) { cr->restore(); gobj->nsaved--;}
       cr->save(); gobj->nsaved++;
     }
@@ -1078,46 +1056,37 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->begin_new_path();
     cr->mkpath_smline(brd, true, sm);
 
-    // outer path
-    if (features.count(FEATURE_OUTER))
+    // outer path (FILL_RULE_EVEN_ODD is set)
+    if (outer)
       cr->mkpath(rect_to_line(expand(range,1.0)));
 
-    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
-
-    // Pattern feature
-    if (features.count(FEATURE_PATT)){
-      auto data = (FeaturePatt *)features.find(FEATURE_PATT)->second.get();
+    // Pattern
+    if (do_patt){
       double scx = osc, scy = osc;
-      if (gobj->fit_patt_size) {
-        double nx = range.w/data->w/data->sc0;
-        double ny = range.h/data->h/data->sc0;
+      if (gobj->fit_patt_size) { // move to patt.draw_patt
+        double nx = range.w/patt.w/patt.sc0;
+        double ny = range.h/patt.h/patt.sc0;
         scx = nx/rint(nx/osc);
         scy = ny/rint(ny/osc);
       }
-      data->draw_patt(cr,scx,scy,true);
+      patt.draw_patt(cr,scx,scy,true);
     }
 
-    // Fill feature
-    // We want to set color for each object, because it can contain
-    // fill+stroke+draw features with different colors
-    if (features.count(FEATURE_FILL)){
-      auto data = (FeatureFill *)features.find(FEATURE_FILL)->second.get();
-      cr->set_color_a(data->col);
+    // Fill
+    if (do_fill){
+      cr->set_color_a(fill_color);
       cr->fill_preserve();
     }
 
-    // Stroke feature
-    if (features.count(FEATURE_STROKE)){
-      auto data = (FeatureStroke *)features.find(FEATURE_STROKE)->second.get();
-      cr->set_color_a(data->col);
+    // Stroke
+    if (do_stroke){
+      cr->set_color_a(stroke_color);
       cr->stroke_preserve();
     }
 
-    // Clip feature
-    if (features.count(FEATURE_CLIP))
-      cr->clip();
+    // Clip
+    if (do_clip) cr->clip();
   }
-
 
   return GObj::FILL_PART;
 }
