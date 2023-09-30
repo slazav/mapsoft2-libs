@@ -20,6 +20,14 @@ main(){
     IConv C2;
     assert_eq( C2("привет!"), "привет!");
 
+    // same encodings - no conversion:
+    C2 = IConv("UTF8", "UTF8");
+    assert_eq( C2("привет!"), "привет!");
+
+    // same unknown encodings - no conversion:
+    C2=IConv("AAA", "AAA");
+    assert_eq( C2("привет!"), "привет!");
+
     // unknown charset:
     assert_err(IConv C3("UTF8", "AAA"),
       "can't do iconv conversion from UTF8 to AAA");

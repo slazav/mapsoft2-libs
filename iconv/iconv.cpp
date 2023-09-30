@@ -26,8 +26,10 @@ class IConv::Impl {
 };
 
 
-IConv::IConv(const std::string & from, const std::string & to):
-  impl(std::unique_ptr<Impl>(new Impl(from,to))) { }
+IConv::IConv(const std::string & from, const std::string & to){
+  if (from!=to)
+    impl = std::shared_ptr<Impl>(new Impl(from,to));
+}
 
 IConv::IConv() {}
 
