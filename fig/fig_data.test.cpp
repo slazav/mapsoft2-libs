@@ -11,6 +11,7 @@ Fig test_objs(const std::string & in, std::string out = "<in>", int fig_header =
   Opt opts;
   opts.put("fig_header", fig_header);
   opts.put("fig_7bit", txt7bit);
+  opts.put("fig_enc", "koi8-r");
   read_fig(s1, w, opts);
   write_fig(s2, w, opts);
   if (out=="<in>") out = in;

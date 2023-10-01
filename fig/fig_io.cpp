@@ -14,7 +14,8 @@ void
 ms2opt_add_fig(GetOptSet & opts){
   const char *g = "FIG";
   opts.add("fig_enc", 1,0,g,
-    "Encoding for reading/writing fig files (default: KOI8-R).");
+    "Encoding for reading/цкшештп fig files (default: KOI8-R). "
+    "When reading utf8 files with a special comment (made by xfig>3.2.9) this option is ignored.");
 // // Fig_header option is needed only for tests,
 // // I do not believe it is useful for any programs.
 //  opts.add("fig_header", 1,0,g,
@@ -352,8 +353,12 @@ void read_fig(std::istream & s, Fig & w, const Opt & ropts){
     if (l.size()<8 || l.substr(0,8) != "#FIG 3.2")
       throw Err() << "Fig: non-supported format";
 
-    // WinFIG writes comments after #FIG line
-    while (s.get()=='#') std::getline(s, l);
+    // comments after #FIG line
+    while (s.get()=='#'){
+      std::getline(s, l);
+      // xfig 3.2.9 produces utf8 files!
+      if (l == "encoding: UTF-8") cnv = IConv();
+    }
     s.unget();
 
     read_line(s, w.orientation);
@@ -595,15 +600,14 @@ write_text(std::ostream & s, const string & text, bool txt7bit){
 void
 write_fig(ostream & s, const Fig & w, const Opt & wopts){
 
+  bool txt7bit = wopts.get("fig_7bit", false);
   string enc = wopts.get("fig_enc", fig_default_enc);
   IConv cnv("UTF-8", enc);
-
-  bool txt7bit = wopts.get("fig_7bit", false);
-
   // Writing header:
   if (wopts.get("fig_header", 1)) {
-    s << "#FIG 3.2\n"
-        << w.orientation << "\n" << w.justification << "\n"
+    s << "#FIG 3.2\n";
+    if (enc=="UTF-8") s << "#encoding: UTF-8\n";
+    s   << w.orientation << "\n" << w.justification << "\n"
         << w.units << "\n" << w.papersize << "\n"
         << setprecision(2) << fixed << w.magnification << "\n"
         << setprecision(3) << w.multiple_page << "\n"
