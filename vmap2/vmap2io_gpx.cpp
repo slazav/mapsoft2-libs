@@ -30,30 +30,35 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
         // for polygons try to find holes
         if (cl == VMAP2_POLYGON) {
           for (auto const i:vmap2.find(trk_type, pts.bbox())){
-            auto o2 = vmap2.get(i);
-            if (o2.size()<1) continue;
-            auto & pts2 = o2[0];
 
-            // If other object o2 with one segment and empty
-            // name and comment is inside o1, merge it to o1.
-            // Note that we should check name and comment,
-            // because o2 can belong to old data.
-            if (check_hole(pts, pts2) && o2.size()==1 &&
-              o2.name == "" && o2.comm == ""){
-              o1.push_back(pts2);
-              vmap2.del(i);
-            }
+            auto o2 = vmap2.get(i);
+            if (o2.size()<1) continue; // we will use o2[0] below
 
             // If o1 has no name and comment and inside
-            // some other oobject o2, merge it to o2. Note that
-            // name and comments are not transfered to
-            // o1 yet, we should check comm.size()
-            if (check_hole(pts2, pts) &&
-              o1.name == "" && o1.comm == ""){
-              o2.push_back(pts);
-              vmap2.put(i, o2);
-              o1.clear();
-              break;
+            // first loop of some other object o2, merge it to o2. Note that
+            // name and comments are not supported in gpx
+            if (check_hole(o2[0], pts)){
+             o2.push_back(pts);
+             vmap2.put(i, o2);
+             o1.clear();
+             break;
+            }
+
+            // If all loops of other object o2 with empty name and comment
+            // are inside o1, merge it to o1.
+            // We should check name and comment,
+            // because o2 can belong to old data.
+            if (o2.name != "" || o2.comm != "") continue;
+            bool all_in = true;
+            for (const auto & pts2: o2) {
+              if (!check_hole(pts, pts2)){
+                all_in = false;
+                break;
+              }
+            }
+            if (all_in){
+              o1.insert(o1.end(), o2.begin(), o2.end());
+              vmap2.del(i);
             }
           }
         }

@@ -158,25 +158,32 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     if (o1.get_class() == VMAP2_POLYGON) {
       for (auto const i:vmap2.find(type, pts.bbox())){
         auto o2 = vmap2.get(i);
-        if (o2.size()<1) continue;
-        auto & pts2 = o2[0];
+        if (o2.size()<1) continue; // we will use o2[0] below
 
-        // If other object o2 with one segment and empty
-        // name and comment is inside o1, merge it to o1:
-        if (o2.size()==1 && o2.name == "" && o2.comm == "" &&
-            check_hole(pts, pts2)){
-          o1.push_back(pts2);
-          vmap2.del(i);
-        }
         // If o1 has no name and comment and inside
-        // some other oobject o2, merge it to o2. Note that
+        // first loop of some other object o2, merge it to o2. Note that
         // name and comments are not transfered to
         // o1 yet, we should check comm.size()
-        if (comm.size()==0 && check_hole(pts2, pts)){
+        if (comm.size()==0 && check_hole(o2[0], pts)){
          o2.push_back(pts);
          vmap2.put(i, o2);
          o1.clear();
          break;
+        }
+
+        // If all loops of other object o2 with empty name and comment
+        // are inside o1, merge it to o1:
+        if (o2.name != "" || o2.comm != "") continue;
+        bool all_in = true;
+        for (const auto & pts2: o2) {
+          if (!check_hole(pts, pts2)){
+            all_in = false;
+            break;
+          }
+        }
+        if (all_in){
+          o1.insert(o1.end(), o2.begin(), o2.end());
+          vmap2.del(i);
         }
       }
     }
