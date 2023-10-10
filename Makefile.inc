@@ -19,7 +19,16 @@
 #                 pkg-config. Default path includes
 #                 $(PKG_CONFIG_PATH) and $(MODDIR)/pc
 # LDLIBS, LDFLAGS, CXXFLAGS, etc. -- standard Makefile variables
+# MOD_LOCAL    -- do not find dependencies, use only local information,
+#                 do not expand PKG_CONFIG options (used in get_deps)
 ######################################################
+
+######################################################
+# Main building rules
+all: make_deps make_nodeps
+clean:
+	rm -f *.o *.a *.so *.test *.passed Makefile.deps $(PROGRAMS)
+
 
 MODDIR ?= ..
 
@@ -37,17 +46,15 @@ endif
 
 SHARED_LIB_SO := $(patsubst %, %.so, $(SHARED_LIB))
 
-######################################################
-# Main building rules
-all: make_deps make_nodeps
-clean:
-	rm -f *.o *.a *.so *.test *.passed Makefile.deps $(PROGRAMS)
 
 ######################################################
 # Build and include dependency file (using get_deps script).
 
 # .SHELLSTATUS variable appears in make 4.2. We set it to 0 for earlier
 # versions of make and skip error detection in the get_deps script:
+
+ifndef MOD_LOCAL
+
 $(shell true)
 ifneq (${.SHELLSTATUS},0)
   .SHELLSTATUS := 0
@@ -75,6 +82,8 @@ override CXXFLAGS_ += -std=gnu++11 -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
 
 CXXFLAGS := $(CXXFLAGS_) $(CXXFLAGS)
 LDLIBS   := $(LDLIBS_) $(LDLIBS)
+
+endif # MOD_LOCAL
 
 ######################################################
 # make_deps/make_nodeps building rules:
@@ -126,15 +135,16 @@ $(MOD_STATIC): $(MOD_OBJECTS)
 
 ######################################################
 info:
-	@echo "###########################"
-	@echo "## Module <<$(MOD_NAME)>>"
+	@echo "MOD_NAME:     $(MOD_NAME)"
 	@echo "MOD_STATIC:   $(MOD_STATIC)"
 	@echo "MOD_SOURCES:  $(MOD_SOURCES)"
 	@echo "MOD_HEADERS:  $(MOD_HEADERS)"
+	@echo "PKG_CONFIG:   $(PKG_CONFIG)"
 	@echo "MDEPS:        $(MDEPS)"
 	@echo "ADEPS:        $(ADEPS)"
 	@echo "LDEPS:        $(LDEPS)"
 	@echo "SIMPLE_TESTS: $(SIMPLE_TESTS)"
 	@echo "SCRIPT_TESTS: $(SCRIPT_TESTS)"
+	@echo "PROGRAMS:     $(PROGRAMS)"
 	@echo "LDLIBS:       $(LDLIBS)"
 	@echo "CXXFLAGS:     $(CXXFLAGS)"
