@@ -14,7 +14,7 @@ void
 ms2opt_add_fig(GetOptSet & opts){
   const char *g = "FIG";
   opts.add("fig_enc", 1,0,g,
-    "Encoding for reading/цкшештп fig files (default: KOI8-R). "
+    "Encoding for reading/writing fig files (default: KOI8-R). "
     "When reading utf8 files with a special comment (made by xfig>3.2.9) this option is ignored.");
 // // Fig_header option is needed only for tests,
 // // I do not believe it is useful for any programs.
