@@ -263,7 +263,8 @@ struct Rect {
     *this = Rect<T>(x1,y1,x2-x1,y2-y1);
   }
 
-  /// Calculate intersection with rectangle r. Can be used with empty rectangle.
+  /// Calculate intersection with rectangle r. Intersection with
+  /// and empty rectangle gives empty result.
   void intersect (const Rect<T> & r) {
     if (e || r.e) { *this = Rect<T>(); return; }
     T x1 =  std::max (x, r.x);
@@ -274,6 +275,14 @@ struct Rect {
     T h = y2-y1;
     if (w<0 || h<0) { *this = Rect<T>(); return; }
     *this = Rect<T>(x1,y1,w,h);
+  }
+
+  /// Calculate intersection with rectangle r.
+  /// Empty rectangles are ignored.
+  void intersect_nonempty (const Rect<T> & r) {
+    if (r.e) { return; }
+    if (e) { *this = r; return; }
+    intersect(r);
   }
 
   /// If rectangle contains a point (only lower bounds are included).
@@ -371,6 +380,12 @@ Rect<T> expand (const Rect<T> & r1, const Rect<T> & r2) { Rect<T> rr(r1); rr.exp
 /// \relates Rect
 template <typename T>
 Rect<T> intersect (const Rect<T> & r1, const Rect<T> & r2) {Rect<T> rr(r1); rr.intersect(r2); return rr;}
+
+/// Calculate intersection of rectangles r1 and r2.
+/// Empty rectangles are ignored.
+/// \relates Rect
+template <typename T>
+Rect<T> intersect_nonempty (const Rect<T> & r1, const Rect<T> & r2) {Rect<T> rr(r1); rr.intersect_nonempty(r2); return rr;}
 
 /// Is rectangle contains a point (only lower bounds are included).
 /// \relates Rect

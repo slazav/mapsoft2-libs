@@ -103,10 +103,11 @@ coordinates are involved.
   - `r.expand(kx,ky)` -- expand by kx and ky in x and y directions.
   - `r.expand(p)` -- expand rectangle to cover point p.
   - `r1.expand(r2)` -- expand rectangle to cover rectangle r2.
-  - `r1.intersect(r2)` -- intersect with rectangle r2.
+  - `r1.intersect(r2)` -- intersect with rectangle r2 (intersection with empty rectangle is empty).
+  - `r1.intersect_nonempty(r2)` -- intersect with rectangle r2 (intersection with empty rectangle is original rectangle).
 
   - `rint(r)`, `floor(r)`, `ceil(r)`, `expand(r,k)`, `expand(r,kx,ky)`, 
-    `expand(r,p)`, `expand(r1,r2)`, `intersect(r1,r2)` --
+    `expand(r,p)`, `expand(r1,r2)`, `intersect(r1,r2)`, `intersect_nonempty(r1,r2)` --
     do same operations, returned modified rectagles but keep original rectangle
     unchanged.
 

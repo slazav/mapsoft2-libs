@@ -40,6 +40,13 @@ void test_intersect(const iRect & r0, const iRect & r1, const iRect & rr){
     assert_eq(r, rr);
 }
 
+void test_intersect_nonempty(const iRect & r0, const iRect & r1, const iRect & rr){
+    iRect r(r0);
+    assert_eq(intersect_nonempty(r0,r1), rr);
+    r.intersect_nonempty(r1);
+    assert_eq(r, rr);
+}
+
 void test_rint(const dRect & r0, const dRect & rr){
     dRect r(r0);
     assert_eq(rint(r0), rr);
@@ -249,6 +256,17 @@ main(){
     test_intersect(iRect(p1,p0), iRect(p1,p2), iRect(p1,p1));
     test_intersect(iRect(p0,p2), iRect(p1,p2), iRect(p1,p2));
     test_intersect(iRect(p0,p2), iRect(p0,p1), iRect(p0,p1));
+
+    test_intersect_nonempty(     iRect(), iRect(p0,p0), iRect(p0,p0));
+    test_intersect_nonempty(     iRect(), iRect(p0,p1), iRect(p0,p1));
+    test_intersect_nonempty(     iRect(),      iRect(), iRect());
+    test_intersect_nonempty(iRect(p0,p0),      iRect(), iRect(p0,p0));
+    test_intersect_nonempty(iRect(p0,p1),      iRect(), iRect(p0,p1));
+    test_intersect_nonempty(iRect(p1,p2), iRect(p0,p0), iRect());
+    test_intersect_nonempty(iRect(p1,p2), iRect(p0,p1), iRect(p1,p1));
+    test_intersect_nonempty(iRect(p1,p0), iRect(p1,p2), iRect(p1,p1));
+    test_intersect_nonempty(iRect(p0,p2), iRect(p1,p2), iRect(p1,p2));
+    test_intersect_nonempty(iRect(p0,p2), iRect(p0,p1), iRect(p0,p1));
 
     assert(!iRect().contains(p0));
     assert(iRect(p0,p2).contains(p0));
