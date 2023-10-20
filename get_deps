@@ -33,11 +33,15 @@ die "Usage: get_deps <lib directory> <module directory>\n"
 # Read all variables from a module Makefile.
 
 sub read_make ($) {
-  my $fname = shift;
+  my @path = split '/', shift;
+  my $fname = $path[$#path];
+  my $folder = join '/', @path[0..$#path-1];
+  $folder = '.' if $folder eq "";
   my %info;
-  open F, $fname or die "can't read $fname file: $fname: $!";
+  open F, "make -C $folder -f $fname MOD_LOCAL=1 info |"
+    or die "can't use Makefile: $fname: $!";
   while (my $line = <F>){
-    next unless $line =~ /^\s*([A-Za-z0-9_]+)\s*[+:]?=\s*(.*)/;
+    next unless $line =~ /^\s*([A-Za-z0-9_]+)\s*:\s*(.*)/;
     my $key = $1;
     $line = $2;
     # join lines with \ at the end, remove extra spaces
