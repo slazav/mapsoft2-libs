@@ -220,3 +220,10 @@ GObjMulti::set_opt(const Opt & o) {
   redraw_counter=-1;
 }
 
+dRect
+GObjMulti::bbox() const{
+  dRect bbox;
+  for (auto const & p:data)
+    bbox.expand(p.second.obj->bbox());
+  return bbox;
+}

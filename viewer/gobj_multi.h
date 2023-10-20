@@ -98,6 +98,9 @@ public:
   // Set options
   void set_opt(const Opt & opt) override;
 
+  // BBox
+  virtual dRect bbox() const override;
+
 };
 
 #endif
