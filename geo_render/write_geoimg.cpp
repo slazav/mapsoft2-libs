@@ -76,9 +76,8 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
   o.erase("border_file");
   o.put<bool>("skip_empty", 1);
 
-  dRect bbox;
-  if (brd.size()) bbox = brd.bbox();
-  else bbox = obj.bbox();
+  // bbox: intersection of border bbox and object bbox
+  dRect bbox = intersect_nonempty(brd.bbox(), obj.bbox());
 
   if (bbox.is_empty()) throw Err() <<
     "Error calculating tile range. Try to set non-empty boundary";
