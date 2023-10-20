@@ -356,17 +356,18 @@ Rect<T> expand(const Rect<T> & r, T val) { Rect<T> rr(r); rr.expand(val); return
 template <typename T>
 Rect<T> expand(const Rect<T> & r, T vx, T vy) { Rect<T> rr(r);  rr.expand(vx,vy); return rr;}
 
-/// Expand rectangle to cover point p. Can be used with empty rectangle.
+/// Get rectungle which covers rectangle r and point p. Can be used with empty rectangle.
 /// \relates Rect
 template <typename T>
 Rect<T> expand (const Rect<T> & r, const Point<T> & p) { Rect<T> rr(r); rr.expand(p); return rr;}
 
-/// Expand rectangle to cover rectangle r. Can be used with empty rectangle.
+/// Get rectungle which covers rectangles r1 and r2. Can be used with empty rectangle.
 /// \relates Rect
 template <typename T>
 Rect<T> expand (const Rect<T> & r1, const Rect<T> & r2) { Rect<T> rr(r1); rr.expand(r2); return rr;}
 
-/// Calculate intersection with rectangle r. Can be used with empty rectangle.
+/// Calculate intersection of rectangles r1 and r2. Intersection with
+/// and empty rectangle gives empty result.
 /// \relates Rect
 template <typename T>
 Rect<T> intersect (const Rect<T> & r1, const Rect<T> & r2) {Rect<T> rr(r1); rr.intersect(r2); return rr;}
