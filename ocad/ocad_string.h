@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <string>
 #include "ocad_types.h"
-#include <boost/lexical_cast.hpp>
 
 namespace ocad{
 
@@ -27,7 +26,7 @@ struct ocad_string{
   /// Get value for field f casted to type T.
   template <typename T>
   T get(const char f) const{
-    return boost::lexical_cast<T>(get_str(f));
+    return str_to_type<T>(get_str(f));
   }
 
   /// Dump string to stdout.

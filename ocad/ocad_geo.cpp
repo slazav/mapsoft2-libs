@@ -19,35 +19,29 @@ get_ref(const ocad_file & O){
   vector<ocad_string>::const_iterator s;
   for (s=O.strings.begin(); s!=O.strings.end(); s++){
     if ((s->type == OCAD_SCALE_PAR) && (s->get_str('r') == "1")){
-      try{
-        double rscale  = s->get<double>('m');
-        double grid    = s->get<double>('g');
-        double grid_r  = s->get<double>('d');
-        dPoint  p0(s->get<double>('x'),
-                   s->get<double>('y'));
-        double a = s->get<double>('a');
-        int zone    = s->get<int>('i'); // grid and zone - "2037"
+      double rscale  = s->get<double>('m');
+      double grid    = s->get<double>('g');
+      double grid_r  = s->get<double>('d');
+      dPoint  p0(s->get<double>('x'),
+                 s->get<double>('y'));
+      double a = s->get<double>('a');
+      int zone    = s->get<int>('i'); // grid and zone - "2037"
 
-        auto proj = GEO_PROJ_SU((zone%1000-30)*6-3);
-        ConvGeo cnv(proj, "WGS");
+      auto proj = GEO_PROJ_SU((zone%1000-30)*6-3);
+      ConvGeo cnv(proj, "WGS");
 
-        dLine pts0(pts);
-        pts.rotate2d(dPoint(), -a * M_PI/180);
-        pts*=rscale / 100000; // 1point = 0.01mm
-        pts+=p0;
-        cnv.frw(pts);
+      dLine pts0(pts);
+      pts.rotate2d(dPoint(), -a * M_PI/180);
+      pts*=rscale / 100000; // 1point = 0.01mm
+      pts+=p0;
+      cnv.frw(pts);
 
-        GeoMap ret;
-        for (int i = 0; i < pts.size(); i++)
-          ret.ref.emplace(pts[i], pts0[i]);
-        ret.proj=proj;
-        ret.border.push_back(pts0);
-        return ret;
-      }
-      catch(boost::bad_lexical_cast x){
-        std::cerr << "can't get reference: " << x.what() << "\n";
-        return GeoMap();
-      }
+      GeoMap ret;
+      for (int i = 0; i < pts.size(); i++)
+        ret.ref.emplace(pts[i], pts0[i]);
+      ret.proj=proj;
+      ret.border.push_back(pts0);
+      return ret;
     }
   }
   return GeoMap();
