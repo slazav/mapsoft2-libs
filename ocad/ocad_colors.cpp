@@ -77,10 +77,10 @@ ocad_colorinfo::to_string() const{
   ostringstream s;
   s << name
     << "\tn" << num
-    << "\tc" << color.C
-    << "\tm" << color.M
-    << "\ty" << color.Y
-    << "\tk" << color.K
+    << "\tc" << (int)color.C
+    << "\tm" << (int)color.M
+    << "\ty" << (int)color.Y
+    << "\tk" << (int)color.K
     << "\to0"   // overprint
     << "\tt100" // transparency
     ;

@@ -1,9 +1,134 @@
 #include "ocad_object.h"
 #include "err/err.h"
+#include <cassert>
 
 using namespace std;
 
 namespace ocad{
+
+/********************************************************************/
+// OCAD has quite tricky structures for keeping objects and symbols:
+// File contains chain of index blocks, each with 256 index structures
+// and position of the next block.
+// Symbol/Object information is splitted into index structure and main
+// part. Position of the main part is recorded in the index structure.
+
+// Index block. Position of the next block + 256 index entries.
+// Should work for OCAD8 and OCAD9 objects and symbols.
+
+template <typename B>
+struct ocad_index_block{ // 1028 bytes
+  ocad_long next;     // file position of the next symbol block or 0
+  B index[256];       // index data
+
+  ocad_index_block(): next(0){
+    assert(sizeof(*this) == 4+256*sizeof(B));
+  }
+};
+
+/// OCAD8 object index structure.
+struct ocad8_object_index{
+  ocad_coord lower_left, upper_right;
+  ocad_long pos;  // file position
+  ocad_word len;  // OCAD 6 and 7: size of the object in the file in bytes
+                  // OCAD 8: number of coordinate pairs. size = 32+8*len
+                  // this is reserved length, real length may be shorter
+  ocad_small sym; // the symbol number (0 for deleted objects)
+  ocad8_object_index(){
+    assert(sizeof(*this) == 24);
+    memset(this, 0, sizeof(*this));
+  }
+};
+
+/// OCAD8 object structure
+struct ocad8_object{
+  ocad_small sym;    // symbol number
+  ocad_byte type;    // object type (1-pt, ...)
+  ocad_byte unicode; // OCAD 6/7: must be 0, OCAD 8: 1 if the text is Unicode
+  ocad_small n;      // number of coordinates
+  ocad_small nt;     // number of coordinates used for text
+  ocad_small ang;    // Angle, unit is 0.1 degrees (for points, area with structure,.
+                     // text, rectangles)
+  ocad_small r2;     // reserved
+  ocad_long rh;      // reserved for height
+  char res[16];
+  ocad8_object(){
+    assert(sizeof(*this) == 32);
+    memset(this, 0, sizeof(*this));
+  }
+};
+
+/// OCAD9 object index structure
+struct ocad9_object_index {
+  ocad_coord lower_left;
+  ocad_coord upper_right;
+  ocad_long pos;   // file position
+  ocad_long len;   // number of coordinate pairs. size = 32+8*len
+                   // this is reserved length, real length may be shorter
+  ocad_long sym;   // the symbol number (0 for deleted objects)
+                   // -3 = image object eg AI object
+                   // -2 = graphic object
+                   // -1 = imported, no symbol assigned or symbol number
+  ocad_byte type;  // 1: point
+                   // 2: line
+                   // 3: area
+                   // 4: unformatted text
+                   // 5: formatted text
+                   // 6: line text
+                   // 7: rectangle
+  ocad_byte r1;    // reserved
+  ocad_byte status;// 0: deleted
+                   // 1: normal
+                   // 2: hidden
+                   // 3: deleted for undo
+  ocad_byte viewtype;
+                   // 0: normal
+                   // 1: course setting object
+                   // 2: modified preview object
+                   // 3: unmodified preview object
+                   // 4: temporary object (symbol editor or control description)
+                   // 10: DXF import, GPS import
+  ocad_small col;  // symbolized objects: color number
+                   // graphic object: color number
+                   // image object: CYMK color of object
+  ocad_small r2;   // reserved
+  ocad_small implayer; //  Layer number of imported objects
+  ocad_small r3;
+
+  ocad9_object_index(){
+    assert(sizeof(*this) == 40);
+    memset(this, 0, sizeof(*this));
+  }
+};
+
+/// OCAD9 object structure
+struct ocad9_object{
+  ocad_long  sym; // symbol number or typ
+                  // image object= -3 (imported from ai or pdf, no symbol assigned)
+                  //  graphic object = -2 (OCAD objects converted to graphics)
+                  // imported object = -1 (imported, no symbol assigned)
+  ocad_byte type; // object type (1-pt, ...)
+  ocad_byte r1;   // reserved
+  ocad_small ang; // Angle, unit is 0.1 degrees (for points, area with structure,.
+                  // text, rectangles)
+  ocad_long n;    // number of coordinates
+  ocad_small nt;  // number of coordinates in the Poly array used for
+                  // storing text in Unicode for (line text and text
+                  // objects) if nText is > 0
+                  // for all other objects it is 0
+  ocad_small r2;  //
+  ocad_long col;  // color number
+  ocad_small width; // line width -- not used???
+  ocad_small flags; // flages: LineStyle by lines -- not used???
+  double r3, r4;
+  ocad9_object(){
+    assert(sizeof(*this) == 40);
+    memset(this, 0, sizeof(*this));
+  }
+};
+
+/********************************************************************/
+
 
 ocad_object::ocad_object(): sym(0), type(3), status(1), viewtype(0),
   implayer(0), idx_col(-1), ang(0), col(0), width(0), flags(0),

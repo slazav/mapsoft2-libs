@@ -3,16 +3,12 @@
 
 #include <cstdio>
 #include <map>
-#include "ocad_header.h"
-#include "ocad_shead.h"
 #include "ocad_symbol.h"
 #include "ocad_symbol8.h"
 #include "ocad_symbol9.h"
 #include "ocad_string.h"
 #include "ocad_object8.h"
 #include "ocad_object9.h"
-#include "ocad_index.h"
-#include "ocad_fname.h"
 
 #include "geom/rect.h"
 
@@ -31,12 +27,11 @@ typedef std::map<int, ocad_symbol> ocad_symbols;
 struct ocad_file{
 
   // all possible data blocks
-  int v, sv, t;
-  ocad8_shead     shead;      // v 6 7 8
+  int version, subversion, type;
   ocad_symbols    symbols;    // incompatible!
   ocad_objects    objects;    // good!
   ocad_strings    strings;    // so-so, v 8,9
-  ocad_fname      fname;      // v 9
+  std::string     fname;      // v 9
   // ocad_setup               // v 6 7 8
   // ocad_info                // v 6 7 8
 
