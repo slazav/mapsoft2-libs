@@ -42,6 +42,7 @@ ifdef MOD_HEADERS
 endif
 ifdef MOD_SOURCES
   MOD_OBJECTS := $(patsubst %.cpp, %.o, $(MOD_SOURCES))
+  MOD_OBJECTS := $(patsubst %.c, %.o, $(MOD_OBJECTS))
 endif
 
 SHARED_LIB_SO := $(patsubst %, %.so, $(SHARED_LIB))
@@ -70,18 +71,18 @@ endif
 # Building flags
 # user-defined flags are added _after_ this
 
-
-override CXXFLAGS_ += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
+override CFLAGS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
+                    PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
+                    pkg-config --cflags '$(PKG_CONFIG)')
+override LDLIBS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
-                        pkg-config --cflags '$(PKG_CONFIG)')
-override LDLIBS_   += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
-                      PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
-                        pkg-config --libs '$(PKG_CONFIG)')
+                      pkg-config --libs '$(PKG_CONFIG)')
 
-override CXXFLAGS_ += -std=gnu++11 -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
+override CFLAGS_ += -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
 
-CXXFLAGS := $(CXXFLAGS_) $(CXXFLAGS)
-LDLIBS   := $(LDLIBS_) $(LDLIBS)
+override CFLAGS   := $(CFLAGS_) $(CFLAGS)
+override CXXFLAGS := -std=gnu++11 $(CFLAGS_) $(CXXFLAGS)
+override LDLIBS   := $(LDLIBS_) $(LDLIBS)
 
 endif # MOD_LOCAL
 
