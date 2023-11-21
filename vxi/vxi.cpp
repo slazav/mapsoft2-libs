@@ -85,6 +85,80 @@ VXI::clear(){
 }
 
 void
+VXI::abort(){
+  Device_Error * r = device_abort_1(&lid, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_abort";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+}
+
+char
+VXI::readstb(){
+  Device_GenericParms p;
+  p.lid = lid;
+  p.flags = 0;
+  p.io_timeout = io_timeout;
+  p.lock_timeout = lock_timeout;
+  Device_ReadStbResp * r = device_readstb_1(&p, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_readstb";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  return r->stb;
+}
+
+void
+VXI::trigger(){
+  Device_GenericParms p;
+  p.lid = lid;
+  p.flags = 0;
+  p.io_timeout = io_timeout;
+  p.lock_timeout = lock_timeout;
+  Device_Error * r = device_trigger_1(&p, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_trigger";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+}
+
+void
+VXI::remote(){
+  Device_GenericParms p;
+  p.lid = lid;
+  p.flags = 0;
+  p.io_timeout = io_timeout;
+  p.lock_timeout = lock_timeout;
+  Device_Error * r = device_remote_1(&p, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_remote";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+}
+
+void
+VXI::local(){
+  Device_GenericParms p;
+  p.lid = lid;
+  p.flags = 0;
+  p.io_timeout = io_timeout;
+  p.lock_timeout = lock_timeout;
+  Device_Error * r = device_local_1(&p, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_local";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+}
+
+void
+VXI::lock(){
+  Device_LockParms p;
+  p.lid = lid;
+  p.flags = 0;
+  p.lock_timeout = lock_timeout;
+  Device_Error * r = device_lock_1(&p, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_lock";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+}
+
+void
+VXI::unlock(){
+  Device_Error * r = device_unlock_1(&lid, (CLIENT*)client);
+  if (r==0) throw Err() << "RPC: device_unlock";
+  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+}
+
+void
 VXI::write(const char *msg){
   Device_WriteParms p;
   p.lid = lid;
@@ -138,4 +212,11 @@ VXI::read(){
     }
   return ret;
 }
+
+/* TODO */
+// Device_Error * device_enable_srq_1(Device_EnableSrqParms *argp, CLIENT *clnt)
+// Device_DocmdResp * device_docmd_1(Device_DocmdParms *argp, CLIENT *clnt)
+// Device_Error * create_intr_chan_1(Device_RemoteFunc *argp, CLIENT *clnt)
+// Device_Error * destroy_intr_chan_1(void *argp, CLIENT *clnt)
+// void * device_intr_srq_1(Device_SrqParms *argp, CLIENT *clnt)
 

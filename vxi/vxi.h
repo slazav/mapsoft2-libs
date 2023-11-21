@@ -22,9 +22,15 @@ public:
 
   ~VXI();
   void clear();
+  void abort();
+  char readstb();
+  void trigger();
+  void remote();
+  void local();
+  void lock();
+  void unlock();
   void write(const char *msg);
   std::string read();
-
 };
 
 
