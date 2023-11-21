@@ -18,6 +18,7 @@
 # PKG_CONFIG   -- external libraries used in this module, controlled by
 #                 pkg-config. Default path includes
 #                 $(PKG_CONFIG_PATH) and $(MODDIR)/pc
+# PROG_DEPS    -- External programs needed for building the module.
 # LDLIBS, LDFLAGS, CXXFLAGS, etc. -- standard Makefile variables
 # MOD_LOCAL    -- do not find dependencies, use only local information,
 #                 do not expand PKG_CONFIG options (used in get_deps)
@@ -141,6 +142,7 @@ info:
 	@echo "MOD_SOURCES:  $(MOD_SOURCES)"
 	@echo "MOD_HEADERS:  $(MOD_HEADERS)"
 	@echo "PKG_CONFIG:   $(PKG_CONFIG)"
+	@echo "PROG_DEPS:    $(PROG_DEPS)"
 	@echo "MDEPS:        $(MDEPS)"
 	@echo "ADEPS:        $(ADEPS)"
 	@echo "LDEPS:        $(LDEPS)"

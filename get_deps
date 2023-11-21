@@ -180,12 +180,15 @@ sub optimize_deps {
 sub add_lib_dep {
   my $pkgc = shift;
   my $libs = shift;
+  my $prog = shift;
   my $mfile = shift;
   my $info = read_make $mfile;
   my @pkgc = split /\s+/, ($info->{PKG_CONFIG}||'');
   my @libs = split /\s+/, ($info->{LDLIBS}||'');
+  my @prog = split /\s+/, ($info->{PROG_DEPS}||'');
   $pkgc->{$_} = 1 foreach @pkgc;
   $libs->{$_} = 1 foreach @libs;
+  $prog->{$_} = 1 foreach @prog;
 }
 
 ######################################################################
@@ -237,15 +240,21 @@ print "ADEPS :=";
 print " $lib_dir/$_/$_.a" foreach reverse(@list);
 print "\n\n";
 
-print "# 4. library dependencies\n\n";
+print "# 4. library/program dependencies\n\n";
 my %libs;
 my %pkgc;
-add_lib_dep(\%pkgc, \%libs, "$mod_dir/Makefile");
-add_lib_dep(\%pkgc,\%libs, "$lib_dir/$_/Makefile") foreach (@list);
+my %prog;
+add_lib_dep(\%pkgc, \%libs, \%prog, "$mod_dir/Makefile");
+add_lib_dep(\%pkgc,\%libs, \%prog, "$lib_dir/$_/Makefile") foreach (@list);
 print "LDLIBS := ", join(" ", keys %libs), "\n\n";
 print "PKG_CONFIG := ", join(" ", keys %pkgc), "\n\n";
 
 # check that pkg-config libraries exist:
 foreach (keys %pkgc){
-  system("pkg-config $_")==0 or die "ERROR: Can't find library: $_\n";
+  system("pkg-config $_ >/dev/null")==0 or die "ERROR: Can't find library: $_\n";
+}
+
+# check program dependancies
+foreach (keys %prog){
+  system("which $_ >/dev/null")==0 or die "ERROR: Can't find program: $_\n";
 }
