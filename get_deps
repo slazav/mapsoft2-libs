@@ -237,7 +237,6 @@ print "ADEPS :=";
 print " $lib_dir/$_/$_.a" foreach reverse(@list);
 print "\n\n";
 
-
 print "# 4. library dependencies\n\n";
 my %libs;
 my %pkgc;
@@ -246,4 +245,7 @@ add_lib_dep(\%pkgc,\%libs, "$lib_dir/$_/Makefile") foreach (@list);
 print "LDLIBS := ", join(" ", keys %libs), "\n\n";
 print "PKG_CONFIG := ", join(" ", keys %pkgc), "\n\n";
 
-
+# check that pkg-config libraries exist:
+foreach (keys %pkgc){
+  system("pkg-config $_")==0 or die "ERROR: Can't find library: $_\n";
+}
