@@ -8,7 +8,7 @@ MOD_SOURCES  :=  rubber.cpp gobj_multi.cpp\
 
 SIMPLE_TESTS := gobj gobj_multi
 
-PKG_CONFIG := 'gtkmm-3.0 gthread-2.0'
+PKG_CONFIG := gtkmm-3.0 gthread-2.0
 
 include ../Makefile.inc
 

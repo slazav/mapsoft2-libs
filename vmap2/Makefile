@@ -12,7 +12,7 @@ MOD_SOURCES := vmap2obj.cpp vmap2.cpp vmap2io.cpp\
 SIMPLE_TESTS := vmap2obj vmap2\
                 db_simple db_geohash string_pack
 
-PKG_CONFIG = 'libdb'
+PKG_CONFIG = libdb
 CXXFLAGS = -g
 
 include ../Makefile.inc
