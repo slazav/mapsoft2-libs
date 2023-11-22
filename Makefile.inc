@@ -15,9 +15,7 @@
 #                 For each <name> should be a source <name>.test.cpp and
 #                 a script <name>.test.script
 # OTHER_TESTS  -- Any programs or scripts which should be run after building
-# PKG_CONFIG   -- external libraries used in this module, controlled by
-#                 pkg-config. Default path includes
-#                 $(PKG_CONFIG_PATH) and $(MODDIR)/pc
+# PKG_CONFIG   -- external libraries used in this module, controlled by pkg-config
 # PROG_DEPS    -- External programs needed for building the module.
 # LDLIBS, LDFLAGS, CXXFLAGS, etc. -- standard Makefile variables
 # MOD_LOCAL    -- do not find dependencies, use only local information,
@@ -73,10 +71,8 @@ endif
 # user-defined flags are added _after_ this
 
 override CFLAGS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
-                    PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                     pkg-config --cflags '$(PKG_CONFIG)')
 override LDLIBS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
-                      PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
                       pkg-config --libs '$(PKG_CONFIG)')
 
 override CFLAGS_ += -Werror=return-type -O2 -fPIC -g -I$(MODDIR)

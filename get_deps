@@ -250,9 +250,8 @@ print "LDLIBS := ", join(" ", keys %libs), "\n\n";
 print "PKG_CONFIG := ", join(" ", keys %pkgc), "\n\n";
 
 # check that pkg-config libraries exist:
-my $p = "PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:$lib_dir/pc";
 foreach (keys %pkgc){
-  system("$p pkg-config $_ >/dev/null")==0 or die "ERROR: Can't find library: $_\n";
+  system("pkg-config $_ >/dev/null")==0 or die "ERROR: Can't find library: $_\n";
 }
 
 # check program dependancies
