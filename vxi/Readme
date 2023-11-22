@@ -1,0 +1,9 @@
+### VXI-11 library
+
+The core part is vxi11.x file copied from VXI-11 specification:
+http://www.vxibus.org/files/VXI_Specs/VXI-11.zip
+
+Low-level library sources (vxi11*.{c,h}) are built from vxi11.x
+by standard rpcgen program.
+
+My higer-level cpp wrapper is in vxi.{cpp,h}.

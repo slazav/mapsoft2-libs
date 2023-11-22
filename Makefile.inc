@@ -18,6 +18,7 @@
 # PKG_CONFIG   -- external libraries used in this module, controlled by
 #                 pkg-config. Default path includes
 #                 $(PKG_CONFIG_PATH) and $(MODDIR)/pc
+# PROG_DEPS    -- External programs needed for building the module.
 # LDLIBS, LDFLAGS, CXXFLAGS, etc. -- standard Makefile variables
 # MOD_LOCAL    -- do not find dependencies, use only local information,
 #                 do not expand PKG_CONFIG options (used in get_deps)
@@ -42,6 +43,7 @@ ifdef MOD_HEADERS
 endif
 ifdef MOD_SOURCES
   MOD_OBJECTS := $(patsubst %.cpp, %.o, $(MOD_SOURCES))
+  MOD_OBJECTS := $(patsubst %.c, %.o, $(MOD_OBJECTS))
 endif
 
 SHARED_LIB_SO := $(patsubst %, %.so, $(SHARED_LIB))
@@ -70,18 +72,18 @@ endif
 # Building flags
 # user-defined flags are added _after_ this
 
-
-override CXXFLAGS_ += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
+override CFLAGS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
+                    PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
+                    pkg-config --cflags '$(PKG_CONFIG)')
+override LDLIBS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
-                        pkg-config --cflags '$(PKG_CONFIG)')
-override LDLIBS_   += $(shell [ "$(PKG_CONFIG)" = "" ] ||\
-                      PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(MODDIR)/pc\
-                        pkg-config --libs '$(PKG_CONFIG)')
+                      pkg-config --libs '$(PKG_CONFIG)')
 
-override CXXFLAGS_ += -std=gnu++11 -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
+override CFLAGS_ += -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
 
-CXXFLAGS := $(CXXFLAGS_) $(CXXFLAGS)
-LDLIBS   := $(LDLIBS_) $(LDLIBS)
+override CFLAGS   := $(CFLAGS_) $(CFLAGS)
+override CXXFLAGS := -std=gnu++11 $(CFLAGS_) $(CXXFLAGS)
+override LDLIBS   := $(LDLIBS_) $(LDLIBS)
 
 endif # MOD_LOCAL
 
@@ -140,6 +142,7 @@ info:
 	@echo "MOD_SOURCES:  $(MOD_SOURCES)"
 	@echo "MOD_HEADERS:  $(MOD_HEADERS)"
 	@echo "PKG_CONFIG:   $(PKG_CONFIG)"
+	@echo "PROG_DEPS:    $(PROG_DEPS)"
 	@echo "MDEPS:        $(MDEPS)"
 	@echo "ADEPS:        $(ADEPS)"
 	@echo "LDEPS:        $(LDEPS)"
