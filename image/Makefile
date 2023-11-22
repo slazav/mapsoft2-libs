@@ -10,6 +10,7 @@ SIMPLE_TESTS := colors image_r image_t image_colors\
                 io io_gif io_jpeg io_png io_tiff\
                 image_reduce image_cache
 
-PKG_CONFIG := libgif libjpeg libpng libtiff-4
+PKG_CONFIG = libjpeg libpng libtiff-4
+LDLIBS = -lgif
 
 include ../Makefile.inc
