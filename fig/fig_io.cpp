@@ -690,7 +690,7 @@ write_fig(ostream & s, const Fig & w, const Opt & wopts){
         if (o.size()!=1) throw Err() << "FigObj: text should have 1 coordinate point";
         s << " " << o.sub_type << " " << pen_color << " " << o.depth
           << " " << o.pen_style << " " << o.font
-          << " " << std::setprecision(0) << o.font_size
+          << " " << std::setprecision(3) << o.font_size
           << " " << std::setprecision(4) << o.angle << " " << o.font_flags
           << " " << std::setprecision(0) << o.height << " " << o.length
           << " " << o[0].x << " " << o[0].y << " ";
