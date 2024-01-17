@@ -12,6 +12,7 @@ ms2opt_add_vmap2t(GetOptSet & opts){
 }
 
 VMap2types::VMap2types(const Opt & o){
+  dpi = 200.0;
   std::string file = o.get("types", "/usr/share/mapsoft2/types.cfg");
   if (file == "") return;
   read_words_defs defs(o.get("define", Opt()));
@@ -48,6 +49,12 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
         load(fn, defs);
         type=-1;
         continue;
+      }
+
+      // set_dpi
+      if (vs[0] == "set_dpi") {
+        if (vs.size()!=2) throw Err() << "set_dpi: argument expected: <dpi>";
+        dpi=str_to_type<double>(vs[1]);
       }
 
       // type <type> -- add description of an object type

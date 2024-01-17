@@ -40,6 +40,7 @@ class VMap2types : public std::map<int, VMap2type> {
 public:
   // Constuctor: read configuration file
   VMap2types(const Opt & o);
+  double dpi;
 
 private:
   // load from a file
