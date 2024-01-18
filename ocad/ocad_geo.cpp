@@ -7,12 +7,10 @@
 
 using namespace std;
 
-namespace ocad{
-
 #define OCAD_SCALE_PAR 1039
 
 GeoMap
-get_ref(const ocad_file & O){
+ocad_get_ref(const ocad & O){
 
   dLine pts = rect_to_line(O.range());
 
@@ -48,7 +46,7 @@ get_ref(const ocad_file & O){
 }
 
 void
-set_ref(ocad_file & O, double rscale, const dPoint & p0){
+ocad_set_ref(ocad & O, double rscale, const dPoint & p0){
 
   // remove old value;
   vector<ocad_string>::iterator si = O.strings.begin();
@@ -79,6 +77,3 @@ set_ref(ocad_file & O, double rscale, const dPoint & p0){
   s.data = str.str();
   O.strings.push_back(s);
 }
-
-
-} // namespace

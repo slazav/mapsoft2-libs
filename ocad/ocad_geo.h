@@ -4,13 +4,10 @@
 #include "geo_data/geo_data.h"
 #include "ocad_file.h"
 
-namespace ocad{
-
 /// get reference from ocad file
-GeoMap get_ref(const ocad_file & O);
+GeoMap ocad_get_ref(const ocad_file & O);
 
 /// set reference from rscale and wgs coords of zero point
-void set_ref(ocad_file & O, double rscale, const dPoint & p0);
+void ocad_set_ref(ocad_file & O, double rscale, const dPoint & p0);
 
-} // namespace
 #endif

@@ -1,9 +1,8 @@
 #include <iostream>
-#include "ocad_file.h"
+#include "ocad.h"
 #include "err/err.h"
 
 using namespace std;
-using namespace ocad;
 
 int
 main(int argc, char **argv){
@@ -13,7 +12,7 @@ main(int argc, char **argv){
     if (argc!=3)
       throw Err() << "usage: " << argv[0] << " <file> <file>";
 
-    ocad_file O;
+    ocad O;
     O.read(argv[1], 2);
     O.update_extents();
     O.write(argv[2]);
