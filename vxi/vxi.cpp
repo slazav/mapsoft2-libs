@@ -56,19 +56,21 @@ VXI::VXI(const char *host, const char *dev, const double rpc_timeout):
   p.lock_timeout = 0;
   p.device = (char *)dev;
 
-  Create_LinkResp *r = create_link_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: create_link";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Create_LinkResp r;
+  if (create_link_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: create_link";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 
-  lid = r->lid;
-  abort_port = r->abortPort;
-  max_recv_size = r->maxRecvSize;
+  lid = r.lid;
+  abort_port = r.abortPort;
+  max_recv_size = r.maxRecvSize;
 }
 
 VXI::~VXI(){
-  Device_Error *r = destroy_link_1(&lid, (CLIENT*)client);
+  Device_Error r;
+  destroy_link_1(&lid, &r, (CLIENT*)client);
   //if (r==0) throw Err() << "RPC: destroy_link";
-  //if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  //if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
   clnt_destroy((CLIENT*)client);
 }
 
@@ -79,16 +81,18 @@ VXI::clear(){
   p.flags = 0;
   p.io_timeout = io_timeout;
   p.lock_timeout = lock_timeout;
-  Device_Error * r = device_clear_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_clear";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_clear_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_clear";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 void
 VXI::abort(){
-  Device_Error * r = device_abort_1(&lid, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_abort";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_abort_1(&lid, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_abort";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 char
@@ -98,10 +102,11 @@ VXI::readstb(){
   p.flags = 0;
   p.io_timeout = io_timeout;
   p.lock_timeout = lock_timeout;
-  Device_ReadStbResp * r = device_readstb_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_readstb";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
-  return r->stb;
+  Device_ReadStbResp r;
+  if (device_readstb_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_readstb";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
+  return r.stb;
 }
 
 void
@@ -111,9 +116,10 @@ VXI::trigger(){
   p.flags = 0;
   p.io_timeout = io_timeout;
   p.lock_timeout = lock_timeout;
-  Device_Error * r = device_trigger_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_trigger";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_trigger_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_trigger";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 void
@@ -123,9 +129,10 @@ VXI::remote(){
   p.flags = 0;
   p.io_timeout = io_timeout;
   p.lock_timeout = lock_timeout;
-  Device_Error * r = device_remote_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_remote";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_remote_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_remote";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 void
@@ -135,9 +142,10 @@ VXI::local(){
   p.flags = 0;
   p.io_timeout = io_timeout;
   p.lock_timeout = lock_timeout;
-  Device_Error * r = device_local_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_local";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_local_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_local";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 void
@@ -146,16 +154,18 @@ VXI::lock(){
   p.lid = lid;
   p.flags = 0;
   p.lock_timeout = lock_timeout;
-  Device_Error * r = device_lock_1(&p, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_lock";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_lock_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_lock";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 void
 VXI::unlock(){
-  Device_Error * r = device_unlock_1(&lid, (CLIENT*)client);
-  if (r==0) throw Err() << "RPC: device_unlock";
-  if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
+  Device_Error r;
+  if (device_unlock_1(&lid, &r, (CLIENT*)client) != RPC_SUCCESS)
+    throw Err() << "RPC: device_unlock";
+  if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
 }
 
 void
@@ -164,7 +174,6 @@ VXI::write(const char *msg){
   p.lid = lid;
   p.io_timeout = io_timeout;
   p.lock_timeout = lock_timeout;
-
 
   int n = strlen(msg);
   int offs = 0;
@@ -178,11 +187,12 @@ VXI::write(const char *msg){
       p.data.data_len = max_recv_size;
     }
     p.data.data_val = (char *)msg + offs;
-    Device_WriteResp *r = device_write_1(&p, (CLIENT*)client);
-    if (r==0) throw Err() << "RPC: device_write";
-    if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
-    offs+=r->size;
-    n-=r->size;
+    Device_WriteResp r;
+    if (device_write_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+      throw Err() << "RPC: device_write";
+    if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
+    offs+=r.size;
+    n-=r.size;
   }
 }
 
@@ -204,12 +214,13 @@ VXI::read(){
   long reason = 0;
   std::string ret;
   while ((reason & (RX_END | RX_CHR | RX_REQCNT)) == 0) {
-    Device_ReadResp *r = device_read_1(&p, (CLIENT*)client);
-      if (r==0) throw Err() << "RPC: device_read";
-      if (r->error!=0) throw Err() << "VXI11: " << vxi11_strerr(r->error);
-      ret += std::string(r->data.data_val, r->data.data_len);
-      reason = r->reason;
-    }
+    Device_ReadResp r;
+    if (device_read_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
+      throw Err() << "RPC: device_read";
+    if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
+    ret += std::string(r.data.data_val, r.data.data_len);
+    reason = r.reason;
+  }
   return ret;
 }
 

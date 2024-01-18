@@ -2,7 +2,7 @@ SOURCES= vxi11_clnt.c vxi11_svc.c vxi11_xdr.c vxi11.h
 
 $(SOURCES): vxi11.x
 	echo "building vxi11.h"
-	rpcgen $<
+	rpcgen -M $<
 
 clean:
 	rm -f $(SOURCES)
