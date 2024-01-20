@@ -17,6 +17,8 @@ main(){
   ml2.push_back(l2);
   assert_eq(ml1.size(), 0);
   assert_eq(ml2.size(), 2);
+  assert_eq(ml1.npts(), 0);
+  assert_eq(ml2.npts(), 4);
 
   assert_eq(ml2, iMultiLine("[[[0,1],[2,3]],[[4,5],[6,7]]]"));
   assert_eq(ml1, iMultiLine("[]"));
@@ -74,14 +76,19 @@ main(){
   assert(ml2 <  ml1);
   assert(ml2 <= ml1);
 
-  // length, bbox, rint
+  // npts, length, bbox, rint
   ml2.clear();
   ml1.clear();
   ml2.push_back(l1);
   ml2.push_back(l2);
+
   assert_eq(ml1.length(), 0);
   assert_feq(ml2.length(), l1.length() + l2.length(), 1e-4);
   assert_feq(length(ml2), length(l1) + length(l2), 1e-4);
+
+  assert_eq(ml1.npts(), 0);
+  assert_eq(ml2.npts(), l1.npts() + l2.npts());
+  assert_eq(npts(ml2), npts(l1) + npts(l2));
 
   assert_eq(ml1.bbox(), iRect());
   assert_eq(ml2.bbox(), expand(l1.bbox(),l2.bbox()));
@@ -91,6 +98,13 @@ main(){
   assert_eq(dMultiLine("[[],[]]").is_empty(), true);
   assert_eq(dMultiLine("[[],[[1,2]]]").is_empty(), false);
   assert_eq(dMultiLine("[[[1,2]]]").is_empty(), false);
+
+  assert_eq(dMultiLine("[]").npts(), 0);
+  assert_eq(dMultiLine("[[],[]]").npts(), 0);
+  assert_eq(dMultiLine("[[],[[1,2]]]").npts(), 1);
+  assert_eq(dMultiLine("[[[1,2]]]").npts(), 1);
+  assert_eq(dMultiLine("[[[1,2],[3,4]]]").npts(), 2);
+  assert_eq(dMultiLine("[[[1,2],[1,2,3]], [[1,2],[3,4],[5,6]], []]").npts(), 5);
 
   {
      dMultiLine ml1("[ [[0,0,0], [1,2,2]], [[0,0,0], [1,2,-2], [2,0,0]] ]");

@@ -12,6 +12,7 @@ main(){
   {
     iLine l1;
     assert_eq (l1.size(), 0);
+    assert_eq (l1.npts(), 0);
     assert_eq (l1.length(), 0);
     l1.push_back(iPoint(0,0,0));
     l1.push_back(iPoint(2,2,1));
@@ -67,17 +68,21 @@ main(){
     assert_eq(sh, iPoint(2,2));
     assert_eq(l3.is_shifted(l3+iPoint(2,2), sh), is_shifted(l3, l3+iPoint(2,2), sh));
 
-    // length
+    // length, npts
     l3 = str_to_type<iLine>("[[0,0,0],[1,2,2],[3,5,8]]");
     assert_eq(l3.size(), 3);
     assert_feq(l3.length(), 10, 1e-6);
     assert_feq(l3.length(), length(l3), 1e-6);
+    assert_eq(l3.npts(), 3);
+    assert_eq(l3.npts(), npts(l3));
 
     // length2d
     l3 = str_to_type<iLine>("[[0,0,100],[3,4,1],[6,0,-23]]");
     assert_eq(l3.size(), 3);
     assert_feq(l3.length2d(), 10, 1e-6);
     assert_feq(l3.length2d(), length2d(l3), 1e-6);
+    assert_eq(l3.npts(), 3);
+    assert_eq(l3.npts(), npts(l3));
 
     // bbox
     assert_eq(iLine().bbox(), iRect());

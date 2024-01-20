@@ -147,6 +147,7 @@ Line is a std::vector of Point.
 - Other operations:
   - `dLine(l)`, `iLine(l)` -- cast to double- or integer-coordinate line.
   - `l.length()`, `length(l)` -- line length.
+  - `l.npts()`, `npts(l)` -- number of points.
   - `l.length2d()`, `length2d(l)` -- 2D line length.
   - `l.bbox()`, `bbox(l)` -- return a bounding box (Rect object) in x-y plane.
   - `l1.is_shifted(l2, sh)`, `is_shifted(l1, l2, sh)` -- check if line l2 is a
@@ -197,6 +198,7 @@ Line with multiple segments (std::vector of Line).
 - Other operations:
   - `dMultiLine(l)`, `iMultiLine(l)` -- cast to double- or integer-coordinate MultiLine.
   - `l.length()`, `length(l)` -- line length (sum of segments' lengths).
+  - `l.npts()`, `npts(l)` -- number of points (sum of segments' point numbers).
   - `l.bbox()`, `bbox(l)` -- return a bounding box in x-y plane (Rect object).
   - `l.is_empty()` -- check if MultiLine is empty (has no segents or only empty segments).
 

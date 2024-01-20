@@ -140,6 +140,9 @@ struct Line : std::vector<PT> {
   /******************************************************************/
   // Some functions. Below same functions are defined outside the class
 
+  /// Number of points
+  size_t npts() const {return this->size();}
+
   /// Calculate line length.
   double length() const {
     double ret=0;
@@ -256,6 +259,11 @@ Line<CT,PT> operator+ (const PT & p, const Line<CT, PT> & l) { return l+p; }
 
 /******************************************************************/
 // functions, similar to ones in the class
+
+/// Calculate number of points.
+/// \relates Line
+template <typename CT, typename PT>
+size_t npts(const Line<CT,PT> & l){ return l.npts(); }
 
 /// Calculate line length.
 /// \relates Line

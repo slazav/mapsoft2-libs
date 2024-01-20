@@ -123,6 +123,13 @@ struct MultiLine : std::vector<Line<CT,PT> > {
   /******************************************************************/
   // Some functions. Below same functions are defined outside the class
 
+ /// Number of points
+  size_t npts() const {
+    size_t ret = 0;
+    for(auto const & l:*this) ret+=l.size();
+    return ret;
+  }
+
   /// MultiLine length (sum of segment lengths).
   double length() const {
     double ret=0;
@@ -210,6 +217,11 @@ MultiLine<CT,PT> operator+ (const PT & p, const MultiLine<CT,PT> & l) { return l
 
 /******************************************************************/
 // functions, similar to ones inside the class
+
+/// Calculate MultiLine number of points.
+/// \relates MultiLine
+template <typename CT, typename PT>
+size_t npts(const MultiLine<CT,PT> & l){ return l.npts(); }
 
 /// Calculate MultiLine length.
 /// \relates MultiLine
