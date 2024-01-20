@@ -215,11 +215,15 @@ VXI::read(){
   std::string ret;
   while ((reason & (RX_END | RX_CHR | RX_REQCNT)) == 0) {
     Device_ReadResp r;
+    r.data.data_val=NULL;
+    r.data.data_len=0;
     if (device_read_1(&p, &r, (CLIENT*)client) != RPC_SUCCESS)
       throw Err() << "RPC: device_read";
     if (r.error!=0) throw Err() << "VXI11: " << vxi11_strerr(r.error);
-    ret += std::string(r.data.data_val, r.data.data_len);
+    if (r.data.data_len==0) continue;
+    ret += std::string(r.data.data_val, r.data.data_val+r.data.data_len);
     reason = r.reason;
+    free(r.data.data_val);
   }
   return ret;
 }
