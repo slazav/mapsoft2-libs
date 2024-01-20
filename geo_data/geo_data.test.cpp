@@ -80,7 +80,7 @@ main(){
       l1.push_back(GeoTpt(37.403169, 55.803693, 210));
       l1.push_back(GeoTpt(24.803224, 60.174925, 20,0));
       assert_eq(l1.size(), 2);
-      assert_feq(l1.length(), 886625, 1);
+      assert_feq(l1.geo_length_2d(), 886625, 1);
       assert_eq(iRect(l1.bbox()*10.0), iRect(248,558,125,43));
       assert_eq(l1[0].z, 210);
       assert_eq(l1[1].z, 20);

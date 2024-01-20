@@ -104,7 +104,7 @@ struct GeoTrk : std::vector<GeoTpt>{
   dRect bbox() const;
 
   /// Get length in m (using Haversine formula).
-  double length() const;
+  double geo_length_2d() const;
 
   /// convert to dLine (join all segments)
   operator dLine() const;
