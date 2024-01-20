@@ -9,10 +9,10 @@
 
 /// Class for checking if a point is inside a polygon.
 /// Line is always treated as closed.
-template <typename T>
+template <typename CT, typename PT>
 class PolyTester{
-  std::vector<Point<T> > sb,se; // segment beginning, ending
-  std::vector<double>    ss; // segment slope
+  std::vector<Point<CT> > sb,se;    // segment beginning, ending
+  std::vector<double> ss;           // segment slope
   std::vector<PolyTester> mtesters; // for MultiLine tester
   bool horiz; // test direction
 public:
@@ -21,12 +21,12 @@ public:
   // Parameters:
   //  - L -- polygon (represented by Line object)
   //  - horiz -- set test direction
-  PolyTester(const Line<T> & L, const bool horiz_ = true): horiz(horiz_){
+  PolyTester(const Line<CT,PT> & L, const bool horiz_ = true): horiz(horiz_){
     // Collect line sides info: start and end points, slopes
     int pts = L.size();
     for (int i = 0; i < pts; i++){
-      Point<T> b(L[i%pts].x, L[i%pts].y),
-               e(L[(i+1)%pts].x, L[(i+1)%pts].y);
+      Point<CT> b(L[i%pts].x, L[i%pts].y),
+                e(L[(i+1)%pts].x, L[(i+1)%pts].y);
       if (!horiz){ // swap x and y
         b.y = L[i%pts].x; b.x=L[i%pts].y;
         e.y = L[(i+1)%pts].x;
@@ -45,7 +45,7 @@ public:
   }
 
   // PolyTester for multiline: keep testers for all segments
-  PolyTester(const MultiLine<T> & L, const bool horiz_ = true): horiz(horiz_){
+  PolyTester(const MultiLine<CT,PT> & L, const bool horiz_ = true): horiz(horiz_){
     for (const auto & seg:L)
       mtesters.push_back(PolyTester(seg, horiz));
   }
@@ -57,7 +57,7 @@ public:
   // are crossing positions, second are "crossing lengths" (normally
   // zero, non-zero if segment coinsides with y=const line.
   // Length is calculated to the left of the point.
-  std::vector<dPoint> get_cr(T y) const{
+  std::vector<dPoint> get_cr(CT y) const{
     std::vector<dPoint> cr;
 
     // multiline: merge and sort crossings for all multiline segments:
@@ -119,7 +119,7 @@ public:
 
   // Use the crossing array to check if a point is inside the polygon
   // by calculating number of crossings on the ray (x,y) - (inf,y)
-  static bool test_cr(const std::vector<dPoint> & cr, T x, bool borders = true) {
+  static bool test_cr(const std::vector<dPoint> & cr, CT x, bool borders = true) {
 
     // first crossing on the right of the point
     auto i = lower_bound(cr.begin(), cr.end(), dPoint(x,0));
@@ -134,29 +134,29 @@ public:
     return k%2==1;
   }
 
-  bool test_pt(const Point<T> & P, const bool borders = true){
-    return PolyTester<T>::test_cr(get_cr(P.y), P.x, borders);
+  bool test_pt(const PT & P, const bool borders = true){
+    return PolyTester<CT,PT>::test_cr(get_cr(P.y), P.x, borders);
   }
 
 };
-typedef PolyTester<double> dPolyTester;
-typedef PolyTester<int>    iPolyTester;
+typedef PolyTester<double,dPoint> dPolyTester;
+typedef PolyTester<int,iPoint>    iPolyTester;
 
 /**********************************************************/
 
 /// Check if one-segment polygon L covers point P.
-template <typename T>
+template <typename CT, typename PT>
 bool
-point_in_polygon(const Point<T> & P, const Line<T> & L, const bool borders = true){
-  PolyTester<T> lt(L, true);
+point_in_polygon(const PT & P, const Line<CT,PT> & L, const bool borders = true){
+  PolyTester<CT,PT> lt(L, true);
   return lt.test_pt(P, borders);
 }
 
 // Same for multi-segment polygon
-template <typename T>
+template <typename CT, typename PT>
 bool
-point_in_polygon(const Point<T> & P, const MultiLine<T> & L, const bool borders = true){
-  PolyTester<T> lt(L, true);
+point_in_polygon(const PT & P, const MultiLine<CT,PT> & L, const bool borders = true){
+  PolyTester<CT,PT> lt(L, true);
   return lt.test_pt(P, borders);
 }
 
@@ -167,14 +167,14 @@ point_in_polygon(const Point<T> & P, const MultiLine<T> & L, const bool borders 
 ///  1 - border of the polygon is crossing/touching rectangle boundary,
 ///  2 - rectangle is fully inside the polygon,
 ///  3 - polygon is fully inside the rectangle
-template <typename T>
+template <typename CT, typename PT>
 int
-rect_in_polygon(const Rect<T> & R, const Line<T> & L){
+rect_in_polygon(const Rect<CT> & R, const Line<CT,PT> & L){
 
   if (!R) return 0;
 
   std::vector<dPoint> cr;
-  PolyTester<T> lth(L, true), ltv(L,false);
+  PolyTester<CT,PT> lth(L, true), ltv(L,false);
 
   // Check is there any crossing at any rectangle side.
   // (segments (R.x,R,x+R.w) and (x, x-l) are crossing)
@@ -201,7 +201,7 @@ rect_in_polygon(const Rect<T> & R, const Line<T> & L){
   }
 
   // one rectangle corner is inside polygon
-  if (PolyTester<T>::test_cr(cr, R.y, false)) return 2;
+  if (PolyTester<CT,PT>::test_cr(cr, R.y, false)) return 2;
 
   // one of polygon points is inside the rectangle
   if (L.size() && R.contains_l(L[0])) return 3;
@@ -210,9 +210,9 @@ rect_in_polygon(const Rect<T> & R, const Line<T> & L){
 
 
 /// Same for multi-segment polygons.
-template <typename T>
+template <typename CT, typename PT>
 int
-rect_in_polygon(const Rect<T> & R, const MultiLine<T> & L){
+rect_in_polygon(const Rect<CT> & R, const MultiLine<CT,PT> & L){
 
   if (!R) return 0;
   int loops = 0;
@@ -228,13 +228,13 @@ rect_in_polygon(const Rect<T> & R, const MultiLine<T> & L){
 
 // Join a multi-segment polygon into a single-segment one
 // using shortest cuts.
-template<typename T>
-Line<T> join_polygons(const MultiLine<T> & L){
+template<typename CT, typename PT>
+Line<CT,PT> join_polygons(const MultiLine<CT,PT> & L){
 
-  Line<T> ret;
+  Line<CT,PT> ret;
   if (L.size()==0) return ret;
 
-  typename MultiLine<T>::const_iterator l = L.begin();
+  typename MultiLine<CT,PT>::const_iterator l = L.begin();
   ret = *l; l++;
   while (l!=L.end()){
 
@@ -243,8 +243,8 @@ Line<T> join_polygons(const MultiLine<T> & L){
 
     double dst = INFINITY;
 
-    typename Line<T>::const_iterator i1,i2; // vertex iterators
-    typename Line<T>::const_iterator q1,q2; // result
+    typename Line<CT,PT>::const_iterator i1,i2; // vertex iterators
+    typename Line<CT,PT>::const_iterator q1,q2; // result
 
     for (i1=ret.begin(); i1!=ret.end(); i1++){
       for (i2=l->begin(); i2!=l->end(); i2++){
@@ -254,7 +254,7 @@ Line<T> join_polygons(const MultiLine<T> & L){
     }
 
     // insert new segment
-    Line<T> tmp;
+    Line<CT,PT> tmp;
     tmp.push_back(*q1);
     tmp.insert(tmp.end(), q2, l->end());
     tmp.insert(tmp.end(), l->begin(), q2);
@@ -267,9 +267,9 @@ Line<T> join_polygons(const MultiLine<T> & L){
 
 // Remove holes in a multi-segment polygon
 // using shortest cuts.
-template<typename T>
-void remove_holes(MultiLine<T> & L){
-  typename MultiLine<T>::iterator i1,i2;
+template<typename CT, typename PT>
+void remove_holes(MultiLine<CT,PT> & L){
+  typename MultiLine<CT,PT>::iterator i1,i2;
   for (i1=L.begin(); i1!=L.end(); i1++){
     i2=i1+1;
     while (i2!=L.end()){
@@ -280,8 +280,8 @@ void remove_holes(MultiLine<T> & L){
       // Find place for the shortest cut between ret vertex
       // and vertex of the next segment
       double dst = 1e99;
-      typename Line<T>::iterator p1,q1;
-      typename Line<T>::iterator p2,q2;
+      typename Line<CT,PT>::iterator p1,q1;
+      typename Line<CT,PT>::iterator p2,q2;
         // p1,p2 -- пара вершин
         // q1,q2 -- искомое
       for (p1=i1->begin(); p1!=i1->end(); p1++){
@@ -291,7 +291,7 @@ void remove_holes(MultiLine<T> & L){
         }
       }
       // insert new segment
-      Line<T> tmp;
+      Line<CT,PT> tmp;
       tmp.push_back(*q1);
       tmp.insert(tmp.end(), q2, i2->end());
       tmp.insert(tmp.end(), i2->begin(), q2);
@@ -305,15 +305,15 @@ void remove_holes(MultiLine<T> & L){
 /// Read a figure from the string.
 /// The figure can be Point, Line/Multiline, Rect.
 /// Return the figure as MultiLine.
-template <typename T>
-MultiLine<T> figure_line(const::std::string &str) {
-  MultiLine<T> ret;
+template <typename CT>
+MultiLine<CT,Point<CT> > figure_line(const::std::string &str) {
+  MultiLine<CT,Point<CT> > ret;
   if (str=="") return ret;
 
   // try point
   try {
-    Line<T> l;
-    l.push_back(Point<T>(str));
+    Line<CT,Point<CT> > l;
+    l.push_back(Point<CT>(str));
     ret.push_back(l);
     return ret;
   }
@@ -321,14 +321,14 @@ MultiLine<T> figure_line(const::std::string &str) {
 
   // try Rect
   try {
-    ret.push_back(rect_to_line(Rect<T>(str), true));
+    ret.push_back(rect_to_line(Rect<CT>(str), true));
     return ret;
   }
   catch (Err & e){}
 
   // try Line/Multiline
   try {
-    MultiLine<T> ml(str);
+    MultiLine<CT,Point<CT> > ml(str);
     return ml;
   }
   catch (Err & e){}
@@ -337,9 +337,9 @@ MultiLine<T> figure_line(const::std::string &str) {
 
 /// Read a figure from the string and get its bounding box.
 /// The figure can be Point, Line/Multiline, Rect
-template <typename T>
-Rect<T> figure_bbox(const::std::string &str) {
-  return figure_line<T>(str).bbox();
+template <typename CT>
+Rect<CT> figure_bbox(const::std::string &str) {
+  return figure_line<CT>(str).bbox();
 }
 
 /****************************************************/
@@ -347,9 +347,9 @@ Rect<T> figure_bbox(const::std::string &str) {
 /// Find distance to the nearest vertex of a Line.
 /// If ptp!=NULL then the vertex point will be stored there.
 /// If line is empty exception is thrown.
-template <typename T>
+template <typename CT, typename PT>
 double
-nearest_vertex(const Line<T> & l, const Point<T> & pt, Point<T> * ptp=NULL){
+nearest_vertex(const Line<CT,PT> & l, const Point<CT> & pt, Point<CT> * ptp=NULL){
   double d = INFINITY;
   for (const auto & p:l){
     double d1 = dist(p, pt);
@@ -362,9 +362,9 @@ nearest_vertex(const Line<T> & l, const Point<T> & pt, Point<T> * ptp=NULL){
 }
 
 /// Same for MultiLine
-template <typename T>
+template <typename CT, typename PT>
 double
-nearest_vertex(const MultiLine<T> & ml, const Point<T> & pt, Point<T> * ptp=NULL){
+nearest_vertex(const MultiLine<CT,PT> & ml, const Point<CT> & pt, Point<CT> * ptp=NULL){
   double d =  INFINITY;
   for (const auto & l:ml){
     for (const auto & p:l){
@@ -379,8 +379,8 @@ nearest_vertex(const MultiLine<T> & ml, const Point<T> & pt, Point<T> * ptp=NULL
 }
 
 ///  For point p0 find nearest point on the segment p1,p2
-template<typename T>
-dPoint nearest_pt(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2){
+template<typename PT>
+dPoint nearest_pt(const PT & p0, const PT & p1, const PT & p2){
   if (p1==p2) return p1;
   double ll = dist(p1,p2);
   dPoint v = dPoint(p2-p1)/ll;
@@ -392,8 +392,8 @@ dPoint nearest_pt(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2)
   return dist2d(p0,p1) < dist(p0,p2)? p1:p2;
 }
 
-template<typename T>
-dPoint nearest_pt2d(const Point<T> & p0, const Point<T> & p1, const Point<T> & p2){
+template<typename PT>
+dPoint nearest_pt2d(const PT & p0, const PT & p1, const PT & p2){
   if (p1==p2) return p1;
   double  ll = dist2d(p1,p2);
   dPoint v = dPoint(p2-p1)/ll;
@@ -415,14 +415,14 @@ dPoint nearest_pt2d(const Point<T> & p0, const Point<T> & p1, const Point<T> & p
  If the distance is larger then <maxdist> then <maxdist> is returned and
  <pt> and <vec> are not modified.
 */
-template<typename T>
-double nearest_pt(const Line<T> & line, dPoint & vec, Point<T> & pt, double maxdist){
+template<typename CT, typename PT>
+double nearest_pt(const Line<CT,PT> & line, dPoint & vec, Point<CT> & pt, double maxdist){
 
-  Point<T> pm = pt;
+  Point<CT> pm = pt;
 
   for (size_t j=1; j<line.size(); j++){
-    Point<T> p1(line[j-1]);
-    Point<T> p2(line[j]);
+    auto p1 = line[j-1];
+    auto p2 = line[j];
     if (p1==p2) continue;
 
     auto pc = nearest_pt2d(pt,p1,p2);
@@ -434,13 +434,12 @@ double nearest_pt(const Line<T> & line, dPoint & vec, Point<T> & pt, double maxd
 }
 
 // same for MultiLine
-template<typename T>
-double nearest_pt(const MultiLine<T> & lines, dPoint & vec, Point<T> & pt, double maxdist){
+template<typename CT, typename PT>
+double nearest_pt(const MultiLine<CT,PT> & lines, dPoint & vec, Point<CT> & pt, double maxdist){
   dPoint pm=pt;
-  typename MultiLine<T>::const_iterator i;
-  for (i = lines.begin(); i != lines.end(); i++){
-    Point<T> p = pt;
-    maxdist = nearest_pt(*i, vec, p, maxdist);
+  for (const auto & line:lines){
+    auto p = pt;
+    maxdist = nearest_pt(line, vec, p, maxdist);
     if ( p != pt) { pm = p;}
   }
   pt=pm;
@@ -451,9 +450,9 @@ double nearest_pt(const MultiLine<T> & lines, dPoint & vec, Point<T> & pt, doubl
 
 
 /// Filter out some points (up to number np, or distance from original line e)
-template<typename T>
-void line_filter_v1(Line<T> & line, double e, int np,
-                    double (*dist_func)(const Point<T> &, const Point<T> &) = NULL){
+template<typename CT, typename PT>
+void line_filter_v1(Line<CT,PT> & line, double e, int np,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
   while (1) {
     // Calculate distance from each non-end point to line between its neighbours.
     // Find minimum of this value.
@@ -463,7 +462,7 @@ void line_filter_v1(Line<T> & line, double e, int np,
       dPoint p1 = line[i-1];
       dPoint p2 = line[i];
       dPoint p3 = line[i+1];
-      auto pc = nearest_pt<double>(p2,p1,p3);
+      auto pc = nearest_pt(p2,p1,p3);
       double dp = dist_func? dist_func(p2,pc) : dist(p2,pc);
       if ((min<0) || (min>dp)) {min = dp; mini=i;}
     }
@@ -476,9 +475,9 @@ void line_filter_v1(Line<T> & line, double e, int np,
 }
 
 // Same for MultiLine. Remove also segments shorter then e.
-template<typename T>
-void line_filter_v1(MultiLine<T> & lines, double e,
-                    double (*dist_func)(const Point<T> &, const Point<T> &) = NULL){
+template<typename CT, typename PT>
+void line_filter_v1(MultiLine<CT,PT> & lines, double e,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
   for (auto l = lines.begin(); l!=lines.end(); l++){
     line_filter_v1(*l, e, -1, dist_func);
     // remove 2-point lines shorter then e
@@ -495,11 +494,11 @@ void line_filter_v1(MultiLine<T> & lines, double e,
 /// Resulting polygon start from point with minimal x,
 /// it is always clockwise-oriented, its last point =
 /// first point
-template <typename T>
-Line<T> convex_border(const Line<T> & points){
-  Line<T> ret;
+template <typename CT, typename PT>
+Line<CT,PT> convex_border(const Line<CT,PT> & points){
+  Line<CT,PT> ret;
   if (points.size()==0) return ret;
-  typename Line<T>::const_iterator p, p0, p1;
+  typename Line<CT,PT>::const_iterator p, p0, p1;
 
   // find point with minimal x
   p0=points.begin();
@@ -536,16 +535,16 @@ Line<T> convex_border(const Line<T> & points){
 // Then find the pair with maximum value (but less then maxdist).
 // Distance is negative inside l1 and positive outside it.
 // The points and distance are returned in maxdist, p1,p2.
-template <typename T>
+template <typename CT, typename PT>
 void
-test_pairs(const Line<T> & l1, const Line<T> & l2,
-           double & maxdist, Point<T> & p1, Point<T> & p2){
-  typename Line<T>::const_iterator i,j;
+test_pairs(const Line<CT,PT> & l1, const Line<CT,PT> & l2,
+           double & maxdist, PT & p1, PT & p2){
+  typename Line<CT,PT>::const_iterator i,j;
   for (i=l1.begin(); i!=l1.end(); i++){
     j=i+1; if (j==l1.end()) j=l1.begin();
     if (*i==*j) continue;
     double mindist=INFINITY;
-    typename Line<T>::const_iterator k;
+    typename Line<CT,PT>::const_iterator k;
     for (k=l2.begin(); k!=l2.end(); k++){
       dPoint v1(*j-*i);
       dPoint v2(*k-*i);
@@ -568,14 +567,14 @@ test_pairs(const Line<T> & l1, const Line<T> & l2,
  Returns margin value (can by < 0).
  p0 is set to line origin, and t is set to line direction.
 */
-template <typename T>
+template <typename CT, typename PT>
 double
-margin_classifier(const Line<T> & L1, const Line<T> & L2,
+margin_classifier(const Line<CT,PT> & L1, const Line<CT,PT> & L2,
   dPoint & p0, dPoint & t){
 
   // find borders
-  Line<T> l1=convex_border(L1);
-  Line<T> l2=convex_border(L2);
+  Line<CT,PT> l1=convex_border(L1);
+  Line<CT,PT> l2=convex_border(L2);
 
   // Support vectors (http://en.wikipedia.org/wiki/Support_vector_machine)
   // are located on a convex boundary of a point set. At least in one set
@@ -586,7 +585,7 @@ margin_classifier(const Line<T> & L1, const Line<T> & L2,
   // distances are positive outside them.
 
   double maxdist=-INFINITY;
-  Point<T> p1,p2;
+  PT p1,p2;
   test_pairs(l1,l2,maxdist,p1,p2);
   test_pairs(l2,l1,maxdist,p1,p2);
 
@@ -608,16 +607,16 @@ margin_classifier(const Line<T> & L1, const Line<T> & L2,
 // all points of pts2 are inside pts1.
 // This is not a very good definition of a hole,
 // but should be OK for real maps.
-template <typename T>
+template <typename CT, typename PT>
 bool
-check_hole(const Line<T> & pts1, const Line<T> & pts2){
+check_hole(const Line<CT,PT> & pts1, const Line<CT,PT> & pts2){
   // see poly_tools.h
   bool brd = false;
-  PolyTester<T> pt1(pts1);
+  PolyTester<CT,PT> pt1(pts1);
   for (const auto & p2:pts2){
     if (!pt1.test_pt(p2, brd)) return false;
   }
-  PolyTester<T> pt2(pts2);
+  PolyTester<CT,PT> pt2(pts2);
   for (const auto & p1:pts1){
     if (pt2.test_pt(p1, brd)) return false;
   }

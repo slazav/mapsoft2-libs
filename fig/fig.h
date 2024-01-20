@@ -188,8 +188,8 @@ struct FigObj : iLine {
 
   /// Convert to a line
   template <typename T>
-  operator Line<T> () const {
-    Line<T> ret;
+  operator Line<T, Point<T> > () const {
+    Line<T, Point<T> > ret;
     for (const_iterator i=begin(); i!=end(); i++)
       ret.push_back(Point<T>(i->x, i->y));
     return ret;
