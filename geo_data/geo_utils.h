@@ -8,6 +8,25 @@
 /// Distance in m between two points (Haversine formula, altitude is ignored).
 double geo_dist_2d(const dPoint &p1, const dPoint &p2);
 
+// Line length in m (Haversine formula, altitude is ignored)
+template<typename T>
+double
+geo_length_2d(const Line<T> & l) {
+  double ret=0;
+  for (size_t i=0; i+1<l.size(); i++)
+    ret += geo_dist_2d(l[i], l[i+1]);
+  return ret;
+}
+
+// MultiLine length in m (Haversine formula, altitude is ignored)
+template<typename T>
+double
+geo_length_2d(const MultiLine<T> & ml) {
+  double ret=0;
+  for(auto const & l:ml) ret+=geo_length_2d(l);
+  return ret;
+}
+
 /// Haversine distance to the nearest point of a dLine or dMultiLine.
 
 /// Find Haversine distance to the nearest vertex of a Line or dMultiLine.

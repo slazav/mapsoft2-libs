@@ -50,6 +50,10 @@ main(){
       dMultiLine ml1("[[],[[0,0],[2,1],[4,2]]]");
       dMultiLine ml0("[[],[]]");
 
+      assert_feq(geo_length_2d(l1),  497900, 1.0);
+      assert_feq(geo_length_2d(ml0), 0, 1.0);
+      assert_feq(geo_length_2d(ml1), 497900, 1.0);
+
       dPoint p0;
       assert_feq(geo_nearest_vertex(l1, dPoint(1,2), &p0), 157448, 1);  // ~111km*sqrt(2)
       assert_eq(p0, dPoint(2,1));
