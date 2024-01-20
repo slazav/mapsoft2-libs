@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "geom/line.h"
 #include "geom/rect.h"
 #include "opt/opt.h"
 
@@ -67,8 +68,6 @@ struct ocad_symbol{
 /********************************************************************/
 
 struct ocad_object{
-  ocad_coord lower_left;
-  ocad_coord upper_right;
 
   ocad_long sym; // the symbol number (0 for deleted objects)
                  // -3 = image object eg AI object
@@ -114,6 +113,18 @@ struct ocad_object{
 
   ocad_object(): sym(0), type(1), status(1), col(0), ang(0),
                  viewtype(0), implayer(0){}
+
+  /// Convert to iLine.
+  /// TODO -- correct holes processing!
+  iLine line() const;
+
+  /// Set points.
+  /// For creating objects use ocad_file::add_object()!
+  void set_coords(const iLine & l);
+
+  /// Get range (without symbol size added).
+  iRect range() const;
+
 };
 
 /********************************************************************/
@@ -137,7 +148,6 @@ struct ocad{
   std::string     info_blob;  // v 6 7 8
   std::string     colinfo_blob;  // v 6 7 8
 
-
   // read ocad 6,7,8,9, cast to ocad 9 structures -- todo
   // verb = 0 - silent
   // verb = 1 - some info
@@ -147,17 +157,23 @@ struct ocad{
   /// Write to file.
   void write (const char * fn) const;
 
-  /// Update extents and types for all objects.
-  /// Do it before writing or calculating range...
-  void update_extents();
+  // find a symbol
+  std::vector<ocad_symbol>::const_iterator
+    find_symbol(int sym) const;
 
   /// Add new object.
-  /// class is used only for unknown symbols.
+  /// Class parameter is used only for unknown symbols,
   /// 0 - POI, 1 - POLYLINE, 2 - POLYGON, as in vmap
-//  int add_object(int sym, iLine pts, double ang=0,
-//                 const std::string & text = std::string(),
-//                 int cl=1);
-//  iRect range() const;
+  int add_object(int sym, iLine pts, double ang=0,
+                 const std::string & text = std::string(),
+                 int cl=1);
+
+  // coordinate range of an objects (with symbol size added)
+  iRect object_range(const ocad_object & o) const;
+
+  // coordinate range of all objects (with symbol sizes)
+  iRect range() const;
+
 };
 
 #endif

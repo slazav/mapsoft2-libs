@@ -14,7 +14,6 @@ main(int argc, char **argv){
 
     ocad O;
     O.read(argv[1], 2);
-    O.update_extents();
     O.write(argv[2]);
 
   }

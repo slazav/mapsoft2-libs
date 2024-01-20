@@ -5,11 +5,6 @@
 
 using namespace std;
 
-//typedef ocad_index<ocad9_object> ocad9_objects;
-//typedef ocad_index<ocad8_object> ocad8_objects;
-//typedef ocad_index<ocad9_symbol> ocad9_symbols;
-//typedef ocad_index<ocad8_symbol> ocad8_symbols;
-
 /********************************************************************/
 /// File operations with error handling
 
@@ -137,6 +132,33 @@ ocad_parstr::write(FILE * F, const std::vector<ocad_parstr> & parstrs){
 }
 
 /********************************************************************/
+
+iLine
+ocad_object::line() const{
+  iLine ret;
+  for (int i=0; i<coords.size(); i++){
+    iPoint p(coords[i].getx(),coords[i].gety());
+    if (!coords[i].is_curve())
+      ret.push_back(p);
+  }
+  return ret;
+}
+
+void
+ocad_object::set_coords(const iLine & l){
+  coords.clear();
+  coords = vector<ocad_coord>(l.begin(), l.end());
+}
+
+iRect
+ocad_object::range() const{
+  iRect ret;
+  for (const auto & c:coords)
+    ret.expand(iPoint(c.getx(),c.gety()));
+  return ret;
+}
+
+/********************************************************************/
 void
 ocad::read(const char * fn, int verb){
 
@@ -260,9 +282,7 @@ ocad::read(const char * fn, int verb){
       for (size_t i=0; i<256; i++){
         if (oi8.data[i].pos==0) continue;
         ocad_object obj;
-        obj.lower_left  = oi8.data[i].lower_left;
-        obj.upper_right = oi8.data[i].upper_right;
-        obj.sym         = oi8.data[i].sym;
+        obj.sym = oi8.data[i].sym;
 
         size_t size = version<8 ? oi8.data[i].len : oi8.data[i].len*8 + 32;
 
@@ -316,8 +336,8 @@ ocad::read(const char * fn, int verb){
             << " type: "  << (int)obj.type
             << " sym: "   << (int)obj.sym
             << " ang: "   << (int)obj.ang
-            << " l-l: "   << obj.lower_left.x << " " << obj.lower_left.x
-            << " u-r: "   << obj.upper_right.x << " " << obj.upper_right.y
+            << " l-l: "   << oi8.data[i].lower_left.x << " " << oi8.data[i].lower_left.y
+            << " u-r: "   << oi8.data[i].upper_right.x << " " << oi8.data[i].upper_right.y
             << " npts: "   << o8.n
           ;
           if (obj.text.size()) std::cout << " txt: "   << obj.text;
@@ -343,8 +363,6 @@ ocad::read(const char * fn, int verb){
       for (size_t i=0; i<256; i++){
         if (oi9.data[i].pos==0) continue;
         ocad_object obj;
-        obj.lower_left  = oi9.data[i].lower_left;
-        obj.upper_right = oi9.data[i].upper_right;
         obj.sym         = oi9.data[i].sym;
         obj.type        = oi9.data[i].type;
         obj.status      = oi9.data[i].status;
@@ -392,8 +410,8 @@ ocad::read(const char * fn, int verb){
             << " type: "  << (int)obj.type
             << " sym: "   << (int)obj.sym
             << " ang: "   << (int)obj.ang
-            << " l-l: "   << obj.lower_left.x << " " << obj.lower_left.x
-            << " u-r: "   << obj.upper_right.x << " " << obj.upper_right.y
+            << " l-l: "   << oi9.data[i].lower_left.x << " " << oi9.data[i].lower_left.y
+            << " u-r: "   << oi9.data[i].upper_right.x << " " << oi9.data[i].upper_right.y
             << " npts: "   << o9.n
           ;
           if (obj.text.size()) std::cout << " txt: "   << obj.text;
@@ -493,6 +511,40 @@ ocad::write (const char * fn) const{
     ocad_write(F, (void *)s.data(), s.size(), "fname");
   }
 
+  // parameter strings
+  // TODO: for OCAD8 skip types 9 and 10 (color info is stored in the header)
+  if (parstrs.size())
+    header.str_pos = ocad_parstr::write(F, parstrs);
+
+  // symbols
+  if (symbols.size()>0){
+    header.sym_pos = ftell(F);
+    size_t num = symbols.size(); // number of entries
+    size_t num_blk = num/256+1; // number of blocks
+
+    for (size_t iblk=0; iblk<num_blk; iblk++){
+      size_t addr = ftell(F);
+      ocad_index_block_<ocad_symbol_index_> idx_blk;
+      ocad_seek(F, addr + sizeof(idx_blk), "writing object index");
+
+      // write data, fill the index block
+      for (size_t i=0; i<256; i++){
+        size_t n = iblk*256 + i;
+        if (n >= num) break;
+
+        auto & obj = symbols[n];
+        auto & idx = idx_blk.data[i];
+        idx.pos  = ftell(F);
+        ocad_write(F, (void *)obj.blob.data(), obj.blob.size(), "symbol blob");
+      }
+      size_t next = ftell(F);
+      if (iblk < num_blk-1) idx_blk.next = next;
+      ocad_seek(F, addr, "writing symbol index");
+      ocad_write(F, &idx_blk, sizeof(idx_blk), "symbol index");
+      ocad_seek(F, next, "writing symbol index");
+    }
+  }
+
   // OCAD8 objects
   if (version==8){
     header.obj_pos = ftell(F);
@@ -515,8 +567,11 @@ ocad::write (const char * fn) const{
         ocad8_object_ data;
 
         idx.pos  = ftell(F);
-        idx.lower_left = obj.lower_left;
-        idx.upper_right = obj.upper_right;
+
+        // object range
+        auto r = object_range(obj);
+        idx.lower_left = r.tlc();
+        idx.upper_right = r.brc();
 
         // convert sym from OCAD9  XXXZZY -> XXXY. this may couse collisions!
         // TODO - check symbol collisions before writing OCAD6..8 objects
@@ -595,8 +650,11 @@ ocad::write (const char * fn) const{
         ocad9_object_ data;
 
         idx.pos  = ftell(F);
-        idx.lower_left = obj.lower_left;
-        idx.upper_right = obj.upper_right;
+
+        // object range
+        auto r = object_range(obj);
+        idx.lower_left = r.tlc();
+        idx.upper_right = r.brc();
 
         data.sym = idx.sym = obj.sym;
         data.type = idx.type = obj.type;
@@ -627,81 +685,24 @@ ocad::write (const char * fn) const{
     }
   }
 
-  // symbols
-  if (symbols.size()>0){
-    header.sym_pos = ftell(F);
-    size_t num = symbols.size(); // number of entries
-    size_t num_blk = num/256+1; // number of blocks
-
-    for (size_t iblk=0; iblk<num_blk; iblk++){
-      size_t addr = ftell(F);
-      ocad_index_block_<ocad_symbol_index_> idx_blk;
-      ocad_seek(F, addr + sizeof(idx_blk), "writing object index");
-
-      // write data, fill the index block
-      for (size_t i=0; i<256; i++){
-        size_t n = iblk*256 + i;
-        if (n >= num) break;
-
-        auto & obj = symbols[n];
-        auto & idx = idx_blk.data[i];
-        idx.pos  = ftell(F);
-        ocad_write(F, (void *)obj.blob.data(), obj.blob.size(), "symbol blob");
-      }
-      size_t next = ftell(F);
-      if (iblk < num_blk-1) idx_blk.next = next;
-      ocad_seek(F, addr, "writing symbol index");
-      ocad_write(F, &idx_blk, sizeof(idx_blk), "symbol index");
-      ocad_seek(F, next, "writing symbol index");
-    }
-  }
-
-  // parameter strings
-  // TODO: for OCAD8 skip types 9 and 10 (color info is stored in the header)
-  if (parstrs.size())
-    header.str_pos = ocad_parstr::write(F, parstrs);
-
-
   // write header
   ocad_seek(F, 0, "writing header");
   ocad_write(F, &header, sizeof(header), "header");
   fclose(F);
 }
 
-void
-ocad::update_extents(){
-}
-
-/*
-  ocad_objects::iterator o;
-  for (o=objects.begin(); o!=objects.end(); o++){
-
-    map<int,ocad_symbol>::const_iterator e = symbols.find(o->sym);
-    if (e!=symbols.end()){
-      o->extent = e->second.extent;
-      o->type = e->second.type;
-    }
-    else{
-      o->extent = 0;
-      o->type   = 0;
-      cerr << "warning: no symbol: "
-                 << o->sym << "\n";
-    }
-  }
-}
-*/
-
-/*
 int
 ocad::add_object(int sym, iLine pts, double ang,
             const std::string & text, int cl){
   ocad_object o;
 
-  auto e = symbols.find(sym);
-  if (e!=symbols.end()){ // it is not an error!
+  // known symbol?
+  auto s = find_symbol(sym);
+
+  // if existing symbol is used, use it's type
+  if (s!=symbols.end()){
     o.sym = sym;
-    o.type   = e->second.type;
-//    o.extent = e->second.extent;
+    o.type = s->type;
   }
   else{
     o.sym = -1;
@@ -719,13 +720,29 @@ ocad::add_object(int sym, iLine pts, double ang,
   objects.push_back(o);
   return 0;
 }
+
+std::vector<ocad_symbol>::const_iterator
+ocad::find_symbol(int sym) const{
+  std::vector<ocad_symbol>::const_iterator ret;
+  for (ret = symbols.begin(); ret!=symbols.end(); ret++)
+    if (ret->sym == sym) break;
+  return ret;
+}
+
+iRect
+ocad::object_range(const ocad_object & o) const{
+  auto r = o.range();
+  auto s = find_symbol(o.sym);
+  if (s!=symbols.end()) r.expand(s->extent);
+  return r;
+}
+
 iRect
 ocad::range() const{
   iRect ret;
-  for (const auto & o: objects){
-    ret.expand(o.range());
-  }
+  for (const auto & o: objects)
+    ret.expand(object_range(o));
+
   return ret;
 }
-*/
 
