@@ -183,6 +183,7 @@ void read_ozi (const string &fname, GeoData & data, const Opt & opts){
     if (v[7] != "") trk.opts.put("bgcolor",  v[7]);
     getline(f,s1); // number of points -- ignored
 
+    GeoTrkSeg seg;
     while (!f.eof()){
       GeoTpt pt;
       getline(f,s1);
@@ -190,12 +191,19 @@ void read_ozi (const string &fname, GeoData & data, const Opt & opts){
       if (v[0] == "" && v[1] == "") continue; // skip empty lines
       pt.y = str_to_type<double>(v[0]);
       pt.x = str_to_type<double>(v[1]);
-      if (v[2] != "") pt.start = str_to_type<bool>(v[2]);
+      bool start = (v[2] != "") ? str_to_type<bool>(v[2]) : false;
       if (v[3] != "" && v[3]!="-777") pt.z = str_to_type<double>(v[3]) * 0.3048;
       if (v[4] != "") pt.t = parse_ozi_time(v[4]);
       // fields 6,7 are ignored.
-      trk.push_back(pt);
+
+      if (start){
+        if (seg.size()) trk.push_back(seg);
+        seg.clear();
+      }
+      seg.push_back(pt);
     }
+    if (seg.size()) trk.push_back(seg);
+
     if (vv) cerr << "  Reading track: " << trk.name
                  << " (" << trk.size() << " points)" << endl;
     data.trks.push_back(trk);
@@ -420,26 +428,28 @@ void write_ozi_plt (const string &fname, const GeoTrk & trk, const Opt & opts){
     << "\r\n";
   f << num << "\r\n";
 
-  GeoTrk::const_iterator p;
-  for (auto p:trk){
-    // Field 1 : Latitude - decimal degrees.
-    // Field 2 : Longitude - decimal degrees.
-    // Field 3 : Code - 0 if normal, 1 if break in track line
-    // Field 4 : Altitude in feet (-777 if not valid)
-    // Field 5 : Date - see Date Format below, if blank a preset date will be used
-    // Field 6 : Date as a string (ignored)
-    // Field 7 : Time as a string (ignored)
-    f << right << fixed << setprecision(6) << setfill(' ')
-        << setw(11) << p.y << ','
-        << setw(11) << p.x << ','
-        << ((p.start)? '1':'0') << ','
-        << setprecision(1) << setw(7)
-        << (p.have_alt() ? p.z/0.3048 : -777) << ','
-        << setprecision(7) << setw(13)
-        << write_ozi_time(p.t) << ','
-        << write_fmt_time(" %d-%b-%y, %T", p.t) << "\r\n";
+  for (const auto & seg:trk){
+    bool start=true;
+    for (const auto & p:seg){
+      // Field 1 : Latitude - decimal degrees.
+      // Field 2 : Longitude - decimal degrees.
+      // Field 3 : Code - 0 if normal, 1 if break in track line
+      // Field 4 : Altitude in feet (-777 if not valid)
+      // Field 5 : Date - see Date Format below, if blank a preset date will be used
+      // Field 6 : Date as a string (ignored)
+      // Field 7 : Time as a string (ignored)
+      f << right << fixed << setprecision(6) << setfill(' ')
+          << setw(11) << p.y << ','
+          << setw(11) << p.x << ','
+          << (start? '1':'0') << ','
+          << setprecision(1) << setw(7)
+          << (p.have_alt() ? p.z/0.3048 : -777) << ','
+          << setprecision(7) << setw(13)
+          << write_ozi_time(p.t) << ','
+          << write_fmt_time(" %d-%b-%y, %T", p.t) << "\r\n";
+      start = false;
     }
-
+  }
   if (!f.good()) throw Err()
       << "Can't write data to OziExplorer file: " << fname;
 }

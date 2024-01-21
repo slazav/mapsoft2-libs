@@ -23,16 +23,18 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
   int mode = 0;
   GeoWptList wpt;
   GeoTrk trk;
+  GeoTrkSeg seg;
+
   while (!s.eof()){
     string l;
     getline(s, l);
 
     if (l.compare(0, 10, "[waypoints")==0) {
-      wpt.clear(); trk.clear(); mode = 1;
+      wpt.clear(); trk.clear(); seg.clear(); mode = 1;
       continue;
     }
     if (l.compare(0,  7, "[tracks")==0) {
-      wpt.clear(); trk.clear(); mode = 2;
+      wpt.clear(); trk.clear(); seg.clear(); mode = 2;
       continue;
     }
     if (l.compare(0,  4, "[end")==0) {
@@ -44,6 +46,7 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
       if (trk.size()){
         if (v) cerr << "  Reading track: "
                     << "(" << trk.size() << " points)" << endl;
+        if (seg.size()) trk.push_back(seg);
         data.trks.push_back(trk);
       }
       wpt.clear(); trk.clear(); mode = 0;
@@ -75,12 +78,12 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
         s1 >> st;
         if (st != "start")
           throw Err() << "io_gu: can't parse a trackpoint: [" << l << "]";
-        p.start=1;
+        if (seg.size()) trk.push_back(seg);
       }
       if (s1.fail() || !s1.eof())
         throw Err() << "io_gu: can't parse a trackpoint: [" << l << "]";
-      if (trk.size()==0) p.start=1;
-      trk.push_back(p);
+
+      seg.push_back(p);
       continue;
     }
   }
@@ -94,7 +97,7 @@ void write_gu_waypoints(ostream & s, const GeoWptList & wp,
   s << "[waypoints, " << num << " records]\n";
   int symb  = 0;
   int displ = 0;
-  for (auto p : wp){
+  for (const auto & p : wp){
     string name = cnv(p.name);
     string comm = cnv(p.comm);
     replace(name.begin(), name.end(), ' ', '_');
@@ -112,15 +115,19 @@ void write_gu_waypoints(ostream & s, const GeoWptList & wp,
 
 
 void write_gu_track(ostream & s, const GeoTrk & tr, const bool v){
-  int num = tr.size();
+  int num = tr.npts();
   if (v) cerr << "  Writing track: (" << num << " points)" << endl;
   s << "[tracks, " << num << " records]\n";
-  for (auto p : tr){
-    s << right << fixed << setprecision(6) << setfill(' ')
-      << setw(10)<< p.y << " "
-      << setw(11)<< p.x << " "
-      << setfill('0') << write_fmt_time("%F %T", p.t)
-      << ((p.start)? " start":"") << "\n";
+  for (const auto & seg : tr){
+    bool start = true;
+    for (const auto & p : seg){
+      s << right << fixed << setprecision(6) << setfill(' ')
+        << setw(10)<< p.y << " "
+        << setw(11)<< p.x << " "
+        << setfill('0') << write_fmt_time("%F %T", p.t)
+        << ((start)? " start":"") << "\n";
+      start = false;
+    }
   }
   s << "[end transfer, " << num << "/" << num << " records]\n";
   if (s.fail()) throw Err() << "io_gu: Can't write track";

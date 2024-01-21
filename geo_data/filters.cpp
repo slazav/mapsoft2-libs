@@ -1,5 +1,7 @@
 #include "geo_nom/geo_nom.h"
+#include "geom/poly_tools.h"
 #include "conv_geo.h"
+#include "geo_utils.h"
 #include "filters.h"
 
 #include <iterator>
@@ -34,6 +36,7 @@ ms2opt_add_geoflt(GetOptSet & opts){
                                "(the map should have a valid name).");
   opts.add("rescale_maps", 1, 0, g, "Rescale image part of map references by some factor.");
   opts.add("shift_maps",   1, 0, g, "Shift image part of map references by some (x,y) vector.");
+//  opts.add("trk_reduce",   1, 0, g, "Reduce number of track points. Argument is accuracy in meters, default: 0");
 }
 
 /********************************************************************/
@@ -73,6 +76,14 @@ geo_filters(GeoData & data, const Opt & opt){
     }
   }
 
+//  if (opt.exists("trk_reduce")){
+//    double e = opt.get("trk_reduce", 0);
+//    int np = 0;
+//    for (auto & t:data.trks){
+//      line_filter_v1(t, e, np, geo_dist_2d);
+//    }
+//  }
+
 }
 
 
@@ -94,16 +105,21 @@ filter_skip(GeoData & data, const Opt & opt){
 
   if (sk.find("t")!=string::npos){
     for (auto & trk:data.trks)
-      for (auto & pt:trk) pt.t = 0;
+      for (auto & seg:trk)
+        for (auto & pt:seg)
+          pt.t = 0;
     for (auto & wpl:data.wpts)
       for (auto & pt:wpl) pt.t = 0;
   }
 
   if (sk.find("z")!=string::npos){
     for (auto & trk:data.trks)
-      for (auto & pt:trk) pt.clear_alt();
+      for (auto & seg:trk)
+        for (auto & pt:seg)
+          pt.clear_alt();
     for (auto & wpl:data.wpts)
-      for (auto & pt:wpl) pt.clear_alt();
+      for (auto & pt:wpl)
+        pt.clear_alt();
   }
 
   if (sk.find("b")!=string::npos){
@@ -280,5 +296,4 @@ filter_nom_brd(GeoData & data, const Opt & opt){
     }
   }
 }
-
 

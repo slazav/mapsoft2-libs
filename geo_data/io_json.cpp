@@ -55,21 +55,20 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
     // coordinates
     json_t *j_crd = json_array();
     json_t *j_seg = json_array();
-    for (auto const & tp: trk) {
-      if (tp.start && json_array_size(j_seg)){
-        json_array_append_new(j_crd, j_seg);
-        j_seg = json_array();
+    for (auto const & seg: trk) {
+      j_seg = json_array();
+      for (auto const & tp: seg) {
+        json_t *j_pt = json_array();
+        json_array_append_new(j_pt, json_real(tp.x));
+        json_array_append_new(j_pt, json_real(tp.y));
+        if (tp.t!=0 || tp.have_alt()) {
+          json_array_append_new(j_pt, tp.have_alt()? json_real(tp.z) : json_null());
+          if (tp.t!=0) json_array_append_new(j_pt, json_integer(tp.t));
+        }
+        json_array_append_new(j_seg, j_pt);
       }
-      json_t *j_pt = json_array();
-      json_array_append_new(j_pt, json_real(tp.x));
-      json_array_append_new(j_pt, json_real(tp.y));
-      if (tp.t!=0 || tp.have_alt()) {
-        json_array_append_new(j_pt, tp.have_alt()? json_real(tp.z) : json_null());
-        if (tp.t!=0) json_array_append_new(j_pt, json_integer(tp.t));
-      }
-      json_array_append_new(j_seg, j_pt);
+      json_array_append_new(j_crd, j_seg);
     }
-    if (json_array_size(j_seg)) json_array_append_new(j_crd, j_seg);
 
     json_t *j_geom = json_object();
     json_object_set_new(j_geom, "type", json_string("MultiLineString"));
@@ -381,23 +380,27 @@ GeoTrk read_geojson_trk(json_t *coord, json_t *prop, const bool multi){
   // coordinates
   size_t i;
   json_t *c1;
-  json_array_foreach(coord, i, c1) {
-    if (multi){
+  if (multi){
+    json_array_foreach(coord, i, c1) {
       size_t j;
       json_t *c2;
+      GeoTrkSeg seg;
       json_array_foreach(c1, j, c2) {
         GeoTpt pt;
-        if (j==0) pt.start=1;
         read_geojson_pt(c2, pt);
-        ret.push_back(pt);
+        seg.push_back(pt);
       }
+      ret.push_back(seg);
     }
-    else {
+  }
+  else {
+    GeoTrkSeg seg;
+    json_array_foreach(coord, i, c1) {
       GeoTpt pt;
-      if (i==0) pt.start=1;
       read_geojson_pt(c1, pt);
-      ret.push_back(pt);
+      seg.push_back(pt);
     }
+    ret.push_back(seg);
   }
   return ret;
 }
@@ -585,6 +588,8 @@ read_geojson_feature(json_t *feature, GeoData & data,
         // coordinates
         size_t i;
         json_t *c1;
+        GeoTrkSeg seg;
+
         json_array_foreach(j_geom_coord, i, c1) {
           if (geom_type == "MultiPolygon"){
             size_t j;
@@ -594,10 +599,11 @@ read_geojson_feature(json_t *feature, GeoData & data,
               json_t *c3;
               json_array_foreach(c2, k, c3) {
                 GeoTpt pt;
-                if (k==0) pt.start=1;
                 read_geojson_pt(c3, pt);
-                trk.push_back(pt);
+                seg.push_back(pt);
               }
+              trk.push_back(seg);
+              seg.clear();
             }
           }
           else if (geom_type == "MultiLineString" || geom_type == "Polygon"){
@@ -605,18 +611,20 @@ read_geojson_feature(json_t *feature, GeoData & data,
             json_t *c2;
             json_array_foreach(c1, j, c2) {
               GeoTpt pt;
-              if (j==0) pt.start=1;
               read_geojson_pt(c2, pt);
-              trk.push_back(pt);
+              seg.push_back(pt);
             }
+            trk.push_back(seg);
+            seg.clear();
           }
           else {
             GeoTpt pt;
-            if (i==0) pt.start=1;
             read_geojson_pt(c1, pt);
-            trk.push_back(pt);
+            seg.push_back(pt);
           }
         }
+        trk.push_back(seg);
+
         if (v) cerr << "  Reading track: " << trk.name
                     << " (" << trk.size() << " points)" << endl;
         if (geom_type == "MultiPolygon" || geom_type == "Polygon")

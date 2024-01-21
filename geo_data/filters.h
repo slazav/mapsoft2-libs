@@ -33,7 +33,5 @@ void filter_wpt(GeoData & data, const Opt & opt);
 void filter_map(GeoData & data, const Opt & opt);
 
 // select_time
-// track_reduce
-// remove_zt
 
 #endif

@@ -306,47 +306,41 @@ write_gpx (const string &filename, const GeoData & data, const Opt & opts){
           throw "writing element";
       }
 
-      int cnt=0;
-      for (auto tp: trk) {
-        cnt++;
+      // write segments
+      for (auto seg: trk) {
+        if (xmlTextWriterStartElement(writer, BAD_CAST "trkseg") < 0)
+          throw "starting <trkseg> element";
 
-        // close <trkseg> if needed
-        if (tp.start && cnt>1 &&
-           xmlTextWriterEndElement(writer) < 0)
-             throw "closing <trkseg> element";
+        // write points
+        for (auto tp: seg) {
 
-        // open <trkseg> if needed
-        if ((tp.start || cnt==1) &&
-           xmlTextWriterStartElement(writer, BAD_CAST "trkseg") < 0)
-             throw "starting <trkseg> element";
+          // open <trkpt>
+          if (xmlTextWriterStartElement(writer, BAD_CAST "trkpt")<0 ||
+              xmlTextWriterWriteFormatAttribute(writer,
+                BAD_CAST "lat", "%.7f", tp.y)<0 ||
+              xmlTextWriterWriteFormatAttribute(writer,
+                BAD_CAST "lon", "%.7f", tp.x)<0)
+            throw "starting <trkpt> element";
 
-        // open <trkpt>
-        if (xmlTextWriterStartElement(writer, BAD_CAST "trkpt")<0 ||
-            xmlTextWriterWriteFormatAttribute(writer,
-              BAD_CAST "lat", "%.7f", tp.y)<0 ||
-            xmlTextWriterWriteFormatAttribute(writer,
-              BAD_CAST "lon", "%.7f", tp.x)<0)
-          throw "starting <trkpt> element";
+          // altitude
+          if (tp.have_alt() &&
+              xmlTextWriterWriteFormatElement(writer,
+                BAD_CAST "ele", "%.2f", tp.z)<0)
+            throw "writing <ele> element";
 
-        // altitude
-        if (tp.have_alt() &&
-            xmlTextWriterWriteFormatElement(writer,
-              BAD_CAST "ele", "%.2f", tp.z)<0)
-          throw "writing <ele> element";
+          // time
+          if (tp.t && xmlTextWriterWriteFormatElement(writer,
+                BAD_CAST "time", "%s",
+                   write_fmt_time("%FT%T%fZ", tp.t).c_str())<0)
+            throw "writing <time> element";
 
-        // time
-        if (tp.t && xmlTextWriterWriteFormatElement(writer,
-              BAD_CAST "time", "%s",
-                 write_fmt_time("%FT%T%fZ", tp.t).c_str())<0)
-          throw "writing <time> element";
+          if (xmlTextWriterEndElement(writer) < 0)
+            throw "closing <trkpt> element";
 
-
+        }
         if (xmlTextWriterEndElement(writer) < 0)
-          throw "closing <trkpt> element";
+          throw "closing <trkseg> element";
       }
-      if (xmlTextWriterEndElement(writer) < 0)
-          throw "closing <trkpt> element";
-
       if (xmlTextWriterEndElement(writer) < 0)
           throw "closing <trk> element";
     }
@@ -469,7 +463,7 @@ read_wpt_node(xmlTextReaderPtr reader, GeoWptList & data){
 }
 
 int
-read_trkpt_node(xmlTextReaderPtr reader, GeoTrk & trk, bool start){
+read_trkpt_node(xmlTextReaderPtr reader, GeoTrkSeg & seg){
   GeoTpt pt;
   bool is_ele = false, is_time=false;
 
@@ -479,8 +473,7 @@ read_trkpt_node(xmlTextReaderPtr reader, GeoTrk & trk, bool start){
   pt.y = a_y? atof(a_y):0;
 
   if (xmlTextReaderIsEmptyElement(reader)) {
-    pt.start = start;
-    trk.push_back(pt);
+    seg.push_back(pt);
     return 1;
   }
 
@@ -522,15 +515,14 @@ read_trkpt_node(xmlTextReaderPtr reader, GeoTrk & trk, bool start){
       cerr << "Warning: Unknown node \"" << name << "\" in trkpt (type: " << type << ")\n";
     }
   }
-  pt.start = start;
-  trk.push_back(pt);
+  seg.push_back(pt);
   return 1;
 }
 
 
 int
 read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
-  bool start=true;
+  GeoTrkSeg seg;
   while(1){
     int ret =xmlTextReaderRead(reader);
     if (ret != 1) return ret;
@@ -548,9 +540,8 @@ read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
     }
 
     else if (NAMECMP("trkpt") && (type == TYPE_ELEM)){
-      ret = read_trkpt_node(reader, trk, start);
+      ret = read_trkpt_node(reader, seg);
       if (ret != 1) return ret;
-      start=false;
     }
 
     else if (NAMECMP("trkseg") && (type == TYPE_ELEM_END)){
@@ -561,6 +552,7 @@ read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
       cerr << "Warning: Unknown node \"" << name << "\" in trkseg (type: " << type << ")\n";
     }
   }
+  trk.push_back(seg);
   return 1;
 }
 
