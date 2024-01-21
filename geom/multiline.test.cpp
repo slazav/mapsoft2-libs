@@ -256,7 +256,30 @@ main(){
     str_to_type<iMultiLine>("[0,0],[2,0],[2,2]"),
     "can't parse multisegment line: \"[0,0],[2,0],[2,2]\": end of file expected near ','");
 
+  // add_point(), add_segment()
+  {
+    iMultiLine ml;
+    ml.add_point(iPoint(1,1));
+    ml.add_point(iPoint(1,2));
+    ml.add_segment();
+    ml.add_point(iPoint(2,1));
+    ml.add_point(iPoint(2,2));
+    ml.add_segment();
+    ml.add_segment();
+    ml.add_point(iPoint(4,1));
+    assert_eq(ml.size(), 4);
+    assert_eq(ml.npts(), 5);
+    assert_eq(ml, iMultiLine("[[[1,1],[1,2]],[[2,1],[2,2]],[],[[4,1]]]"));
+    ml.clear();
+    ml.add_segment();
+    assert_eq(ml.size(), 1);
+    assert_eq(ml.npts(), 0);
+    assert_eq(ml, iMultiLine("[[]]"));
   }
+
+  }
+
+
   catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
     return 1;

@@ -123,6 +123,17 @@ struct MultiLine : std::vector<Line<CT,PT> > {
   /******************************************************************/
   // Some functions. Below same functions are defined outside the class
 
+  // Add a new empty segment
+  void add_segment() {
+    this->push_back(Line<CT,PT>());
+  }
+
+  // Add a point to the end of last segment, or to a new segment if no one exists
+  void add_point(const PT & pt) {
+    if (this->size()==0) this->push_back(Line<CT,PT>());
+    (*this)[this->size()-1].push_back(pt);
+  }
+
  /// Number of points
   size_t npts() const {
     size_t ret = 0;
