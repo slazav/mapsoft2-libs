@@ -146,10 +146,11 @@ main(){
        fig_get_trks(F, map, D1);
        assert_eq(D1.trks.size(), 1);
        auto t = *D1.trks.begin();
-       assert_eq(t.size(), 2);
+       assert_eq(t.size(), 1);
+       assert_eq(t[0].size(), 2);
        assert_eq(t.name, "trk1");
-       assert_deq(t[0], dPoint(69,39), 1e-4);
-       assert_deq(t[1], dPoint(69.5,39.5), 1e-4);
+       assert_deq(t[0][0], dPoint(69,39), 1e-4);
+       assert_deq(t[0][1], dPoint(69.5,39.5), 1e-4);
        assert_eq(D1.wpts.size(), 1);
        auto w = *D1.wpts.begin();
        assert_eq(w.size(), 1);
