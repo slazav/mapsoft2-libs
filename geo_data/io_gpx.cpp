@@ -286,7 +286,7 @@ write_gpx (const string &filename, const GeoData & data, const Opt & opts){
     for (auto trk: data.trks) {
 
       if (v) cerr << "  Writing track: "
-                  << trk.name << " (" << trk.size() << " points)" << endl;
+                  << trk.name << " (" << trk.npts() << " points)" << endl;
 
       if (xmlTextWriterStartElement(writer, BAD_CAST "trk")<0)
           throw "starting <trk> element";
@@ -463,7 +463,7 @@ read_wpt_node(xmlTextReaderPtr reader, GeoWptList & data){
 }
 
 int
-read_trkpt_node(xmlTextReaderPtr reader, GeoTrkSeg & seg){
+read_trkpt_node(xmlTextReaderPtr reader, GeoTrk & trk){
   GeoTpt pt;
   bool is_ele = false, is_time=false;
 
@@ -473,7 +473,7 @@ read_trkpt_node(xmlTextReaderPtr reader, GeoTrkSeg & seg){
   pt.y = a_y? atof(a_y):0;
 
   if (xmlTextReaderIsEmptyElement(reader)) {
-    seg.push_back(pt);
+    trk.add_point(pt);
     return 1;
   }
 
@@ -515,14 +515,14 @@ read_trkpt_node(xmlTextReaderPtr reader, GeoTrkSeg & seg){
       cerr << "Warning: Unknown node \"" << name << "\" in trkpt (type: " << type << ")\n";
     }
   }
-  seg.push_back(pt);
+  trk.add_point(pt);
   return 1;
 }
 
 
 int
 read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
-  GeoTrkSeg seg;
+  trk.add_segment();
   while(1){
     int ret =xmlTextReaderRead(reader);
     if (ret != 1) return ret;
@@ -540,7 +540,7 @@ read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
     }
 
     else if (NAMECMP("trkpt") && (type == TYPE_ELEM)){
-      ret = read_trkpt_node(reader, seg);
+      ret = read_trkpt_node(reader, trk);
       if (ret != 1) return ret;
     }
 
@@ -552,7 +552,6 @@ read_trkseg_node(xmlTextReaderPtr reader, GeoTrk & trk){
       cerr << "Warning: Unknown node \"" << name << "\" in trkseg (type: " << type << ")\n";
     }
   }
-  trk.push_back(seg);
   return 1;
 }
 
@@ -616,7 +615,7 @@ read_trk_node(xmlTextReaderPtr reader, GeoData & data, const Opt & opts){
   data.trks.push_back(trk);
   if (opts.get("verbose", false))
     cerr << "  Reading track: " << trk.name
-         << " (" << trk.size() << " points)" << endl;
+         << " (" << trk.npts() << " points)" << endl;
   return 1;
 }
 

@@ -129,7 +129,7 @@ write_kml (const string &filename, const GeoData & data, const Opt & opts){
     for (auto trk: data.trks) {
 
      if (v) cerr << "  Writing track: " << trk.name
-                 << " (" << trk.size() << " points)" << endl;
+                 << " (" << trk.npts() << " points)" << endl;
 
       start_element(writer, "Placemark");
       write_cdata_element(writer, "name", trk.name);
@@ -268,7 +268,7 @@ read_point_node(xmlTextReaderPtr reader, GeoWpt & ww){
 int
 read_linestring_node(xmlTextReaderPtr reader, GeoTrk & T){
   int ret=1;
-  GeoTrkSeg seg;
+  T.add_segment();
   while(1){
     ret =xmlTextReaderRead(reader);
     if (ret != 1) break;
@@ -298,7 +298,7 @@ read_linestring_node(xmlTextReaderPtr reader, GeoTrk & T){
           cerr << "Warning: Coord error\n";
           break;
         }
-        seg.push_back(tp);
+        T.add_point(tp);
       }
     }
     else if (NAMECMP("LineString") && (type == TYPE_ELEM_END)){
@@ -308,7 +308,6 @@ read_linestring_node(xmlTextReaderPtr reader, GeoTrk & T){
       cerr << "Skipping node\"" << name << "\" in LineString (type: " << type << ")\n";
     }
   }
-  T.push_back(seg);
   return ret;
 }
 
@@ -337,7 +336,7 @@ read_polygon_node(xmlTextReaderPtr reader, GeoTrk & T){
       char s1,s2;
       istringstream s(str);
       GeoTpt tp;
-      GeoTrkSeg seg;
+      T.add_segment();
       while (!s.eof()){
         s >> ws >> tp.x >> ws >> s1 >>
              ws >> tp.y >> ws >> s2 >>
@@ -346,9 +345,8 @@ read_polygon_node(xmlTextReaderPtr reader, GeoTrk & T){
           cerr << "Warning: Coord error\n";
           break;
         }
-        seg.push_back(tp);
+        T.add_point(tp);
       }
-      T.push_back(seg);
     }
     else if (NAMECMP("Polygon") && (type == TYPE_ELEM_END)){
       break;
@@ -365,7 +363,6 @@ int
 read_gx_track_node(xmlTextReaderPtr reader, GeoTrk & T){
   int ret=1;
   T = GeoTrk();
-  GeoTrkSeg seg;
   while(1){
     ret =xmlTextReaderRead(reader);
     if (ret != 1) break;
@@ -388,7 +385,7 @@ read_gx_track_node(xmlTextReaderPtr reader, GeoTrk & T){
       s >> ws >> tp.x >> ws
         >> ws >> tp.y >> ws
         >> ws >> tp.z >> ws;
-      seg.push_back(tp);
+      T.add_point(tp);
     }
     else if (NAMECMP("gx:Track") && (type == TYPE_ELEM_END)){
       break;
@@ -397,7 +394,6 @@ read_gx_track_node(xmlTextReaderPtr reader, GeoTrk & T){
       cerr << "Skipping node\"" << name << "\" in gx:Track (type: " << type << ")\n";
     }
   }
-  T.push_back(seg);
   return ret;
 }
 
@@ -639,7 +635,7 @@ read_document_node(xmlTextReaderPtr reader, GeoData & data, const bool v){
   }
   if (T.size()){
     if (v) cerr << "  Reading track: " << T.name
-                << " (" << T.size() << " points)" << endl;
+                << " (" << T.npts() << " points)" << endl;
     data.trks.push_back(T);
   }
   if (M.size()){ // not supported yet

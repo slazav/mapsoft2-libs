@@ -23,18 +23,17 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
   int mode = 0;
   GeoWptList wpt;
   GeoTrk trk;
-  GeoTrkSeg seg;
 
   while (!s.eof()){
     string l;
     getline(s, l);
 
     if (l.compare(0, 10, "[waypoints")==0) {
-      wpt.clear(); trk.clear(); seg.clear(); mode = 1;
+      wpt.clear(); trk.clear(); mode = 1;
       continue;
     }
     if (l.compare(0,  7, "[tracks")==0) {
-      wpt.clear(); trk.clear(); seg.clear(); mode = 2;
+      wpt.clear(); trk.clear(); mode = 2;
       continue;
     }
     if (l.compare(0,  4, "[end")==0) {
@@ -45,8 +44,7 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
       }
       if (trk.size()){
         if (v) cerr << "  Reading track: "
-                    << "(" << trk.size() << " points)" << endl;
-        if (seg.size()) trk.push_back(seg);
+                    << "(" << trk.npts() << " points)" << endl;
         data.trks.push_back(trk);
       }
       wpt.clear(); trk.clear(); mode = 0;
@@ -78,12 +76,12 @@ void read_gu (const string &fname, GeoData & data, const Opt & opts){
         s1 >> st;
         if (st != "start")
           throw Err() << "io_gu: can't parse a trackpoint: [" << l << "]";
-        if (seg.size()) trk.push_back(seg);
+        trk.add_segment();
       }
       if (s1.fail() || !s1.eof())
         throw Err() << "io_gu: can't parse a trackpoint: [" << l << "]";
 
-      seg.push_back(p);
+      trk.add_point(p);
       continue;
     }
   }

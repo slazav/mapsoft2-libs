@@ -33,7 +33,7 @@ write_json (const string &fname, const GeoData & data, const Opt & opts){
   // First we write tracks to have them below points on leaflet maps.
   for (auto const & trk: data.trks) {
     if (v) cerr << "  Writing track: " << trk.name
-           << " (" << trk.size() << " points)" << endl;
+           << " (" << trk.npts() << " points)" << endl;
 
     json_t *j_trk = json_object();
     json_object_set_new(j_trk, "type", json_string("Feature"));
@@ -588,45 +588,41 @@ read_geojson_feature(json_t *feature, GeoData & data,
         // coordinates
         size_t i;
         json_t *c1;
-        GeoTrkSeg seg;
 
         json_array_foreach(j_geom_coord, i, c1) {
           if (geom_type == "MultiPolygon"){
             size_t j;
             json_t *c2;
+            trk.add_segment();
             json_array_foreach(c1, j, c2) {
               size_t k;
               json_t *c3;
               json_array_foreach(c2, k, c3) {
                 GeoTpt pt;
                 read_geojson_pt(c3, pt);
-                seg.push_back(pt);
+                trk.add_point(pt);
               }
-              trk.push_back(seg);
-              seg.clear();
             }
           }
           else if (geom_type == "MultiLineString" || geom_type == "Polygon"){
             size_t j;
             json_t *c2;
+            trk.add_segment();
             json_array_foreach(c1, j, c2) {
               GeoTpt pt;
               read_geojson_pt(c2, pt);
-              seg.push_back(pt);
+              trk.add_point(pt);
             }
-            trk.push_back(seg);
-            seg.clear();
           }
           else {
             GeoTpt pt;
             read_geojson_pt(c1, pt);
-            seg.push_back(pt);
+            trk.add_point(pt);
           }
         }
-        trk.push_back(seg);
 
         if (v) cerr << "  Reading track: " << trk.name
-                    << " (" << trk.size() << " points)" << endl;
+                    << " (" << trk.npts() << " points)" << endl;
         if (geom_type == "MultiPolygon" || geom_type == "Polygon")
           trk.opts.put("type", "closed");
         data.trks.push_back(trk);

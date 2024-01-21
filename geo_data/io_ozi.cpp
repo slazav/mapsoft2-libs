@@ -183,7 +183,6 @@ void read_ozi (const string &fname, GeoData & data, const Opt & opts){
     if (v[7] != "") trk.opts.put("bgcolor",  v[7]);
     getline(f,s1); // number of points -- ignored
 
-    GeoTrkSeg seg;
     while (!f.eof()){
       GeoTpt pt;
       getline(f,s1);
@@ -191,21 +190,15 @@ void read_ozi (const string &fname, GeoData & data, const Opt & opts){
       if (v[0] == "" && v[1] == "") continue; // skip empty lines
       pt.y = str_to_type<double>(v[0]);
       pt.x = str_to_type<double>(v[1]);
-      bool start = (v[2] != "") ? str_to_type<bool>(v[2]) : false;
+      if (v[2] != "" && str_to_type<bool>(v[2])) trk.add_segment();
       if (v[3] != "" && v[3]!="-777") pt.z = str_to_type<double>(v[3]) * 0.3048;
       if (v[4] != "") pt.t = parse_ozi_time(v[4]);
       // fields 6,7 are ignored.
-
-      if (start){
-        if (seg.size()) trk.push_back(seg);
-        seg.clear();
-      }
-      seg.push_back(pt);
+      trk.add_point(pt);
     }
-    if (seg.size()) trk.push_back(seg);
 
     if (vv) cerr << "  Reading track: " << trk.name
-                 << " (" << trk.size() << " points)" << endl;
+                 << " (" << trk.npts() << " points)" << endl;
     data.trks.push_back(trk);
 
     return;
@@ -402,7 +395,6 @@ void write_ozi_plt (const string &fname, const GeoTrk & trk, const Opt & opts){
 
   IConv cnv("UTF-8", opts.get("ozi_enc", ozi_default_enc) );
 
-  int num = trk.size();
   f << "OziExplorer Track Point File Version 2.0\r\n"
     << "WGS 84\r\n"
     << "Altitude is in Feet\r\n"
@@ -426,7 +418,7 @@ void write_ozi_plt (const string &fname, const GeoTrk & trk, const Opt & opts){
     << "," << trk.opts.get("ozi_fill", 0)
     << "," << trk.opts.get("bgcolor", 0xFFFFFF)
     << "\r\n";
-  f << num << "\r\n";
+  f << trk.npts() << "\r\n";
 
   for (const auto & seg:trk){
     bool start=true;
