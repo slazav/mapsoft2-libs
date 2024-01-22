@@ -256,7 +256,7 @@ main(){
     str_to_type<iMultiLine>("[0,0],[2,0],[2,2]"),
     "can't parse multisegment line: \"[0,0],[2,0],[2,2]\": end of file expected near ','");
 
-  // add_point(), add_segment()
+  // add_point(), add_segment(), del_last_point()
   {
     iMultiLine ml;
     ml.add_point(iPoint(1,1));
@@ -270,7 +270,17 @@ main(){
     assert_eq(ml.size(), 4);
     assert_eq(ml.npts(), 5);
     assert_eq(ml, iMultiLine("[[[1,1],[1,2]],[[2,1],[2,2]],[],[[4,1]]]"));
-    ml.clear();
+    ml.del_last_point();
+    assert_eq(ml, iMultiLine("[[[1,1],[1,2]],[[2,1],[2,2]]]"));
+    ml.del_last_point();
+    assert_eq(ml, iMultiLine("[[[1,1],[1,2]],[[2,1]]]"));
+    ml.del_last_point();
+    assert_eq(ml, iMultiLine("[[[1,1],[1,2]]]"));
+    ml.del_last_point();
+    assert_eq(ml, iMultiLine("[[[1,1]]]"));
+    ml.del_last_point();
+    assert_eq(ml, iMultiLine());
+
     ml.add_segment();
     assert_eq(ml.size(), 1);
     assert_eq(ml.npts(), 0);

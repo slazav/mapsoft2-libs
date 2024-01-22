@@ -198,6 +198,7 @@ Line with multiple segments (std::vector of Line).
 - Other operations:
   - `l.add_point(pt)` -- Add point to the end of the last segment (create segment if needed).
   - `l.add_segment()` -- Add empty segment.
+  - `l.del_last_point()` -- Remove last point and all empty segments at the end.
   - `dMultiLine(l)`, `iMultiLine(l)` -- cast to double- or integer-coordinate MultiLine.
   - `l.length()`, `length(l)` -- line length (sum of segments' lengths).
   - `l.npts()`, `npts(l)` -- number of points (sum of segments' point numbers).

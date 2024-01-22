@@ -134,7 +134,20 @@ struct MultiLine : std::vector<Line<CT,PT> > {
     (*this)[this->size()-1].push_back(pt);
   }
 
- /// Number of points
+  // Remove last point and delete all empty segments at the end
+  void del_last_point() {
+    // find last non-empty segment
+    for (auto i = this->rbegin(); i!=this->rend(); i++){
+      if (i->size()==0) continue;
+      i->pop_back();
+      break;
+    }
+    // remove empty segments at the end
+    while (this->size()>0 && (*this)[this->size()-1].size()==0)
+      this->pop_back();
+  }
+
+  /// Number of points
   size_t npts() const {
     size_t ret = 0;
     for(auto const & l:*this) ret+=l.size();
