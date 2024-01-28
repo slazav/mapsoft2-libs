@@ -36,7 +36,10 @@ ms2opt_add_geoflt(GetOptSet & opts){
                                "(the map should have a valid name).");
   opts.add("rescale_maps", 1, 0, g, "Rescale image part of map references by some factor.");
   opts.add("shift_maps",   1, 0, g, "Shift image part of map references by some (x,y) vector.");
-//  opts.add("trk_reduce",   1, 0, g, "Reduce number of track points. Argument is accuracy in meters, default: 0");
+  opts.add("trk_reduce_acc",   1, 0, g, "Reduce number of track points. Argument is accuracy in meters, default: 0");
+  opts.add("trk_reduce_num",   1, 0, g, "Reduce number of track points. Argument is maximum point number, "
+                               "default: 0. Both --trk_reduce_acc and --trk_reduce_num can exist. "
+                               "Works separately for each track segment.");
 }
 
 /********************************************************************/
@@ -76,14 +79,12 @@ geo_filters(GeoData & data, const Opt & opt){
     }
   }
 
-//  if (opt.exists("trk_reduce")){
-//    double e = opt.get("trk_reduce", 0);
-//    int np = 0;
-//    for (auto & t:data.trks){
-//      line_filter_v1(t, e, np, geo_dist_2d);
-//    }
-//  }
-
+  if (opt.exists("trk_reduce_acc") || opt.exists("trk_reduce_num")){
+    double acc = opt.get("trk_reduce_acc", 0.0);
+    int num = opt.get("trk_reduce_num", 0);
+    for (auto & t:data.trks) line_filter_v1<double,GeoTpt>(t, acc, num,
+     (double (*)(const GeoTpt&, const GeoTpt&)) geo_dist_2d);
+  }
 }
 
 
