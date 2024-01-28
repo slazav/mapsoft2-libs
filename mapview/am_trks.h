@@ -53,12 +53,11 @@ private:
 class AMTrkAdd : public ActionMode {
     GeoTrk trk;
     DlgTrk dlg;
-    bool start;
 
     void on_result(int r){
       // new segment
       if (r == Gtk::RESPONSE_APPLY){
-        start = true;
+        trk.add_segment();
         if (mapview->rubber.size()>0) mapview->rubber.pop();
         return;
       }
@@ -74,7 +73,7 @@ class AMTrkAdd : public ActionMode {
 
   public:
 
-    AMTrkAdd (Mapview * mapview) : ActionMode(mapview), start(true) {
+    AMTrkAdd (Mapview * mapview) : ActionMode(mapview) {
       dlg.set_transient_for(*mapview);
       dlg.signal_response().connect(
         sigc::mem_fun (this, &AMTrkAdd::on_result));
@@ -102,7 +101,7 @@ class AMTrkAdd : public ActionMode {
                       const Gdk::ModifierType & state) override {
 
          if (button == 3) {
-           if (!(state&Gdk::CONTROL_MASK)){
+           if (!(state&Gdk::CONTROL_MASK) && trk.size()){
              dlg.dlg2trk(&trk);
              std::shared_ptr<GeoTrk> track(new GeoTrk(trk));
              mapview->panel_trks->add(track);
@@ -120,7 +119,7 @@ class AMTrkAdd : public ActionMode {
 
         // remove point
         if (state&Gdk::CONTROL_MASK){
-          if (trk.size()>0) trk.pop_back();
+          trk.del_last_point();
           if (mapview->rubber.size()>0){
             mapview->rubber.pop();
           }
@@ -133,21 +132,25 @@ class AMTrkAdd : public ActionMode {
         }
         // add point
         else{
-          GeoTpt pt;
-          pt.dPoint::operator=(p);
+          GeoTpt pt(p);
           mapview->viewer.get_cnv().frw(pt);
-          pt.start = (state&Gdk::SHIFT_MASK) || start;
 //          pt.z = mapview->srtm.get_val_int4(pt);
-          trk.push_back(pt);
+          if (state&Gdk::SHIFT_MASK){
+            trk.add_segment();
+            if (mapview->rubber.size()>0) mapview->rubber.pop();
+          }
+          trk.add_point(pt);
+          // first point of a segment?
+          bool start = trk.size() && trk[trk.size()-1].size()==1;
 
+          // fix the last rubber segment
           if (mapview->rubber.size()>0 && !start){
             RubberSegment s = mapview->rubber.pop();
             s.flags &= ~RUBBFL_MOUSE;
-            s.p2 = pt.start ? s.p1 : dPoint(p);
+            s.p2 = dPoint(p);
             mapview->rubber.add(s);
           }
           mapview->rubber.add_line(p);
-          start=false;
         }
 
         dlg.set_info(&trk);

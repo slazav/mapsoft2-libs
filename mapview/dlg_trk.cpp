@@ -1,4 +1,5 @@
 #include "dlg_trk.h"
+#include "geo_data/geo_utils.h"
 #include <iomanip>
 #include <sstream>
 
@@ -69,10 +70,10 @@ void
 DlgTrk::set_info(const GeoTrk * trk){
   if (!trk) return;
   std::ostringstream st;
-  st << "Points: <b>"
-     << trk->size() << "</b>, Length: <b>"
-     << std::setprecision(2) << std::fixed
-     << trk->length()/1000 << "</b> km";
+  st << "Points: <b>" << trk->npts() << "</b>,"
+     << "Segments: <b>" << trk->size() << "</b>,"
+     << "Length: <b>" << std::setprecision(2) << std::fixed
+     << geo_length_2d(*trk)/1000 << "</b> km";
         info->set_markup(st.str());
 }
 

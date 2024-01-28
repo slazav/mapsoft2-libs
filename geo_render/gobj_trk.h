@@ -25,9 +25,19 @@ void ms2opt_add_drawtrk(GetOptSet & opts);
 /********************************************************************/
 
 class GObjTrk : public GObj {
+public:
+  // point index (segment number, point number)
+  struct idx_t {
+    size_t sn, pn;
+    idx_t(const size_t sn = -1, const size_t pn = -1): sn(sn), pn(pn){}
+    bool operator== (const idx_t & idx) {return sn == idx.sn && pn == idx.pn;}
+    bool operator!= (const idx_t & idx) {return sn != idx.sn || pn != idx.pn;}
+  };
+
 private:
 
-  // Original data. It can be edited through the GObj interface.
+  // Link to original data.
+  // It can be edited through the GObj interface.
   GeoTrk & trk;
   dRect range; // data range
 
@@ -35,7 +45,6 @@ private:
   Opt opt;
   // coordinate conversion, viewer->wgs84
   std::shared_ptr<ConvBase> cnv;
-
 
   // Drawing parameters.
   const double dot_w = 0.5; // multiple of linewidth
@@ -45,20 +54,24 @@ private:
   bool draw_dots;
   bool selected;
 
-  // Data for drawing track segments.
-  // Must be updated when options, data, or cnv are changing.
-  struct segment_t{
-    dPoint p1, p2;
-    bool hide;
-    uint32_t color;
+  // Additional data for drawing track points.
+  struct data_t{
+    dPoint crd;      // converted point (should be updated with cnv)
+    double vel, alt; // velocity and altitude
+    uint32_t color;  // should be updated with opts
+    data_t(): vel(0),alt(NAN),color(0xFF000000) {};
   };
-  std::vector<segment_t> segments;
+  std::vector<std::vector<data_t> > points;
+
+  double calc_vel(const size_t i, const size_t j);
+  double calc_alt(const size_t i, const size_t j);
+
 
 public:
 
-  void update_crd(); // update segment coordinates (when cnv changed)
-  void update_opt(); // update segment colors (when options changed)
-  void update_data(); // update segments (when data changed)
+  void update_crd(); // update point coordinates (when cnv changed)
+  void update_opt(); // update point colors (when options changed)
+  void update_data(); // update points (when data changed)
 
   GeoTrk & get_data() {return trk;} // use lock when modifying.
 
@@ -86,45 +99,45 @@ public:
   /************************************************/
 
   // Find track points near pt within radius r.
-  // Return point numbers, sorted by distance.
-  std::vector<size_t> find_points (const dPoint & pt);
+  // Return pointers to track points, sorted by distance.
+  std::vector<idx_t> find_points (const dPoint & pt);
 
   // Find all track points within rectangle r.
-  // Return point numbers.
-  std::vector<size_t> find_points(const dRect & r);
+  // Return pointers to track points.
+  std::vector<idx_t> find_points(const dRect & r);
 
   // Find segments near pt within radius r.
   // Return numbers of starting points.
-  std::vector<size_t> find_segments(const dPoint & pt);
+  std::vector<idx_t> find_segments(const dPoint & pt);
 
   // Get viewer coordinates of point with index idx,
   // coordinates of next and/or previous point if
   // segments are visible.
-  std::vector<dPoint> get_point_crd(const size_t idx) const;
+  std::vector<dPoint> get_point_crd(const idx_t & idx) const;
 
   // set viewer coordinates of point with index idx
-  void set_point_crd(const size_t idx, const dPoint & pt);
+  void set_point_crd(const idx_t & idx, const dPoint & pt);
 
   // add new point with viewer coordinates pt after index idx
-  void add_point_crd(const size_t idx, const dPoint & pt);
+  void add_point_crd(const idx_t & idx, const dPoint & pt);
 
   // add new segment using viewer coordinates
   void add_segment_crd(const dLine & pts);
 
   // get index of the nearest segment end
-  size_t get_nearest_segment_end(const size_t idx) const;
+  idx_t get_nearest_segment_end(const idx_t & idx) const;
 
   // continue segment by adding points at index idx
-  void add_points_crd(const size_t idx, const dLine & pts);
+  void add_points_crd(const idx_t & idx, const dLine & pts);
 
   // delete track point with index idx
-  void del_point(const size_t idx);
+  void del_point(const idx_t & idx);
 
   // split track after point idx
-  void split_trk(const size_t idx);
+  void split_trk(const idx_t & idx);
 
   // delete track segment which contains point with given index
-  void del_seg(const size_t idx);
+  void del_seg(const idx_t & idx);
 
   // Delete all points within rectangle r.
   void del_points(const dRect & r);
@@ -134,7 +147,6 @@ public:
     if (selected ==v ) return;
     selected = v; redraw_me();
   }
-
 };
 
 #endif

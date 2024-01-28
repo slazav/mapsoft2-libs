@@ -15,13 +15,13 @@ public:
 
 
     // Find track points in a rectangular area
-    std::map<ptr_t, std::vector<size_t> > find_points(const iRect & r) const;
+    std::map<ptr_t, std::vector<GObjTrk::idx_t> > find_points(const iRect & r) const;
 
     // Find track points near pt.
-    std::map<ptr_t, std::vector<size_t> > find_points(const dPoint & pt) const;
+    std::map<ptr_t, std::vector<GObjTrk::idx_t> > find_points(const dPoint & pt) const;
 
     // Find segments near pt.
-    std::map<ptr_t, std::vector<size_t> > find_segments(const dPoint & pt) const;
+    std::map<ptr_t, std::vector<GObjTrk::idx_t> > find_segments(const dPoint & pt) const;
 
     // Delete points in a rectangular area
     void del_points(const iRect & r, const ptr_t & obj);

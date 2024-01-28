@@ -19,9 +19,9 @@ PanelTrks::add(const std::shared_ptr<GeoTrk> & trk) {
 }
 
 // Find track points in a rectangular area
-std::map<PanelTrks::ptr_t, std::vector<size_t> >
+std::map<PanelTrks::ptr_t, std::vector<GObjTrk::idx_t> >
 PanelTrks::find_points(const iRect & r) const{
-  std::map<ptr_t, std::vector<size_t> > ret;
+  std::map<ptr_t, std::vector<GObjTrk::idx_t> > ret;
   for (const auto & c: store->children()){
     if (!c[columns.checked]) continue;
     ptr_t gobj = c[columns.gobj];
@@ -32,9 +32,9 @@ PanelTrks::find_points(const iRect & r) const{
 }
 
 // Find track points near pt.
-std::map<PanelTrks::ptr_t, std::vector<size_t> >
+std::map<PanelTrks::ptr_t, std::vector<GObjTrk::idx_t> >
 PanelTrks::find_points(const dPoint & pt) const{
-  std::map<ptr_t, std::vector<size_t> > ret;
+  std::map<ptr_t, std::vector<GObjTrk::idx_t> > ret;
   for (const auto & c: store->children()){
     if (!c[columns.checked]) continue;
     ptr_t gobj = c[columns.gobj];
@@ -45,9 +45,9 @@ PanelTrks::find_points(const dPoint & pt) const{
 }
 
 // Find segments near pt.
-std::map<PanelTrks::ptr_t, std::vector<size_t> >
+std::map<PanelTrks::ptr_t, std::vector<GObjTrk::idx_t> >
 PanelTrks::find_segments(const dPoint & pt) const{
-  std::map<ptr_t, std::vector<size_t> > ret;
+  std::map<ptr_t, std::vector<GObjTrk::idx_t> > ret;
   for (const auto & c: store->children()){
     if (!c[columns.checked]) continue;
     ptr_t gobj = c[columns.gobj];

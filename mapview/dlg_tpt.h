@@ -9,7 +9,6 @@
 class DlgTpt : public Gtk::Dialog{
     CoordBox * coord;
     Gtk::Entry *time, *alt;
-    Gtk::CheckButton *start;
 
   public:
     DlgTpt();

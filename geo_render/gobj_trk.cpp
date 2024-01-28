@@ -44,6 +44,7 @@ GObjTrk::get_def_opt(){
   return o;
 }
 
+
 void
 GObjTrk::set_opt(const Opt & o){
   opt = o;
@@ -59,36 +60,63 @@ GObjTrk::set_cnv(const std::shared_ptr<ConvBase> c) {
   redraw_me();
 }
 
+double
+GObjTrk::calc_vel(const size_t i, const size_t j){
+  if (j==0) return NAN;
+
+  auto & p1 = trk[i][j];
+  auto & p2 = trk[i][j-1];
+  double d = geo_dist_2d(p1,p2)/1000.0; // in m
+  double t = (p1.t - p2.t)/1000.0; // in s
+  return (t>0 && t<3600*24)? 3600*d/t : NAN;
+}
+
+double
+GObjTrk::calc_alt(const size_t i, const size_t j){
+  if (j==0) return trk[i][j].z;
+  auto & p1 = trk[i][j];
+  auto & p2 = trk[i][j-1];
+  if (p1.have_alt() && p2.have_alt())
+    return (p1.z + p2.z)/2.0;
+  else
+    return p1.z;
+}
+
+
+void
+GObjTrk::update_data(){
+  // calculate additional data
+  points.clear();
+  for (size_t i = 0; i<trk.size(); i++){
+    points.push_back(std::vector<data_t>());
+    for (size_t j = 0; j<trk[i].size(); j++){
+      data_t p;
+      // velocity and altitude (for the segment, not point!)
+      // TODO: use time window
+      p.vel = calc_vel(i,j);
+      p.alt = calc_alt(i,j);
+      points.rbegin()->push_back(p);
+    }
+  }
+  update_crd();
+  update_opt();
+  redraw_me();
+}
+
 void
 GObjTrk::update_crd(){
-  if (trk.size() != segments.size())
-    throw Err() << "GObjTrk: segments are not syncronized with track";
-
-  bool closed = trk.opts.get<double>("closed", false);
-
-  for (size_t i=0; i<trk.size(); i++){
-    dPoint pt(trk[i]);
-    if (cnv) cnv->bck(pt);
-    pt.z = 0;
-    segments[i].p1 = pt;
-    segments[i>0? i-1: trk.size()-1].p2 = pt;
-    segments[i].hide = false;
-    // if the point has start flag, then previous segment is transparent.
-    if (i>0 && trk[i].start) segments[i-1].hide = true;
-  }
-
-  // if track is not closed, the last segment should be transparent
-  if (!closed) segments[trk.size()-1].hide = true;
-
-  // update range
   range = dRect();
-  for (auto const & s:segments) range.expand(s.p1);
+  for (size_t i = 0; i<trk.size(); i++){
+    for (size_t j = 0; j<trk[i].size(); j++){
+      auto & p = points[i][j];
+      p.crd = cnv->bck_pts(trk[i][j]);
+      range.expand(p.crd);
+    }
+  }
 }
 
 void
 GObjTrk::update_opt(){
-  if (trk.size() != segments.size())
-    throw Err() << "GObjTrk: segments are not syncronized with track";
 
   linewidth = trk.opts.get<double>("thickness", 1.0)
             * opt.get<double>("trk_draw_width", 3.0);
@@ -100,7 +128,7 @@ GObjTrk::update_opt(){
   color = color | ((int)rint((1-tr)*255)<<24);
 
   // track drawing mode (normal, speed, height)
-  string trk_mode = opt.get<string>("trk_draw_mode", "normal");
+  std::string trk_mode = opt.get<string>("trk_draw_mode", "normal");
 
   Rainbow RB(0,1);
   if (trk_mode == "normal"){
@@ -119,40 +147,26 @@ GObjTrk::update_opt(){
                  opt.get<string>("trk_draw_grad", "BCGYRM").c_str());
   }
 
-  // set segment colors
-  for (size_t i=0; i<trk.size(); i++){
+  // set colors
+  for (size_t i = 0; i<points.size(); i++){
+    for (size_t j = 0; j<points[i].size(); j++){
+      auto & p = points[i][j];
+      p.color = 0xFF000000;
 
-    segments[i].color = 0xFF000000;
-
-    if (trk_mode == "normal"){
-      segments[i].color = color;
-    }
-    else if (trk_mode == "speed"){
-      if (i<trk.size()-1){
-        double d = geo_dist_2d(trk[i], trk[i+1])/1000.0; // in m
-        double t = (trk[i+1].t - trk[i].t)/1000.0; // in s
-        if (t>0 && t<3600*24)
-          segments[i].color = RB.get(d/t * 3600) + 0xFF000000;
+      if (trk_mode == "normal"){
+        p.color = color;
       }
-    }
-    else if (trk_mode == "height"){
-      if (i<trk.size()-1 && trk[i].have_alt() && trk[i+1].have_alt()){
-        double z = (trk[i].z + trk[i+1].z)/2.0;
-        segments[i].color = RB.get(z) + 0xFF000000;
+      else if (trk_mode == "speed" && !isnan(p.vel)){
+        p.color = RB.get(p.vel) + 0xFF000000;
       }
+      else if (trk_mode == "height" && !isnan(p.alt)){
+        p.color = RB.get(p.alt) + 0xFF000000;
+      }
+      else throw Err() << "GObjTrk: unknown track drawing mode" << trk_mode;
     }
-    else throw Err() << "GObjTrk: unknown track drawing mode" << trk_mode;
-
   }
 }
 
-void
-GObjTrk::update_data(){
-  segments.resize(trk.size());
-  update_opt();
-  update_crd();
-  redraw_me();
-}
 
 
 /********************************************************************/
@@ -165,21 +179,21 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
   // draw selection
   if (selected) {
-    for (size_t i = 0; i<segments.size(); ++i){
-      if (is_stopped()) return GObj::FILL_NONE;
-      dPoint p1 = segments[i].p1;
-      dPoint p2 = segments[i].p2;
-      dRect r(p1,p2);
-      r.expand(sel_w + linewidth*(dot_w+1));
-      if (intersect(draw_range, r).is_zsize()) continue;
 
-      if (!segments[i].hide){
-        cr->move_to(p1);
-        cr->line_to(p2);
-      }
-      if (draw_dots ||
-          (segments[i].hide && segments[i>0?i-i:trk.size()-1].hide)){
-        cr->circle(p1, dot_w*linewidth);
+    for (size_t i = 0; i<trk.size(); i++){
+      for (size_t j = 0; j<trk[i].size(); j++){
+        auto & p1 = points[i][j];
+        auto & p2 = points[i][j>0? j-1: points[i].size()-1];
+
+        dRect r(p1.crd,p2.crd);
+        r.expand(sel_w + linewidth*(dot_w+1));
+        if (intersect(draw_range, r).is_zsize()) continue;
+
+        if (j!=0){
+          cr->move_to(p1.crd);
+          cr->line_to(p2.crd);
+        }
+        if (draw_dots) cr->circle(p1.crd, dot_w*linewidth);
       }
     }
     cr->cap_round();
@@ -191,28 +205,26 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
   // draw all segments
   cr->cap_round();
   cr->set_line_width(linewidth);
-  for (size_t i = 0; i<segments.size(); ++i){
 
-    if (is_stopped()) return GObj::FILL_NONE;
+  for (size_t i = 0; i<trk.size(); i++){
+    for (size_t j = 0; j<trk[i].size(); j++){
+      auto & p1 = points[i][j];
+      auto & p2 = points[i][j>0? j-1: points[i].size()-1];
 
-    dPoint p1 = segments[i].p1;
-    dPoint p2 = segments[i].p2;
-    dRect r(p1,p2);
-    r.expand((1+dot_w)*linewidth);
-    if (intersect(draw_range, r).is_zsize()) continue;
+      dRect r(p1.crd,p2.crd);
+      r.expand((1+dot_w)*linewidth);
+      if (intersect(draw_range, r).is_zsize()) continue;
 
-    cr->set_color_a(segments[i].color);
+      cr->set_color_a(p1.color);
 
-    if (!segments[i].hide){
-      cr->move_to(p1);
-      cr->line_to(p2);
+      if (j!=0){
+        cr->move_to(p1.crd);
+        cr->line_to(p2.crd);
+      }
+
+      if (draw_dots) cr->circle(p2.crd, dot_w*linewidth);
+      cr->stroke();
     }
-
-    if (draw_dots ||
-        (segments[i].hide && segments[i>0?i-i:trk.size()-1].hide)){
-      cr->circle(p1, dot_w*linewidth);
-    }
-    cr->stroke();
   }
 
   return GObj::FILL_PART;
@@ -221,108 +233,119 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
 /********************************************************************/
 
-std::vector<size_t>
+std::vector<GObjTrk::idx_t>
 GObjTrk::find_points(const dPoint & pt){
   double R = (dot_w+1)*linewidth;
-  std::map<double, size_t> m;
-  for (size_t i = 0; i < segments.size(); ++i){
-    double d = dist(segments[i].p1, pt);
-    if (d<R) m.emplace(d,i);
+  std::map<double, idx_t> m;
+
+  for (size_t i = 0; i<points.size(); i++){
+    for (size_t j = 0; j<points[i].size(); j++){
+      double d = dist2d(points[i][j].crd, pt);
+      if (d<R) m.emplace(d, idx_t(i,j));
+    }
   }
-  std::vector<size_t> ret;
+  std::vector<idx_t> ret;
   for (const auto & x:m) ret.push_back(x.second);
   return ret;
 }
 
-std::vector<size_t>
+std::vector<GObjTrk::idx_t>
 GObjTrk::find_points(const dRect & r){
-  std::vector<size_t> ret;
-  for (size_t i = 0; i < segments.size(); ++i)
-    if (r.contains(segments[i].p1)) ret.push_back(i);
+  std::vector<idx_t> ret;
+  for (size_t i = 0; i<points.size(); i++){
+    for (size_t j = 0; j<points[i].size(); j++){
+      if (r.contains(points[i][j].crd))
+        ret.push_back(idx_t(i,j));
+    }
+  }
   return ret;
 }
 
-std::vector<size_t>
+std::vector<GObjTrk::idx_t>
 GObjTrk::find_segments(const dPoint & pt){
   double R = linewidth; // search distance
-  std::map<double, size_t> m;
-  std::vector<size_t> ret;
+  std::map<double, idx_t> m;
+  std::vector<idx_t> ret;
 
+  // todo: support for closed tracks
+  for (size_t i = 0; i<points.size(); i++){
+    for (size_t j = 1; j<points[i].size(); j++){
+      auto & p1 = points[i][j];
+      auto & p2 = points[i][j-1];
 
-  if (segments.size() == 0) return ret;
+      double d12 = dist2d(p1.crd, p2.crd);
+      if (d12 == 0.0) {
+        double d = dist2d(p1.crd, pt);
+        if (d<R) ret.push_back(idx_t(i,j));
+        continue;
+      }
 
-  for (size_t i=0; i<segments.size(); ++i) {
-    if (segments[i].hide) continue;
-    auto p1 = segments[i].p1;
-    auto p2 = segments[i].p2;
+      // for point projection to the segment
+      // calculate length of p1->proj(pt)
+      double vn = pscal2d(pt-p1.crd, p2.crd-p1.crd)/d12;
+      if (vn < -R || vn > d12 + R) continue;
 
-    double d12 = dist(p2,p1);
-    if (d12 == 0) {
-      double d = dist(segments[i].p1,pt);
-      if (d<R) ret.push_back(i);
-      continue;
+      double d;
+      if (vn < 0) d = dist2d(p1.crd, pt);
+      else if (vn > d12) d = dist2d(p2.crd, pt);
+      else d = dist2d(pt-p1.crd, norm2d(p2.crd-p1.crd) * vn);
+      if (d < R) m.emplace(d,idx_t(i,j));
     }
-
-    // for point projection to the segment
-    // calculate length of p1->proj(pt)
-    double vn = pscal(pt-p1, p2-p1)/d12;
-
-    if (vn < -R || vn > d12 + R)
-      continue;
-
-    double d;
-    if (vn < 0)
-      d = dist(segments[i].p1, pt);
-    else if (vn > d12)
-      d = dist(segments[i].p2, pt);
-    else {
-      d = dist(pt-p1, norm(p2-p1) * vn);
-    }
-    if (d < R) m.emplace(d,i);
   }
   for (const auto & x:m) ret.push_back(x.second);
   return ret;
 }
 
 std::vector<dPoint>
-GObjTrk::get_point_crd(const size_t idx) const {
+GObjTrk::get_point_crd(const idx_t & idx) const {
   std::vector<dPoint> ret;
-  if (idx>=segments.size()) return ret;
 
-  ret.push_back(segments[idx].p1);
+  if (idx.sn>=points.size() ||
+      idx.pn>=points[idx.sn].size()) return ret;
 
-  // next point
-  if (!segments[idx].hide)
-    ret.push_back(segments[idx].p2);
+  size_t i = idx.sn, j = idx.pn;
+  ret.push_back(points[i][j].crd);
 
-  // previous point
-  size_t idxp = idx>0 ? idx-1: segments.size()-1;
-  if (!segments[idxp].hide)
-    ret.push_back(segments[idxp].p1);
-
+  // previous/next points
+  if (j>0) ret.push_back(points[i][j-1].crd);
+  if (j+1 < points[i].size()) ret.push_back(points[i][j+1].crd);
   return ret;
 }
 
 void
-GObjTrk::set_point_crd(const size_t idx, const dPoint & pt) {
+GObjTrk::set_point_crd(const idx_t & idx, const dPoint & pt) {
   auto lk = get_lock();
-  if (idx>=trk.size()) return;
+  if (idx.sn>=points.size() ||
+      idx.pn>=points[idx.sn].size()) return;
+
+  auto & p = points[idx.sn][idx.pn];
+  auto & tpt = trk[idx.sn][idx.pn];
+
+  dPoint pc = cnv->frw_pts(pt);
+
   // keep altitude and time
-  auto z = trk[idx].z;
-  trk[idx].dPoint::operator=(pt);
-  cnv->frw(trk[idx]);
-  trk[idx].z = z;
-  update_crd();
+  tpt.x = pc.x;
+  tpt.y = pc.y;
+
+  // update additional data: only coordinates and velocity
+  p.crd = pt;
+  p.vel = calc_vel(idx.sn, idx.pn);
+
+  // no need to update_data!
   redraw_me();
 }
 
 void
-GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
+GObjTrk::add_point_crd(const idx_t & idx, const dPoint & pt) {
   auto lk = get_lock();
-  if (idx>=trk.size()) return;
-  GeoTpt p(pt);
-  cnv->frw(p);
-  trk.insert(trk.begin()+idx+1, p);
+
+  if (idx.sn>=trk.size()) return;
+  GeoTpt pto = cnv->frw_pts(pt);
+
+  auto dest = idx.pn<trk[idx.sn].size() ?
+    trk[idx.sn].begin()+idx.pn : trk[idx.sn].end();
+  trk[idx.sn].insert(dest, pto);
+
   update_data();
   redraw_me();
 }
@@ -330,91 +353,81 @@ GObjTrk::add_point_crd(const size_t idx, const dPoint & pt) {
 void
 GObjTrk::add_segment_crd(const dLine & pts) {
   auto lk = get_lock();
+  GeoTrkSeg seg;
   for (size_t i=0; i<pts.size(); ++i) {
     GeoTpt tpt(pts[i]);
     cnv->frw(tpt);
-    tpt.start = (i==0);
-    trk.insert(trk.end(), tpt);
+    seg.push_back(tpt);
   }
+  trk.push_back(seg);
   update_data();
   redraw_me();
 }
 
-size_t
-GObjTrk::get_nearest_segment_end(const size_t idx) const {
-  if (trk.size()==0) return 0;
-  if (idx>=trk.size()) return trk.size()-1;
-  // find segment which contains idx (0 <= idx1 <= idx <= idx2 < trk.size())
-  size_t idx1 = 0, idx2 = trk.size()-1;
-  for (size_t i=0; i<trk.size(); ++i) {
-    if (trk[i].start && i<=idx) idx1=i;
-    if (trk[i].start && i>idx)  {idx2=i-1; break;}
+GObjTrk::idx_t
+GObjTrk::get_nearest_segment_end(const idx_t & idx) const {
+  auto ret = idx;
+  if (idx.sn < trk.size() && trk[idx.sn].size() > 0){
+    auto i2 = trk[idx.sn].size()-1;
+    ret.pn = idx.pn < i2-idx.pn ? 0:i2;
   }
-  // find which end is closer to idx:
-  bool start = (idx-idx1 < idx2-idx);
-  return start? idx1:idx2;
+  return ret;
 }
 
 void
-GObjTrk::add_points_crd(const size_t idx, const dLine & pts){
+GObjTrk::add_points_crd(const idx_t & idx, const dLine & pts){
   auto lk = get_lock();
-  if (idx>=trk.size()) return;
-  // idx coresponds to beginning of a segment: add points before idx
-  bool start = trk[idx].start;
+  if (idx.sn>=trk.size()) return;
 
-  if (start) {
-    trk[idx].start = false;
-    for (auto const & p: pts) {
-      GeoTpt tpt(p);
-      cnv->frw(tpt);
-      trk.insert(trk.begin() + (start?idx:idx+1), tpt);
-    }
-    trk[idx].start = true;
+  GeoTrkSeg seg;
+  for (auto const & p: pts) {
+    GeoTpt tpt(p);
+    cnv->frw(tpt);
+    seg.push_back(tpt);
+  }
+
+  if (idx.pn == 0){
+    trk[idx.sn].insert(trk[idx.sn].begin(), seg.rbegin(), seg.rend());
+  }
+  else if (idx.pn == trk[idx.sn].size()-1){
+    trk[idx.sn].insert(trk[idx.sn].end(), seg.begin(), seg.end());
   }
   else {
-    for (auto p = pts.rbegin(); p!= pts.rend(); p++) {
-      GeoTpt tpt(*p);
-      cnv->frw(tpt);
-      trk.insert(trk.begin() + (start?idx:idx+1), tpt);
-    }
+    return;
   }
+
   update_data();
   redraw_me();
 }
 
 void
-GObjTrk::del_point(const size_t idx){
+GObjTrk::del_point(const idx_t & idx){
   auto lk = get_lock();
-  if (idx>=trk.size()) return;
-
-  // move start flag if needed
-  if (idx < trk.size()-1 && trk[idx].start)
-    trk[idx+1].start = true;
-
-  trk.erase(trk.begin()+idx);
+  if (idx.sn>=trk.size() ||
+      idx.pn>=trk[idx.sn].size()) return;
+  trk[idx.sn].erase(trk[idx.sn].begin()+idx.pn);
   update_data();
   redraw_me();
 }
 
 void
-GObjTrk::split_trk(const size_t idx){
+GObjTrk::split_trk(const idx_t & idx){
   auto lk = get_lock();
-  if (idx>=trk.size()-1) return;
-  trk[idx+1].start = 1;
+  if (idx.sn>=trk.size() ||
+      idx.pn>=trk[idx.sn].size()) return;
+  GeoTrkSeg seg;
+  seg.insert(seg.begin(),trk[idx.sn].begin()+idx.pn, trk[idx.sn].end());
+  trk[idx.sn].erase(trk[idx.sn].begin()+idx.pn, trk[idx.sn].end());
+  trk.insert(trk.begin()+idx.sn+1, seg);
   update_data();
   redraw_me();
 }
 
 void
-GObjTrk::del_seg(const size_t idx){
+GObjTrk::del_seg(const idx_t & idx){
   auto lk = get_lock();
-  if (idx>=trk.size()) return;
-  size_t i1=0, i2=trk.size();
-  for (size_t i=0; i<trk.size(); ++i) {
-    if (i<=idx && trk[i].start) {i1 = i;}
-    if (i>idx  && trk[i].start) {i2 = i; break; }
-  }
-  trk.erase(trk.begin()+i1, trk.begin()+i2);
+  if (idx.sn>=trk.size()) return;
+  trk.erase(trk.begin()+idx.sn);
   update_data();
   redraw_me();
 }
@@ -422,8 +435,12 @@ GObjTrk::del_seg(const size_t idx){
 void
 GObjTrk::del_points(const dRect & r){
   auto lk = get_lock();
-  for (ssize_t i = segments.size()-1; i >= 0; --i)
-    if (r.contains(segments[i].p1)) trk.erase(trk.begin()+i);
+  for (size_t i = 0; i<points.size(); i++){
+    for (size_t j = points[i].size(); j>0; j--){
+      auto & p = points[i][j-1];
+      if (r.contains(p.crd)) trk[i].erase(trk[i].begin()+j-1);
+    }
+  }
   update_data();
   redraw_me();
 }

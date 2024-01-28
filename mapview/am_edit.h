@@ -37,7 +37,8 @@ class AMEditData : public ActionMode {
 int mystate;
 PanelTrks::ptr_t trk;
 PanelWpts::ptr_t wpts;
-size_t   idx;
+GObjTrk::idx_t   trk_idx;
+size_t           wpt_idx;
 dLine pts; // points for adding track parts
 
 DlgTrk dlg_trk;
@@ -203,7 +204,7 @@ private:
       // Choose first point of the first WaypointList:
       if (res1.begin()->second.size()<1) return;
       wpts = res1.begin()->first;
-      idx = *res1.begin()->second.begin();
+      wpt_idx = *res1.begin()->second.begin();
 
       if (button == 3) popup_menu_wpt->popup(button, 0);
       else if (button == 1 && state&Gdk::CONTROL_MASK) del_wpt();
@@ -218,7 +219,7 @@ private:
       // Choose first point of the first track:
       if (res2.begin()->second.size()<1) return;
       trk = res2.begin()->first;
-      idx = *res2.begin()->second.begin();
+      trk_idx = *res2.begin()->second.begin();
 
       if (button == 3) popup_menu_tpt->popup(button, 0);
       else if (button == 1 && state&Gdk::CONTROL_MASK) del_tpt();
@@ -233,7 +234,7 @@ private:
       // Choose first segment of the first track:
       if (res3.begin()->second.size()<1) return;
       trk = res3.begin()->first;
-      idx = *res3.begin()->second.begin();
+      trk_idx = *res3.begin()->second.begin();
 
       if (button == 3) popup_menu_tseg->popup(button, 0);
       else if (button == 1 && state&Gdk::CONTROL_MASK) split_trk();
@@ -245,7 +246,7 @@ private:
   /**************************/
 
   void move_wpt_start() {
-    dPoint pt = wpts->get_point_crd(idx);
+    dPoint pt = wpts->get_point_crd(wpt_idx);
     mapview->rubber.add_cr_mark(pt, false, 3);
     mapview->rubber.add_cr_mark(iPoint(), true, 3);
     mapview->rubber.add_line(pt);
@@ -253,14 +254,14 @@ private:
   }
 
   void move_wpt_finish(const iPoint p, const int button){
-    if (button != 3) wpts->set_point_crd(idx, p);
+    if (button != 3) wpts->set_point_crd(wpt_idx, p);
     abort();
   }
 
   /**************************/
 
   void move_tpt_start() {
-    auto pts = trk->get_point_crd(idx);
+    auto pts = trk->get_point_crd(trk_idx);
     switch (pts.size()){
       case 0: return;
       case 1:
@@ -279,7 +280,7 @@ private:
   }
 
   void move_tpt_finish(const iPoint p, const int button){
-    if (button != 3) trk->set_point_crd(idx, p);
+    if (button != 3) trk->set_point_crd(trk_idx, p);
     abort();
   }
 
@@ -289,7 +290,7 @@ private:
     // find_segments returns only visible segments.
     // pts should contain 2 or 3 points: start and end of the segment
     // and optional previous point (not needed here)
-    auto pts = trk->get_point_crd(idx);
+    auto pts = trk->get_point_crd(trk_idx);
     if (pts.size()<2) return;
     mapview->rubber.add_line(pts[0]);
     mapview->rubber.add_line(pts[1]);
@@ -298,14 +299,14 @@ private:
   }
 
   void add_tpt_finish(const iPoint p, const int button){
-    if (button != 3) trk->add_point_crd(idx, p);
+    if (button != 3) trk->add_point_crd(trk_idx, p);
     abort();
   }
 
-  void del_tpt()    { trk->del_point(idx); }
-  void del_wpt()    { wpts->del_point(idx); }
-  void split_trk()  { trk->split_trk(idx); }
-  void del_trkseg() { trk->del_seg(idx); }
+  void del_tpt()    { trk->del_point(trk_idx); }
+  void del_wpt()    { wpts->del_point(wpt_idx); }
+  void split_trk()  { trk->split_trk(trk_idx); }
+  void del_trkseg() { trk->del_seg(trk_idx); }
   void del_trk()    { mapview->panel_trks->remove(trk); }
 
   /**************************/
@@ -322,8 +323,8 @@ private:
     mystate = 5;
     mapview->spanel.message("Add points to the track: "
       "left click - add point; ctrl-left - remove last point; right - finish; ctrl-right - abort");
-    idx = trk->get_nearest_segment_end(idx);
-    auto pts = trk->get_point_crd(idx);
+    trk_idx = trk->get_nearest_segment_end(trk_idx);
+    auto pts = trk->get_point_crd(trk_idx);
     if (pts.size()<1) {abort(); return;}
     mapview->rubber.add_line(pts[0]);
   }
@@ -334,7 +335,7 @@ private:
     if (button == 3) {
        if (! (state&Gdk::CONTROL_MASK)){
          if (mystate == 4) trk->add_segment_crd(pts);
-         if (mystate == 5) trk->add_points_crd(idx, pts);
+         if (mystate == 5) trk->add_points_crd(trk_idx, pts);
        }
 
        if (pts.size()==0 || mystate == 5) {
@@ -441,8 +442,8 @@ private:
       if (!trk) return;
       auto lk = trk->get_lock();
       auto & t = trk->get_data();
-      if (idx < t.size()) {
-        dlg_tpt.dlg2tpt(t[idx]);
+      if (trk_idx.sn < t.size()) {
+        dlg_tpt.dlg2tpt(t[trk_idx.sn][trk_idx.pn]);
         trk->update_opt();
         trk->redraw_me();
       }
@@ -455,8 +456,8 @@ private:
     if (!trk) return;
     auto lk = trk->get_lock();
     auto & t = trk->get_data();
-    if (idx < t.size())
-      dlg_tpt.tpt2dlg(t[idx]);
+    if (trk_idx.sn < t.size())
+      dlg_tpt.tpt2dlg(t[trk_idx.sn][trk_idx.pn]);
     dlg_tpt.show_all();
   }
 
@@ -467,8 +468,8 @@ private:
       if (!wpts) return;
       auto lk = wpts->get_lock();
       auto & w = wpts->get_data();
-      if (idx < w.size()) {
-        dlg_wpt.dlg2wpt(w[idx]);
+      if (wpt_idx < w.size()) {
+        dlg_wpt.dlg2wpt(w[wpt_idx]);
         wpts->update_data();
         wpts->redraw_me();
       }
@@ -481,8 +482,8 @@ private:
     if (!wpts) return;
     auto lk = wpts->get_lock();
     auto & w = wpts->get_data();
-    if (idx < w.size())
-      dlg_wpt.wpt2dlg(w[idx]);
+    if (wpt_idx < w.size())
+      dlg_wpt.wpt2dlg(w[wpt_idx]);
     dlg_wpt.show_all();
   }
 

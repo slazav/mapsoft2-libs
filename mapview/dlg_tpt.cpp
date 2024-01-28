@@ -19,7 +19,6 @@ DlgTpt::DlgTpt(){
   alt   = manage(new Gtk::Entry);
   time  = manage(new Gtk::Entry);
   coord = manage(new CoordBox);
-  start = manage(new Gtk::CheckButton("Start point of a new segment"));
 
   // Table
   Gtk::Table *table = manage(new Gtk::Table(2,4));
@@ -30,7 +29,6 @@ DlgTpt::DlgTpt(){
   table->attach(*alt,     1, 2, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
   table->attach(*l_time,  0, 1, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
   table->attach(*time,    1, 2, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  table->attach(*start,   1, 2, 3, 4, Gtk::FILL, Gtk::SHRINK, 3, 3);
 
   get_vbox()->add(*table);
 }
@@ -38,7 +36,6 @@ DlgTpt::DlgTpt(){
 void
 DlgTpt::dlg2tpt(GeoTpt & tpt) const{
   tpt.dPoint::operator=(coord->get_ll());
-  tpt.start = start->get_active();
   tpt.t  = parse_utc_time(time->get_text());
 
   double d;
@@ -51,7 +48,6 @@ DlgTpt::dlg2tpt(GeoTpt & tpt) const{
 void
 DlgTpt::tpt2dlg(const GeoTpt & tpt){
   coord->set_ll(tpt);
-  start->set_active(tpt.start);
   time->set_text(write_fmt_time("%F %T%f", tpt.t));
 
   if (tpt.have_alt()){
