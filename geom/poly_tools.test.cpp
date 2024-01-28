@@ -257,10 +257,19 @@ main(){
     {
       iLine l1("[[0,0],[1,1],[2,2],[5,3],[8,3],[10,4]]"), l2;
 
+      l2=l1; line_filter_v1(l2, 0, 0);
+      assert_eq(l2, l1);
+
       l2=l1; line_filter_v1(l2, -1, 5);
       assert_eq(l2, iLine("[[0,0],[2,2],[5,3],[8,3],[10,4]]"));
 
+      l2=l1; line_filter_v1(l2, 0, 5);
+      assert_eq(l2, iLine("[[0,0],[2,2],[5,3],[8,3],[10,4]]"));
+
       l2=l1; line_filter_v1(l2, 0.01, -1);
+      assert_eq(l2, iLine("[[0,0],[2,2],[5,3],[8,3],[10,4]]"));
+
+      l2=l1; line_filter_v1(l2, 0.01, 0);
       assert_eq(l2, iLine("[[0,0],[2,2],[5,3],[8,3],[10,4]]"));
 
       l2=l1; line_filter_v1(l2, -1, 4);

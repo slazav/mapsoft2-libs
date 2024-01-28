@@ -468,18 +468,18 @@ void line_filter_v1(Line<CT,PT> & line, double e, int np,
     }
     if (mini == 0) break;
     // skip point if needed
-    if ( ((e>=0) && (min<e)) ||
-         ((np>=0) && (line.size()>np))) line.erase(line.begin()+mini);
+    if ( ((e>0) && (min<e)) ||
+         ((np>0) && (line.size()>np))) line.erase(line.begin()+mini);
     else break;
   }
 }
 
 // Same for MultiLine. Remove also segments shorter then e.
 template<typename CT, typename PT>
-void line_filter_v1(MultiLine<CT,PT> & lines, double e,
+void line_filter_v1(MultiLine<CT,PT> & lines, double e, int np,
                     double (*dist_func)(const PT &, const PT &) = NULL){
   for (auto l = lines.begin(); l!=lines.end(); l++){
-    line_filter_v1(*l, e, -1, dist_func);
+    line_filter_v1(*l, e, np, dist_func);
     // remove 2-point lines shorter then e
     if (l->size() != 2 || e<=0) continue;
     dPoint p1 = (*l)[0];
