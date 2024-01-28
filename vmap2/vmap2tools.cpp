@@ -285,7 +285,7 @@ do_filter_pts(VMap2 & map, const double D){
     auto & obj(p.second);
     auto cl = obj.get_class();
     if (cl!=VMAP2_LINE && cl!=VMAP2_POLYGON) continue;
-    line_filter_v1((dMultiLine&)obj, D, &geo_dist_2d);
+    line_filter_v1((dMultiLine&)obj, D, 0, &geo_dist_2d);
     if (obj.size()==0) map.del(p.first);
     else map.put(p.first, obj);
   }
