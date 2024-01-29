@@ -2,7 +2,9 @@
 #include <sstream>
 #include <iomanip>
 #include <queue>
+#include <list>
 #include "srtm.h"
+#include "geom/line.h"
 #include "geom/point_int.h"
 #include "filename/filename.h"
 #include <zlib.h>
@@ -399,6 +401,24 @@ SRTM::get_val_int16(const dPoint & p){
   return cubic_interp(hy, y-y0);
 }
 
+double
+SRTM::get_val_smooth(const int x, const int y, const double r){
+  if (r==0) return get_val(x,y, interp_holes);
+  int ri = ceil(r);
+  double v=0;
+  double n = 0;
+  for (int sx=-ri;sx<=ri;sx++){
+    for (int sy=-ri;sy<=ri;sy++){
+      auto h = get_val(x+sx,y+sy,interp_holes);
+      if (h<SRTM_VAL_MIN) continue;
+      double w = exp(-(sx*sx + sy*sy)/r);
+      v += w*h;
+      n += w;
+    }
+  }
+  return v/n;
+}
+
 /************************************************/
 
 short
@@ -456,6 +476,23 @@ SRTM::get_slope_int4(const dPoint & p){
   return h12 + (h34-h12)*(x-x1);
 }
 
+double
+SRTM::get_slope_smooth(const int x, const int y, const double r){
+  if (r==0) return get_slope(x,y, interp_holes);
+  int ri = ceil(r);
+  double v=0;
+  double n = 0;
+  for (int sx=-ri;sx<=ri;sx++){
+    for (int sy=-ri;sy<=ri;sy++){
+      auto h = get_slope(x+sx,y+sy,interp_holes);
+      double w = exp(-(sx*sx + sy*sy)/r);
+      v += w*h;
+      n += w;
+    }
+  }
+  return v/n;
+}
+
 
 /************************************************/
 
@@ -466,7 +503,7 @@ iPoint crn (int k, int kx=1){ k%=4; return iPoint(kx*(k/2), (k%3>0)?1:0); }
 iPoint dir (int k, int kx=1){ return crn(k+1, kx)-crn(k, kx); }
 
 std::map<short, dMultiLine>
-SRTM::find_contours(const dRect & range, int step, int kx){
+SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
 
   int w = get_srtm_width();
   double E = 1e-3/w; // distance for merging
@@ -481,17 +518,51 @@ SRTM::find_contours(const dRect & range, int step, int kx){
   dRect drange = range*(w-1.0);
   drange.x /= kx; drange.w /= kx;
   iRect irange = ceil(drange);
-  irange.x *= kx; irange.w *= kx;
+//  irange.x *= kx; irange.w *= kx;
 
   int x1  = irange.tlc().x;
   int x2  = irange.brc().x;
   int y1  = irange.tlc().y;
   int y2  = irange.brc().y;
 
+  // Extract altitudes for the whole range, make image
+std::cerr << "collect altitude data\n";
+  ImageR img(x2-x1+1, y2-y1+1, IMAGE_16);
+  for (int y=y1; y<=y2; y++){
+    for (int x=x1; x<=x2; x++){
+      img.set16(x-x1,y-y1, get_val(x*kx,y));
+    }
+  }
+
+  // Smooth image if needed
+  if (smooth!=0.0) {
+std::cerr << "smooth data\n";
+    int ri = ceil(smooth);
+    ImageR img_s(x2-x1+1, y2-y1+1, IMAGE_16);
+    for (int y=0; y<=y2-y1; y++){
+      for (int x=0; x<=x2-x1; x++){
+        double s0=0;
+        double s1=0;
+        for (int sx=-ri;sx<=ri;sx++){
+          for (int sy=-ri;sy<=ri;sy++){
+            if (x+sx<0 || y+sy<0 || x+sx>x2-x1 || y+sy>y2-y1) continue;
+            double w = exp(-(sx*sx + sy*sy)/smooth);
+            s0 += w;
+            s1 += w*img.get16(x+sx,y+sy);
+          }
+        }
+        img_s.set16(x,y,(uint16_t)(s1/s0));
+      }
+    }
+    img = img_s;
+  }
+
+
+std::cerr << "find contours\n";
   std::map<short, dMultiLine> ret;
   int count = 0;
-  for (int y=y2; y>=y1; y--){
-    for (int x=x1; x<=x2; x+=kx){
+  for (int y=y1; y<y2; y++){
+    for (int x=x1; x<x2; x++){
 
       iPoint p(x,y);
       // Crossing of all 4 data cell sides with contours
@@ -500,10 +571,11 @@ SRTM::find_contours(const dRect & range, int step, int kx){
       std::multimap<short, dPoint> pts;
 
       for (int k=0; k<4; k++){
-        iPoint p1 = p+crn(k, kx);
-        iPoint p2 = p+crn(k+1, kx);
-        short h1 = get_val(p1.x, p1.y);
-        short h2 = get_val(p2.x, p2.y);
+        iPoint p1 = p+crn(k);
+        iPoint p2 = p+crn(k+1);
+        auto h1 = img.get16(p1.x-x1, p1.y-y1);
+        auto h2 = img.get16(p2.x-x1, p2.y-y1);
+
         if (h2==h1) continue;
         if ((h1<SRTM_VAL_MIN) || (h2<SRTM_VAL_MIN)) continue;
         int min = (h1<h2)? h1:h2;
@@ -513,7 +585,10 @@ SRTM::find_contours(const dRect & range, int step, int kx){
         for (int hh = min; hh<=max; hh+=step){
           double v = double(hh-h1+0.1)/double(h2-h1);
           if ((v<0)||(v>1)) continue;
-          pts.emplace(hh, ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0));
+          dPoint cr = ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0);
+          cr.x*=kx;
+          cr.y-=1/(w-1.0); // ??
+          pts.emplace(hh, cr);
         }
       }
       // Put contours which are crossing the data cell twice to `ret`.
@@ -553,6 +628,7 @@ SRTM::find_contours(const dRect & range, int step, int kx){
   }
 
   // merge contours (similar code is in point_int.cpp/border_line)
+std::cerr << "merge contours\n";
   for(auto & d:ret){
     for (auto i1 = d.second.begin(); i1!=d.second.end(); i1++){
       for (auto i2 = i1+1; i2!=d.second.end(); i2++){
@@ -579,7 +655,7 @@ SRTM::find_contours(const dRect & range, int step, int kx){
 }
 
 dMultiLine
-SRTM::find_slope_contours(const dRect & range, double val, int kx){
+SRTM::find_slope_contours(const dRect & range, double val, int kx, double smooth){
   int w = get_srtm_width();
   double E = 1e-3/w; // distance for merging
 
@@ -593,39 +669,80 @@ SRTM::find_slope_contours(const dRect & range, double val, int kx){
   dRect drange = range*(w-1.0);
   drange.x /= kx; drange.w /= kx;
   iRect irange = ceil(drange);
-  irange.x *= kx; irange.w *= kx;
+//  irange.x *= kx; irange.w *= kx;
 
   int x1  = irange.tlc().x;
   int x2  = irange.brc().x;
   int y1  = irange.tlc().y;
   int y2  = irange.brc().y;
 
-  dMultiLine ret;
+  // Extract slopes for the whole range.
+  // make image with slopes
+std::cerr << "get slope data\n";
+  ImageR img(x2-x1+1, y2-y1+1, IMAGE_FLOAT);
+  for (int y=y1; y<=y2; y++){
+    for (int x=x1; x<=x2; x++){
+      img.setF(x-x1,y-y1,get_slope(x*kx,y));
+    }
+  }
+
+  // Smooth slopes if needed
+  if (smooth!=0.0) {
+std::cerr << "smooth slope data\n";
+    int ri = ceil(smooth);
+    ImageR img_s(x2-x1+1, y2-y1+1, IMAGE_FLOAT);
+    for (int y=0; y<=y2-y1; y++){
+      for (int x=0; x<=x2-x1; x++){
+        double s0=0;
+        double s1=0;
+        for (int sx=-ri;sx<=ri;sx++){
+          for (int sy=-ri;sy<=ri;sy++){
+            if (x+sx<0 || y+sy<0 || x+sx>x2-x1 || y+sy>y2-y1) continue;
+            double v = img.getF(x+sx,y+sy);
+            double w = exp(-(sx*sx + sy*sy)/smooth);
+            s0 += w;
+            s1 += w*v;
+          }
+        }
+      img_s.setF(x,y,s1/s0);
+      }
+    }
+    img = img_s;
+  }
+
+  // Find contours
   // Add one extra point on each side to put zero values there
   // and get closed contours.
-  for (int y=y2+1; y>=y1-1; y--){
-    for (int x=x1-1; x<=x2+1; x++){
+  dMultiLine ret;
+
+std::cerr << "find slope contours\n";
+  for (int y=y1-1; y<=y2; y++){
+    for (int x=x1-1; x<=x2; x++){
 
       iPoint p(x,y);
       // Crossing of all 4 data cell sides with contours
       // (coordinate v along the 4-segment line).
       dLine pts;
       for (int k=0; k<4; k++){
-        iPoint p1 = p+crn(k, kx);
-        iPoint p2 = p+crn(k+1, kx);
-        double h1 = 0, h2 = 0;
+        iPoint p1 = p+crn(k);
+        iPoint p2 = p+crn(k+1);
+        float v1 = 0, v2 = 0;
         if (p1.y>=y1 && p1.y<=y2 && p1.x>=x1 && p1.x<=x2)
-          h1 = get_slope(p1.x, p1.y, 0);
+          v1 = img.getF(p1.x-x1, p1.y-y1);
+
         if (p2.y>=y1 && p2.y<=y2 && p2.x>=x1 && p2.x<=x2)
-          h2 = get_slope(p2.x, p2.y, 0);
-        double min = (h1<h2)? h1:h2;
-        double max = (h1<h2)? h2:h1;
+          v2 = img.getF(p2.x-x1, p2.y-y1);
+
+        float min = (v1<v2)? v1:v2;
+        float max = (v1<v2)? v2:v1;
         if (min < val && max >= val){
-          double v = double(val-h1)/double(h2-h1);
-          pts.push_back(((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0));
+          double v = (val-v1)/(v2-v1);
+          dPoint cr = ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0);
+          cr.x*=kx;
+          cr.y-=1/(w-1.0); // ??
+          pts.push_back(cr);
         }
       }
-
       // Put contours which are crossing the data cell 2 or 4 times to `ret`.
       for (size_t i=1; i<pts.size(); i+=2){
         dPoint p1 = pts[i-1], p2 = pts[i];
@@ -650,7 +767,8 @@ SRTM::find_slope_contours(const dRect & range, double val, int kx){
     }
   }
 
-  // merge contours (similar code is in point_int.cpp/border_line)
+  // merge contours
+std::cerr << "merge slope contours\n";
   for (auto i1 = ret.begin(); i1!=ret.end(); i1++){
     for (auto i2 = i1+1; i2!=ret.end(); i2++){
       if (dist(*(i1->begin()),*(i2->begin()))<E){
