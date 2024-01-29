@@ -502,6 +502,73 @@ iPoint crn (int k, int kx=1){ k%=4; return iPoint(kx*(k/2), (k%3>0)?1:0); }
 // Directions of 4 data cell sides
 iPoint dir (int k, int kx=1){ return crn(k+1, kx)-crn(k, kx); }
 
+// Erase a key-value pair from multimap
+void erase_kv (std::multimap<iPoint, iPoint> & mm, const iPoint & k, const iPoint &v){
+  auto i = mm.lower_bound(k);
+  while (i != mm.upper_bound(k)){
+    if (i->second == v) i=mm.erase(i);
+    else i++;
+  }
+}
+
+// Merge contours.
+// Sizes of pf and pb should be same, they should contain
+// pairs p1->p2 and p2->p1 of coordinates multiplied by 1e6.
+dMultiLine merge_cntr(std::multimap<iPoint, iPoint> & pf,
+                      std::multimap<iPoint, iPoint> & pb){
+
+  dMultiLine ret;
+  while (pf.size()){
+    iLine l;
+    auto p1 = pf.begin()->first;
+    auto p2 = pf.begin()->second;
+    l.push_back(p1);
+    l.push_back(p2);
+    pf.erase(p1);
+    pb.erase(p2);
+
+    while (1){
+
+     if (pf.count(p2)){
+        auto p3 = pf.find(p2)->second;
+        l.push_back(p3);
+        erase_kv(pf, p2, p3);
+        erase_kv(pb, p3, p2);
+        p2 = p3;
+      }
+
+      else if (pb.count(p2)){
+        auto p3 = pb.find(p2)->second;
+        l.push_back(p3);
+        erase_kv(pb, p2, p3);
+        erase_kv(pf, p3, p2);
+        p2 = p3;
+      }
+
+      else if (pf.count(p1)){
+        auto p3 = pf.find(p1)->second;
+        l.insert(l.begin(), p3);
+        erase_kv(pf, p1, p3);
+        erase_kv(pb, p3, p1);
+        p1 = p3;
+      }
+
+      else if (pb.count(p1)){
+        auto p3 = pb.find(p1)->second;
+        l.insert(l.begin(), p3);
+        erase_kv(pb, p1, p3);
+        erase_kv(pf, p3, p1);
+        p1 = p3;
+      }
+
+      else break;
+    }
+    if (l.size()) ret.push_back((dLine)l*1e-6);
+  }
+  return ret;
+}
+
+
 std::map<short, dMultiLine>
 SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
 
@@ -518,7 +585,6 @@ SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
   dRect drange = range*(w-1.0);
   drange.x /= kx; drange.w /= kx;
   iRect irange = ceil(drange);
-//  irange.x *= kx; irange.w *= kx;
 
   int x1  = irange.tlc().x;
   int x2  = irange.brc().x;
@@ -545,7 +611,7 @@ std::cerr << "smooth data\n";
         double s1=0;
         for (int sx=-ri;sx<=ri;sx++){
           for (int sy=-ri;sy<=ri;sy++){
-            if (x+sx<0 || y+sy<0 || x+sx>x2-x1 || y+sy>y2-y1) continue;
+            if (!img.check_crd(x+sx, y+sy)) continue;
             double w = exp(-(sx*sx + sy*sy)/smooth);
             s0 += w;
             s1 += w*img.get16(x+sx,y+sy);
@@ -559,7 +625,8 @@ std::cerr << "smooth data\n";
 
 
 std::cerr << "find contours\n";
-  std::map<short, dMultiLine> ret;
+  std::map<short, std::multimap<iPoint, iPoint> > pf, pb;
+
   int count = 0;
   for (int y=y1; y<y2; y++){
     for (int x=x1; x<x2; x++){
@@ -601,56 +668,22 @@ std::cerr << "find contours\n";
           p1 = i.second;
           continue;
         }
-        p2 = i.second;
-
-        // We found segment p1-p2 with height h
-        // first try to append it to existing line in ret[h]
-        bool done=false;
-        for (auto & l:ret[h]){
-          int e = (int)l.size()-1;
-          if (e<=0) continue; // we have no 1pt lines!
-          if (dist(l[0], p1)<E){ l.insert(l.begin(), p2); done=true; break;}
-          if (dist(l[0], p2)<E){ l.insert(l.begin(), p1); done=true; break;}
-          if (dist(l[e], p1)<E){ l.push_back(p2); done=true; break;}
-          if (dist(l[e], p2)<E){ l.push_back(p1); done=true; break;}
+        else {
+          p2 = i.second;
+          pf[h].emplace(p1*1e6, p2*1e6);
+          pb[h].emplace(p2*1e6, p1*1e6);
+          h = SRTM_VAL_UNDEF;
         }
-        if (!done){ // insert new line into ret[h]
-          dLine hor;
-          hor.push_back(p1);
-          hor.push_back(p2);
-          ret[h].push_back(hor);
-        }
-        h=SRTM_VAL_UNDEF;
-        count++;
-      }
-
-    }
-  }
-
-  // merge contours (similar code is in point_int.cpp/border_line)
-std::cerr << "merge contours\n";
-  for(auto & d:ret){
-    for (auto i1 = d.second.begin(); i1!=d.second.end(); i1++){
-      for (auto i2 = i1+1; i2!=d.second.end(); i2++){
-        if (dist(*(i1->begin()),*(i2->begin()))<E){
-          i1->insert(i1->begin(), i2->rbegin(), i2->rend());
-        }
-        else if (dist(*(i1->begin()),*(i2->rbegin()))<E){
-          i1->insert(i1->begin(), i2->begin(), i2->end());
-        }
-        else if (dist(*(i1->rbegin()),*(i2->begin()))<E){
-          i1->insert(i1->end(), i2->begin(), i2->end());
-        }
-        else if (dist(*(i1->rbegin()),*(i2->rbegin()))<E){
-          i1->insert(i1->end(), i2->rbegin(), i2->rend());
-        }
-        else continue;
-        d.second.erase(i2);
-        i2=i1;
       }
     }
   }
 
+  // merge contours
+  std::map<short, dMultiLine> ret;
+  for(const auto & pp : pf){
+    auto h = pp.first;
+    ret[h] = merge_cntr(pf[h], pb[h]);
+  }
   return ret;
 }
 
@@ -697,7 +730,7 @@ std::cerr << "smooth slope data\n";
         double s1=0;
         for (int sx=-ri;sx<=ri;sx++){
           for (int sy=-ri;sy<=ri;sy++){
-            if (x+sx<0 || y+sy<0 || x+sx>x2-x1 || y+sy>y2-y1) continue;
+            if (!img.check_crd(x+sx, y+sy)) continue;
             double v = img.getF(x+sx,y+sy);
             double w = exp(-(sx*sx + sy*sy)/smooth);
             s0 += w;
@@ -713,7 +746,10 @@ std::cerr << "smooth slope data\n";
   // Find contours
   // Add one extra point on each side to put zero values there
   // and get closed contours.
-  dMultiLine ret;
+
+  // Put each pair of points into two arrays
+  // for both directions
+  std::multimap<iPoint, iPoint> pf, pb;
 
 std::cerr << "find slope contours\n";
   for (int y=y1-1; y<=y2; y++){
@@ -746,49 +782,14 @@ std::cerr << "find slope contours\n";
       // Put contours which are crossing the data cell 2 or 4 times to `ret`.
       for (size_t i=1; i<pts.size(); i+=2){
         dPoint p1 = pts[i-1], p2 = pts[i];
-        // first try to append it to existing line in ret[h]
-        bool done=false;
-        for (auto & l:ret){
-          int e = (int)l.size()-1;
-          if (e<=0) continue; // we have no 1pt lines!
-          if (dist(l[0], p1) < E){ l.insert(l.begin(), p2); done=true; break;}
-          if (dist(l[0], p2) < E){ l.insert(l.begin(), p1); done=true; break;}
-          if (dist(l[e], p1) < E){ l.push_back(p2); done=true; break;}
-          if (dist(l[e], p2) < E){ l.push_back(p1); done=true; break;}
-        }
-        // insert new line into ret
-        if (!done){
-          dLine hor;
-          hor.push_back(p1);
-          hor.push_back(p2);
-          ret.push_back(hor);
-        }
+        pf.emplace(1e6*p1, 1e6*p2);
+        pb.emplace(1e6*p2, 1e6*p1);
       }
     }
   }
 
-  // merge contours
-std::cerr << "merge slope contours\n";
-  for (auto i1 = ret.begin(); i1!=ret.end(); i1++){
-    for (auto i2 = i1+1; i2!=ret.end(); i2++){
-      if (dist(*(i1->begin()),*(i2->begin()))<E){
-        i1->insert(i1->begin(), i2->rbegin(), i2->rend());
-      }
-      else if (dist(*(i1->begin()),*(i2->rbegin()))<E){
-        i1->insert(i1->begin(), i2->begin(), i2->end());
-      }
-      else if (dist(*(i1->rbegin()),*(i2->begin()))<E){
-        i1->insert(i1->end(), i2->begin(), i2->end());
-      }
-      else if (dist(*(i1->rbegin()),*(i2->rbegin()))<E){
-        i1->insert(i1->end(), i2->rbegin(), i2->rend());
-      }
-      else continue;
-      ret.erase(i2);
-      i2=i1;
-    }
-  }
-
+  std::cerr << "merge slope contours\n";
+  auto ret = merge_cntr(pf, pb);
   return ret;
 }
 
