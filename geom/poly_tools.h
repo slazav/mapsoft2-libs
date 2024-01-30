@@ -564,7 +564,7 @@ test_pairs(const Line<CT,PT> & l1, const Line<CT,PT> & l2,
 /*
  Margin Classifier --
  Find line which separates two point sets L1 and L2 with maximal margin.
- Returns margin value (can by < 0).
+ Returns margin value (can be < 0).
  p0 is set to line origin, and t is set to line direction.
 */
 template <typename CT, typename PT>
@@ -592,7 +592,7 @@ margin_classifier(const Line<CT,PT> & L1, const Line<CT,PT> & L2,
   // We have found two support vectors: p1 and p2 in one of the boundaries and
   // the distance between sets (positive or negative).
 
-  // Now move the line p1-p2 by maxdist/2 на maxdist/2.
+  // Now move the line p1-p2 by maxdist/2.
 
   t = norm(p2-p1);
   dPoint n(-t.y, t.x);
@@ -610,7 +610,6 @@ margin_classifier(const Line<CT,PT> & L1, const Line<CT,PT> & L2,
 template <typename CT, typename PT>
 bool
 check_hole(const Line<CT,PT> & pts1, const Line<CT,PT> & pts2){
-  // see poly_tools.h
   bool brd = false;
   PolyTester<CT,PT> pt1(pts1);
   for (const auto & p2:pts2){
