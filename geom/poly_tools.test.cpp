@@ -262,6 +262,18 @@ main(){
         (double (*)(const dPoint &, const dPoint &))dist), sqrt(2), 1e-6);
     }
 
+    // nearest_pt
+    {
+      assert_deq(nearest_pt(dPoint(0,0),  dPoint(-1,1), dPoint(+1,1), true), dPoint(0,1), 1e-6);
+      assert_deq(nearest_pt(dPoint(-3,0), dPoint(-1,1), dPoint(+1,1), true), dPoint(-1,1), 1e-6);
+      assert_deq(nearest_pt(dPoint(+3,0), dPoint(-1,1), dPoint(+1,1), true), dPoint(+1,1), 1e-6);
+
+      assert_deq(nearest_pt(dPoint(0,0,0),  dPoint(-1,1,1), dPoint(+1,1,10), false), dPoint(-1,1,1), 1e-6);
+      assert_deq(nearest_pt(dPoint(0,0,0),  dPoint(-1,1,1), dPoint(+1,1,10), true),  dPoint(0,1,5.5), 1e-6);
+
+    }
+
+
     // line_filter_v1
     {
       iLine l1("[[0,0],[1,1],[2,2],[5,3],[8,3],[10,4]]"), l2;

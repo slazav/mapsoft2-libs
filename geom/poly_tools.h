@@ -343,7 +343,6 @@ Rect<CT> figure_bbox(const::std::string &str) {
 }
 
 /****************************************************/
-/****************************************************/
 /// Find distance to the nearest vertex of a Line.
 /// Arguments:
 ///   l -- line
@@ -387,36 +386,26 @@ nearest_vertex(const MultiLine<CT,PT> & ml, const PT & pt, PT * ptp=NULL,
   return d;
 }
 
+/****************************************************/
+
 ///  For point p0 find nearest point on the segment p1,p2
 template<typename PT>
-dPoint nearest_pt(const PT & p0, const PT & p1, const PT & p2){
+dPoint nearest_pt(const PT & p0, const PT & p1, const PT & p2, bool use2d = true){
   if (p1==p2) return p1;
-  double ll = dist(p1,p2);
+  double ll = use2d ? dist2d(p1,p2) : dist(p1,p2);
   dPoint v = dPoint(p2-p1)/ll;
 
-  double prl = pscal(dPoint(p0-p1), v);
+  double prl = use2d ? pscal2d(dPoint(p0-p1), v): pscal(dPoint(p0-p1), v);
   if ((prl>=0)&&(prl<=ll))  // point is inside a segment
     return (dPoint)p1 + v*prl;
 
-  return dist2d(p0,p1) < dist(p0,p2)? p1:p2;
-}
-
-template<typename PT>
-dPoint nearest_pt2d(const PT & p0, const PT & p1, const PT & p2){
-  if (p1==p2) return p1;
-  double  ll = dist2d(p1,p2);
-  dPoint v = dPoint(p2-p1)/ll;
-
-  double prl = pscal2d(dPoint(p0-p1), v);
-
-  if ((prl>=0)&&(prl<=ll))  // point is inside a segment
-    return (dPoint)p1 + v*prl;
-
-  return dist2d(p0,p1) < dist2d(p0,p2)? p1:p2;
+  double d1 = use2d ? dist2d(p0,p1) : dist(p0,p1);
+  double d2 = use2d ? dist2d(p0,p2) : dist(p0,p2);
+  return d1<d2 ? p1:p2;
 }
 
 /*
- Find the minimum distance between a line and a point <pt>.
+ Find minimum distance between a line and a point <pt>.
 
  If the distance is less then <maxdist> then the distance is returned,
  the nearest point in the line is returned in <pt> and direction in <vec>.
@@ -425,7 +414,7 @@ dPoint nearest_pt2d(const PT & p0, const PT & p1, const PT & p2){
  <pt> and <vec> are not modified.
 */
 template<typename CT, typename PT>
-double nearest_pt(const Line<CT,PT> & line, dPoint & vec, Point<CT> & pt, double maxdist){
+double nearest_pt(const Line<CT,PT> & line, dPoint & vec, Point<CT> & pt, double maxdist, bool use2d = true){
 
   Point<CT> pm = pt;
 
@@ -434,9 +423,10 @@ double nearest_pt(const Line<CT,PT> & line, dPoint & vec, Point<CT> & pt, double
     auto p2 = line[j];
     if (p1==p2) continue;
 
-    auto pc = nearest_pt2d(pt,p1,p2);
-    auto lc = dist(pt,pc);
-    if (lc<maxdist) { maxdist=lc; pm=pc; vec = dPoint(p2-p1)/dist2d(p1,p2); }
+    auto pc = nearest_pt(pt,p1,p2, use2d);
+    auto lc = use2d ? dist2d(pt,pc) : dist(pt,pc);
+    auto d12 = use2d ? dist2d(p1,p2) : dist(p1,p2);
+    if (lc<maxdist) { maxdist=lc; pm=pc; vec = dPoint(p2-p1)/d12; }
   }
   pt=pm;
   return maxdist;
@@ -444,11 +434,11 @@ double nearest_pt(const Line<CT,PT> & line, dPoint & vec, Point<CT> & pt, double
 
 // same for MultiLine
 template<typename CT, typename PT>
-double nearest_pt(const MultiLine<CT,PT> & lines, dPoint & vec, Point<CT> & pt, double maxdist){
+double nearest_pt(const MultiLine<CT,PT> & lines, dPoint & vec, Point<CT> & pt, double maxdist, bool use2d = true){
   dPoint pm=pt;
   for (const auto & line:lines){
     auto p = pt;
-    maxdist = nearest_pt(line, vec, p, maxdist);
+    maxdist = nearest_pt(line, vec, p, maxdist, use2d);
     if ( p != pt) { pm = p;}
   }
   pt=pm;
