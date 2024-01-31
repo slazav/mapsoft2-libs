@@ -272,6 +272,98 @@ main(){
       assert_deq(nearest_pt(dPoint(0,0,0),  dPoint(-1,1,1), dPoint(+1,1,10), true),  dPoint(0,1,5.5), 1e-6);
 
     }
+    // segment_cross_2d
+    {
+      dPoint p0;
+      // two horizontal lines
+      assert_eq(segment_cross_2d(dPoint(0,0), dPoint(4,0), dPoint(0,4), dPoint(4,4), p0), false);
+      assert_eq(std::isinf(p0.x), true);
+      assert_eq(std::isnan(p0.y), true);
+
+      // two vertical lines
+      assert_eq(segment_cross_2d(dPoint(0,0), dPoint(0,4), dPoint(4,0), dPoint(4,4), p0), false);
+      assert_eq(std::isnan(p0.x), true);
+      assert_eq(std::isinf(p0.y), true);
+
+      // crossing in the middle
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(1,0), dPoint(0,-1), dPoint(0,1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(1,0), dPoint(-1,-1), dPoint(1,1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(1,0), dPoint(1,-1), dPoint(-1,1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(1,1), dPoint(0,-1), dPoint(0,1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,1), dPoint(1,-1), dPoint(0,-1), dPoint(0,1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,1), dPoint(1,-1), dPoint(1,1), dPoint(-1,-1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      // crossing at the end (p1 and q1 included in segments, p2,q2 not)
+
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(0,0), dPoint(-1,-1), dPoint(1,1), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(0,0), dPoint(-1,0), dPoint(-1,-1), dPoint(1,1), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(1,0), dPoint(0,0), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(0,0), dPoint(1,0), p0), true);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(0,0), dPoint(0,0), dPoint(-1,-1), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      // empty lines - no crossings
+
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(0,0), dPoint(0,0), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(2,2), dPoint(2,2), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(0,0), dPoint(0,0), dPoint(-1,-1), dPoint(1,1), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(2,2), dPoint(2,2), dPoint(-1,-1), dPoint(1,1), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      // segments on the same line - no crossing
+
+      assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(0,0), dPoint(1,1), dPoint(2,2), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(0,0), dPoint(-1,-1), dPoint(0,0), dPoint(1,1), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(1,1), dPoint(0,0), dPoint(2,2), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(1,1), dPoint(-1,-1), dPoint(1,1), p0), false);
+      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+
+      // crossing outside segments
+
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(1,0), dPoint(0,1), dPoint(0,2), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(1,0), dPoint(1,1), dPoint(2,2), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-2,0), dPoint(-1,0), dPoint(1,-1), dPoint(-1,1), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+      assert_eq(segment_cross_2d(dPoint(-2,-2), dPoint(-1,-1), dPoint(0,-1), dPoint(0,1), p0), false);
+      assert_deq(p0, dPoint(0,0), 1e-6);
+
+    }
 
 
     // line_filter_v1

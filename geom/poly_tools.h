@@ -446,6 +446,40 @@ double nearest_pt(const MultiLine<CT,PT> & lines, dPoint & vec, Point<CT> & pt, 
 }
 
 /****************************************************/
+// Check if two segments are crossing (2D),
+// return crossing point in cr (even if segments are not crossing).
+// Points p2, q2 are not included into segments.
+// Segments on any parallel lines (even same) are not crossing.
+// No crossings for zero-length segments.
+
+template<typename PT>
+bool segment_cross_2d(const PT & p1, const PT & p2,
+                      const PT & q1, const PT & q2,
+                      dPoint & cr){
+
+  // line through points (x1,y1) and (x2,y2):
+  // y*(x2-x1) = (y2-y1)*x + (y1*x2 - y2*x1)
+
+  // Find crossing of two lines (x0,y0): AX*x0 = BX, AY*y0 = BY
+  double AX = (p2.y-p1.y)*(q2.x-q1.x) - (q2.y-q1.y)*(p2.x-p1.x);
+  double AY = (q2.y-q1.y)*(p2.x-p1.x) - (p2.y-p1.y)*(q2.x-q1.x);
+  double BX = (q1.y*q2.x - q2.y*q1.x)*(p2.x-p1.x) - (p1.y*p2.x - p2.y*p1.x)*(q2.x-q1.x);
+  double BY = (p1.y*p2.x - p2.y*p1.x)*(q2.y-q1.y) - (q1.y*q2.x - q2.y*q1.x)*(p2.y-p1.y);
+
+  cr = dPoint(BX/AX, BY/AY);
+  // note that coordinates can be inf or nan!
+  if (cr.x != cr.x || cr.y != cr.y) return false;
+
+  double dp = dist2d(p1,p2);
+  double dq = dist2d(q1,q2);
+
+  if (dist2d(cr,p1) >= dp || dist2d(cr,p2) > dp ||
+      dist2d(cr,q1) >= dq || dist2d(cr,q2) > dq) return false;
+
+  return true;
+}
+
+/****************************************************/
 
 
 /// Filter out some points (up to number np, or distance from original line e)
