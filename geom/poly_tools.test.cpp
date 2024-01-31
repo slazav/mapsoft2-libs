@@ -236,7 +236,7 @@ main(){
 
     }
 
-    // nearest_pt
+    // nearest_vertex
     {
       dPoint p0d;
       iPoint p0i;
@@ -251,6 +251,15 @@ main(){
 
       assert_feq(nearest_vertex(dMultiLine("[[], [[0,0],[2,1],[4,2]]]"), dPoint(1,2)), sqrt(2), 1e-6);
       assert_err(nearest_vertex(dMultiLine("[[], []]"), dPoint(1,2), &p0d), "Can't find nearest point: empty line");
+
+      // z-coordinate
+      assert_feq(nearest_vertex(dLine("[[0,0,-10], [1,1,0], [2,2,10]]"), dPoint(0,0)), 0, 1e-6);
+
+      assert_feq(nearest_vertex(dLine("[[0,0,-10], [1,1,0], [2,2,10]]"), dPoint(0,0), (dPoint*)NULL,
+        (double (*)(const dPoint &, const dPoint &))dist2d), 0, 1e-6);
+
+      assert_feq(nearest_vertex(dLine("[[0,0,-10], [1,1,0], [2,2,10]]"), dPoint(0,0), (dPoint*)NULL,
+        (double (*)(const dPoint &, const dPoint &))dist), sqrt(2), 1e-6);
     }
 
     // line_filter_v1

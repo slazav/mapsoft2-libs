@@ -1,4 +1,5 @@
 #include "vmap2io.h"
+#include "geom/poly_tools.h"
 #include "geo_data/geo_utils.h"
 
 /****************************************************************************/
@@ -122,7 +123,8 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
 
         // Reference point and type
         l1.ref_type = type;
-        geo_nearest_vertex(o, l.pos, &l1.ref_pt);
+        nearest_vertex(o, l.pos, &l1.ref_pt,
+          (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
 
         vmap2.add(l1);
       }

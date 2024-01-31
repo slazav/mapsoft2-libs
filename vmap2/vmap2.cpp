@@ -10,6 +10,7 @@
 #include "vmap2.h"
 #include "string_pack.h"
 #include "filename/filename.h"
+#include "geom/poly_tools.h"
 
 using namespace std;
 
@@ -282,7 +283,8 @@ VMap2::find_refs(const double & dist1, const double & dist2){
         for (auto const & i:find(l.ref_type, r)){
           auto o1 = get(i);
           if (o1.name != l.name) continue;
-          auto d1 = geo_nearest_vertex(o1, l.ref_pt);
+          auto d1 = nearest_vertex(o1, l.ref_pt, (dPoint *)NULL,
+                    (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
           if (d1<md) {md=d1, mi=i;}
         }
 
@@ -313,7 +315,8 @@ VMap2::find_refs(const double & dist1, const double & dist2){
             if (l1.name != l.name) continue;
           }
           auto o1 = get(i);
-          auto d1 = geo_nearest_vertex(o1, l.ref_pt);
+          auto d1 = nearest_vertex(o1, l.ref_pt, (dPoint *)NULL,
+                    (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
           if (d1<md) {md=d1, mi=i;}
         }
         if (md<dist) {

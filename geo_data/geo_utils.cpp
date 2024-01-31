@@ -17,34 +17,6 @@ double geo_dist_2d(const dPoint &p1, const dPoint &p2){
   return 2*R * asin(sqrt(hdy + cy1*cy2*hdx));
 }
 
-double
-geo_nearest_vertex(const dLine & l, const dPoint & pt, dPoint * ptp){
-  double d =  INFINITY;
-  for (const auto & p:l){
-    double d1 = geo_dist_2d(p, pt);
-    if (d1>=d) continue;
-    d = d1;
-    if (ptp) *ptp = p;
-  }
-  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
-  return d;
-}
-
-double
-geo_nearest_vertex(const dMultiLine & ml, const dPoint & pt, dPoint * ptp){
-  double d =  INFINITY;
-  for (const auto & l:ml){
-    for (const auto & p:l){
-      double d1 = geo_dist_2d(p, pt);
-      if (d1>=d) continue;
-      d = d1;
-      if (ptp) *ptp = p;
-    }
-  }
-  if (std::isinf(d)) throw Err() << "Can't find nearest point: empty line";
-  return d;
-}
-
 /**********************/
 
 dMultiLine figure_geo_line(const::std::string &str) {

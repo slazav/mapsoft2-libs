@@ -343,16 +343,24 @@ Rect<CT> figure_bbox(const::std::string &str) {
 }
 
 /****************************************************/
-
+/****************************************************/
 /// Find distance to the nearest vertex of a Line.
-/// If ptp!=NULL then the vertex point will be stored there.
-/// If line is empty exception is thrown.
+/// Arguments:
+///   l -- line
+///   pt -- point
+///   ptp -- if the pointer is not NULL then the vertex point will be stored there
+///   dist_func -- function for measuring distances (default dist_2d)
+/// Return value:
+///   distance from point pt to the nearest vertex of line l
+///
 template <typename CT, typename PT>
 double
-nearest_vertex(const Line<CT,PT> & l, const Point<CT> & pt, Point<CT> * ptp=NULL){
+nearest_vertex(const Line<CT,PT> & l, const PT & pt, PT * ptp=NULL,
+               double (*dist_func)(const PT &, const PT &) = NULL){
+
   double d = INFINITY;
   for (const auto & p:l){
-    double d1 = dist(p, pt);
+    double d1 = dist_func? dist_func(p,pt) : dist2d(p,pt);
     if (d1>=d) continue;
     d = d1;
     if (ptp) *ptp=p;
@@ -364,11 +372,12 @@ nearest_vertex(const Line<CT,PT> & l, const Point<CT> & pt, Point<CT> * ptp=NULL
 /// Same for MultiLine
 template <typename CT, typename PT>
 double
-nearest_vertex(const MultiLine<CT,PT> & ml, const Point<CT> & pt, Point<CT> * ptp=NULL){
+nearest_vertex(const MultiLine<CT,PT> & ml, const PT & pt, PT * ptp=NULL,
+               double (*dist_func)(const PT &, const PT &) = NULL){
   double d =  INFINITY;
   for (const auto & l:ml){
     for (const auto & p:l){
-      double d1 = dist(p, pt);
+      double d1 = dist_func? dist_func(p,pt) : dist2d(p,pt);
       if (d1>=d) continue;
       d = d1;
       if (ptp) *ptp=p;

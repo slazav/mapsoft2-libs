@@ -313,7 +313,8 @@ do_make_label(const VMap2obj & o, const VMap2type & t){
 
   label.name = o.name;
   label.ref_type = o.type;
-  geo_nearest_vertex(o, pt0, &label.ref_pt);
+  nearest_vertex(o, pt0, &label.ref_pt,
+    (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
   label.scale = t.label_def_scale;
   label.align = t.label_def_align;
   return label;
@@ -360,7 +361,8 @@ do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names){
         double m_dist=0;
         while (it!=ref_tab.upper_bound(id)){
           auto l = map.get(it->second);
-          auto d = geo_nearest_vertex(l, l.ref_pt);
+          auto d = nearest_vertex(l, l.ref_pt, (dPoint*)NULL,
+                   (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
           if (m_dist < d){ m_dist=d; m_it=it; }
           ++it;
         }
@@ -426,7 +428,8 @@ do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names){
 
     // update ref_pt
     if (lab.size()==0 || lab[0].size()==0) continue;
-    geo_nearest_vertex(obj, lab[0][0], &lab.ref_pt);
+    nearest_vertex(obj, lab[0][0], &lab.ref_pt,
+      (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
     map.put(id_l, lab);
   }
 
