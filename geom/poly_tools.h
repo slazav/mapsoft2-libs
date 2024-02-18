@@ -4,6 +4,7 @@
 #include "multiline.h"
 #include <algorithm>
 #include <cassert>
+#include <map>
 
 /* Extra polygon-related functions */
 
@@ -479,6 +480,83 @@ bool segment_cross_2d(const PT & p1, const PT & p2,
       dist2d(cr,q1) > dq || dist2d(cr,q2) > dq) return false;
 
   return true;
+}
+
+/****************************************************/
+// Find all crossings of two closed lines
+struct cross_t {
+  dPoint pt; // crossing point
+  size_t i1, i2; // indices of line1 and line2 segments
+
+  cross_t(const dPoint & pt, const size_t i1, const size_t & i2):
+      pt(pt), i1(i1), i2(i2) {}
+};
+
+
+template<typename CT, typename PT>
+std::list<cross_t>
+poly_cross_2d(const Line<CT,PT> & line1, const Line<CT,PT> & line2){
+  std::list<cross_t> ret;
+
+  size_t di1 = 1;
+  size_t N1 = line1.size();
+  size_t N2 = line2.size();
+  // exact crossings (lineA exact index -> lineB index)
+  std::map<size_t, size_t> ecr1, ecr2;
+
+  for (size_t i1b = 0; i1b < N1; i1b+=di1){
+
+    // TODO: it should be a separate normalization function:
+    // remove self crossings and empty segments
+
+    size_t i1e = i1b+1<N1 ? i1b+1 : 0;
+    // skip zero-length segments
+    while (i1e!=i1b && line1[i1b] == line1[i1e])
+      i1e = i1e+1<N1 ? i1e+1 : 0;
+    // skip zero-length segment at the end
+    if (i1e+1 == N1 && line1[0] == line1[i1e])
+      i1e=0;
+    di1=(i1e+N1-i1b)%N1;
+
+    size_t di2 = 1;
+    for (size_t i2b = 0; i2b < N2; i2b+=di2){
+
+      size_t i2e = i2b+1<N2 ? i2b+1 : 0;
+      // skip zero-length segments
+      while (i2e!=i2b && line2[i2b] == line2[i2e])
+        i2e = i2e+1<N2 ? i2e+1 : 0;
+      // skip zero-length segment at the end
+      if (i2e+1 == N2 && line2[0] == line2[i2e])
+        i2e=0;
+      di2=(i2e+N2-i2b)%N2;
+
+      dPoint cr;
+      if (!segment_cross_2d(line1[i1b], line1[i1e],
+                            line2[i2b], line2[i2e], cr)) continue;
+
+      auto i1r = (cr==line1[i1e]) ? i1e:i1b;
+      auto i2r = (cr==line2[i2e]) ? i2e:i2b;
+      // skip duplicated exact crossings
+      if (cr == line1[i1b]){
+        if (ecr1.count(i1b) && i2r == ecr1[i1b]) continue;
+        ecr1.emplace(i1b,i2r);
+      }
+      if (cr == line1[i1e]){
+        if (ecr1.count(i1e) && i2r == ecr1[i1e]) continue;
+        ecr1.emplace(i1e,i2r);
+      }
+      if (cr == line2[i2b]){
+        if (ecr2.count(i2b) && i1r == ecr2[i2b]) continue;
+        ecr2.emplace(i2b,i1r);
+      }
+      if (cr == line2[i2e]){
+        if (ecr2.count(i2e) && i1r == ecr2[i2e]) continue;
+        ecr2.emplace(i2e,i1r);
+      }
+      ret.emplace_back(cr, i1b, i2b);
+    }
+  }
+  return ret;
 }
 
 /****************************************************/
