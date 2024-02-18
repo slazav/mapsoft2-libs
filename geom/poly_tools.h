@@ -448,7 +448,9 @@ double nearest_pt(const MultiLine<CT,PT> & lines, dPoint & vec, Point<CT> & pt, 
 /****************************************************/
 // Check if two segments are crossing (2D),
 // return crossing point in cr (even if segments are not crossing).
-// Points p2, q2 are not included into segments.
+// Both ends included into segments: this may produce
+// duplication of crossing points (if line just touches another line),
+// but should always produce even number of crossings for closed lines.
 // Segments on any parallel lines (even same) are not crossing.
 // No crossings for zero-length segments.
 
@@ -473,8 +475,8 @@ bool segment_cross_2d(const PT & p1, const PT & p2,
   double dp = dist2d(p1,p2);
   double dq = dist2d(q1,q2);
 
-  if (dist2d(cr,p1) >= dp || dist2d(cr,p2) > dp ||
-      dist2d(cr,q1) >= dq || dist2d(cr,q2) > dq) return false;
+  if (dist2d(cr,p1) > dp || dist2d(cr,p2) > dp ||
+      dist2d(cr,q1) > dq || dist2d(cr,q2) > dq) return false;
 
   return true;
 }

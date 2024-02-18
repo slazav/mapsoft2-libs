@@ -304,21 +304,21 @@ main(){
       assert_eq(segment_cross_2d(dPoint(-1,1), dPoint(1,-1), dPoint(1,1), dPoint(-1,-1), p0), true);
       assert_deq(p0, dPoint(0,0), 1e-6);
 
-      // crossing at the end (p1 and q1 included in segments, p2,q2 not)
+      // crossing at the end
 
-      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(0,0), dPoint(-1,-1), dPoint(1,1), p0), false);
+      assert_eq(segment_cross_2d(dPoint(-1,0), dPoint(0,0), dPoint(-1,-1), dPoint(1,1), p0), true);
       assert_deq(p0, dPoint(0,0), 1e-6);
 
       assert_eq(segment_cross_2d(dPoint(0,0), dPoint(-1,0), dPoint(-1,-1), dPoint(1,1), p0), true);
       assert_deq(p0, dPoint(0,0), 1e-6);
 
-      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(1,0), dPoint(0,0), p0), false);
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(1,0), dPoint(0,0), p0), true);
       assert_deq(p0, dPoint(0,0), 1e-6);
 
       assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(0,0), dPoint(1,0), p0), true);
       assert_deq(p0, dPoint(0,0), 1e-6);
 
-      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(0,0), dPoint(0,0), dPoint(-1,-1), p0), false);
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(0,0), dPoint(0,0), dPoint(-1,-1), p0), false); // same line
       assert_deq(p0, dPoint(0,0), 1e-6);
 
       // empty lines - no crossings
