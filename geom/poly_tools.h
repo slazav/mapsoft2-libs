@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <set>
 
 /* Extra polygon-related functions */
 
@@ -595,8 +596,8 @@ void line_filter_v1(MultiLine<CT,PT> & lines, double e, int np,
     line_filter_v1(*l, e, np, dist_func);
     // remove 2-point lines shorter then e
     if (l->size() != 2 || e<=0) continue;
-    dPoint p1 = (*l)[0];
-    dPoint p2 = (*l)[1];
+    auto p1 = (*l)[0];
+    auto p2 = (*l)[1];
     double d = dist_func? dist_func(p1,p2) : dist(p1,p2);
     if (d<e) lines.erase(l--);
   }
@@ -714,23 +715,253 @@ margin_classifier(const Line<CT,PT> & L1, const Line<CT,PT> & L2,
   return maxdist;
 }
 
+// Find area of a polygon (sign shows orientation).
+template <typename CT, typename PT>
+double line_area(const Line<CT,PT> & line){
+  double ret = 0.0;
+  for (size_t i = 0; i < line.size(); i++){
+    auto p1 = line[i];
+    auto p2 = i>0? line[i-1]: line[line.size()-1];
+    ret += (p1.x - p2.x)*(p1.y + p2.y)/2.0;
+  }
+  return ret;
+}
+
+
+typedef enum {
+  POLY_ADD,
+  POLY_SUB
+} poly_op_t;
+
+
+// Crop single-segment polygons. Line1 is cropped by line2.
+template <typename CT, typename PT>
+MultiLine<CT,PT> poly_op(const Line<CT,PT> & line1, const Line<CT,PT> & line2, const poly_op_t & op){
+
+  // line crossing
+  struct cross_t {
+    dPoint pt; // crossing point
+    size_t i1b,i1e; // indices of line1 segment
+    size_t i2b,i2e; // indices of line2 segment
+    double dist1; // distance from beginning of line1 segment
+    double dist2; // distance from beginning of line2 segment
+    cross_t *i1n, *i2n; // next crossing along line1 and line2, NULL if unknown
+    cross_t *i1p, *i2p; // previous crossing along line1 and line2, NULL if unknown
+
+    cross_t(const dPoint & pt, const size_t i1b, const size_t & i1e,
+            const size_t i2b, const size_t & i2e,
+            const double dist1, const double dist2):
+      pt(pt), i1b(i1b), i1e(i1e), i2b(i2b), i2e(i2e),
+      dist1(dist1), dist2(dist2),
+      i1n(NULL), i2n(NULL), i1p(NULL), i2p(NULL) {}
+  };
+
+  // Find all crossings
+  std::vector<cross_t> cross;
+  for (size_t i1b = 0; i1b < line1.size(); i1b++){
+    size_t i1e = i1b+1<line1.size() ? i1b+1 : 0;
+
+    for (size_t i2b = 0; i2b < line2.size(); i2b++){
+      size_t i2e = i2b+1<line2.size() ? i2b+1 : 0;
+      dPoint cr;
+      bool res = segment_cross_2d(
+        line1[i1b], line1[i1e], line2[i2b], line2[i2e], cr);
+
+      if (res) {
+        cross.emplace_back(cr, i1b, i1e, i2b, i2e,
+          dist2d(line1[i1b],cr), dist2d(line2[i2b],cr));
+std::cerr << "  cr: " << i1b << " " << i1e << " " << i2b << " " << i2e << " " << cr << "\n";
+      }
+    }
+  }
+std::cerr << "line1: " << line1 << "\n";
+std::cerr << "line2: " << line2 << "\n";
+std::cerr << "crossings: " << cross.size() << "\n";
+
+  // Fill i*n, i*p fields
+  size_t N = cross.size();
+  if (N>0){
+    std::vector<cross_t *> cross_s(N);
+    for (size_t i = 0; i < N; i++) cross_s[i] = &cross[i];
+
+    // Sorted crossings along line1
+    struct {
+      bool operator()(const cross_t * a, const cross_t * b) const {
+        return a->i1b < b->i1b || (a->i1b == b->i1b && a->dist1 < b->dist1); }
+    } cross_cmp1;
+    std::sort(cross_s.begin(), cross_s.end(), cross_cmp1);
+
+    for (size_t i = 0; i<N; i++){
+      cross_s[i]->i1n = cross_s[i+1<N? i+1:0];
+      cross_s[i]->i1p = cross_s[i>0? i-1:N-1];
+    }
+
+    // Same for line2
+    struct {
+      bool operator()(const cross_t * a, const cross_t * b) const {
+        return a->i2b < b->i2b || (a->i2b == b->i2b && a->dist2 < b->dist2); }
+    } cross_cmp2;
+    std::sort(cross_s.begin(), cross_s.end(), cross_cmp2);
+
+    for (size_t i = 0; i<N; i++){
+      cross_s[i]->i2n = cross_s[i+1<N? i+1:0];
+      cross_s[i]->i2p = cross_s[i>0? i-1:N-1];
+    }
+  }
+
+std::cerr << "sort crossings\n";
+
+  // we need to test are points inside lines or not
+  PolyTester<CT,PT> pt1(line1), pt2(line2);
+
+  // Now we can calculate result line!
+  MultiLine<CT,PT> ret;
+
+  // no crossing case
+  if (N==0) {
+    if (op == POLY_ADD){
+      if (line1.size() == 0) {ret.push_back(line2); return ret;}
+      if (line2.size() == 0) {ret.push_back(line1); return ret;}
+      // one can imaging all points except a few are coinside
+      // if at least one is inside, return another line
+      for (size_t i = 0; i < line1.size(); i++)
+        if (pt2.test_pt(line1[i])) {ret.push_back(line2); return ret;}
+      for (size_t i = 0; i < line2.size(); i++)
+        if (pt1.test_pt(line2[i])) {ret.push_back(line1); return ret;}
+      ret.push_back(line1); return ret;
+    }
+    else if (op == POLY_SUB){
+      if (line1.size() == 0) return ret;
+      if (line2.size() == 0) {ret.push_back(line1); return ret;}
+      // non-empty difference only if line2 is inside line1
+      for (size_t i = 0; i < line2.size(); i++)
+        if (pt1.test_pt(line2[i])) {ret.push_back(line1); ret.push_back(line2); return ret;}
+      return ret;
+    }
+    else throw Err() << "Unknown operation";
+  }
+
+//  double a1 = line_area(line1);
+//  double a2 = line_area(line2);
+//  std::cerr << "areas: " << a1 << "  " << a2 << "\n";
+
+  // we have at least one crossing. Let's start from this point
+  std::set<cross_t *> todo;
+  for (size_t i = 0; i < N; i++) todo.insert(&cross[i]);
+  while (todo.size()>0){
+    auto c0 = *todo.begin();
+    todo.erase(todo.begin());
+std::cerr << "start loop\n";
+
+    // We want to do a full loop starting from the crossing.
+    // On each crossing we switch to another line, choosing direction
+    // which goes inside or ouside of previous line, depending on
+    // op parameter.
+
+    bool l1 = false; // previous line is line1?
+    Line<CT,PT> loop; // constructed loop
+    cross_t *c1 = c0;
+    cross_t *c2;
+    while (1){
+      loop.push_back(c1->pt);
+std::cerr << "  pt: " << c1->pt << "\n";
+      if (l1) { // switching line1 -> line2
+        cross_t *c2n = c1->i2n;
+        cross_t *c2p = c1->i2p;
+        if (!c2n || !c2p) throw Err() <<
+          "NULL crossing address"; // should not happen
+        // We should check if segment goes outside or inside previous line.
+        // For this we choose reference point: start of next crossing segment
+        // if crossings are on different segments, center between crossings otherwise.
+        auto pref = line2[c2n->i2b];
+        if (c1->i2b == c2n->i2b)
+          pref += norm(line2[c2n->i2e] - line2[c2n->i2b]) * (c1->dist2 + c2n->dist2)/2.0;
+        c2 = (op == POLY_ADD) == pt1.test_pt(pref) ? c2n : c2p;
+        // Go from c1 to c2 along line2:
+std::cerr << "  l2: " << c1->i2e << " " << c2->i2e <<  "\n";
+        for (size_t i = c1->i2e; i!=c2->i2e; i = i<line2.size()-1 ? i+1:0) loop.push_back(line2[i]);
+      }
+      else { // same for switching line2 -> line1
+        cross_t *c2n = c1->i1n;
+        cross_t *c2p = c1->i1p;
+        if (!c2n || !c2p) throw Err() <<
+          "NULL crossing address"; // should not happen
+        // We should check if segment goes outside or inside previous line.
+        // For this we choose reference point: start of next crossing segment
+        // if crossings are on different segments, center between crossings otherwise.
+        auto pref = line1[c2n->i1b];
+        if (c1->i1b == c2n->i1b)
+          pref += (line1[c2n->i1e] - line1[c2n->i1b]) * (c1->dist1 + c2n->dist1)/2.0;
+        c2 = (op == POLY_ADD) == pt2.test_pt(pref) ? c2n : c2p;
+        // Go from c1 to c2 along line1:
+std::cerr << "  l1: " << c1->i1e << " " << c2->i1e <<  "\n";
+        for (size_t i = c1->i1e; i!=c2->i1e; i = i<line1.size()-1 ? i+1:0) loop.push_back(line1[i]);
+      }
+      if (c2 == c0) break; // end of loop
+      auto c2i = todo.find(c2);
+      if (c2i!=todo.end()) todo.erase(c2i);
+      c1 = c2;
+      l1 = !l1;
+    }
+std::cerr << "loop done\n";
+    ret.push_back(loop);
+  }
+
+  return ret;
+}
+
+// Same for multilines.
+template <typename CT, typename PT>
+MultiLine<CT,PT> poly_op(const MultiLine<CT,PT> & ml1, const MultiLine<CT,PT> & ml2, const poly_op_t & op){
+  // subtract
+  MultiLine<CT,PT> ret;
+  if (op == POLY_SUB) {
+    for (const auto & l1:ml1){
+      for (const auto & l2:ml2){
+        auto l = poly_op(l1,l2, POLY_SUB);
+        ret.insert(ret.end(), l.begin(), l.end());
+      }
+    }
+  }
+  else {
+/*    // join both multilines
+    ret.insert(ret.end(), ml1.begin(), ml1.end());
+    ret.insert(ret.end(), ml2.begin(), ml2.end());
+    size_t ns = 0;
+    while (ns!=ret.size()){
+      // join 
+      auto i1 = ret.begin(), i2 = ret.begin();
+
+      for (const i)
+      for (const auto & l1:ml1){
+        for (const auto & l2:ml2){
+     
+        }
+      }
+    }
+
+    for (const auto & l1:ml1){
+      ret = poly_op(ret,l2, POLY_ADD);
+    }
+*/
+  }
+}
 
 // Check if pts2 is a hole inside pts1:
-// all points of pts1 are outside pts2,
 // all points of pts2 are inside pts1.
+// all points of pts1 are outside pts2,
 // This is not a very good definition of a hole,
 // but should be OK for real maps.
 template <typename CT, typename PT>
 bool
 check_hole(const Line<CT,PT> & pts1, const Line<CT,PT> & pts2){
-  bool brd = false;
   PolyTester<CT,PT> pt1(pts1);
   for (const auto & p2:pts2){
-    if (!pt1.test_pt(p2, brd)) return false;
+    if (!pt1.test_pt(p2, true)) return false;
   }
   PolyTester<CT,PT> pt2(pts2);
   for (const auto & p1:pts1){
-    if (pt2.test_pt(p1, brd)) return false;
+    if (pt2.test_pt(p1, false)) return false;
   }
   return true;
 }
