@@ -109,6 +109,9 @@ class SRTM {
     /// Hole interpolation is done according with srtm_interp_holes option.
     short get_val_int16(const dPoint & p);
 
+    /// Get smooth value (averaging with Gaussian weight in radius r)
+    double get_val_smooth(const int x, const int y, const double r);
+
     /// set new hight in cached data (used for interpolation)
     short set_val(const int x, const int y, const short h);
 
@@ -120,13 +123,16 @@ class SRTM {
     /// Hole interpolation is done according with srtm_interp_holes option.
     double get_slope_int4(const dPoint & p);
 
+    /// Get smooth slope (averaging with Gaussian weight in radius r)
+    double get_slope_smooth(const int x, const int y, const double r);
+
     // make vector data: contours
     // use kx parameter to use only every kx-th horizontal point.
     // if kx == 0 then use some latitude-dependent default.
-    std::map<short, dMultiLine> find_contours(const dRect & range, int step, int kx=0);
+    std::map<short, dMultiLine> find_contours(const dRect & range, int step, int kx=0, double smooth = 0.0);
 
     // make vector data: slope contours
-    dMultiLine find_slope_contours(const dRect & range, double val, int kx=0);
+    dMultiLine find_slope_contours(const dRect & range, double val, int kx=0, double smooth = 0.0);
 
     // make vector data: peaks
     std::map<dPoint, short> find_peaks(const dRect & range, int DH, size_t PS);

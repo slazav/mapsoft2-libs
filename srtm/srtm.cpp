@@ -654,11 +654,10 @@ std::cerr << "find contours\n";
           if ((v<0)||(v>1)) continue;
           dPoint cr = ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0);
           cr.x*=kx;
-          cr.y-=1/(w-1.0); // ??
           pts.emplace(hh, cr);
         }
       }
-      // Put contours which are crossing the data cell twice to `ret`.
+      // Put contours which are crossing the data cell 2 or 4 times to `ret`.
       short h=SRTM_VAL_UNDEF;
       dPoint p1, p2;
 
@@ -775,7 +774,6 @@ std::cerr << "find slope contours\n";
           double v = (val-v1)/(v2-v1);
           dPoint cr = ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0);
           cr.x*=kx;
-          cr.y-=1/(w-1.0); // ??
           pts.push_back(cr);
         }
       }
