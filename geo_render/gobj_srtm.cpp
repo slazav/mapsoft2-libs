@@ -156,6 +156,7 @@ render_tile(const dRect & draw_range){
       }
     }
   }
+  else { image.fill32(0); }
 
   CairoWrapper cr;
   cr.set_surface_img(image);
@@ -256,7 +257,7 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
   cr->paint();
 
   if (is_stopped()) return GObj::FILL_NONE;
-  return GObj::FILL_ALL;
+  return surf? GObj::FILL_ALL : GObj::FILL_PART;
 }
 
 
