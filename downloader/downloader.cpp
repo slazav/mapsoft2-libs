@@ -9,6 +9,7 @@
 void
 ms2opt_add_downloader(GetOptSet & opts){
   const char *g = "DNLDR";
+  opts.add("downloader_log_level",  1,0,g, "log level (0..3, default: 0)");
   opts.add("insecure",   1,0,g, "do not check TLS certificate (default: 0)");
   opts.add("user_agent", 1,0,g, "set user agent (default: \"mapsoft2 downloader\")");
   opts.add("http_ref",   1,0,g, "set http reference (default: \"https://github.com/slazav/mapsoft2\")");
@@ -24,8 +25,8 @@ write_cb(char *data, size_t n, size_t l, void *userp) {
 }
 
 /**********************************/
-Downloader::Downloader(const int cache_size, const int max_conn, const int log_level):
-       max_conn(max_conn), num_conn(0), log_level(log_level), worker_needed(true),
+Downloader::Downloader(const int cache_size, const int max_conn):
+       max_conn(max_conn), num_conn(0), worker_needed(true),
        data(cache_size) {
   set_opt(Opt());
   // worker_thread must not be started from initializer list
@@ -42,6 +43,7 @@ Downloader::~Downloader(){
 
 void
 Downloader::set_opt(const Opt & opts){
+  log_level = opts.get("downloader_log_level", 0);
   insecure = opts.get("insecure", false);
   user_ag  = opts.get("user_agent", "mapsoft2 downloader");
   http_ref = opts.get("http_ref",   "https://github.com/slazav/mapsoft2");

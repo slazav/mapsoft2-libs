@@ -78,7 +78,7 @@ class Downloader {
 
   public:
 
-  Downloader(const int cache_size=64, const int max_conn=4, const int log_level=1);
+  Downloader(const int cache_size=64, const int max_conn=4);
   ~Downloader();
 
   void set_opt(const Opt & opts);
