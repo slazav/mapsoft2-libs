@@ -17,8 +17,22 @@ read_file(const std::string & file, const size_t srtm_width){
   FILE *F = fopen(file.c_str(), "rb");
   if (!F) return ImageR();
 
-  ImageR im(srtm_width,srtm_width, IMAGE_16);
-  size_t length = srtm_width*srtm_width*sizeof(short);
+  // find file length
+  fseek(F, 0L, SEEK_END);
+  auto flen = ftell(F);
+  fseek(F, 0L, SEEK_SET);
+  size_t width=0;
+  switch (flen){
+    case 2*1201*1201: width=1201; break;
+    case 2*3601*3601: width=3601; break;
+    default: throw Err()
+      << "SRTM: unsupported file size: " << file << ": " << flen;
+  }
+  if (width!=srtm_width) throw Err()
+    << "SRTM: file width does not match srtm_width: " << file << ": " << width;
+
+  ImageR im(width, width, IMAGE_16);
+  size_t length = width*width*sizeof(short);
 
   if (length != fread(im.data(), 1, length, F))
     throw Err() << "SRTM: bad .hgt file: " << file;
@@ -37,8 +51,28 @@ read_zfile(const std::string & file, const size_t srtm_width){
   gzFile F = gzopen(file.c_str(), "rb");
   if (!F) return ImageR();
 
-  ImageR im(srtm_width, srtm_width, IMAGE_16);
-  int length = srtm_width*srtm_width*sizeof(short);
+  // find uncompressed file length
+  size_t width=0;
+  {
+    unsigned char buf[4];
+    unsigned int  flen;
+    FILE *FU = fopen(file.c_str(), "rb");
+    fseek(FU, -4L, SEEK_END);
+    auto len = fread(buf, 1, 4, FU);
+    flen = (buf[3] << 24) | (buf[2] << 16) | (buf[1] << 8) | buf[0];
+    fclose(FU);
+    switch (flen){
+      case 2*1201*1201: width=1201; break;
+      case 2*3601*3601: width=3601; break;
+      default: throw Err()
+        << "SRTM: unsupported file size: " << file << ": " << flen;
+    }
+  }
+  if (width!=srtm_width) throw Err()
+    << "SRTM: file width does not match srtm_width: " << file << ": " << width;
+
+  ImageR im(width, width, IMAGE_16);
+  int length = width*width*sizeof(short);
 
   if (length != gzread(F, im.data(), length))
     throw Err() << "SRTM: bad .hgt.gz file: " << file;
@@ -67,6 +101,7 @@ read_tfile(const std::string & file, const size_t srtm_width){
   int scan = TIFFScanlineSize(tif);
   int bpp = scan/tiff_w;
   auto *cbuf = (uint8_t *)_TIFFmalloc(scan);
+
 
   ImageR im(srtm_width, srtm_width, IMAGE_16);
 
