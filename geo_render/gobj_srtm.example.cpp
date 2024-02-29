@@ -15,7 +15,7 @@ main(){
     Opt o;
     o.put("srtm_dir", "../srtm/test_srtm");
     o.put("srtm_hmin",   0.0);
-    o.put("srtm_hmax", 5000.0);
+    o.put("srtm_hmax", 200.0);
     o.put("srtm_smin",   35.0);
     o.put("srtm_smax", 50.0);
     o.put("srtm_interp_holes", 1);
@@ -29,8 +29,8 @@ main(){
     SRTM s;
     GObjSRTM S(&s, o);
 
-    int x0 = 78;   // coordinates of top-left corner 
-    int y0 = 42;   // (datafile for this area N78E029.hgt should be in srtm_dir)
+    int x0 = 29;   // coordinates of top-left corner 
+    int y0 = 79;   // (datafile for this area N78E029.hgt should be in srtm_dir)
     int w = 1200;  // image size
     int h = 1200;
     double k = 4; // scale
