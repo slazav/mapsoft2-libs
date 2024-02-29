@@ -32,9 +32,11 @@ main(){
     assert_eq(S.get_val(x0, y0+1, false), 100);
 
     Opt o1 = S.get_def_opt();
-    assert_eq(o1.size(), 2);
+    assert_eq(o1.size(), 4);
     assert_eq(o1.exists("srtm_dir"), true);
     assert_eq(o1.get("srtm_interp_holes"), "1");
+    assert_eq(o1.get("srtm_interp"), "cubic");
+    assert_eq(o1.get("srtm_smooth_rad"), "5");
 
 
   }

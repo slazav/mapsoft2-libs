@@ -33,10 +33,10 @@ SRTMSurf::get_color(const double h, const double s){
 uint32_t
 SRTMSurf::get_color(const dPoint & p) {
   switch (draw_mode){
-    case SRTM_DRAW_SLOPES:  return R.get(SRTM::get_slope_int4(p));
-    case SRTM_DRAW_HEIGHTS: return R.get(SRTM::get_val_int4(p));
+    case SRTM_DRAW_SLOPES:  return R.get(SRTM::get_s(p));
+    case SRTM_DRAW_HEIGHTS: return R.get(SRTM::get_h(p));
     case SRTM_DRAW_SHADES:
-      return color_shade(R.get(SRTM::get_val_int4(p)), 1-SRTM::get_slope_int4(p)/90.0);
+      return color_shade(R.get(SRTM::get_h(p)), 1-SRTM::get_s(p)/90.0);
   }
   return bgcolor;
 }

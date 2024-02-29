@@ -221,6 +221,11 @@ ms2opt_add_srtm(GetOptSet & opts){
     "Set srtm data folder, default - $HOME/.srtm_data");
   opts.add("srtm_interp_holes", 1,0,g,
     "Interpolate holes (0|1, default 1).");
+
+  opts.add("srtm_interp", 1,0,g,
+    "Interpolation (nearest, linear, cubic, smooth. Default: cubic).");
+  opts.add("srtm_smooth_rad", 1,0,g,
+    "Smooth radius (used only if srtm_interp=smooth, default: 5.");
 }
 
 Opt
@@ -228,6 +233,9 @@ SRTM::get_def_opt() {
   Opt o;
   o.put("srtm_dir", std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
   o.put("srtm_interp_holes", 1);
+
+  o.put("srtm_interp", "cubic");
+  o.put("srtm_smooth_rad", 5.0);
   return o;
 }
 
@@ -254,7 +262,16 @@ SRTM::set_opt(const Opt & opt){
     srtm_cache.clear();
   }
 
+  auto srtm_interp_s = opt.get("srtm_interp", "cubic");
+  if      (srtm_interp_s == "nearest") srtm_interp = SRTM_NEAREST;
+  else if (srtm_interp_s == "linear")  srtm_interp = SRTM_LINEAR;
+  else if (srtm_interp_s == "cubic")   srtm_interp = SRTM_CUBIC;
+  else if (srtm_interp_s == "smooth")  srtm_interp = SRTM_SMOOTH;
+  else throw Err() << "SRTM: unknown srtm_interp setting: " << srtm_interp_s;
+
+  srtm_smooth_rad = opt.get("srtm_smooth_rad", 5.0);
 }
+
 
 
 /************************************************/
@@ -528,6 +545,160 @@ SRTM::get_slope_smooth(const int x, const int y, const double r){
   return v/n;
 }
 
+/************************************************/
+
+// Distance between points (dx,dy) at a given place.
+// (0,0) if data is missing.
+dPoint
+SRTM::get_step(const iPoint& p){
+  // find tile
+  dPoint ret;
+  iPoint key = floor(p);
+  if ((!srtm_cache.contains(key)) && (!load(key))) return ret;
+  auto im = srtm_cache.get(key);
+  if (im.is_empty()) return ret;
+  auto w = im.width(), h = im.height();
+  ret.x = 1.0/(w%2==1 ? w-1 : w);
+  ret.y = 1.0/(h%2==1 ? h-1 : h);
+  return ret;
+}
+
+
+// Low-level get function: rounding coordinate to the nearest point
+int16_t
+SRTM::get_raw(const dPoint& p){
+  // find tile
+  iPoint key = floor(p);
+  if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
+  auto im = srtm_cache.get(key);
+  if (im.is_empty()) return SRTM_VAL_NOFILE;
+
+  // find coordinate in the tile (with extra point!)
+  iPoint crd;
+  auto w = im.width(), h = im.height();
+  crd.x = rint((p.x-key.x)*(w%2==1 ? w-1 : w));
+  crd.y = rint((1.0-p.y+key.y)*(h%2==1 ? h-1 : h));
+
+
+  // Here I can see how smart were SRTM engeneers with
+  // their extra point: if resolution of two tiles is
+  // different then rounding or interpolation of points
+  // between them is not trivial!
+
+  // If we do not have extra point, coordinate can go
+  // beyond image range: 0..1200 for 1200x1200 image.
+  // In this case we need the next tile:
+  bool ox = (w%2==0 && crd.x==w);
+  bool oy = (h%2==0 && crd.y==h);
+  if (ox || oy){
+    dPoint p1(p);
+    if (ox) p1.x = ceil(p.x)+1e-6;
+    if (oy) p1.y = ceil(p.y)+1e-6;
+    return get_raw(p1);
+  }
+
+  // TODO: overlay
+
+  // obtain the point
+  return (int16_t)im.get16(crd.x, crd.y);
+}
+
+// get with interpolation/smoothing
+int16_t
+SRTM::get_h(const dPoint& p){
+  switch (srtm_interp) {
+
+    case SRTM_NEAREST:
+      return get_raw(p);
+
+    case SRTM_LINEAR: {
+      dPoint d = get_step(p);
+      double x = p.x - floor(p.x);
+      double y = p.y - floor(p.y);
+      double sx = floor(x/d.x)*d.x - x;
+      double sy = floor(y/d.y)*d.y - y;
+
+      auto h1 = get_raw(p + dPoint(sx, sy));
+      auto h2 = get_raw(p + dPoint(sx, sy+d.y));
+      if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
+      auto h12 = (uint16_t)( h1 - (h2-h1)*sy/d.y);
+
+      auto h3=get_raw(p + dPoint(sx+d.x, sy));
+      auto h4=get_raw(p + dPoint(sx+d.x, sy+d.y));
+      if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
+      auto h34 = (int)(h3 - (h4-h3)*sy/d.y);
+      return (int16_t)(h12 - (h34-h12)*sx/d.x);
+    }
+
+    case SRTM_CUBIC: {
+      dPoint d = get_step(p);
+      double x = p.x - floor(p.x);
+      double y = p.y - floor(p.y);
+      double sx = floor(x/d.x)*d.x - x;
+      double sy = floor(y/d.y)*d.y - y;
+      double hx[4], hy[4];
+
+      for (int i=0; i<4; i++){
+        for (int j=0; j<4; j++){
+          hx[j]=get_raw(p + dPoint(sx+d.x*(j-1), sy+d.y*(i-1)));
+        }
+        int_holes(hx);
+        hy[i]= cubic_interp(hx, -sx/d.x);
+      }
+      int_holes(hy);
+      return cubic_interp(hy, -sy/d.y);
+    }
+
+    case SRTM_SMOOTH: {
+      if (srtm_smooth_rad<=0) return get_raw(p);
+      dPoint d = get_step(p);
+      double x = p.x - floor(p.x);
+      double y = p.y - floor(p.y);
+      double sx = floor(x/d.x)*d.x - x;
+      double sy = floor(y/d.y)*d.y - y;
+      int ri = ceil(srtm_smooth_rad);
+      double v=0;
+      double n = 0;
+      for (int ix=-ri;ix<=ri;ix++){
+        for (int iy=-ri;iy<=ri;iy++){
+          auto h = get_raw(p + dPoint(sx+d.x*ix, sy+d.y*iy));
+          if (h<SRTM_VAL_MIN) continue;
+          double w = exp(-(ix*ix + iy*iy)/srtm_smooth_rad/srtm_smooth_rad);
+          v += w*h;
+          n += w;
+        }
+      }
+      return v/n;
+    }
+
+    default: throw Err()
+      << "SRTM: unknown interpolation style: " << srtm_interp;
+  }
+  return SRTM_VAL_UNDEF;
+}
+
+double
+SRTM::get_s(const dPoint& p){
+  dPoint d = get_step(p);
+  int h  = get_h(p);
+  int h1 = get_h(p + dPoint(-d.x/2.0, 0));
+  int h2 = get_h(p + dPoint(+d.x/2.0, 0));
+  if (h1 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h2 > SRTM_VAL_MIN) h1 = 2*h - h2;
+  if (h2 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h1 > SRTM_VAL_MIN) h1 = 2*h - h2;
+
+  int h3 = get_h(p + dPoint(0, -d.y/2.0));
+  int h4 = get_h(p + dPoint(0, +d.y/2.0));
+  if (h3 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h4 > SRTM_VAL_MIN) h3 = 2*h - h4;
+  if (h4 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h3 > SRTM_VAL_MIN) h4 = 2*h - h3;
+
+  if (h1 < SRTM_VAL_MIN || h2 < SRTM_VAL_MIN ||
+      h3 < SRTM_VAL_MIN || h4 < SRTM_VAL_MIN) return NAN;
+
+  d *= 6380e3 * M_PI/180;
+  d.x *= cos(M_PI*p.y/180.0);
+  double  U = hypot((h2-h1)/d.x, (h4-h3)/d.y);
+  return atan(U)*180.0/M_PI;
+}
 
 /************************************************/
 

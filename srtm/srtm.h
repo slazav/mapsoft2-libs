@@ -72,7 +72,6 @@ class SRTM {
 
   bool interp_holes; // interpolate holes in data
 
-
   /// load data into cache
   bool load(const iPoint & key);
 
@@ -80,6 +79,29 @@ class SRTM {
 
     /// Constructor.
     SRTM(const Opt & o = Opt());
+
+typedef enum {
+  SRTM_NEAREST,
+  SRTM_LINEAR,
+  SRTM_CUBIC,
+  SRTM_SMOOTH,
+} style_t;
+
+style_t srtm_interp;
+double  srtm_smooth_rad;
+
+// Distance between points (dx,dy) at a given place.
+// (0,0) if data is missing.
+dPoint get_step(const iPoint& p);
+
+// Low-level get function: rounding coordinate to the nearest point
+int16_t get_raw(const dPoint& p);
+
+// get with interpolation/smoothing
+int16_t get_h(const dPoint& p);
+
+// get slope
+double get_s(const dPoint& p);
 
     // get srtm width
     int get_srtm_width() const {return srtm_width;}
