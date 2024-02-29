@@ -2,7 +2,7 @@
 #define GOBJ_SRTM_H
 
 #include "viewer/gobj.h"
-#include "srtm/srtm_surf.h"
+#include "srtm/srtm.h"
 
 /// SRTM data layer.
 
@@ -17,7 +17,7 @@ void ms2opt_add_drawsrtm(GetOptSet & opts);
 class GObjSRTM : public GObj {
 
   std::shared_ptr<ConvBase> cnv;
-  SRTMSurf * srtm;
+  SRTM * srtm;
 
   bool surf;         // draw color surface
   double maxsc;      // max scale (srtm pixels / viewer pixels)
@@ -49,7 +49,7 @@ class GObjSRTM : public GObj {
 
   public:
 
-    GObjSRTM(SRTMSurf *srtm, const Opt & o):
+    GObjSRTM(SRTM *srtm, const Opt & o):
       srtm(srtm), tiles(SRTM_TILE_CACHE_SIZE) { set_opt(o); }
 
     static Opt get_def_opt();

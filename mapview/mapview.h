@@ -21,7 +21,7 @@
 #include "panel_maps.h"
 #include "panel_vmap.h"
 #include "panel_status.h"
-#include "srtm/srtm_surf.h"
+#include "srtm/srtm.h"
 #include "geo_render/gobj_srtm.h"
 
 #define DATADIR    "mapsoft2"
@@ -45,7 +45,7 @@ public:
     Rubber        rubber;          // Rubber lines
     Opt           opts;            // Command-line options
 
-    SRTMSurf srtm;
+    SRTM srtm;
     // signal is emitted when srtm is reconfigured
     sigc::signal<void> signal_srtm_conf_;
     sigc::signal<void> signal_srtm_conf() {return signal_srtm_conf_;}

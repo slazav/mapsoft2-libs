@@ -22,7 +22,7 @@ DlgPano::set_opt(const Opt & o) {
 
 
 
-DlgPano::DlgPano(SRTMSurf * s): gobj_pano(s, Opt()),
+DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
                     viewer(&gobj_pano),
                     rubber(&viewer){
 

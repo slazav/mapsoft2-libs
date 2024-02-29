@@ -3,7 +3,7 @@
 
 #include "rainbow/rainbow.h"
 #include "viewer/gobj.h"
-#include "srtm/srtm_surf.h"
+#include "srtm/srtm.h"
 #include <vector>
 #include <mutex>
 
@@ -21,7 +21,7 @@ class GObjPano : public GObj {
 private:
 
   std::shared_ptr<ConvBase> cnv; // used only for rescaling
-  SRTMSurf *srtm;
+  SRTM *srtm;
 
   dPoint p0;
   double max_r;
@@ -68,7 +68,7 @@ public:
   dPoint xy2geo(const iPoint & pt);
 
 
-  GObjPano(SRTMSurf * s, const Opt & o): srtm(s),
+  GObjPano(SRTM * s, const Opt & o): srtm(s),
       width(width0), ray_cache(512) { set_opt(o); }
 
   static Opt get_def_opt();

@@ -56,7 +56,7 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
 Opt
 GObjSRTM::get_def_opt(){
 
-  Opt o = SRTMSurf::get_def_opt();
+  Opt o = SRTM::get_def_opt();
 
   // draw_surface?
   o.put("srtm_surf",    1);

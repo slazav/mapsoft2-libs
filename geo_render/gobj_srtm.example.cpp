@@ -26,7 +26,7 @@ main(){
     o.put("srtm_holes",  1);
     o.put("srtm_peaks", 1);
 
-    SRTMSurf s;
+    SRTM s;
     GObjSRTM S(&s, o);
 
     int x0 = 78;   // coordinates of top-left corner 

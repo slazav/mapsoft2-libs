@@ -9,6 +9,7 @@
 #include "cache/cache.h"
 #include "image/image_r.h"
 #include "geom/multiline.h"
+#include "rainbow/rainbow.h"
 
 /*
 Read-only access to a SRTM data.
@@ -47,8 +48,10 @@ Default data directory is DIR=$HOME/.srtm_data
 // add SRTM group of options
 void ms2opt_add_srtm(GetOptSet & opts);
 
-/********************************************************************/
+// add SRTM group of options
+void ms2opt_add_srtm_surf(GetOptSet & opts);
 
+/********************************************************************/
 
 class SRTM {
 
@@ -71,6 +74,8 @@ class SRTM {
   double area0;
 
   bool interp_holes; // interpolate holes in data
+
+
 
   /// load data into cache
   bool load(const iPoint & key);
@@ -102,6 +107,25 @@ int16_t get_h(const dPoint& p);
 
 // get slope
 double get_s(const dPoint& p);
+
+enum draw_mode_t {
+  SRTM_DRAW_SHADES, // heights shaded with slope value
+  SRTM_DRAW_HEIGHTS,
+  SRTM_DRAW_SLOPES,
+} draw_mode;
+
+double hmin,hmax;  // limits for heights and shades modes
+double smin,smax;  // limits for slopes mode
+uint32_t bgcolor;  // how to draw holes
+Rainbow R; // color converter
+
+// Get color for given height and slope, according with drawing options
+uint32_t get_color(const double h, const double s);
+
+/// Get color for a point (lon-lat coords), according with drawing options.
+uint32_t get_color(const dPoint & p);
+
+uint32_t get_bgcolor() const {return bgcolor;}
 
     // get srtm width
     int get_srtm_width() const {return srtm_width;}

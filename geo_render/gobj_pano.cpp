@@ -14,7 +14,7 @@ ms2opt_add_drawpano(GetOptSet & opts){
 
 Opt
 GObjPano::get_def_opt() {
-  Opt o = SRTMSurf::get_def_opt();
+  Opt o = SRTM::get_def_opt();
   o.put("pano_origin",  dPoint());
   o.put("pano_alt",     20.0);
   o.put("pano_rmax",   100.0);

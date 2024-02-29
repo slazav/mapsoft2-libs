@@ -1,6 +1,6 @@
-MOD_HEADERS := srtm.h srtm_surf.h
+MOD_HEADERS := srtm.h
 
-MOD_SOURCES := srtm.cpp srtm_surf.cpp
+MOD_SOURCES := srtm.cpp
 
 SIMPLE_TESTS := srtm
 
