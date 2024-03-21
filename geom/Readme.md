@@ -16,6 +16,7 @@
   of same type as point coordinates):
   - `p+=p`, `p-=p`, `p+p`, `p-p`, `-p`.
   - `p*=k`, `p/=k`, `p*k`, `k*p`, `p/k`.
+  - `p*=p1`, `p/=p1`, `p*p1`, `p1*p`, `p/p1`.
   - `p==p`, `p!=p`.
   - `p<p`, `p<=p`, `p>=p`, `p>p`.
 

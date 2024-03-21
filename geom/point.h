@@ -55,6 +55,12 @@ struct Point {
   /// Multiply coordinates by k
   Point & operator*= (const T k) { x *= k; y *= k; z *= k; return *this; }
 
+  /// Divide coordinates by p
+  Point & operator/= (const Point<T> p) { x /= p.x; y /= p.y; z /= p.z; return *this; }
+
+  /// Multiply coordinates by p
+  Point & operator*= (const Point<T> p) { x *= p.x; y *= p.y; z *= p.z; return *this; }
+
   /// Subtract coordinates
   Point operator- (Point const & other) const { return Point(x-other.x, y-other.y, z-other.z); }
 
@@ -69,6 +75,12 @@ struct Point {
 
   /// Multiply coordinates by k
   Point operator* (const T k) const { return Point(x*k, y*k, z*k); }
+
+  /// Divide coordinates by p
+  Point operator/ (const Point<T> p) const { return Point(x/p.x, y/p.y, z/p.z); }
+
+  /// Multiply coordinates by p
+  Point operator* (const Point<T> p) const { return Point(x*p.x, y*p.y, z*p.z); }
 
   /******************************************************************/
   // operators <=>

@@ -52,6 +52,11 @@ main(){
 
     assert_eq(-iPoint(1,2,5), iPoint(-1,-2,-5));
 
+    p1 = iPoint(10,12,24);
+    assert_eq(p1/iPoint(5,6,2), iPoint(2,2,12));
+    assert_eq(p1*iPoint(4,3,2), iPoint(40,36,48));
+    assert_eq(iPoint(4,3,2)*p1, p1*iPoint(4,3,2));
+
   }
 
   {
