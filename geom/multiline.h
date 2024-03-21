@@ -50,6 +50,18 @@ struct MultiLine : std::vector<Line<CT,PT> > {
     return *this;
   }
 
+  /// Divide coordinates by p
+  MultiLine<CT,PT> & operator/= (const PT p) {
+    for (auto & l:*this) l/=p;
+    return *this;
+  }
+
+  /// Multiply coordinates by p
+  MultiLine<CT,PT> & operator*= (const PT p) {
+    for (auto & l:*this) l*=p;
+    return *this;
+  }
+
   /// Add p to every point (shift the line)
   MultiLine<CT,PT> operator+ (const PT & p) const { MultiLine<CT,PT> ret(*this); return ret+=p; }
 
@@ -61,6 +73,12 @@ struct MultiLine : std::vector<Line<CT,PT> > {
 
   /// Multiply coordinates by k
   MultiLine<CT,PT> operator* (const CT k) const { MultiLine<CT,PT> ret(*this); return ret*=k; }
+
+  /// Divide coordinates by p
+  MultiLine<CT,PT> operator/ (const PT p) const { MultiLine<CT,PT> ret(*this); return ret/=p; }
+
+  /// Multiply coordinates by p
+  MultiLine<CT,PT> operator* (const PT p) const { MultiLine<CT,PT> ret(*this); return ret*=p; }
 
   /// Invert coordinates
   MultiLine<CT,PT> operator- () const {
@@ -233,6 +251,11 @@ struct MultiLine : std::vector<Line<CT,PT> > {
 /// \relates MultiLine
 template <typename CT, typename PT>
 MultiLine<CT,PT> operator* (const CT k, const MultiLine<CT,PT> & l) { return l*k; }
+
+/// Multiply coordinates by p (p*multiline = multiline*p)
+/// \relates MultiLine
+template <typename CT, typename PT>
+MultiLine<CT,PT> operator* (const PT p, const MultiLine<CT,PT> & l) { return l*p; }
 
 /// Add p to every point (shift the line) (p+multiline = multiline+p)
 /// \relates MultiLine

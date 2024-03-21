@@ -42,6 +42,13 @@ main(){
   assert_eq((ml2*=2), iMultiLine("[[[0,2],[4,6]],[[8,10],[12,14]]]"));
   assert_eq((ml2/=2), iMultiLine("[[[0,1],[2,3]],[[4,5],[6,7]]]"));
 
+  assert_eq(iMultiLine("[[],[[10,20,30],[1,2],[1,0,0],[0,0,2]]]") * iPoint(1,2,3),
+            iMultiLine("[[],[[10,40,90],[1,4],[1,0,0],[0,0,6]]]"));
+  assert_eq(iPoint(1,2,3)*iMultiLine("[[],[[10,20,30],[1,2],[1,0,0],[0,0,2]]]"),
+            iMultiLine("[[],[[10,40,90],[1,4],[1,0,0],[0,0,6]]]"));
+  assert_eq(iMultiLine("[[],[[10,20,30],[1,4],[1,0,0],[0,0,6]]]") / iPoint(1,2,3),
+            iMultiLine("[[],[[10,10,10],[1,2],[1,0,0],[0,0,2]]]"));
+
   // <=>
   assert_eq(ml1, iMultiLine());
   ml1=ml2; // Multilines are equal

@@ -53,6 +53,18 @@ struct Line : std::vector<PT> {
     return *this;
   }
 
+  /// Divide coordinates by p
+  Line<CT,PT> & operator/= (const PT p) {
+    for (typename Line<CT,PT>::iterator i=this->begin(); i!=this->end(); i++) (*i)/=p;
+    return *this;
+  }
+
+  /// Multiply coordinates by p
+  Line<CT,PT> & operator*= (const PT p) {
+    for (typename Line<CT,PT>::iterator i=this->begin(); i!=this->end(); i++) (*i)*=p;
+    return *this;
+  }
+
   /// Add p to every point (shift the line)
   Line<CT,PT> operator+ (const PT & p) const { Line<CT,PT> ret(*this); return ret+=p; }
 
@@ -64,6 +76,12 @@ struct Line : std::vector<PT> {
 
   /// Multiply coordinates by k
   Line<CT,PT> operator* (const CT k) const { Line<CT,PT> ret(*this); return ret*=k; }
+
+  /// Divide coordinates by p
+  Line<CT,PT> operator/ (const PT p) const { Line<CT,PT> ret(*this); return ret/=p; }
+
+  /// Multiply coordinates by p
+  Line<CT,PT> operator* (const PT p) const { Line<CT,PT> ret(*this); return ret*=p; }
 
   /// Invert coordinates
   Line<CT,PT> operator- () const {
@@ -251,6 +269,11 @@ struct Line : std::vector<PT> {
 /// \relates Line
 template <typename CT, typename PT>
 Line<CT,PT> operator* (const CT k, const Line<CT, PT> & l) { return l*k; }
+
+/// Multiply coordinates by PT (p*line = line*p)
+/// \relates Line
+template <typename CT, typename PT>
+Line<CT,PT> operator* (const PT p, const Line<CT, PT> & l) { return l*p; }
 
 /// Add p to every point (p+line = line+p)
 /// \relates Line
