@@ -112,6 +112,16 @@ struct Rect {
     if (e) throw Err() << "Empty rectangle in operator*";
     x *= k; y *= k; w *= k; h *= k; return *this; }
 
+  /// Divide coordinates by p.x, p.y
+  Rect<T> & operator/= (Point<T> p) {
+    if (e) throw Err() << "Empty rectangle in operator/";
+    x /= p.x; y /= p.y; w /= p.x; h /= p.y; return *this; }
+
+  /// Multiply coordinates by p.x, p.y
+  Rect<T> & operator*= (Point<T> p) {
+    if (e) throw Err() << "Empty rectangle in operator*";
+    x *= p.x; y *= p.y; w *= p.x; h *= p.y; return *this; }
+
   /// Subtract point from the rectangle (shift the rectangle)
   Rect<T> & operator-= (Point<T> p) {
     if (e) throw Err() << "Empty rectangle in operator-";
@@ -127,6 +137,12 @@ struct Rect {
 
   /// Multiply all coordinates by k
   Rect<T> operator* (T k) const { Rect<T> ret(*this); return ret*=k; }
+
+  /// Divide coordinates by p.x, p.y
+  Rect<T> operator/ (Point<T> p) const { Rect<T> ret(*this); return ret/=p; }
+
+  /// Multiply coordinates by p.x, p.y
+  Rect<T> operator* (Point<T> p) const { Rect<T> ret(*this); return ret*=p; }
 
   /// Subtract point from the rectangle (shift the rectangle)
   Rect<T> operator- (Point<T> p) const { Rect<T> ret(*this); return ret-=p; }
@@ -330,6 +346,11 @@ struct Rect {
 /// \relates Rect
 template <typename T>
 Rect<T> operator* (const T k, const Rect<T> & r) { return r*k; }
+
+/// Multiply coordinates by p (p*rect = rect*p)
+/// \relates Rect
+template <typename T>
+Rect<T> operator* (const Point<T> p, const Rect<T> & r) { return r*p; }
 
 /// Add p to every point (p+rect = rect+p)
 /// \relates Rect

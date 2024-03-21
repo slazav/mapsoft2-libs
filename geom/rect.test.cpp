@@ -142,11 +142,20 @@ main(){
   assert_eq((r1*=2), iRect(4,4,8,8));
   assert_eq(-r1, iRect(-12,-12,8,8));
 
+  r1=iRect(10,10, 20,20);
+  assert_eq(r1/iPoint(2,10), iRect(5,1,10,2));
+  assert_eq(r1*iPoint(2,3),  iRect(20,30,40,60));
+  assert_eq(iPoint(2,3)*r1,  iRect(20,30,40,60));
+  assert_eq(iPoint()*r1,     iRect(0,0,0,0));
+  assert_eq(r1*iPoint(),     iRect(0,0,0,0));
+
   r1=iRect();
   assert_err(r1+=iPoint(), "Empty rectangle in operator+");
   assert_err(r1-=iPoint(), "Empty rectangle in operator-");
   assert_err(r1/=5, "Empty rectangle in operator/");
   assert_err(r1*=5, "Empty rectangle in operator*");
+  assert_err(r1/=iPoint(2,2), "Empty rectangle in operator/");
+  assert_err(r1*=iPoint(2,2), "Empty rectangle in operator*");
   assert_err(-r1, "Empty rectangle in operator-");
 
   // <=>

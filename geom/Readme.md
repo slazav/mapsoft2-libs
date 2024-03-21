@@ -192,6 +192,7 @@ Line with multiple segments (std::vector of Line).
 - Arithmetic operations (`l` are MultiLines, `p` points, `k` numbers):
   - `l+=p, l-=p, l+p, p+l, l-p, -l`
   - `l*=k, l/=k, l*k, k*l, l/k`
+  - `l*=p, l/=p, l*p, p*l, l/p`
   - `l==l, l!=l`,
   - `l<l, l<=l, l>=l, l>l`
 
