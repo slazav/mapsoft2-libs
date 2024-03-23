@@ -10,10 +10,6 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
   const char *g = "DRAWSRTM";
   opts.add("srtm_surf", 1,0,g,
     "draw SRTM color surface (default 1).");
-  opts.add("srtm_maxsc", 1,0,g,
-    "Do not draw srtm data out of this scale (default 15).");
-  opts.add("srtm_maxscv", 1,0,g,
-    "Do not draw srtm contours out of this scale (default 1.0).");
   opts.add("srtm_cnt",1,0,g,
     "Draw contours (0|1, default - 1).");
   opts.add("srtm_cnt_step",1,0,g,
@@ -60,8 +56,6 @@ GObjSRTM::get_def_opt(){
 
   // draw_surface?
   o.put("srtm_surf",    1);
-  o.put("srtm_maxsc",   15.0);
-  o.put("srtm_maxscv",  1.0);
 
   // contours parameters
   o.put("srtm_cnt",       1);
@@ -97,8 +91,6 @@ GObjSRTM::set_opt(const Opt & o){
   }
 
   surf = o.get("srtm_surf", 1);
-  maxsc    = o.get<double>("srtm_maxsc",   15);
-  maxscv   = o.get<double>("srtm_maxscv",  1);
 
   // contours parameters
   cnt          = o.get<bool>("srtm_cnt",      1);
@@ -166,7 +158,6 @@ render_tile(const dRect & draw_range){
   dRect wgs_range;
   if (cnt || holes) {
     wgs_range = cnv->frw_acc(draw_range);
-    wgs_range.expand(1.0/srtm->get_srtm_width()); // +1 srtm point
     cr->set_line_cap(Cairo::LINE_CAP_ROUND);
     cr->set_line_join(Cairo::LINE_JOIN_ROUND);
     cr->translate(-draw_range.tlc());
@@ -239,15 +230,6 @@ GObjSRTM::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (!srtm) return GObj::FILL_NONE;
   if (is_stopped()) return GObj::FILL_NONE;
-
-  // too small scale: draw bgcolor only
-  dPoint scp = cnv->scales(draw_range);
-  double sc = std::min(scp.x, scp.y) * srtm->get_srtm_width();
-  if (sc >= maxsc) {
-    cr->set_color(srtm->get_bgcolor());
-    cr->paint();
-    return GObj::FILL_ALL;
-  }
 
   if (!tiles.contains(draw_range)){
     if (!render_tile(draw_range)) return GObj::FILL_NONE;
