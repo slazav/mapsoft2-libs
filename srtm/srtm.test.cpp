@@ -10,29 +10,36 @@ main(){
 
     Opt o;
     o.put("srtm_dir", "./test_srtm");
+    o.put("srtm_interp", "nearest");
     SRTM S(o);
 
-    int x0 = 29*1200;
-    int y0 = 78*1200;
+    assert_eq(S.get_h(dPoint(30.2,78.0)), SRTM_VAL_NOFILE);
+    assert_eq(S.get_h(dPoint(-1.0,-1.0)), SRTM_VAL_NOFILE);
+    assert_eq(S.get_h(dPoint(29.0,77.0)), SRTM_VAL_NOFILE);
 
-    assert_eq(S.get_val(x0 + 1300, y0, false), SRTM_VAL_NOFILE);
-    assert_eq(S.get_val(-10, -20, false), SRTM_VAL_NOFILE);
-    assert_eq(S.get_val(x0, y0-1, false), SRTM_VAL_NOFILE);
+    assert_eq(S.get_h(dPoint(29.1, 78.1)), 0);
+    assert_eq(S.get_h(dPoint(29.6, 78.9)), 58);
 
-    assert_eq(S.get_val(x0+10, y0+10, false), 0);
-    assert_eq(S.get_val(x0+700, y0+1100, false), 20);
+    o.put("srtm_interp", "linear");
+    S.set_opt(o);
 
-    // wgs coordinates
-    assert_eq(S.get_val_int4(dPoint(x0+10, y0+10)/1200.0), 0);
-    assert_eq(S.get_val_int4(dPoint(x0+700, y0+1100)/1200.0), 20);
+    assert_eq(S.get_h(dPoint(29.1, 78.1)), 0);
+    assert_eq(S.get_h(dPoint(29.6, 78.9)), 57);
 
-    // set value
-    assert_eq(S.set_val(x0, y0-1, 100), SRTM_VAL_NOFILE);
-    assert_eq(S.set_val(x0, y0+1, 100), 100);
-    assert_eq(S.get_val(x0, y0+1, false), 100);
+    o.put("srtm_interp", "cubic");
+    S.set_opt(o);
+
+    assert_eq(S.get_h(dPoint(29.1, 78.1)), 0);
+    assert_eq(S.get_h(dPoint(29.6, 78.9)), 57);
+
+    o.put("srtm_interp", "smooth");
+    S.set_opt(o);
+
+    assert_eq(S.get_h(dPoint(29.1, 78.1)), 0);
+    assert_eq(S.get_h(dPoint(29.6, 78.9)), 56);
+
 
     Opt o1 = S.get_def_opt();
-//    assert_eq(o1.size(), 10);
     assert_eq(o1.exists("srtm_dir"), true);
     assert_eq(o1.get("srtm_interp_holes"), "1");
     assert_eq(o1.get("srtm_interp"), "cubic");

@@ -13,7 +13,7 @@
 
 // load srtm data from *.hgt file
 ImageR
-read_file(const std::string & file, const size_t srtm_width){
+read_file(const std::string & file){
   FILE *F = fopen(file.c_str(), "rb");
   if (!F) return ImageR();
 
@@ -28,8 +28,6 @@ read_file(const std::string & file, const size_t srtm_width){
     default: throw Err()
       << "SRTM: unsupported file size: " << file << ": " << flen;
   }
-  if (width!=srtm_width) throw Err()
-    << "SRTM: file width does not match srtm_width: " << file << ": " << width;
 
   ImageR im(width, width, IMAGE_16);
   size_t length = width*width*sizeof(short);
@@ -47,7 +45,7 @@ read_file(const std::string & file, const size_t srtm_width){
 
 // load srtm data from *.hgt.gz file
 ImageR
-read_zfile(const std::string & file, const size_t srtm_width){
+read_zfile(const std::string & file){
   gzFile F = gzopen(file.c_str(), "rb");
   if (!F) return ImageR();
 
@@ -68,8 +66,6 @@ read_zfile(const std::string & file, const size_t srtm_width){
         << "SRTM: unsupported file size: " << file << ": " << flen;
     }
   }
-  if (width!=srtm_width) throw Err()
-    << "SRTM: file width does not match srtm_width: " << file << ": " << width;
 
   ImageR im(width, width, IMAGE_16);
   int length = width*width*sizeof(short);
@@ -87,7 +83,7 @@ read_zfile(const std::string & file, const size_t srtm_width){
 
 // load srtm data from *.tif file
 ImageR
-read_tfile(const std::string & file, const size_t srtm_width){
+read_tfile(const std::string & file){
 
   // open Tiff file, get width and height
   if (!file_exists(file)) return ImageR();
@@ -103,7 +99,7 @@ read_tfile(const std::string & file, const size_t srtm_width){
   auto *cbuf = (uint8_t *)_TIFFmalloc(scan);
 
 
-  ImageR im(srtm_width, srtm_width, IMAGE_16);
+  ImageR im(tiff_w, tiff_h, IMAGE_16);
 
   try {
 
@@ -115,49 +111,12 @@ read_tfile(const std::string & file, const size_t srtm_width){
     if (bpp != 2)
       throw Err() << "not a 2 byte-per-pixel tiff";
 
-    // check size: for srtm width w it should be one of
-    // (w)x(w), (w-1)x(w-1), ((w-1)/2+1)x(w), ((w-1)/2)x(w-1)
-    bool addpixel;
-    int xsc=1;
-    if (tiff_h == (int)srtm_width-1) {
-      addpixel = true;
-      if (tiff_w == (int)srtm_width-1) xsc = 1;
-      else if (tiff_w == ((int)srtm_width-1)/2) xsc = 2;
-      else if (tiff_w == ((int)srtm_width-1)/3) xsc = 3;
-      else if (tiff_w == ((int)srtm_width-1)/4) xsc = 4;
-      else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
-    }
-    else if (tiff_h == (int)srtm_width) {
-      addpixel = false;
-      if (tiff_w == (int)srtm_width) xsc = 1;
-      else if (tiff_w == ((int)srtm_width-1)/2+1) xsc = 2;
-      else if (tiff_w == ((int)srtm_width-1)/3+1) xsc = 3;
-      else if (tiff_w == ((int)srtm_width-1)/4+1) xsc = 4;
-      else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
-    }
-    else throw Err() << "bad image size: " << tiff_w << "x" << tiff_h;
-
     // read image
     for (int y = 0; y<tiff_h; y++){
       TIFFReadScanline(tif, cbuf, y);
       for (int x = 0; x<tiff_w; x++){
-        uint16_t v = (cbuf[2*x+1]<<8) + cbuf[2*x];
-
-        if (xsc > 1){
-          im.set16(xsc*x,  y,v);
-          if (xsc*x+1<(int)srtm_width) im.set16(xsc*x+1,y,v);
-        }
-        else {
-          im.set16(x,y,v);
-        }
+        im.set16(x,y, (cbuf[2*x+1]<<8) + cbuf[2*x]);
       }
-      if (addpixel){
-        im.set16(srtm_width-1,y, im.get16(0,y));
-      }
-    }
-    if (addpixel){
-      for (int x = 0; x<(int)srtm_width; x++)
-        im.set16(x, srtm_width-1, im.get16(x,0));
     }
   }
   catch (Err & e) {
@@ -186,18 +145,18 @@ SRTM::load(const iPoint & key){
        << EW << std::setw(3) << abs(key.x);
 
   // try <name>.hgt.gz
-  ImageR im = read_zfile(srtm_dir + "/" + file.str() + ".hgt.gz", srtm_width);
+  ImageR im = read_zfile(srtm_dir + "/" + file.str() + ".hgt.gz");
 
   // try <name>.hgt
   if (im.is_empty())
-    im = read_file(srtm_dir + "/" + file.str() + ".hgt", srtm_width);
+    im = read_file(srtm_dir + "/" + file.str() + ".hgt");
 
   // try <name>.tif
   if (im.is_empty())
-    im = read_tfile(srtm_dir + "/" + file.str() + ".tif", srtm_width);
+    im = read_tfile(srtm_dir + "/" + file.str() + ".tif");
 
   if (im.is_empty())
-    im = read_tfile(srtm_dir + "/" + file.str() + ".tiff", srtm_width);
+    im = read_tfile(srtm_dir + "/" + file.str() + ".tiff");
 
   if (im.is_empty())
     std::cerr << "SRTM: can't find file: " << file.str() << "\n";
@@ -208,11 +167,6 @@ SRTM::load(const iPoint & key){
 
 
 /************************************************/
-
-SRTM::SRTM(const Opt & o): srtm_width(0), srtm_cache(SRTM_CACHE_SIZE) {
-  set_opt(o);
-}
-
 
 void
 ms2opt_add_srtm(GetOptSet & opts){
@@ -246,6 +200,12 @@ ms2opt_add_srtm_surf(GetOptSet & opts){
     "Color to draw no-data and out-of-scale areas (default 0x60FF0000).");
 }
 
+/************************************************/
+
+SRTM::SRTM(const Opt & o): srtm_cache(SRTM_CACHE_SIZE) {
+  set_opt(o);
+}
+
 Opt
 SRTM::get_def_opt() {
   Opt o;
@@ -265,6 +225,7 @@ SRTM::get_def_opt() {
   return o;
 }
 
+
 void
 SRTM::set_opt(const Opt & opt){
 
@@ -272,19 +233,9 @@ SRTM::set_opt(const Opt & opt){
   std::string dir = opt.get("srtm_dir",
     std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
 
-  // Data width. Read a number from
-  // srtm_width.txt file. Default 1201.
-  size_t width = 1201;
-  std::ifstream ws(dir + "/srtm_width.txt");
-  ws >> width;
-  if (width<=0) width = 1201;
-
-  // set new values and clear data cache if needed
-  if (width!=srtm_width || dir!=srtm_dir){
-    srtm_width = width;
+  // set new value and clear data cache if needed
+  if (dir!=srtm_dir){
     srtm_dir = dir;
-    size0 = 6380e3 * M_PI/srtm_width/180;
-    area0 = pow(6380e3 * M_PI/srtm_width/180, 2);
     srtm_cache.clear();
   }
 
@@ -319,16 +270,14 @@ SRTM::set_opt(const Opt & opt){
     R = Rainbow(smin,smax, RAINBOW_BURNING);
 
   bgcolor = opt.get<int>("srtm_bgcolor", 0x60FF0000);
-
 }
-
 
 
 /************************************************/
 
-
 // Find set of points with same value (used
 // for hole interpolation in get_val) and its border.
+/*
 void
 SRTM::plane_and_border(const iPoint& p,
      std::set<iPoint>& set, std::set<iPoint>& brd, size_t max){
@@ -350,6 +299,7 @@ SRTM::plane_and_border(const iPoint& p,
     if ((max!=0)&&(set.size()>max)) break;
   }
 }
+*/
 
 /*
    -1     0      1      2deg
@@ -369,6 +319,7 @@ srtm_width=1201 mean 1200 point period!
 
 */
 
+/*
 // Find tile number and coordinate on the tile
 // (used in get_val/set_val).
 inline void
@@ -520,9 +471,11 @@ SRTM::get_val_smooth(const int x, const int y, const double r){
   }
   return v/n;
 }
+*/
 
 /************************************************/
 
+/*
 short
 SRTM::set_val(const int x, const int y, const short h){
   // find tile number and coordinate on the tile
@@ -536,9 +489,10 @@ SRTM::set_val(const int x, const int y, const short h){
   ((uint16_t*)im.data())[srtm_width*crd.y+crd.x] = h;
   return h;
 }
+*/
 
 /************************************************/
-
+/*
 double
 SRTM::get_slope(const int x, const int y, const bool interp){
   int h  = get_val(x,   y, interp);
@@ -594,9 +548,9 @@ SRTM::get_slope_smooth(const int x, const int y, const double r){
   }
   return v/n;
 }
+*/
 
 /************************************************/
-
 // Distance between points (dx,dy) at a given place.
 // (0,0) if data is missing.
 dPoint
@@ -613,7 +567,6 @@ SRTM::get_step(const iPoint& p){
   return ret;
 }
 
-
 // Low-level get function: rounding coordinate to the nearest point
 int16_t
 SRTM::get_raw(const dPoint& p){
@@ -628,7 +581,6 @@ SRTM::get_raw(const dPoint& p){
   auto w = im.width(), h = im.height();
   crd.x = rint((p.x-key.x)*(w%2==1 ? w-1 : w));
   crd.y = rint((1.0-p.y+key.y)*(h%2==1 ? h-1 : h));
-
 
   // Here I can see how smart were SRTM engeneers with
   // their extra point: if resolution of two tiles is
@@ -653,13 +605,44 @@ SRTM::get_raw(const dPoint& p){
   return (int16_t)im.get16(crd.x, crd.y);
 }
 
-// get with interpolation/smoothing
+// Cubic interpolation (used in get_val_int16()).
+// see http://www.paulinternet.nl/?page=bicubic
+short
+cubic_interp(const double h[4], const double x){
+  return h[1] + 0.5 * x*(h[2] - h[0] + x*(2.0*h[0] - 5.0*h[1] + 4.0*h[2] -
+              h[3] + x*(3.0*(h[1] - h[2]) + h[3] - h[0])));
+}
+
+// interpolate 1-point or 2-points holes
+// maybe this can be written smarter...
+void
+int_holes(double h[4]){
+  if ((h[0]>SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)) return;
+  for (int cnt=0; cnt<2; cnt++){
+    if      ((h[0]<=SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN)) h[0]=2*h[1]-h[2];
+    else if ((h[1]<=SRTM_VAL_MIN) && (h[0]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN)) h[1]=(h[0]+h[2])/2;
+    else if ((h[1]<=SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)) h[1]=2*h[2]-h[3];
+    else if ((h[2]<=SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)) h[2]=(h[1]+h[3])/2;
+    else if ((h[2]<=SRTM_VAL_MIN) && (h[0]>SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN)) h[2]=2*h[1]-h[0];
+    else if ((h[3]<=SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN)) h[3]=2*h[2]-h[1];
+    else break;
+  }
+  if ((h[1]<=SRTM_VAL_MIN) && (h[2]<=SRTM_VAL_MIN) && (h[0]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)){
+    h[1]=(2*h[0] + h[3])/3;
+    h[2]=(h[0] + 2*h[3])/3;
+  }
+}
+
+// Get with interpolation/smoothing
 int16_t
 SRTM::get_h(const dPoint& p){
+  auto h0 = get_raw(p);
+  if (h0<SRTM_VAL_MIN) return h0;
+
   switch (srtm_interp) {
 
     case SRTM_NEAREST:
-      return get_raw(p);
+      return h0;
 
     case SRTM_LINEAR: {
       dPoint d = get_step(p);
@@ -734,7 +717,7 @@ SRTM::get_s(const dPoint& p){
   int h1 = get_h(p + dPoint(-d.x/2.0, 0));
   int h2 = get_h(p + dPoint(+d.x/2.0, 0));
   if (h1 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h2 > SRTM_VAL_MIN) h1 = 2*h - h2;
-  if (h2 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h1 > SRTM_VAL_MIN) h1 = 2*h - h2;
+  if (h2 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h1 > SRTM_VAL_MIN) h2 = 2*h - h1;
 
   int h3 = get_h(p + dPoint(0, -d.y/2.0));
   int h4 = get_h(p + dPoint(0, +d.y/2.0));
@@ -853,19 +836,11 @@ dMultiLine merge_cntr(std::multimap<iPoint, iPoint> & pf,
 std::map<short, dMultiLine>
 SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
 
-  int w = get_srtm_width();
-  double E = 1e-3/w; // distance for merging
-
-  if (kx<1) {
-    if      (range.y>=70) kx = 3;
-    else if (range.y>=60) kx = 2;
-    else kx = 1;
-  }
+  dPoint d = get_step(range.cnt());
+  double E = std::min(d.x,d.y)/3; // distance for merging
 
   // integer rectangle covering the area
-  dRect drange = range*(w-1.0);
-  drange.x /= kx; drange.w /= kx;
-  iRect irange = ceil(drange);
+  iRect irange = ceil(range/d);
 
   int x1  = irange.tlc().x;
   int x2  = irange.brc().x;
@@ -873,39 +848,13 @@ SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
   int y2  = irange.brc().y;
 
   // Extract altitudes for the whole range, make image
-std::cerr << "collect altitude data\n";
   ImageR img(x2-x1+1, y2-y1+1, IMAGE_16);
   for (int y=y1; y<=y2; y++){
     for (int x=x1; x<=x2; x++){
-      img.set16(x-x1,y-y1, get_val(x*kx,y));
+      img.set16(x-x1,y-y1, get_h(dPoint(x*d.x,y*d.y)));
     }
   }
 
-  // Smooth image if needed
-  if (smooth!=0.0) {
-std::cerr << "smooth data\n";
-    int ri = ceil(smooth);
-    ImageR img_s(x2-x1+1, y2-y1+1, IMAGE_16);
-    for (int y=0; y<=y2-y1; y++){
-      for (int x=0; x<=x2-x1; x++){
-        double s0=0;
-        double s1=0;
-        for (int sx=-ri;sx<=ri;sx++){
-          for (int sy=-ri;sy<=ri;sy++){
-            if (!img.check_crd(x+sx, y+sy)) continue;
-            double w = exp(-(sx*sx + sy*sy)/smooth);
-            s0 += w;
-            s1 += w*img.get16(x+sx,y+sy);
-          }
-        }
-        img_s.set16(x,y,(uint16_t)(s1/s0));
-      }
-    }
-    img = img_s;
-  }
-
-
-std::cerr << "find contours\n";
   std::map<short, std::multimap<iPoint, iPoint> > pf, pb;
 
   int count = 0;
@@ -933,8 +882,9 @@ std::cerr << "find contours\n";
         for (int hh = min; hh<=max; hh+=step){
           double v = double(hh-h1+0.1)/double(h2-h1);
           if ((v<0)||(v>1)) continue;
-          dPoint cr = ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0);
-          cr.x*=kx;
+          dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*v;
+          cr.x*=d.x;
+          cr.y*=d.y;
           pts.emplace(hh, cr);
         }
       }
@@ -969,21 +919,12 @@ std::cerr << "find contours\n";
 
 dMultiLine
 SRTM::find_slope_contours(const dRect & range, double val, int kx, double smooth){
-  int w = get_srtm_width();
-  double E = 1e-3/w; // distance for merging
 
-  if (kx<1) {
-    if      (range.y>=70) kx = 3;
-    else if (range.y>=60) kx = 2;
-    else kx = 1;
-  }
+  dPoint d = get_step(range.cnt());
+  double E = std::min(d.x,d.y)/3; // distance for merging
 
   // integer rectangle covering the area
-  dRect drange = range*(w-1.0);
-  drange.x /= kx; drange.w /= kx;
-  iRect irange = ceil(drange);
-//  irange.x *= kx; irange.w *= kx;
-
+  iRect irange = ceil(range/d);
   int x1  = irange.tlc().x;
   int x2  = irange.brc().x;
   int y1  = irange.tlc().y;
@@ -991,36 +932,11 @@ SRTM::find_slope_contours(const dRect & range, double val, int kx, double smooth
 
   // Extract slopes for the whole range.
   // make image with slopes
-std::cerr << "get slope data\n";
   ImageR img(x2-x1+1, y2-y1+1, IMAGE_FLOAT);
   for (int y=y1; y<=y2; y++){
     for (int x=x1; x<=x2; x++){
-      img.setF(x-x1,y-y1,get_slope(x*kx,y));
+      img.setF(x-x1,y-y1, get_s(dPoint(x*d.x,y*d.y)));
     }
-  }
-
-  // Smooth slopes if needed
-  if (smooth!=0.0) {
-std::cerr << "smooth slope data\n";
-    int ri = ceil(smooth);
-    ImageR img_s(x2-x1+1, y2-y1+1, IMAGE_FLOAT);
-    for (int y=0; y<=y2-y1; y++){
-      for (int x=0; x<=x2-x1; x++){
-        double s0=0;
-        double s1=0;
-        for (int sx=-ri;sx<=ri;sx++){
-          for (int sy=-ri;sy<=ri;sy++){
-            if (!img.check_crd(x+sx, y+sy)) continue;
-            double v = img.getF(x+sx,y+sy);
-            double w = exp(-(sx*sx + sy*sy)/smooth);
-            s0 += w;
-            s1 += w*v;
-          }
-        }
-      img_s.setF(x,y,s1/s0);
-      }
-    }
-    img = img_s;
   }
 
   // Find contours
@@ -1031,7 +947,6 @@ std::cerr << "smooth slope data\n";
   // for both directions
   std::multimap<iPoint, iPoint> pf, pb;
 
-std::cerr << "find slope contours\n";
   for (int y=y1-1; y<=y2; y++){
     for (int x=x1-1; x<=x2; x++){
 
@@ -1053,8 +968,9 @@ std::cerr << "find slope contours\n";
         float max = (v1<v2)? v2:v1;
         if (min < val && max >= val){
           double v = (val-v1)/(v2-v1);
-          dPoint cr = ((dPoint)p1 + (dPoint)(p2-p1)*v)/(w-1.0);
-          cr.x*=kx;
+          dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*v;
+          cr.x*=d.x;
+          cr.y*=d.y;
           pts.push_back(cr);
         }
       }
@@ -1075,11 +991,14 @@ std::cerr << "find slope contours\n";
 
 std::map<dPoint, short>
 SRTM::find_peaks(const dRect & range, int DH, size_t PS){
-  int w = get_srtm_width();
-  int x1  = int(floor((w-1)*range.tlc().x));
-  int x2  = int( ceil((w-1)*range.brc().x));
-  int y1  = int(floor((w-1)*range.tlc().y));
-  int y2  = int( ceil((w-1)*range.brc().y));
+
+  // integer rectangle covering the area
+  dPoint d = get_step(range.cnt());
+  iRect irange = ceil(range/d);
+  int x1  = irange.tlc().x;
+  int x2  = irange.brc().x;
+  int y1  = irange.tlc().y;
+  int y2  = irange.brc().y;
 
   // Summit finder:
   // 1. Find all local maxima with altitude h0 (they can contain multiple points).
@@ -1098,7 +1017,7 @@ SRTM::find_peaks(const dRect & range, int DH, size_t PS){
 
       iPoint p(x,y);
       if (done.count(p)>0) continue;
-      short h0 = get_val(x,y, false);
+      short h0 = get_h(dPoint(x,y)*d);
       if (h0 < SRTM_VAL_MIN) continue;
 
       std::set<iPoint> pts, brd;
@@ -1108,7 +1027,7 @@ SRTM::find_peaks(const dRect & range, int DH, size_t PS){
         short max = SRTM_VAL_UNDEF;
         iPoint maxpt;
         for (auto const & b:brd){
-          short h1 = get_val(b.x, b.y, false);
+          short h1 = get_h(b*d);
           // original point is too close to data edge
           if ((h1<SRTM_VAL_MIN) && (dist(b,p)<1.5)) {max = h1; break;}
           if (h1>max) {max = h1; maxpt=b;}
@@ -1120,7 +1039,7 @@ SRTM::find_peaks(const dRect & range, int DH, size_t PS){
 
         // if we descended more then DH or covered area more then PS:
         if ((h0 - max > DH ) || (pts.size() > PS)) {
-          ret[dPoint(p)/(double)(w-1)] = h0;
+          ret[dPoint(p)*d] = h0;
           break;
         }
         add_set_and_border(maxpt, pts, brd);
@@ -1133,20 +1052,24 @@ SRTM::find_peaks(const dRect & range, int DH, size_t PS){
 
 dMultiLine
 SRTM::find_holes(const dRect & range){
-  int w = get_srtm_width();
-  int x1  = int(floor((w-1)*range.tlc().x));
-  int x2  = int( ceil((w-1)*range.brc().x));
-  int y1  = int(floor((w-1)*range.tlc().y));
-  int y2  = int( ceil((w-1)*range.brc().y));
+
+  // integer rectangle covering the area
+  dPoint d = get_step(range.cnt());
+  iRect irange = ceil(range/d);
+  int x1  = irange.tlc().x;
+  int x2  = irange.brc().x;
+  int y1  = irange.tlc().y;
+  int y2  = irange.brc().y;
+
   std::set<iPoint> set;
   for (int y=y2; y>y1; y--){
     for (int x=x1; x<x2-1; x++){
-      short h = get_val(x,y,false);
+      short h = get_h(dPoint(x,y));
       if (h!=SRTM_VAL_UNDEF) continue;
-      set.insert(iPoint(x,y));
+      set.insert(dPoint(x*d.x, y*d.y));
     }
   }
   // convert points to polygons
   dMultiLine ret = border_line(set);
-  return (ret - dPoint(0.5,0.5))/(double)(w-1);
+  return (ret - dPoint(0.5,0.5))*d;
 }

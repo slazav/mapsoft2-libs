@@ -47,8 +47,6 @@ Default data directory is DIR=$HOME/.srtm_data
 
 // add SRTM group of options
 void ms2opt_add_srtm(GetOptSet & opts);
-
-// add SRTM group of options
 void ms2opt_add_srtm_surf(GetOptSet & opts);
 
 /********************************************************************/
@@ -58,24 +56,13 @@ class SRTM {
   /// SRTM data folder.
   std::string srtm_dir;
 
-  /// SRTM data width
-  size_t srtm_width;
-
   /// data cache. key is lon,lat in degrees, images are of IMAGE_16 type
   Cache<iPoint, ImageR> srtm_cache;
 
   // Locking srtm cache
   std::mutex cache_mutex;
 
-  /// size (m) of 1 srtm point lat bow
-  double size0;
-
-  /// area (m^2) of 1x1 srtm point on equator
-  double area0;
-
   bool interp_holes; // interpolate holes in data
-
-
 
   /// load data into cache
   bool load(const iPoint & key);
@@ -84,6 +71,21 @@ class SRTM {
 
     /// Constructor.
     SRTM(const Opt & o = Opt());
+
+    // Options can be used to change data dir
+    void set_opt(const Opt & opt);
+
+    // Get default options.
+    static Opt get_def_opt();
+
+    // Get lock. SRTM class goes not lock anything itself,
+    // User must lock set_opt, get_val, ... methods if they are
+    // used from different threads.
+    std::unique_lock<std::mutex> get_lock() {
+      return std::unique_lock<std::mutex>(cache_mutex);}
+
+/******************************/
+// new interface
 
 typedef enum {
   SRTM_NEAREST,
@@ -108,6 +110,9 @@ int16_t get_h(const dPoint& p);
 // get slope
 double get_s(const dPoint& p);
 
+/******************************/
+// color surface interface
+
 enum draw_mode_t {
   SRTM_DRAW_SHADES, // heights shaded with slope value
   SRTM_DRAW_HEIGHTS,
@@ -127,50 +132,13 @@ uint32_t get_color(const dPoint & p);
 
 uint32_t get_bgcolor() const {return bgcolor;}
 
-    // get srtm width
-    int get_srtm_width() const {return srtm_width;}
-
-    // Options can be used to change data dir
-    void set_opt(const Opt & opt);
-
-    // Get default options.
-    static Opt get_def_opt();
+/******************************/
 
     // Find set of points with same value (used
     // for hole interpolation in get_val) and its border.
     // `max` is max.set size (default is 0 for no limits).
-    void plane_and_border(const iPoint& p,
-       std::set<iPoint>& set, std::set<iPoint>& brd, size_t max=0);
-
-
-    /// Get altitude value at a given point (integer coordinates).
-    /// Hole interpolation can be switched with `interp` parameter.
-    short get_val(const int x, const int y, const bool interp=false);
-
-    /// Get value, 4-point linear interpolation, long-lat coordinates.
-    /// Hole interpolation is done according with srtm_interp_holes option.
-    short get_val_int4(const dPoint & p);
-
-    /// Get value, 16-point cubic interpolation, long-lat coordinates.
-    /// Hole interpolation is done according with srtm_interp_holes option.
-    short get_val_int16(const dPoint & p);
-
-    /// Get smooth value (averaging with Gaussian weight in radius r)
-    double get_val_smooth(const int x, const int y, const double r);
-
-    /// set new hight in cached data (used for interpolation)
-    short set_val(const int x, const int y, const short h);
-
-    /// Get slope (in degrees) at a given point (integer coordinates).
-    /// Hole interpolation can be switched with `interp` parameter.
-    double get_slope(const int x, const int y, const bool interp=false);
-
-    /// Get slope, 4-point interpolation, long-lat coordinates.
-    /// Hole interpolation is done according with srtm_interp_holes option.
-    double get_slope_int4(const dPoint & p);
-
-    /// Get smooth slope (averaging with Gaussian weight in radius r)
-    double get_slope_smooth(const int x, const int y, const double r);
+//    void plane_and_border(const iPoint& p,
+//       std::set<iPoint>& set, std::set<iPoint>& brd, size_t max=0);
 
     // make vector data: contours
     // use kx parameter to use only every kx-th horizontal point.
@@ -186,11 +154,6 @@ uint32_t get_bgcolor() const {return bgcolor;}
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);
 
-    // Get lock. SRTM class goes not lock anything itself,
-    // User must lock set_opt, get_val, ... methods if they are
-    // used from different threads.
-    std::unique_lock<std::mutex> get_lock() {
-      return std::unique_lock<std::mutex>(cache_mutex);}
 
 };
 
