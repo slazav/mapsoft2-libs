@@ -27,7 +27,9 @@ geo_length_2d(const MultiLine<CT,PT> & ml) {
   return ret;
 }
 
-/// Haversine distance to the nearest point of a dLine or dMultiLine.
+/// Go from point p1 using bearing th (deg) and distance d (m)
+dPoint geo_bearing_2d(const dPoint &p1, const double th, const double d);
+
 
 /// Read a figure from the string and get its bounding box.
 /// Same as figure_line from poly_tools.h, but can also read data from a file (tracks and waypoints).

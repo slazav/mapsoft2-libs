@@ -47,6 +47,26 @@ main(){
         dPoint(12, -90),
         dPoint(22,   0)), d5, 1.0);
 
+      // geo_bearing_2d
+      assert_deq(geo_bearing_2d(
+        dPoint(0,0), 0, 6380e3), dPoint(0,57.296), 1e-3);
+
+      assert_deq(geo_bearing_2d(
+        dPoint(0,0), 90, 6380e3), dPoint(57.296,0), 1e-3);
+
+      assert_deq(geo_bearing_2d(
+        dPoint(0,0), 180, 6380e3), dPoint(0,-57.296), 1e-3);
+
+      assert_deq(geo_bearing_2d(
+        dPoint(0,0), 270, 6380e3), dPoint(-57.296,0), 1e-3);
+
+      assert_deq(geo_bearing_2d(
+        dPoint(0,0), -90, 6380e3), dPoint(-57.296,0), 1e-3);
+
+      assert_deq(geo_bearing_2d(
+        dPoint(-2.809, 54.055), 45, 1950), dPoint(-2.788,54.067), 1e-3);
+
+
       dLine       l1("[[0,0],[2,1],[4,2]]");
       dMultiLine ml1("[[],[[0,0],[2,1],[4,2]]]");
       dMultiLine ml0("[[],[]]");

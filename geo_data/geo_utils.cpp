@@ -17,6 +17,22 @@ double geo_dist_2d(const dPoint &p1, const dPoint &p2){
   return 2*R * asin(sqrt(hdy + cy1*cy2*hdx));
 }
 
+// see https://www.movable-type.co.uk/scripts/latlong.html
+dPoint geo_bearing_2d(const dPoint &p1, const double th, const double d){
+  double sy1 = sin(p1.y * M_PI/180.0);
+  double cy1 = cos(p1.y * M_PI/180.0);
+  double sdd = sin(d/6380e3);
+  double cdd = cos(d/6380e3);
+  double sth = sin(th * M_PI/180.0);
+  double cth = cos(th * M_PI/180.0);
+  dPoint ret;
+  ret.y = asin(sy1*cdd + cy1*sdd*cth);
+  ret.x = atan2(sth*sdd*cy1, cdd - sin(ret.y)*sy1);
+  ret *= 180.0/M_PI;
+  ret.x += p1.x;
+  return ret;
+}
+
 /**********************/
 
 dMultiLine figure_geo_line(const::std::string &str) {
