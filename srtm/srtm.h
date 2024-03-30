@@ -88,14 +88,12 @@ class SRTM {
     // new interface
 
     typedef enum {
-      SRTM_NEAREST,
-      SRTM_LINEAR,
-      SRTM_CUBIC,
-      SRTM_SMOOTH,
+      SRTM_NEAREST=0,
+      SRTM_LINEAR=1,
+      SRTM_CUBIC=2,
     } style_t;
 
     style_t srtm_interp;
-    double  srtm_smooth_rad;
 
     // Distance between points (dx,dy) at a given place.
     // (0,0) if data is missing.
@@ -104,7 +102,7 @@ class SRTM {
     // Low-level get function: rounding coordinate to the nearest point
     int16_t get_raw(const dPoint& p);
 
-    // get with interpolation/smoothing
+    // get with interpolation
     int16_t get_h(const dPoint& p);
 
     // get slope

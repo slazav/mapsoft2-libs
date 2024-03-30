@@ -32,18 +32,10 @@ main(){
     assert_eq(S.get_h(dPoint(29.1, 78.1)), 0);
     assert_eq(S.get_h(dPoint(29.6, 78.9)), 57);
 
-    o.put("srtm_interp", "smooth");
-    S.set_opt(o);
-
-    assert_eq(S.get_h(dPoint(29.1, 78.1)), 0);
-    assert_eq(S.get_h(dPoint(29.6, 78.9)), 56);
-
-
     Opt o1 = S.get_def_opt();
     assert_eq(o1.exists("srtm_dir"), true);
     assert_eq(o1.get("srtm_interp_holes"), "1");
     assert_eq(o1.get("srtm_interp"), "linear");
-    assert_eq(o1.get("srtm_smooth_rad"), "5");
 
 
   }

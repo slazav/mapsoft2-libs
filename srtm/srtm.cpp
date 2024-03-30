@@ -177,9 +177,7 @@ ms2opt_add_srtm(GetOptSet & opts){
     "Interpolate holes (0|1, default 1).");
 
   opts.add("srtm_interp", 1,0,g,
-    "Interpolation (nearest, linear, cubic, smooth. Default: linear).");
-  opts.add("srtm_smooth_rad", 1,0,g,
-    "Smooth radius (used only if srtm_interp=smooth, default: 5.");
+    "Interpolation (nearest, linear, cubic. Default: linear).");
 }
 
 void
@@ -211,9 +209,7 @@ SRTM::get_def_opt() {
   Opt o;
   o.put("srtm_dir", std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
   o.put("srtm_interp_holes", 1);
-
   o.put("srtm_interp", "linear");
-  o.put("srtm_smooth_rad", 5.0);
 
   o.put("srtm_draw_mode", "shades");
   o.put("srtm_hmin", 0);
@@ -243,10 +239,7 @@ SRTM::set_opt(const Opt & opt){
   if      (srtm_interp_s == "nearest") srtm_interp = SRTM_NEAREST;
   else if (srtm_interp_s == "linear")  srtm_interp = SRTM_LINEAR;
   else if (srtm_interp_s == "cubic")   srtm_interp = SRTM_CUBIC;
-  else if (srtm_interp_s == "smooth")  srtm_interp = SRTM_SMOOTH;
   else throw Err() << "SRTM: unknown srtm_interp setting: " << srtm_interp_s;
-
-  srtm_smooth_rad = opt.get("srtm_smooth_rad", 5.0);
 
   // surface parameters
   auto     m = opt.get("srtm_draw_mode", "shades");
@@ -356,7 +349,7 @@ int_holes(double h[4]){
   }
 }
 
-// Get with interpolation/smoothing
+// Get with interpolation
 int16_t
 SRTM::get_h(const dPoint& p){
   auto h0 = get_raw(p);
@@ -403,28 +396,6 @@ SRTM::get_h(const dPoint& p){
       }
       int_holes(hy);
       return cubic_interp(hy, -sy/d.y);
-    }
-
-    case SRTM_SMOOTH: {
-      if (srtm_smooth_rad<=0) return get_raw(p);
-      dPoint d = get_step(p);
-      double x = p.x - floor(p.x);
-      double y = p.y - floor(p.y);
-      double sx = floor(x/d.x)*d.x - x;
-      double sy = floor(y/d.y)*d.y - y;
-      int ri = ceil(srtm_smooth_rad);
-      double v=0;
-      double n = 0;
-      for (int ix=-ri;ix<=ri;ix++){
-        for (int iy=-ri;iy<=ri;iy++){
-          auto h = get_raw(p + dPoint(sx+d.x*ix, sy+d.y*iy));
-          if (h<SRTM_VAL_MIN) continue;
-          double w = exp(-(ix*ix + iy*iy)/srtm_smooth_rad/srtm_smooth_rad);
-          v += w*h;
-          n += w;
-        }
-      }
-      return v/n;
     }
 
     default: throw Err()
