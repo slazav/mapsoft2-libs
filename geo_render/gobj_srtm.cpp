@@ -121,6 +121,12 @@ GObjSRTM::set_opt(const Opt & o){
 }
 
 void
+GObjSRTM::redraw() {
+  tiles.clear();
+  redraw_me();
+}
+
+void
 GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
   cnv = c;
   tiles.clear();

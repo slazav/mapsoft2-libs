@@ -54,6 +54,8 @@ class GObjSRTM : public GObj {
 
     static Opt get_def_opt();
 
+    void redraw();
+
     void set_opt(const Opt & o) override;
 
     void set_cnv(const std::shared_ptr<ConvBase> c) override;
