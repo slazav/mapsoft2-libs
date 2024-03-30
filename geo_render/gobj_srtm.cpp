@@ -135,16 +135,26 @@ render_tile(const dRect & draw_range){
 
   ImageR image = ImageR(draw_range.w, draw_range.h, IMAGE_32ARGB);
 
-  auto srtm_lock = srtm->get_lock();
+  // calculate wgs range
+  dRect wgs_range = cnv->frw_acc(draw_range);
 
   // draw surface
   if (surf) {
+    auto srtm_lock = srtm->get_lock();
+
+    // data resolution [deg/px]
+    dPoint data_res((double)wgs_range.w/draw_range.w, (double)wgs_range.h/draw_range.h);
+
+    // srtm resolution [deg/px]
+    dPoint srtm_res = srtm->get_step(wgs_range.cnt());
+    bool raw = data_res.x > srtm_res.x || data_res.y > srtm_res.y;
+
     for (size_t j=0; j<image.height(); j++){
       if (is_stopped()) return false;
       for (size_t i=0; i<image.width(); i++){
         dPoint p(i + draw_range.x, j+draw_range.y);
         if (cnv) cnv->frw(p);
-        image.set32(i,j, srtm->get_color(p));
+        image.set32(i,j, srtm->get_color(p, raw));
       }
     }
   }
@@ -152,12 +162,8 @@ render_tile(const dRect & draw_range){
 
   CairoWrapper cr;
   cr.set_surface_img(image);
-
-  // calculate wgs range and set some cairo parameters
-  // for drawing vector data
-  dRect wgs_range;
+  //  set some cairo parameters for drawing vector data
   if (cnt || holes) {
-    wgs_range = cnv->frw_acc(draw_range);
     cr->set_line_cap(Cairo::LINE_CAP_ROUND);
     cr->set_line_join(Cairo::LINE_JOIN_ROUND);
     cr->translate(-draw_range.tlc());
@@ -165,6 +171,7 @@ render_tile(const dRect & draw_range){
 
   // draw contours
   if (cnt) {
+    auto srtm_lock = srtm->get_lock();
     auto c_data = srtm->find_contours(wgs_range, cnt_step);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
@@ -180,6 +187,7 @@ render_tile(const dRect & draw_range){
 
   // draw holes
   if (holes) {
+    auto srtm_lock = srtm->get_lock();
     auto h_data = srtm->find_holes(wgs_range);
     cr->set_color(holes_color);
     cr->set_line_width(holes_w);
@@ -193,6 +201,7 @@ render_tile(const dRect & draw_range){
 
   // draw peaks
   if (peaks) {
+    auto srtm_lock = srtm->get_lock();
     wgs_range = cnv->frw_acc(expand(draw_range,peaks_text_size*4));
     auto p_data = srtm->find_peaks(wgs_range, peaks_dh, peaks_ps);
     cr->set_color(peaks_color);
