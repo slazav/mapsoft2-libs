@@ -103,10 +103,10 @@ class SRTM {
     int16_t get_raw(const dPoint& p);
 
     // get with interpolation
-    double get_h(const dPoint& p);
+    double get_h(const dPoint& p, bool raw=false);
 
     // get slope
-    double get_s(const dPoint& p);
+    double get_s(const dPoint& p, bool raw=false);
 
     /******************************/
     // color surface interface

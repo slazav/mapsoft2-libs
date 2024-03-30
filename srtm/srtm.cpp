@@ -351,65 +351,57 @@ int_holes(double h[4]){
 
 // Get with interpolation
 double
-SRTM::get_h(const dPoint& p){
+SRTM::get_h(const dPoint& p, bool raw){
   auto h0 = get_raw(p);
-  if (h0<SRTM_VAL_MIN) return h0;
+  if (h0<SRTM_VAL_MIN || raw || srtm_interp == SRTM_NEAREST) return h0;
 
-  switch (srtm_interp) {
+  if (srtm_interp == SRTM_LINEAR) {
+    dPoint d = get_step(p);
+    double x = p.x - floor(p.x);
+    double y = p.y - floor(p.y);
+    double sx = floor(x/d.x)*d.x - x;
+    double sy = floor(y/d.y)*d.y - y;
 
-    case SRTM_NEAREST:
-      return (double)h0;
+    auto h1 = get_raw(p + dPoint(sx, sy));
+    auto h2 = get_raw(p + dPoint(sx, sy+d.y));
+    if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
+    double h12 = h1 - (h2-h1)*sy/d.y;
 
-    case SRTM_LINEAR: {
-      dPoint d = get_step(p);
-      double x = p.x - floor(p.x);
-      double y = p.y - floor(p.y);
-      double sx = floor(x/d.x)*d.x - x;
-      double sy = floor(y/d.y)*d.y - y;
-
-      auto h1 = get_raw(p + dPoint(sx, sy));
-      auto h2 = get_raw(p + dPoint(sx, sy+d.y));
-      if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-      double h12 = h1 - (h2-h1)*sy/d.y;
-
-      auto h3=get_raw(p + dPoint(sx+d.x, sy));
-      auto h4=get_raw(p + dPoint(sx+d.x, sy+d.y));
-      if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-      double h34 = h3 - (h4-h3)*sy/d.y;
-      return h12 - (h34-h12)*sx/d.x;
-    }
-
-    case SRTM_CUBIC: {
-      dPoint d = get_step(p);
-      double x = p.x - floor(p.x);
-      double y = p.y - floor(p.y);
-      double sx = floor(x/d.x)*d.x - x;
-      double sy = floor(y/d.y)*d.y - y;
-      double hx[4], hy[4];
-
-      for (int i=0; i<4; i++){
-        for (int j=0; j<4; j++){
-          hx[j]=get_raw(p + dPoint(sx+d.x*(j-1), sy+d.y*(i-1)));
-        }
-        int_holes(hx);
-        hy[i]= cubic_interp(hx, -sx/d.x);
-      }
-      int_holes(hy);
-      return cubic_interp(hy, -sy/d.y);
-    }
-
-    default: throw Err()
-      << "SRTM: unknown interpolation style: " << srtm_interp;
+    auto h3=get_raw(p + dPoint(sx+d.x, sy));
+    auto h4=get_raw(p + dPoint(sx+d.x, sy+d.y));
+    if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
+    double h34 = h3 - (h4-h3)*sy/d.y;
+    return h12 - (h34-h12)*sx/d.x;
   }
-  return SRTM_VAL_UNDEF;
+
+  if (srtm_interp == SRTM_CUBIC) {
+    dPoint d = get_step(p);
+    double x = p.x - floor(p.x);
+    double y = p.y - floor(p.y);
+    double sx = floor(x/d.x)*d.x - x;
+    double sy = floor(y/d.y)*d.y - y;
+    double hx[4], hy[4];
+
+    for (int i=0; i<4; i++){
+      for (int j=0; j<4; j++){
+        hx[j]=get_raw(p + dPoint(sx+d.x*(j-1), sy+d.y*(i-1)));
+      }
+      int_holes(hx);
+      hy[i]= cubic_interp(hx, -sx/d.x);
+    }
+    int_holes(hy);
+    return cubic_interp(hy, -sy/d.y);
+  }
+
+  throw Err() << "SRTM: unknown interpolation style: " << srtm_interp;
 }
 
 double
-SRTM::get_s(const dPoint& p){
+SRTM::get_s(const dPoint& p, bool raw){
   dPoint d = get_step(p);
-  int h  = get_h(p);
-  int h1 = get_h(p + dPoint(-d.x/2.0, 0));
-  int h2 = get_h(p + dPoint(+d.x/2.0, 0));
+  int h  = get_h(p, raw);
+  int h1 = get_h(p + dPoint(-d.x/2.0, 0), raw);
+  int h2 = get_h(p + dPoint(+d.x/2.0, 0), raw);
   if (h1 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h2 > SRTM_VAL_MIN) h1 = 2*h - h2;
   if (h2 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h1 > SRTM_VAL_MIN) h2 = 2*h - h1;
 
