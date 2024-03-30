@@ -654,12 +654,12 @@ SRTM::get_h(const dPoint& p){
       auto h1 = get_raw(p + dPoint(sx, sy));
       auto h2 = get_raw(p + dPoint(sx, sy+d.y));
       if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-      auto h12 = (uint16_t)( h1 - (h2-h1)*sy/d.y);
+      auto h12 = (int16_t)( h1 - (h2-h1)*sy/d.y);
 
       auto h3=get_raw(p + dPoint(sx+d.x, sy));
       auto h4=get_raw(p + dPoint(sx+d.x, sy+d.y));
       if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-      auto h34 = (int)(h3 - (h4-h3)*sy/d.y);
+      auto h34 = (int16_t)(h3 - (h4-h3)*sy/d.y);
       return (int16_t)(h12 - (h34-h12)*sx/d.x);
     }
 
@@ -870,8 +870,8 @@ SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
       for (int k=0; k<4; k++){
         iPoint p1 = p+crn(k);
         iPoint p2 = p+crn(k+1);
-        auto h1 = img.get16(p1.x-x1, p1.y-y1);
-        auto h2 = img.get16(p2.x-x1, p2.y-y1);
+        auto h1 = (int16_t)img.get16(p1.x-x1, p1.y-y1);
+        auto h2 = (int16_t)img.get16(p2.x-x1, p2.y-y1);
 
         if (h2==h1) continue;
         if ((h1<SRTM_VAL_MIN) || (h2<SRTM_VAL_MIN)) continue;
