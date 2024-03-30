@@ -177,7 +177,7 @@ ms2opt_add_srtm(GetOptSet & opts){
     "Interpolate holes (0|1, default 1).");
 
   opts.add("srtm_interp", 1,0,g,
-    "Interpolation (nearest, linear, cubic, smooth. Default: cubic).");
+    "Interpolation (nearest, linear, cubic, smooth. Default: linear).");
   opts.add("srtm_smooth_rad", 1,0,g,
     "Smooth radius (used only if srtm_interp=smooth, default: 5.");
 }
@@ -212,7 +212,7 @@ SRTM::get_def_opt() {
   o.put("srtm_dir", std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
   o.put("srtm_interp_holes", 1);
 
-  o.put("srtm_interp", "cubic");
+  o.put("srtm_interp", "linear");
   o.put("srtm_smooth_rad", 5.0);
 
   o.put("srtm_draw_mode", "shades");
@@ -239,7 +239,7 @@ SRTM::set_opt(const Opt & opt){
     srtm_cache.clear();
   }
 
-  auto srtm_interp_s = opt.get("srtm_interp", "cubic");
+  auto srtm_interp_s = opt.get("srtm_interp", "linear");
   if      (srtm_interp_s == "nearest") srtm_interp = SRTM_NEAREST;
   else if (srtm_interp_s == "linear")  srtm_interp = SRTM_LINEAR;
   else if (srtm_interp_s == "cubic")   srtm_interp = SRTM_CUBIC;
