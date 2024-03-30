@@ -6,6 +6,7 @@
 #include "srtm.h"
 #include "geom/line.h"
 #include "geom/point_int.h"
+#include "geom/poly_tools.h"
 #include "filename/filename.h"
 #include <zlib.h>
 #include <tiffio.h>
@@ -315,7 +316,9 @@ SRTM::get_raw(const dPoint& p){
     return get_raw(p1);
   }
 
-  // TODO: overlay
+  // Use overlay
+  if (overlay.count(key) && overlay[key].count(crd))
+     return overlay[key][crd];
 
   // obtain the point
   return (int16_t)im.get16(crd.x, crd.y);
@@ -417,6 +420,42 @@ SRTM::get_s(const dPoint& p, bool raw){
   d.x *= cos(M_PI*p.y/180.0);
   double  U = hypot((h2-h1)/d.x, (h4-h3)/d.y);
   return atan(U)*180.0/M_PI;
+}
+
+/************************************************/
+
+void
+SRTM::overlay_cut(const dLine & l){
+  auto r = l.bbox();
+  dPolyTester pt(l);
+  for (int x = floor(r.x); x<ceil(r.x+r.w); x++){
+    for (int y = floor(r.y); y<ceil(r.y+r.h); y++){
+      iPoint key(x,y);
+
+      // load image (only for w and h)
+      if ((!srtm_cache.contains(key)) && (!load(key))) return;
+      auto im = srtm_cache.get(key);
+      size_t w = im.width(), h=im.height();
+      if (im.is_empty()) return;
+
+      std::set<iPoint> pts;
+      // not very efficient
+      for (size_t cx = 0; cx < w; cx++){
+        for (size_t cy = 0; cy < h; cy++){
+          dPoint p(key);
+          p.x += (double)cx/(w%2==1 ? w-1 : w);
+          p.y += 1.0 - (double)cy/(h%2==1 ? h-1 : h);
+          if (pt.test_pt(p)) pts.emplace(cx,cy);
+        }
+      }
+
+      if (!pts.size()) continue;
+      if (!overlay.count(key)) overlay[key] = std::map<iPoint, int16_t>();
+
+      for (const auto & p:pts)
+        overlay[key][p] = SRTM_VAL_UNDEF;
+    }
+  }
 }
 
 /************************************************/

@@ -59,6 +59,9 @@ class SRTM {
   /// data cache. key is lon,lat in degrees, images are of IMAGE_16 type
   Cache<iPoint, ImageR> srtm_cache;
 
+  /// overlay
+  std::map<iPoint, std::map<iPoint, int16_t> > overlay;
+
   // Locking srtm cache
   std::mutex cache_mutex;
 
@@ -107,6 +110,12 @@ class SRTM {
 
     // get slope
     double get_s(const dPoint& p, bool raw=false);
+
+    /******************************/
+    // overlay things
+
+    // cut hole in the data
+    void overlay_cut(const dLine & l);
 
     /******************************/
     // color surface interface
