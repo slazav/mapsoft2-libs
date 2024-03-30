@@ -49,6 +49,45 @@ GObjPano::set_cnv(const std::shared_ptr<ConvBase> c) {
 
 /***********************************************************/
 
+void
+GObjPano::set_p0(const dPoint & p0_) {
+  p0=p0_;
+
+  dPoint d;
+  {
+    auto srtm_lock = srtm->get_lock();
+    // data step in degrees in the central point
+    st = srtm->get_step(p0);
+  }
+
+  // convert to m
+  st *= M_PI*6380e3/180.0;
+  st.x *= cos(p0.y * M_PI/180.0);
+
+  {
+    std::lock_guard<std::mutex> lk(cache_mutex);
+    ray_cache.clear();
+  }
+  redraw_me();
+}
+
+void
+GObjPano::set_mr(const double mr_) {
+  mr=mr_;
+  {
+    std::lock_guard<std::mutex> lk(cache_mutex);
+    ray_cache.clear();
+  }
+  redraw_me();
+}
+
+void
+GObjPano::set_dh(const double dh_) {
+  dh=dh_;
+  redraw_me();
+}
+
+
 
 std::vector<GObjPano::ray_data>
 GObjPano::get_ray(int x){
@@ -58,32 +97,26 @@ GObjPano::get_ray(int x){
   // convert coordinate to angle, [0..2pi]
   while (x<0) x+=width;
   while (x>=width) x-=width;
-  double a = 2.0*M_PI*x/width;
-  double ad = 360.0*x/width;
-  size_t key=round(a*1e6); // key for the cache
+  double da = 2.0*M_PI/width; // pixel size in rad
+  double a = x*da;            // angle in rad
+  double ad = 360.0*x/width;  // andle in deg
+  size_t key=round(a*1e6);    // key for the cache
 
   if (ray_cache.contains(key)){
      std::lock_guard<std::mutex> lk(cache_mutex);
      return ray_cache.get(key);
   }
 
+  // step along the ray (angle is counted from axis y), m:
+  auto dr = 1.0/sqrt(pow(sin(a)/st.x, 2) + pow(cos(a)/st.y, 2));
+
   std::vector<GObjPano::ray_data> ret;
   auto srtm_lock = srtm->get_lock();
-
-  // data step in degrees in the central point
-  auto d = srtm->get_step(p0);
-
-  // convert to m
-  d *= M_PI*6380e3/180.0;
-  d.x *= cos(p0.y * M_PI/180.0);
-
-  // step along the ray (angle is counted from axis y), m:
-  auto dr = 1.0/sqrt(pow(sin(a)/d.x, 2) + pow(cos(a)/d.y, 2));
-
   for (double r = 0; r<mr; r+=dr){
+    bool raw = dr/r < da;
     auto p2 = geo_bearing_2d(p0, ad, r);
-    auto h = srtm->get_h(p2);
-    auto s = srtm->get_s(p2);
+    auto h = srtm->get_h(p2, raw);
+    auto s = srtm->get_s(p2, raw);
     if (h>SRTM_VAL_MIN) ret.emplace_back(r, h, s);
   }
   std::lock_guard<std::mutex> lk(cache_mutex);

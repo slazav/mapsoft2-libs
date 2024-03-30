@@ -26,6 +26,7 @@ private:
   dPoint p0;
   double mr;
   double dh;
+  dPoint st; // srtm step in the origin [m] (set with p0)
   Rainbow R;
 
   static const size_t width0 = 4096;
@@ -48,9 +49,9 @@ public:
 
 */
    // central point, wgs84 lonlat
-  void set_p0(const dPoint & p0_) {p0=p0_; ray_cache.clear(); redraw_me();}
-  void set_mr(const double mr_) {mr=mr_; ray_cache.clear(); redraw_me();}
-  void set_dh(const double dh_) {dh=dh_; redraw_me();}
+  void set_p0(const dPoint & p0);
+  void set_mr(const double mr);
+  void set_dh(const double dh);
 
   dPoint get_p0(void) const {return p0;}
   double get_mr(void) const {return mr;}
