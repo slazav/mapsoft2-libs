@@ -323,7 +323,7 @@ SRTM::get_raw(const dPoint& p){
 
 // Cubic interpolation (used in get_val_int16()).
 // see http://www.paulinternet.nl/?page=bicubic
-short
+double
 cubic_interp(const double h[4], const double x){
   return h[1] + 0.5 * x*(h[2] - h[0] + x*(2.0*h[0] - 5.0*h[1] + 4.0*h[2] -
               h[3] + x*(3.0*(h[1] - h[2]) + h[3] - h[0])));
@@ -350,7 +350,7 @@ int_holes(double h[4]){
 }
 
 // Get with interpolation
-int16_t
+double
 SRTM::get_h(const dPoint& p){
   auto h0 = get_raw(p);
   if (h0<SRTM_VAL_MIN) return h0;
@@ -358,7 +358,7 @@ SRTM::get_h(const dPoint& p){
   switch (srtm_interp) {
 
     case SRTM_NEAREST:
-      return h0;
+      return (double)h0;
 
     case SRTM_LINEAR: {
       dPoint d = get_step(p);
@@ -370,13 +370,13 @@ SRTM::get_h(const dPoint& p){
       auto h1 = get_raw(p + dPoint(sx, sy));
       auto h2 = get_raw(p + dPoint(sx, sy+d.y));
       if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-      auto h12 = (int16_t)( h1 - (h2-h1)*sy/d.y);
+      double h12 = h1 - (h2-h1)*sy/d.y;
 
       auto h3=get_raw(p + dPoint(sx+d.x, sy));
       auto h4=get_raw(p + dPoint(sx+d.x, sy+d.y));
       if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-      auto h34 = (int16_t)(h3 - (h4-h3)*sy/d.y);
-      return (int16_t)(h12 - (h34-h12)*sx/d.x);
+      double h34 = h3 - (h4-h3)*sy/d.y;
+      return h12 - (h34-h12)*sx/d.x;
     }
 
     case SRTM_CUBIC: {

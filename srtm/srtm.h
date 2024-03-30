@@ -103,7 +103,7 @@ class SRTM {
     int16_t get_raw(const dPoint& p);
 
     // get with interpolation
-    int16_t get_h(const dPoint& p);
+    double get_h(const dPoint& p);
 
     // get slope
     double get_s(const dPoint& p);
