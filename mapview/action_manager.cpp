@@ -86,8 +86,9 @@ ActionManager::ActionManager (Mapview * mapview_):
     ADD_ACT(CloseVMap,       "VMap")
 
     ADD_ACT(AMShowSRTM,      "SRTM")
-    ADD_ACT(AMPano,          "SRTM")
+    ADD_ACT(AMSrtmPano,      "SRTM")
     ADD_ACT(AMSrtmOpts,      "SRTM")
+    ADD_ACT(AMSrtmCut,       "SRTM")
 
     // Wpt panel menu
     ADD_ACT(PanelGoto,        "PopupWPTs")

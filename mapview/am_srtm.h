@@ -77,23 +77,23 @@ private:
 
 /// Panoramic view
 #include "dlg_pano.h"
-class AMPano : public ActionMode {
+class AMSrtmPano : public ActionMode {
 public:
-    AMPano (Mapview * mapview) :
+    AMSrtmPano (Mapview * mapview) :
       ActionMode(mapview),
       dlg(&mapview->srtm),
       state(0)
     {
       dlg.signal_response().connect(
-        sigc::hide(sigc::mem_fun (this, &AMPano::abort)));
+        sigc::hide(sigc::mem_fun (this, &AMSrtmPano::abort)));
       dlg.signal_go().connect(
-        sigc::mem_fun (this, &AMPano::on_go));
+        sigc::mem_fun (this, &AMSrtmPano::on_go));
       dlg.signal_point().connect(
-        sigc::mem_fun (this, &AMPano::on_point));
+        sigc::mem_fun (this, &AMSrtmPano::on_point));
       dlg.set_title(get_name());
 
       mapview->signal_srtm_conf().connect(
-        sigc::mem_fun (this, &AMPano::on_reconf));
+        sigc::mem_fun (this, &AMSrtmPano::on_reconf));
 
     }
 
@@ -158,6 +158,77 @@ private:
     DlgPano dlg;
     int state; // first/next click;
     dPoint p0;
+};
+
+// Cut hole
+class AMSrtmCut : public ActionMode {
+    dLine line;
+
+  public:
+
+    AMSrtmCut (Mapview * mapview) : ActionMode(mapview) { }
+
+    std::string get_name() override { return "Cut hole in SRTM data"; }
+    std::string get_icon() { return "cut"; }
+    std::string get_desc() override {
+      return "left click - add points; ctrl-left - remove last point; "
+             "right - finish; ctrl-right - abort"; }
+
+    void activate(const std::string & menu) override { abort(); }
+
+    void abort() override {
+      line.clear();
+      mapview->rubber.clear();
+    }
+
+    void handle_click(const iPoint p, const int button,
+                      const Gdk::ModifierType & state) override {
+
+         if (button == 3) {
+           if (!(state&Gdk::CONTROL_MASK) && line.size()){
+             dPoint pt(p);
+             mapview->viewer.get_cnv().frw(pt);
+             line.push_back(pt);
+             mapview->srtm.overlay_cut(line);
+             mapview->obj_srtm->redraw();
+           }
+           abort();
+           return;
+         }
+
+         if (button != 1) return;
+
+        // remove point
+        if (state&Gdk::CONTROL_MASK){
+          if (line.size()>0){
+            line.resize(line.size()-1);
+          }
+          if (mapview->rubber.size()>0){
+            mapview->rubber.pop();
+          }
+          if (mapview->rubber.size()>0){
+            RubberSegment s = mapview->rubber.pop();
+            s.flags |= RUBBFL_MOUSE_P2;
+            s.p2=iPoint(0,0);
+            mapview->rubber.add(s);
+          }
+        }
+        // add point
+        else{
+          dPoint pt(p);
+          mapview->viewer.get_cnv().frw(pt);
+          line.push_back(pt);
+
+          // fix the last rubber segment
+          if (mapview->rubber.size()>0){
+            RubberSegment s = mapview->rubber.pop();
+            s.flags &= ~RUBBFL_MOUSE;
+            s.p2 = dPoint(p);
+            mapview->rubber.add(s);
+          }
+          mapview->rubber.add_line(p);
+        }
+    }
 };
 
 
