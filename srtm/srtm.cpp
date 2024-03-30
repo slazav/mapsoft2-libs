@@ -434,12 +434,12 @@ SRTM::get_color(const double h, const double s){
 
 /// Get color for a point (lon-lat coords), according with drawing options.
 uint32_t
-SRTM::get_color(const dPoint & p) {
+SRTM::get_color(const dPoint & p, bool raw) {
   switch (draw_mode){
-    case SRTM_DRAW_SLOPES:  return R.get(get_s(p));
-    case SRTM_DRAW_HEIGHTS: return R.get(get_h(p));
+    case SRTM_DRAW_SLOPES:  return R.get(get_s(p, raw));
+    case SRTM_DRAW_HEIGHTS: return R.get(get_h(p, raw));
     case SRTM_DRAW_SHADES:
-      return color_shade(R.get(get_h(p)), 1-get_s(p)/90.0);
+      return color_shade(R.get(get_h(p, raw)), 1-get_s(p, raw)/90.0);
   }
   return bgcolor;
 }

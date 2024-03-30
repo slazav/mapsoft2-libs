@@ -126,7 +126,7 @@ class SRTM {
     uint32_t get_color(const double h, const double s);
 
     /// Get color for a point (lon-lat coords), according with drawing options.
-    uint32_t get_color(const dPoint & p);
+    uint32_t get_color(const dPoint & p, bool raw=false);
 
     uint32_t get_bgcolor() const {return bgcolor;}
 
