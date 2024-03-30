@@ -1,4 +1,5 @@
 #include "gobj_pano.h"
+#include "geo_data/geo_utils.h"
 
 /***********************************************************/
 // options
@@ -29,7 +30,7 @@ GObjPano::set_opt(const Opt & o){
   }
   p0 = o.get<dPoint>("pano_origin");
   dh = o.get<double>("pano_alt", 20.0);
-  max_r = o.get<double>("pano_rmax", 100) * 1000; // convert km->m
+  mr = o.get<double>("pano_rmax", 100) * 1000; // convert km->m
   std::lock_guard<std::mutex> lk(cache_mutex);
   ray_cache.clear();
   redraw_me();
@@ -58,6 +59,7 @@ GObjPano::get_ray(int x){
   while (x<0) x+=width;
   while (x>=width) x-=width;
   double a = 2.0*M_PI*x/width;
+  double ad = 360.0*x/width;
   size_t key=round(a*1e6); // key for the cache
 
   if (ray_cache.contains(key)){
@@ -65,77 +67,24 @@ GObjPano::get_ray(int x){
      return ray_cache.get(key);
   }
 
-  size_t srtmw = srtm->get_srtm_width()-1;
-
-  double sa=sin(a), ca=cos(a), cx=cos(p0.y * M_PI/180.0);
-  dPoint pt = p0*srtmw; // viewpoint coordinates in srtm points
-  double m2srtm = srtmw * 180/M_PI/ 6380000;
-  double rM = max_r*m2srtm; // max distance in srtm points
-
-  // Intersections or ray with x and y lines of srtm grid goes
-  // with constant steps. But we need to sort them by r.
-  double rx,drx,ry,dry; // Initial values and steps
-  if      (sa>1/rM) { drx=cx/sa;  rx=(ceil(pt.x)-pt.x)*cx/sa;  }
-  else if (sa<-1/rM){ drx=-cx/sa; rx=(floor(pt.x)-pt.x)*cx/sa; }
-  else              { drx=rx=rM; }
-  if      (ca>1/rM) { dry=1/ca;  ry=(ceil(pt.y)-pt.y)/ca;  }
-  else if (ca<-1/rM){ dry=-1/ca; ry=(floor(pt.y)-pt.y)/ca; }
-  else                 { dry=ry=rM; }
-
   std::vector<GObjPano::ray_data> ret;
   auto srtm_lock = srtm->get_lock();
-  while (rx<rM || ry<rM){ // Go from zero to rM
 
-    while (rx <= ry && rx<rM){ // step in x
-      int x = round(pt.x+rx*sa/cx); // x is a round number
-      double y = pt.y+rx*ca;        // y is between two grid points.
-      // assert(abs(pt.x+rx*sa/cx - x) < 1e-9); // check this
+  // data step in degrees in the central point
+  auto d = srtm->get_step(p0);
 
-      // Interpolate altitude and slope between two points:
-      int y1 = floor(y);
-      int y2 = ceil(y);
-      double h=SRTM_VAL_UNDEF,s;
-      if (y1!=y2){
-        int h1 = srtm->get_val(x,y1, false);
-        int h2 = srtm->get_val(x,y2, false);
-        double s1 = srtm->get_slope(x,y1, false);
-        double s2 = srtm->get_slope(x,y2, false);
-        if ((h1>SRTM_VAL_MIN) && (h2>SRTM_VAL_MIN))
-          h = h1 + (h2-h1)*(y-y1)/(y2-y1);
-        s = s1 + (s2-s1)*(y-y1)/(y2-y1);
-      }
-      else {
-        h = srtm->get_val(x,y1, false);
-        s = srtm->get_slope(x,y1, false);
-      }
-      // Save data and do step:
-      if  (h>SRTM_VAL_MIN) ret.emplace_back(rx/m2srtm, h, s);
-      rx+=drx;
-    }
-    while (ry <= rx && ry<rM){ // step in y; the same but rx->ry, y is on the grid
-      double x = pt.x+ry*sa/cx;
-      int y = round(pt.y+ry*ca);
-      // assert(abs(pt.y+ry*ca - y) < 1e-9);
+  // convert to m
+  d *= M_PI*6380e3/180.0;
+  d.x *= cos(p0.y * M_PI/180.0);
 
-      int x1 = floor(x);
-      int x2 = ceil(x);
-      double h=SRTM_VAL_UNDEF,s;
-      if (x1!=x2){
-        int h1 = srtm->get_val(x1,y, false);
-        int h2 = srtm->get_val(x2,y, false);
-        double s1 = srtm->get_slope(x1,y, false);
-        double s2 = srtm->get_slope(x2,y, false);
-        if ((h1>SRTM_VAL_MIN) && (h2>SRTM_VAL_MIN))
-          h = h1 + (h2-h1)*(x-x1)/(x2-x1);
-        s = s1 + (s2-s1)*(x-x1)/(x2-x1);
-      }
-      else {
-        h = srtm->get_val(x1,y, false);
-        s = srtm->get_slope(x1,y, false);
-      }
-      if  (h>SRTM_VAL_MIN) ret.push_back(ray_data(ry/m2srtm, h, s));
-      ry+=dry;
-    }
+  // step along the ray (angle is counted from axis y), m:
+  auto dr = 1.0/sqrt(pow(sin(a)/d.x, 2) + pow(cos(a)/d.y, 2));
+
+  for (double r = 0; r<mr; r+=dr){
+    auto p2 = geo_bearing_2d(p0, ad, r);
+    auto h = srtm->get_h(p2);
+    auto s = srtm->get_s(p2);
+    if (h>SRTM_VAL_MIN) ret.emplace_back(r, h, s);
   }
   std::lock_guard<std::mutex> lk(cache_mutex);
   ray_cache.add(key,ret);
@@ -224,7 +173,7 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
   double h0;
   {
     auto srtm_lock = srtm->get_lock();
-    h0 = srtm->get_val_int4(p0) + dh; // altitude of observation point
+    h0 = srtm->get_h(p0) + dh; // altitude of observation point
   }
   ImageR image(box.w, box.h, IMAGE_32ARGB);
   image.fill32(0xFF000000);
@@ -248,7 +197,7 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
       double hn=ray[i].h;
       double sn=ray[i].s;
       double r=ray[i].r;
-      if (r>max_r) break;
+      if (r>mr) break;
 
       double b = atan2(hn-h0, r); // vertical angle
       ssize_t yn = (1 - 2*b/M_PI) * width/4.0 - box.y; // y-coord
@@ -260,7 +209,7 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
         if (y<0 || y>=yo) continue; // select visible points
         double s = sp + (sn-sp)*(y-yp)/double(yn-yp); // Interpolate slope and altitude
         double h = hp + (hn-hp)*(y-yp)/double(yn-yp); //  and calculate point color.
-        uint32_t color = color_shade(srtm->get_color(h,s), (1-r/max_r));
+        uint32_t color = color_shade(srtm->get_color(h,s), (1-r/mr));
         image.set32(x,y, color);
       }
       if (yn<yo) yo=yn;
@@ -276,5 +225,4 @@ GObjPano::draw(const CairoWrapper & cr, const dRect &box){
 
   return GObj::FILL_ALL;
 }
-
 

@@ -24,7 +24,7 @@ private:
   SRTM *srtm;
 
   dPoint p0;
-  double max_r;
+  double mr;
   double dh;
   Rainbow R;
 
@@ -48,8 +48,13 @@ public:
 
 */
    // central point, wgs84 lonlat
-  void set_origin(const dPoint & p) {p0=p; ray_cache.clear(); redraw_me();}
-  dPoint get_origin(void) const {return p0;}
+  void set_p0(const dPoint & p0_) {p0=p0_; ray_cache.clear(); redraw_me();}
+  void set_mr(const double mr_) {mr=mr_; ray_cache.clear(); redraw_me();}
+  void set_dh(const double dh_) {dh=dh_; redraw_me();}
+
+  dPoint get_p0(void) const {return p0;}
+  double get_mr(void) const {return mr;}
+  double get_dh(void) const {return dh;}
 
   // 360deg width
   int get_width(void) const {return width;}
@@ -57,8 +62,6 @@ public:
   // find segments of the ray brocken by srtm grid
   // these segments must have linear height and slope dependence
   std::vector<ray_data> get_ray(int x);
-
-  public:
 
   // Convert geo coordinates to the image point.
   // y coordinate is negative for invisible points.
