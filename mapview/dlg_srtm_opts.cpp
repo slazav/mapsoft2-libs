@@ -19,6 +19,7 @@ DlgSrtmOpt::get_opt() const{
   o.put("srtm_holes", holes->get_active());
   o.put("srtm_peaks", peaks->get_active());
   o.put("srtm_interp_holes", interp->get_active());
+  o.put("srtm_interp", interp_cb->get_active_id());
 
   if (m_heights->get_active()){
     bool sh = shades->get_active();
@@ -81,6 +82,9 @@ DlgSrtmOpt::set_opt(const Opt & o){
   if (o.exists("srtm_interp_holes"))
     interp->set_active(o.get<bool>("srtm_interp_holes", true));
 
+  if (o.exists("srtm_interp"))
+    interp_cb->set_active_id(o.get("srtm_interp", "linear"));
+
   if (o.exists("srtm_holes"))
     holes->set_active(o.get<bool>("srtm_holes", true));
 
@@ -113,6 +117,8 @@ DlgSrtmOpt::DlgSrtmOpt():
   peaks   = manage(new Gtk::CheckButton("Draw summits"));
   holes   = manage(new Gtk::CheckButton("Draw holes"));
   interp  = manage(new Gtk::CheckButton("Interpolate holes"));
+  interp_cb = manage(new CBInterp());
+  auto interp_l = manage(new Gtk::Label("Interpolation:"));
 
   m_heights =  manage(new Gtk::RadioButton("Heights"));
   Gtk::RadioButtonGroup gr = m_heights->get_group();
@@ -127,22 +133,29 @@ DlgSrtmOpt::DlgSrtmOpt():
   dirbtn = manage(new Gtk::Button("Change data folder..."));
   dir  = manage(new Gtk::Label("", Gtk::ALIGN_START));
 
-  Gtk::Table *t = manage(new Gtk::Table(2,11));
+
+  Gtk::Table *t = manage(new Gtk::Table(2,12));
   t->attach(*cnt,      0, 1, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*cnt_val,  1, 2, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*peaks,    0, 1, 1, 2, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*interp,   0, 1, 2, 3, Gtk::FILL, Gtk::SHRINK, 3, 3);
   t->attach(*holes,    0, 1, 3, 4, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*surf,     0, 1, 4, 5, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*m_heights,0, 1, 5, 6, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*shades,   1, 2, 5, 6, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*rh,       0, 2, 6, 7, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*m_slopes, 0, 2, 7, 8, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*rs,       0, 2, 8, 9, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*dir,      0, 2, 9,10, Gtk::FILL, Gtk::SHRINK, 3, 3);
-  t->attach(*dirbtn,   0, 1,10,11, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*interp_l, 0, 1, 4, 5, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*interp_cb,1, 2, 4, 5, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*surf,     0, 1, 5, 6, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*m_heights,0, 1, 6, 7, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*shades,   1, 2, 6, 7, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*rh,       0, 2, 7, 8, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*m_slopes, 0, 2, 8, 9, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*rs,       0, 2, 9,10, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*dir,      0, 2,10,11, Gtk::FILL, Gtk::SHRINK, 3, 3);
+  t->attach(*dirbtn,   0, 1,11,12, Gtk::FILL, Gtk::SHRINK, 3, 3);
+
 
   get_vbox()->add(*t);
+
+  // When switching controls, update surface
+  // 0 - all modes, 1 - cnt, 2 - heights/shades, 3 - slopes
 
   m_heights->signal_toggled().connect(
       sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, m_heights));
@@ -161,6 +174,8 @@ DlgSrtmOpt::DlgSrtmOpt():
   interp->signal_toggled().connect(
       sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, b0));
   holes->signal_toggled().connect(
+      sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, b0));
+  interp_cb->signal_changed().connect(
       sigc::bind(sigc::mem_fun(this, &DlgSrtmOpt::on_ch), 0, b0));
 
   shades->signal_toggled().connect(

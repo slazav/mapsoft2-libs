@@ -19,7 +19,6 @@ class DlgPano : public Gtk::Dialog{
 
     dPoint target; // target point (place to keep it during origin change)
 
-    void on_ch();
     bool on_key_press(GdkEventKey * event);
     void click (iPoint p, int button, const Gdk::ModifierType & state);
 
@@ -29,16 +28,14 @@ class DlgPano : public Gtk::Dialog{
   public:
     DlgPano(SRTM * s);
 
-    // convert interface state to options
-    Opt get_opt() const;
-
-    // set interface state (including viewer) from options
-    void set_opt(const Opt & o);
-
     void set_origin(const dPoint & pt);
     void set_target(const dPoint & pt, bool scroll=true);
-    void set_az();
+
+    void on_set_az();
     void get_az(const iPoint & p); // update az value from viewer signal
+    void on_set_mr();
+    void on_set_dh();
+
     void redraw() {viewer.redraw();}
 
     sigc::signal<void, dPoint> signal_go();

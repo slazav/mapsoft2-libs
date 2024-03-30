@@ -15,6 +15,7 @@ class DlgSrtmOpt : public Gtk::Dialog{
     Gtk::Label        *dir;
     RainbowWidget     *rh, *rs;
     Gtk::FileChooserDialog fdlg;
+    CBInterp          *interp_cb;
 
     sigc::signal<void> signal_changed_;
     void on_ch(int mode, Gtk::RadioButton *b);

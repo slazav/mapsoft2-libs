@@ -1,27 +1,6 @@
 #include "dlg_pano.h"
 #include <cfloat> // NAN
 
-Opt
-DlgPano::get_opt() const{
-  Opt o;
-  o.put("pano_alt", dh->get_value());
-  o.put("pano_rmax", mr->get_value());
-  return o;
-}
-
-void
-DlgPano::set_opt(const Opt & o) {
-  if (o.exists("pano_alt"))
-    dh->set_value(o.get<double>("pano_alt"));
-
-  if (o.exists("pano_rmax"))
-    mr->set_value(o.get<double>("pano_rmax"));
-
-  gobj_pano.set_opt(o);
-}
-
-
-
 DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
                     viewer(&gobj_pano),
                     rubber(&viewer){
@@ -37,11 +16,12 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   dh = manage(new Gtk::SpinButton(dh_adj));
   mr = manage(new Gtk::SpinButton(mr_adj));
   az->set_wrap();
-  Gtk::Label * azl = manage(new Gtk::Label("Azimuth, deg:", Gtk::ALIGN_END));
-  Gtk::Label * dhl = manage(new Gtk::Label("Altitude, m:", Gtk::ALIGN_END));
-  Gtk::Label * mrl = manage(new Gtk::Label("Max.Dist., km:", Gtk::ALIGN_END));
 
-  Gtk::Table * t =   manage(new Gtk::Table(6,1));
+  auto azl = manage(new Gtk::Label("Azimuth, deg:", Gtk::ALIGN_END));
+  auto dhl = manage(new Gtk::Label("Altitude, m:", Gtk::ALIGN_END));
+  auto mrl = manage(new Gtk::Label("Max.Dist., km:", Gtk::ALIGN_END));
+
+  auto t =   manage(new Gtk::Table(6,1));
 
       //  widget    l  r  t  b  x       y
   t->attach(*azl,   0, 1, 0, 1, Gtk::FILL, Gtk::SHRINK, 3, 3);
@@ -56,11 +36,11 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   add_button (Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 
   dh->signal_value_changed().connect(
-      sigc::mem_fun(this, &DlgPano::on_ch));
+      sigc::mem_fun(this, &DlgPano::on_set_dh));
   az->signal_value_changed().connect(
-      sigc::mem_fun(this, &DlgPano::set_az));
+      sigc::mem_fun(this, &DlgPano::on_set_az));
   mr->signal_value_changed().connect(
-      sigc::mem_fun(this, &DlgPano::on_ch));
+      sigc::mem_fun(this, &DlgPano::on_set_mr));
 
   viewer.signal_ch_origin().connect(
       sigc::mem_fun(this, &DlgPano::get_az));
@@ -78,6 +58,8 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   int w = gobj_pano.get_width();
   viewer.set_origin(iPoint(w/2-320, w/4 - 240));
   az->set_value(180);
+  dh->set_value(gobj_pano.get_dh());
+  mr->set_value(gobj_pano.get_mr()/1000.0);
 
   viewer.set_can_focus();
   viewer.grab_focus();
@@ -85,20 +67,13 @@ DlgPano::DlgPano(SRTM * s): gobj_pano(s, Opt()),
   viewer.set_bbox(iRect(0,0,w,w/2));
 
   set_position(Gtk::WIN_POS_CENTER_ON_PARENT);
-  set_opt(GObjPano::get_def_opt()); //set default options
   target = dPoint(NAN,NAN);
-}
-
-
-void
-DlgPano::on_ch(){
-  gobj_pano.set_opt(get_opt());
 }
 
 void
 DlgPano::set_origin(const dPoint & p){
   Gtk::Dialog::show_all();
-  gobj_pano.set_origin(p);
+  gobj_pano.set_p0(p);
   if (std::isnan(target.x)) target = p; // initial call
   set_target(target); // keep same target
 }
@@ -106,7 +81,7 @@ DlgPano::set_origin(const dPoint & p){
 void
 DlgPano::set_target(const dPoint & pt, bool scroll){
   target = pt;
-  dPoint pt0 = gobj_pano.get_origin();
+  dPoint pt0 = gobj_pano.get_p0();
   double width = gobj_pano.get_width();
   double angle = atan2((pt.x-pt0.x)*cos(pt0.y*M_PI/180), pt.y-pt0.y);
   rubber.clear();
@@ -118,7 +93,7 @@ DlgPano::set_target(const dPoint & pt, bool scroll){
 }
 
 void
-DlgPano::set_az(){
+DlgPano::on_set_az(){
   if (viewer.is_on_drag()) return;
   viewer.set_center(iPoint(
     gobj_pano.get_width()/360.0*az->get_value(),
@@ -131,6 +106,18 @@ DlgPano::get_az(const iPoint & p){
   while (a>360) a-=360;
   while (a<0)   a+=360;
   az->set_value(a);
+}
+
+void
+DlgPano::on_set_mr(){
+  if (viewer.is_on_drag()) return;
+  gobj_pano.set_mr(mr->get_value() * 1000); // km -> m
+}
+
+void
+DlgPano::on_set_dh(){
+  if (viewer.is_on_drag()) return;
+  gobj_pano.set_dh(dh->get_value());
 }
 
 
