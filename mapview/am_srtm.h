@@ -24,6 +24,7 @@ class AMShowSRTM : public ActionMode{
 };
 
 
+/**********************************************************/
 // Edit SRTM options
 #include "dlg_srtm_opts.h"
 class AMSrtmOpts : public ActionMode, public DlgSrtmOpt {
@@ -75,6 +76,7 @@ private:
     Opt o;
 };
 
+/**********************************************************/
 /// Panoramic view
 #include "dlg_pano.h"
 class AMSrtmPano : public ActionMode {
@@ -160,44 +162,60 @@ private:
     dPoint p0;
 };
 
-// Cut hole
-class AMSrtmCut : public ActionMode {
+/**********************************************************/
+
+// ActionMode for selecting polygon/rectangular region
+class ActionModeRegion : public ActionMode {
     dLine line;
+    dRect rect;
+public:
+    ActionModeRegion (Mapview * mapview) : ActionMode(mapview) { }
 
-  public:
+    virtual void on_select(const dLine & l) = 0;
 
-    AMSrtmCut (Mapview * mapview) : ActionMode(mapview) { }
-
-    std::string get_name() override { return "Cut hole in SRTM data"; }
-    std::string get_icon() { return "cut"; }
     std::string get_desc() override {
-      return "left click - add points; ctrl-left - remove last point; "
-             "right - finish; ctrl-right - abort"; }
+      return "left click - start line, add points; "
+             "ctrl-left - start rectangle, remove line point; "
+             "middle - finish; right - abort"; }
 
     void activate(const std::string & menu) override { abort(); }
 
     void abort() override {
       line.clear();
+      rect = dRect();
       mapview->rubber.clear();
     }
 
     void handle_click(const iPoint p, const int button,
                       const Gdk::ModifierType & state) override {
 
-         if (button == 3) {
-           if (!(state&Gdk::CONTROL_MASK) && line.size()){
-             dPoint pt(p);
-             mapview->viewer.get_cnv().frw(pt);
-             line.push_back(pt);
-             mapview->srtm.overlay_cut(line);
-             mapview->obj_srtm->redraw();
-           }
-           abort();
-           return;
-         }
+      // start drawing
+      if (line.size()==0 && rect.is_empty() && button == 1){
+        // start rect
+        if (state&Gdk::CONTROL_MASK) {
+          rect.expand(p);
+          mapview->rubber.clear();
+          mapview->rubber.add_rect(p);
+        }
+        // start line
+        else {
+          line.push_back(p);
+          mapview->rubber.add_line(p);
+        }
+        return;
+      }
 
-         if (button != 1) return;
+      // finish rect
+      if (!rect.is_empty() && button == 1){
+        rect.expand(p);
+        on_select(rect_to_line(rect));
+        mapview->rubber.clear();
+        rect = dRect();
+        return;
+      }
 
+      // continue line
+      if (line.size()!=0 && button == 1){
         // remove point
         if (state&Gdk::CONTROL_MASK){
           if (line.size()>0){
@@ -214,11 +232,8 @@ class AMSrtmCut : public ActionMode {
           }
         }
         // add point
-        else{
-          dPoint pt(p);
-          mapview->viewer.get_cnv().frw(pt);
-          line.push_back(pt);
-
+        else {
+          line.push_back(p);
           // fix the last rubber segment
           if (mapview->rubber.size()>0){
             RubberSegment s = mapview->rubber.pop();
@@ -228,9 +243,67 @@ class AMSrtmCut : public ActionMode {
           }
           mapview->rubber.add_line(p);
         }
+        return;
+      }
+
+      // abort line/rect
+      if (button == 3) {
+        abort();
+        return;
+      }
+
+      // finish line
+      if (line.size()!=0 && button == 2) {
+        line.push_back(p);
+        on_select(line);
+        abort();
+        return;
+      }
+    }
+
+};
+
+/**********************************************************/
+// Cut overlay hole
+class AMSrtmCut : public ActionModeRegion {
+  dLine line;
+  dRect rect;
+
+  public:
+
+    AMSrtmCut (Mapview * mapview) : ActionModeRegion(mapview) { }
+
+    std::string get_name() override { return "Make hole in SRTM overlay"; }
+    std::string get_icon() { return "cut"; }
+
+    void on_select(const dLine & l) override{
+      dLine l1(l);
+      mapview->viewer.get_cnv().frw(l1);
+      mapview->srtm.overlay_cut(l1);
+      mapview->obj_srtm->redraw();
     }
 };
 
+/**********************************************************/
+// Clear overlay
+class AMSrtmClear : public ActionModeRegion {
+  dLine line;
+  dRect rect;
+
+  public:
+
+    AMSrtmClear (Mapview * mapview) : ActionModeRegion(mapview) { }
+
+    std::string get_name() override { return "Clear SRTM overlay"; }
+    std::string get_icon() { return "Clear"; }
+
+    void on_select(const dLine & l) override{
+      dLine l1(l);
+      mapview->viewer.get_cnv().frw(l1);
+      mapview->srtm.overlay_clear(l1);
+      mapview->obj_srtm->redraw();
+    }
+};
 
 #endif
 

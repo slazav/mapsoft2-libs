@@ -117,6 +117,8 @@ class SRTM {
     // cut hole in the data
     void overlay_cut(const dLine & l);
 
+    void overlay_clear(const dLine & l);
+
     /******************************/
     // color surface interface
 

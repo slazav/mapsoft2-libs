@@ -433,10 +433,10 @@ SRTM::overlay_cut(const dLine & l){
       iPoint key(x,y);
 
       // load image (only for w and h)
-      if ((!srtm_cache.contains(key)) && (!load(key))) return;
+      if ((!srtm_cache.contains(key)) && (!load(key))) continue;
       auto im = srtm_cache.get(key);
       size_t w = im.width(), h=im.height();
-      if (im.is_empty()) return;
+      if (im.is_empty()) continue;
 
       std::set<iPoint> pts;
       // not very efficient
@@ -454,6 +454,35 @@ SRTM::overlay_cut(const dLine & l){
 
       for (const auto & p:pts)
         overlay[key][p] = SRTM_VAL_UNDEF;
+    }
+  }
+}
+
+void
+SRTM::overlay_clear(const dLine & l){
+  auto r = l.bbox();
+  dPolyTester pt(l);
+  for (int x = floor(r.x); x<ceil(r.x+r.w); x++){
+    for (int y = floor(r.y); y<ceil(r.y+r.h); y++){
+      iPoint key(x,y);
+      if (!overlay.count(key)) continue;
+
+      if ((!srtm_cache.contains(key)) && (!load(key))) continue;
+      auto im = srtm_cache.get(key);
+      size_t w = im.width(), h=im.height();
+      if (im.is_empty()) continue;
+      dPoint d;
+      d.x = 1.0/(w%2==1 ? w-1 : w);
+      d.y = 1.0/(h%2==1 ? h-1 : h);
+
+      auto i = overlay[key].begin();
+      while (i!=overlay[key].end()){
+        dPoint p1(i->first);
+        dPoint p2(p1.x*d.x + key.x, 1.0 - p1.y*d.y + key.y);
+        if (pt.test_pt(p2)) i = overlay[key].erase(i);
+        else i++;
+      }
+
     }
   }
 }
