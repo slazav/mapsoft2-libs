@@ -131,13 +131,13 @@ class ImageR : public Image {
 
     // Fast color get function for image type IMAGE_1
     uint32_t get1col(const size_t x, const size_t y) const{
-      return get1(x,y) ? 0xFFFFFFFF:0xFF000000;
+      return get1(x,y) ? 0xFF000000:0xFFFFFFFF;
     }
 
     // Fast get function for image type IMAGE_1.
     bool get1(const size_t x, const size_t y) const{
       size_t b = (w*y+x)/8; // byte
-      size_t o = (w*y+x)%8; // offset
+      size_t o = 7-(w*y+x)%8; // offset
       uint8_t v = data_.get()[b];
       return (v >> o) & 1;
     }
@@ -248,7 +248,7 @@ class ImageR : public Image {
     // Fast set function for image type IMAGE_1.
     void set1(const size_t x, const size_t y, const bool v){
       size_t b = (w*y+x)/8; // byte
-      size_t o = (w*y+x)%8; // offset
+      size_t o = 7-(w*y+x)%8; // offset
       uint8_t old = data_.get()[b];
       data_.get()[b] = v? old|(1<<o) : old&~(1<<o);
     }

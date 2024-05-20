@@ -378,8 +378,8 @@ image_save_png(const ImageR & im, std::ostream & str,
 
       if (im8.type()==IMAGE_1){
         im8.cmap.resize(2);
-        im8.cmap[0]=0xFF000000;
-        im8.cmap[1]=0xFFFFFFFF;
+        im8.cmap[0]=0xFFFFFFFF;
+        im8.cmap[1]=0xFF000000;
       }
       else if (im8.type()!=IMAGE_8PAL)
         throw Err() << "image_save_png: inconsistent palette setting";
