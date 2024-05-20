@@ -187,7 +187,7 @@ main(){
       ImageR img(256,128, IMAGE_1);
       for (size_t y=0; y<img.height(); ++y){
         for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, (int)(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
+          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
         }
       }
       image_save_gif(img, "test_gif/img_1_def.gif");
@@ -195,10 +195,10 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(img.get1(0,0), 0);
-      assert_eq(img.get1(15,45), 0);
-      assert_eq(img.get1(43,123), 1);
-      assert_eq(img.get1(203,27), 0);
+      assert_eq(img.get1(0,0), 1);
+      assert_eq(img.get1(15,45), 1);
+      assert_eq(img.get1(43,123), 0);
+      assert_eq(img.get1(203,27), 1);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(15,45), 0xFF000000);
       assert_eq(I.get_argb(43,123), 0xFFFFFFFF);

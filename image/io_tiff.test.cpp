@@ -432,7 +432,7 @@ main(){
       ImageR img(256,128, IMAGE_1);
       for (size_t y=0; y<img.height(); ++y){
         for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, (int)(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
+          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
         }
       }
       image_save_tiff(img, "test_tiff/img_1_def.tif");
@@ -440,10 +440,10 @@ main(){
       assert_eq(I.type(), IMAGE_8);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(img.get1(0,0), 0);
-      assert_eq(img.get1(15,45), 0);
-      assert_eq(img.get1(43,123), 1);
-      assert_eq(img.get1(203,27), 0);
+      assert_eq(img.get1(0,0), 1);
+      assert_eq(img.get1(15,45), 1);
+      assert_eq(img.get1(43,123), 0);
+      assert_eq(img.get1(203,27), 1);
       assert_eq(I.get8(0,0), 0x00);
       assert_eq(I.get8(15,45), 0x00);
       assert_eq(I.get8(43,123), 0xFF);
