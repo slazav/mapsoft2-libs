@@ -106,6 +106,11 @@ void image_apply_border(const Image & img, const iLine & brd = iLine(),
                         const uint32_t color = 0);
 ```
 
+* invert colors (black <=> white), inplace, to change of image type
+``` c++
+void image_invert(ImageR & img);
+```
+
 ------
 
 ### Reading raster formats (image_io.h)

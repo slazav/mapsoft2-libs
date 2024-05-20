@@ -34,4 +34,7 @@ int image_classify_alpha(const ImageR & img);
 // colors[clen] array is filled with the color palette.
 int image_classify_color(const ImageR & img, uint32_t *colors, size_t clen=256);
 
+// invert colors (black <=> white), inplace, to change of image type
+void image_invert(ImageR & img);
+
 #endif

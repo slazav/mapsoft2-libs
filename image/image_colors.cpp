@@ -419,3 +419,34 @@ image_classify_color(const ImageR & img, uint32_t *colors, size_t clen){
   return ret;
 }
 
+void
+image_invert(ImageR & img){
+  auto t = img.type();
+
+  // only need to invert palette
+  if (t == IMAGE_8PAL){
+    for (auto & c:img.cmap)
+      c = color_rgb_invert(c);
+    return;
+  }
+
+  // invert all data bytes
+  if (t == IMAGE_1){
+    // hack with data access
+    for (size_t i = 0; i<img.dsize(); i++)
+      img.set8(i,0, ~img.get8(i,0));
+  }
+
+  // other types
+  for (size_t y=0; y<img.height(); ++y){
+    for (size_t x=0; x<img.width(); ++x){
+      switch (img.type()){
+        case IMAGE_32ARGB: img.set32(x,y, color_rgb_invert(img.get32(x,y))); continue;
+        case IMAGE_24RGB:  img.set24(x,y, color_rgb_invert(img.get24(x,y))); continue;
+        case IMAGE_16:     img.set16(x,y, 0xFFFF - img.get16(x,y)); continue;
+        case IMAGE_8:      img.set8(x,y,  0xFF-img.get8(x,y)); continue;
+        default: throw "image_invert: unsupported image type";
+      }
+    }
+  }
+}
