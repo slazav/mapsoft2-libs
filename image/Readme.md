@@ -250,9 +250,9 @@ Supported TIFF types for saving:
 
 * Reading/writing from/to files or std::iostreams.
 
-### tiled images
+### tiled images (image_t.h)
 
-Not supported yet.
+TODO
 
 ### tiled TIFF
 
