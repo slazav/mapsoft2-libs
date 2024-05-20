@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <memory>
+#include <cstring>
 #include "err/err.h"
 #include "geom/rect.h"
 
@@ -27,6 +28,8 @@ enum ImageDataType {
   IMAGE_1,      // 1 bit per pixel, black and white
   IMAGE_FLOAT,  // float-value pixel
   IMAGE_DOUBLE, // double-value pixel
+  IMAGE_64ARGB, // 8 bytes per pixel data: AARRGGBB colors
+  IMAGE_48RGB,  // 6 bytes per pixel data: RRGGBB colors
   IMAGE_UNKNOWN,// unknown data format
 };
 
@@ -54,6 +57,8 @@ class ImageR : public Image {
     // get data size (0 for IMAGE_UNKNOWN)
     size_t dsize() const {
       switch (t){
+        case IMAGE_64ARGB: return w*h*8;
+        case IMAGE_48RGB:  return w*h*6;
         case IMAGE_32ARGB: return w*h*4;
         case IMAGE_24RGB:  return w*h*3;
         case IMAGE_16:     return w*h*2;
@@ -91,6 +96,18 @@ class ImageR : public Image {
     // Fast get functions for different image types.
     // Return raw data or uint32_t ARGB color (*col versions)
     // Image type and coordinate range should be checked before.
+
+    // Fast get function for image type IMAGE_64ARGB
+    uint64_t get64(const size_t x, const size_t y) const{
+      return ((uint64_t*)data_.get())[w*y+x]; }
+
+    // Fast get function for image type IMAGE_48RGB
+    uint64_t get48(const size_t x, const size_t y) const{
+      auto d = data_.get() + 3*(w*y+x);
+      return 0xFFFF000000000000l
+       + ((uint64_t)d[0]<<40) + ((uint64_t)d[1]<<32) + (d[2]<<24)
+       + (d[3]<<16) + (d[4]<<8) + d[5];
+    }
 
     // Fast get function for image type IMAGE_32ARGB
     uint32_t get32(const size_t x, const size_t y) const{
@@ -170,6 +187,8 @@ class ImageR : public Image {
         case IMAGE_1:      return get1col(x,y);
         case IMAGE_FLOAT:  return 0; // todo: rainbow calculation?
         case IMAGE_DOUBLE: return 0; // todo: rainbow calculation?
+        case IMAGE_64ARGB: return color_rgb_64to32(get64(x,y));
+        case IMAGE_48RGB:  return color_rgb_64to32(get48(x,y));
         case IMAGE_UNKNOWN: return getUcol(x,y);
       }
       return 0;
@@ -181,6 +200,7 @@ class ImageR : public Image {
       if (t==IMAGE_16)    return get16col(x,y);
       if (t==IMAGE_8)     return get8col(x,y);
       if (t==IMAGE_1)     return get1col(x,y);
+      if (t==IMAGE_48RGB) return color_rgb_64to32(get48(x,y));
       return color_rem_transp(get_argb(x,y),false);
     }
 
@@ -226,6 +246,24 @@ class ImageR : public Image {
     // Fast set functions for different image types.
     // Image type and coordinate range should be checked before.
 
+    // Fast set function for image type IMAGE_64ARGB.
+    void set64(const size_t x, const size_t y, const uint64_t v){
+      ((uint64_t*)data_.get())[w*y+x] = v; }
+
+    // Fast set function for image type IMAGE_48RGB
+    void set48(const size_t x, const size_t y, const uint64_t v){
+      data_.get()[6*(w*y+x)]   = (v>>40) & 0xFF;
+      data_.get()[6*(w*y+x)+1] = (v>>32) & 0xFF;
+      data_.get()[6*(w*y+x)+2] = (v>>24) & 0xFF;
+      data_.get()[6*(w*y+x)+3] = (v>>16) & 0xFF;
+      data_.get()[6*(w*y+x)+4] = (v>>8) & 0xFF;
+      data_.get()[6*(w*y+x)+5] = v & 0xFF;
+    }
+    // Fast set function for image type IMAGE_48RGB
+    void set48(const size_t x, const size_t y, const uint8_t * p){
+      memcpy(data_.get() + 6*(w*y+x), p, 6);
+    }
+
     // Fast set function for image type IMAGE_32ARGB.
     void set32(const size_t x, const size_t y, const uint32_t v){
       ((uint32_t*)data_.get())[w*y+x] = v; }
@@ -235,6 +273,10 @@ class ImageR : public Image {
       data_.get()[3*(w*y+x)]   = (v>>16) & 0xFF;
       data_.get()[3*(w*y+x)+1] = (v>>8)  & 0xFF;
       data_.get()[3*(w*y+x)+2] = v & 0xFF;
+    }
+    // Fast set function for image type IMAGE_24RGB
+    void set24(const size_t x, const size_t y, const uint8_t * p){
+      memcpy(data_.get() + 3*(w*y+x), p, 3);
     }
 
     // Fast set function for image type IMAGE_16
@@ -269,6 +311,24 @@ class ImageR : public Image {
     /******************************************************/
     // Fill functions for different image types.
     // Image type should be checked before.
+
+    // Fill function for image type IMAGE_32ARGB.
+    void fill64(const uint64_t v) const{
+      for (size_t i=0; i<w*h; i++)
+        ((uint64_t*)data_.get())[i] = v;
+    }
+
+    // Fill function for image type IMAGE_24RGB
+    void fill48(const uint64_t v) const{
+      for (size_t i=0; i<w*h; i++) {
+        data_.get()[6*i]   = (v>>40) & 0xFF;
+        data_.get()[6*i+1] = (v>>32) & 0xFF;
+        data_.get()[6*i+2] = (v>>24) & 0xFF;
+        data_.get()[6*i+3] = (v>>16) & 0xFF;
+        data_.get()[6*i+4] = (v>>8)  & 0xFF;
+        data_.get()[6*i+5] = v & 0xFF;
+      }
+    }
 
     // Fill function for image type IMAGE_32ARGB.
     void fill32(const uint32_t v) const{
@@ -332,6 +392,8 @@ class ImageR : public Image {
           case IMAGE_1:       s << "B/W, 1bpp"; break;
           case IMAGE_FLOAT:   s << "float"; break;
           case IMAGE_DOUBLE:  s << "double"; break;
+          case IMAGE_64ARGB:  s << "ARGB, 64bpp"; break;
+          case IMAGE_48RGB:   s << "RGB, 48bpp"; break;
           default: s << "Unknown data format"; break;
         }
         s << ")";

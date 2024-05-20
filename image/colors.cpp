@@ -90,6 +90,24 @@ uint16_t color_rgb_to_grey16(const uint32_t c){
     COLOR_LUMINB*((c<<8)&0xFF00) );
 }
 
+// Convert RGB color from 64 to 32 bpp
+uint32_t color_rgb_64to32(const uint64_t c){
+  // AAaaRRrrGGggBBbb
+  //         AARRGGBB
+  return ((c>>32) & 0xFF000000)
+       + ((c>>24) & 0xFF0000)
+       + ((c>>16) & 0xFF00)
+       + ((c>>8)  & 0xFF);
+}
+
+// Convert RGB color from 32 to 64 bpp
+uint64_t color_rgb_32to64(const uint32_t c){
+  return ((uint64_t)(c&0xFF000000)<<32)
+       + ((uint64_t)(c&0xFF0000)<<24)
+       + ((uint64_t)(c&0xFF00)<<16)
+       + ((uint64_t)(c&0xFF)<<8);
+}
+
 // Invert RGB color, keep transparency
 uint32_t color_rgb_invert(const uint32_t c){
   int tr=c>>24;
