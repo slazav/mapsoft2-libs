@@ -32,5 +32,7 @@ uint8_t color_rgb_to_grey8(const uint32_t c);
 // Convert RGB color to 16-bit greyscale
 uint16_t color_rgb_to_grey16(const uint32_t c);
 
+// Invert RGB color, keep transparency
+uint32_t color_rgb_invert(const uint32_t c);
 
 #endif

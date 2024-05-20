@@ -90,3 +90,11 @@ uint16_t color_rgb_to_grey16(const uint32_t c){
     COLOR_LUMINB*((c<<8)&0xFF00) );
 }
 
+// Invert RGB color, keep transparency
+uint32_t color_rgb_invert(const uint32_t c){
+  int tr=c>>24;
+  return   (c&0xFF000000)
+         + ((tr - ((c>>16)&0xFF)) << 16)
+         + ((tr - (c>>8)&0xFF) << 8)
+         + (tr - c&0xFF);
+}

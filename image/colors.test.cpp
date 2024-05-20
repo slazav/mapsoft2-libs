@@ -51,6 +51,11 @@ main(){
     assert_eq(color_rgb_to_grey16(0xFF101010), 0x1000);
     assert_eq(color_rgb_to_grey8(0xFF000010), 0x2);
     assert_eq(color_rgb_to_grey16(0xFF000010), 0x1d5);
+
+    assert_eq(color_rgb_invert(0xFF000000), 0xFFFFFFFF);
+    assert_eq(color_rgb_invert(0x80000000), 0x80808080);
+    assert_eq(color_rgb_invert(0xFF010101), 0xFFFEFEFE);
+
   }
   catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
