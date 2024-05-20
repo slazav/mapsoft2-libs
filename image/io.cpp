@@ -7,6 +7,7 @@
 #include "io_jpeg.h"
 #include "io_tiff.h"
 #include "io_gif.h"
+#include "io_pnm.h"
 
 #include "io.h"
 #include "image_colors.h"
@@ -15,7 +16,7 @@
 void ms2opt_add_image(GetOptSet & opts){
   const char *g = "IMAGE";
   opts.add("img_out_fmt", 1,0, g,
-    "Explicitely set image format: jpeg, png, gif, tiff");
+    "Explicitely set image format: jpeg, png, gif, tiff, pnm");
   opts.add("tiff_format", 1,0, g,
     "When writing TIFF, convert image to one of following forms: "
     "argb, rgb, grey, pal (default depends on the image).");
@@ -41,6 +42,7 @@ image_ext_fmt(const std::string & fname){
   else if (file_ext_check(fname, ".gif"))  return "gif";
   else if (file_ext_check(fname, ".tif"))  return "tiff";
   else if (file_ext_check(fname, ".tiff")) return "tiff";
+  else if (file_ext_check(fname, ".pnm"))  return "pnm";
   return "";
 }
 
@@ -53,6 +55,7 @@ image_stream_fmt(std::istream & str){
   /// jpeg FF D8 FF
   /// png  89 50 4E 47
   /// gif 47 49 46
+  /// pnm P(1..6)
   unsigned char buf[3];
   str.read((char *)buf,3);
   str.seekg(std::ios_base::beg);
@@ -62,6 +65,7 @@ image_stream_fmt(std::istream & str){
   if ((buf[0] == 0x49 && buf[1] == 0x49 && buf[2] == 0x2A) ||
       (buf[0] == 0x4D && buf[1] == 0x4D && buf[2] == 0x00)) return "tiff";
   if (buf[0] == 0x47 && buf[1] == 0x49 && buf[2] == 0x46) return "gif";
+  if (buf[0] == 0x50 && buf[1] >= '1' && buf[1] <= '6') return "pnm";
   return "";
 }
 
@@ -81,6 +85,7 @@ image_size(const std::string & fname, const Opt & opts){
   if (fmt == "png")  return image_size_png(fname);
   if (fmt == "gif")  return image_size_gif(fname);
   if (fmt == "tiff") return image_size_tiff(fname);
+  if (fmt == "pnm")  return image_size_pnm(fname);
   throw Err() << "image_size: unknown format: " << fname;
 }
 
@@ -92,6 +97,7 @@ image_load(const std::string & fname, const double scale, const Opt & opts){
   if (fmt == "png")  return image_load_png(fname, scale);
   if (fmt == "gif")  return image_load_gif(fname, scale);
   if (fmt == "tiff") return image_load_tiff(fname, scale);
+  if (fmt == "pnm")  return image_load_pnm(fname, scale);
   throw Err() << "image_load: unknown format: " << fname;
 }
 
@@ -101,6 +107,7 @@ image_load(std::istream & str, const double scale, const Opt & opt){
   if (fmt == "jpeg") return image_load_jpeg(str, scale);
   if (fmt == "png")  return image_load_png(str, scale);
   if (fmt == "tiff") return image_load_tiff(str, scale);
+  if (fmt == "pnm")  return image_load_pnm(str, scale);
   if (fmt == "gif")
     throw Err() << "image_load: loading GIF files from stream is not supported";
   throw Err() << "image_load: unknown image format";
@@ -117,6 +124,7 @@ image_save(const ImageR & im, const std::string & fname, const Opt & opts){
   if (fmt == "png")  return image_save_png(im, fname, opts);
   if (fmt == "gif")  return image_save_gif(im, fname, opts);
   if (fmt == "tiff") return image_save_tiff(im, fname, opts);
+  if (fmt == "pnm")  return image_save_pnm(im, fname, opts);
 
   throw Err() << "image_save: unknown format: " << fname;
 }
