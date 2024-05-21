@@ -128,18 +128,21 @@ uint8_t color_rgb_to_grey8(const uint32_t c){
 
 // Convert RGB color to 8-bit greyscale
 uint8_t color_rgb64_to_grey8(const uint64_t c){
+  double k = 1.0*0xFF/0xFFFF;
   return rint(
-    COLOR_LUMINR*((c>>32)&0xFFFF)/0xFF +
-    COLOR_LUMING*((c>>16)&0xFFFF)/0xFF +
-    COLOR_LUMINB*(c&0xFFFF)/0xFF );
+    COLOR_LUMINR*((c>>32)&0xFFFF)*k +
+    COLOR_LUMING*((c>>16)&0xFFFF)*k +
+    COLOR_LUMINB*(c&0xFFFF)*k );
 }
 
 // Convert RGB color to 16-bit greyscale
+// 0->0, FF,FF,FF -> FFFF
 uint16_t color_rgb_to_grey16(const uint32_t c){
+  double k = 1.0*0xFFFF/0xFF;
   return rint(
-    COLOR_LUMINR*((c>>8)&0xFF00) +
-    COLOR_LUMING*(c&0xFF00) +
-    COLOR_LUMINB*((c<<8)&0xFF00) );
+    COLOR_LUMINR*((c>>16)&0xFF)*k +
+    COLOR_LUMING*((c>>8)&0xFF)*k +
+    COLOR_LUMINB*(c&0xFF)*k);
 }
 
 // Convert RGB color to 16-bit greyscale

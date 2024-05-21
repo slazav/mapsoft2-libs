@@ -134,11 +134,11 @@ main(){
       assert_eq(I.height(), 128);
 
       assert_eq(I.get_argb(0,0), 0xFF000000);
-      assert_eq(I.get_argb(127,127), 0xFFe0e0e0);
+      assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
       assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
       assert_eq(I.get_argb(64,64), 0xFF717171);
-      assert_eq(I.get_argb(192,64), 0xFF252525);
+      assert_eq(I.get_argb(192,64), 0xFF262626);
 
     }
 

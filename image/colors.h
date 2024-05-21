@@ -37,11 +37,11 @@ uint64_t color_rem_transp64(const uint64_t c, const bool gifmode);
 
 // Convert RGB color to 8-bit greyscale
 uint8_t color_rgb_to_grey8(const uint32_t c);
-uint8_t color_rgb64_to_grey8(const uint32_t c);
+uint8_t color_rgb64_to_grey8(const uint64_t c);
 
 // Convert RGB color to 16-bit greyscale
 uint16_t color_rgb_to_grey16(const uint32_t c);
-uint16_t color_rgb64_to_grey16(const uint32_t c);
+uint16_t color_rgb64_to_grey16(const uint64_t c);
 
 // Convert RGB color from 64 to 32 bpp
 uint32_t color_rgb_64to32(const uint64_t c);
