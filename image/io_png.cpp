@@ -328,6 +328,8 @@ image_save_png(const ImageR & im, std::ostream & str,
       case IMAGE_8PAL:   color_type = PNG_COLOR_TYPE_PALETTE; break;
       case IMAGE_FLOAT:  color_type = PNG_COLOR_TYPE_RGB;  break;
       case IMAGE_DOUBLE: color_type = PNG_COLOR_TYPE_RGB;  break;
+      case IMAGE_64ARGB: color_type = PNG_COLOR_TYPE_RGB_ALPHA; break;
+      case IMAGE_48RGB:  color_type = PNG_COLOR_TYPE_RGB;   break;
       case IMAGE_UNKNOWN: color_type = PNG_COLOR_TYPE_RGB;  break;
     }
 
