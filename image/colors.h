@@ -22,6 +22,11 @@ double color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled=tru
 uint32_t color_argb(const uint8_t a, const uint8_t r,
                     const uint8_t g, const uint8_t b);
 
+// Assemble 64-bit color from a,r,g,b components.
+// Prescaled semi-transparent colors are used
+uint64_t color_argb64(const uint16_t a, const uint16_t r,
+                      const uint16_t g, const uint16_t b);
+
 // Convert to prescale color
 uint32_t color_prescale(const uint32_t c);
 

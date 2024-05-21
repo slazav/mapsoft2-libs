@@ -42,6 +42,50 @@ main(){
       }
     }
 
+    ImageR img64(256,128, IMAGE_64ARGB);
+    for (size_t y=0; y<128; ++y){
+      for (size_t x=0; x<128; ++x){
+        img64.set64(x,y,     color_argb64(0xFFFF, 400*x, 400*y, 0));
+        img64.set64(128+x,y, color_argb64(400*x,  400*y, 0,   0));
+      }
+    }
+
+    /*********************************************/
+    { // IMAGE_48RGB, IMAGE_64RGBA
+
+      ImageR img(256,128, IMAGE_48RGB);
+      for (size_t y=0; y<img.height(); ++y)
+        for (size_t x=0; x<img.width(); ++x)
+          img.set48(x,y, img64.get64(x,y));
+
+
+      image_save_pnm(img64, "test_pnm/img_64.pnm");
+      assert_eq(image_size_pnm("test_pnm/img_64.pnm"), iPoint(256,128));
+      ImageR img1 = image_load_pnm("test_pnm/img_64.pnm", 1);
+image_save_pnm(img1, "test_pnm/img_64_.pnm");
+      assert_eq(img1.type(), IMAGE_48RGB);
+      assert_eq(img1.width(), 256);
+      assert_eq(img1.height(), 128);
+
+      for (size_t x=0; x<img.width(); x+=8){
+        for (size_t y=0; y<img.height(); y+=8){
+          assert_eq(img1.get_rgb(x,y), img.get_rgb(x,y));
+        }
+      }
+
+      image_save_pnm(img, "test_pnm/img_48.pnm");
+      assert_eq(image_size_pnm("test_pnm/img_48.pnm"), iPoint(256,128));
+      img1 = image_load_pnm("test_pnm/img_48.pnm", 1);
+      assert_eq(img1.type(), IMAGE_48RGB);
+      assert_eq(img1.width(), 256);
+      assert_eq(img1.height(), 128);
+      for (size_t x=0; x<img.width(); x+=8)
+        for (size_t y=0; y<img.height(); y+=8)
+          assert_eq(img1.get_rgb(x,y), img.get_rgb(x,y));
+
+    }
+
+
     /*********************************************/
     { // IMAGE_24RGB, IMAGE_32RGBA
       ImageR img(256,128, IMAGE_24RGB);

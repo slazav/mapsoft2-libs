@@ -52,6 +52,16 @@ uint32_t color_argb(const uint8_t a, const uint8_t r,
          ((uint32_t)g*a/255<<8) + ((uint32_t)b*a/255);
 }
 
+// Assemble 64-bit color from a,r,g,b components.
+// Prescaled semi-transparent colors are used
+uint64_t color_argb64(const uint16_t a, const uint16_t r,
+                     const uint16_t g, const uint16_t b){
+  if (a==0) return 0;
+  if (a==0xFFFF) return (0xFFFFl<<48) + ((uint64_t)r<<32) + ((uint64_t)g<<16) + b;
+  return ((uint64_t)a<<48) + ((uint64_t)r*a/0xFFFF<<32) +
+         ((uint64_t)g*a/0xFFFF<<16) + ((uint64_t)b*a/0xFFFF);
+}
+
 // Convert to prescale color
 uint32_t color_prescale(const uint32_t c){
   uint32_t a = c>>24;
