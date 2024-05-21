@@ -644,4 +644,68 @@ image_autolevel(ImageR & img, size_t brd,
   }
 }
 
+dRect
+image_autocrop(ImageR & img, size_t brd, double t1, double t2, size_t maxlines){
+  size_t w = img.width();
+  size_t h = img.height();
+  if (brd>=w/2 || brd>=h/2) throw Err() << "image_autocrop: border is too big";
+
+  // make border width hystograms
+  std::vector<size_t> hy1(brd,0), hy2(brd,0), hx1(brd,0), hx2(brd,0);
+  size_t ny1=0, ny2=0, nx1=0, nx2=0;
+
+  int lim1 = t1*0xFFFF;
+  int lim2 = (1.0-t2)*0xFFFF;
+
+  for (size_t y=brd; y<h-brd; y++){
+    auto t1 = (img.get_grey16(0,y) + img.get_grey16(brd,y))/2;
+
+    for (size_t x=0; x<brd; x++){
+       auto v = img.get_grey16(x,y);
+       if (v > lim1 && v < lim2){
+         hx1[x]++; nx1++;
+         break;
+       }
+    }
+    for (size_t x=0; x<brd; x++){
+       auto v = img.get_grey16(w-x-1,y);
+       if (v > lim1 && v < lim2){
+         hx2[x]++; nx2++;
+         break;
+       }
+    }
+  }
+
+  for (size_t x=brd; x<w-brd; x++){
+    for (size_t y=0; y<brd; y++){
+       auto v = img.get_grey16(x,y);
+       if (v > lim1 && v < lim2){
+         hy1[y]++; ny1++;
+         break;
+       }
+    }
+    for (size_t y=0; y<brd; y++){
+       auto v = img.get_grey16(x,h-y-1);
+       if (v > lim1 && v < lim2){
+         hy2[y]++; ny2++;
+         break;
+       }
+    }
+  }
+
+  size_t maxx = maxlines*(h-2*brd);
+  size_t maxy = maxlines*(w-2*brd);
+  size_t x1=0,x2=0,y1=0,y2=0;
+  size_t sx1=0,sx2=0,sy1=0,sy2=0; // number of crossed border pixels
+  size_t ax1=0,ax2=0,ay1=0,ay2=0; // picture area crossed
+  for (size_t i=0; i<brd; i++){
+    sx1+=hx1[i]; sx2+=hx2[i]; sy1+=hy1[i]; sy2+=hy2[i];
+    ax1+=sx1; ax2+=sx2; ay1+=sy1; ay2+=sy2;
+    if (ax1<=maxx) x1=i;
+    if (ax2<=maxx) x2=i;
+    if (ay1<=maxy) y1=i;
+    if (ay2<=maxy) y2=i;
+  }
+  return dRect(x1,y1, w-x1-x2, h-y1-y2);
+}
 
