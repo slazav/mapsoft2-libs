@@ -33,8 +33,11 @@ template<>
 int str_to_type<int>(const std::string & s);
 
 // Version for vector<int>, supports HEX values (starting with 0x)
-// Use ',' as separators, ':' as range separators.
+// Use ',' or ';' as separators, ':' as range separators.
 std::vector<int> str_to_type_ivec(const std::string & s);
+
+// Version for vector<double>, separator is "," or ";".
+std::vector<double> str_to_type_dvec(const std::string & s);
 
 // parsing ip
 uint32_t str_to_type_ip4(const std::string & s);

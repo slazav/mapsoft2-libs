@@ -70,6 +70,11 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 -----------------
 ## Changelog:
 
+2024.05.21 V.Zavjalov 1.12:
+- add str_to_type_dvec() - parsing lists of double values ("1e-5,2.0; -3").
+  Using ',' or ';' as separators.
+- add ';' separator to str_to_type_ivec()
+
 2021.12.01 V.Zavjalov 1.11:
 - add str_to_type_ivec() - parsing lists of integers ("1,2, -3, 5:10, 12:1").
   Using ',' as separator, ':' as range separator

@@ -212,6 +212,22 @@ try{
    assert_err(str_to_type_ivec("1,5,"), "can't parse integer list: 1,5,");
    assert_err(str_to_type_ivec("1,5:5,-2"), "can't parse empty range: 1,5:5,-2");
 
+   // dvec
+   assert_eq(str_to_type_dvec("") == std::vector<double>(), true);
+   assert_eq(str_to_type_dvec(" ") == std::vector<double>(), true);
+   assert_eq(str_to_type_dvec("1") == std::vector<double>({1}), true);
+   assert_eq(str_to_type_dvec(" 1 ") == std::vector<double>({1}), true);
+   assert_eq(str_to_type_dvec("1, 2,3") == std::vector<double>({1,2,3}), true);
+   assert_eq(str_to_type_dvec(" 1, 2,3") == std::vector<double>({1,2,3}), true);
+   assert_eq(str_to_type_dvec("1.1, 2E-1,-3.5e-4") == std::vector<double>({1.1,2e-1,-3.5e-4}), true);
+   assert_eq(str_to_type_dvec(" -1.2; 2.2;+3") == std::vector<double>({-1.2,2.2,3}), true);
+
+   assert_err(str_to_type_dvec("1,5a"), "can't parse number list: 1,5a");
+   assert_err(str_to_type_dvec("1a,5"), "can't parse number list: 1a,5");
+   assert_err(str_to_type_dvec(",1,5"), "can't parse number list: ,1,5");
+   assert_err(str_to_type_dvec("1,5,"), "can't parse number list: 1,5,");
+   assert_err(str_to_type_dvec("1:5"), "can't parse number list: 1:5");
+
 }
 catch (Err & e) {
   std::cerr << "Error: " << e.str() << "\n";

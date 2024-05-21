@@ -51,10 +51,36 @@ str_to_type_ivec(const std::string & s){
     ss >> sep >> std::ws;
     if (!ss || ss.eof()) throw Err()
       << "can't parse integer list: " << s;
-    if (sep==',') {range=false; continue; }
+    if (sep==',' || sep==';') {range=false; continue; }
     if (sep==':') {range=true;  continue; }
     throw Err()
       << "can't parse integer list: " << s;
+  }
+  return ret;
+}
+
+std::vector<double>
+str_to_type_dvec(const std::string & s){
+  std::istringstream ss(s);
+  std::vector<double> ret;
+  while (1){
+    char sep;
+    double n;
+    ss >> std::ws;
+    if (ss.eof()) break;
+
+    ss >> n >> std::ws;
+    if (ss.bad()) throw Err()
+      << "can't parse number list: " << s;
+
+    ret.push_back(n);
+    if (ss.eof()) break;
+
+    ss >> sep >> std::ws;
+    if (!ss || ss.eof()) throw Err()
+      << "can't parse number list: " << s;
+    if (sep==',' || sep==';') continue;
+    throw Err() << "can't parse number list: " << s;
   }
   return ret;
 }
