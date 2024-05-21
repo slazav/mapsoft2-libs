@@ -577,20 +577,19 @@ image_autolevel(ImageR & img, size_t brd,
     A[i]=maxval*(max[i]-B[i])/(max[i]-min[i]);
     C[i]=A[i]*(B[i]-min[i]);
   }
+/*
+  std::cerr << "n = " << n << "\n";
+  for (int i=0; i<3; i++){
+    std::cerr << " mm  = " << mm[i]*255
+              << " min = " << min[i]
+              << " avr = " << int(avr[i])
+              << " max = " << max[i] << "\n";
+    std::cerr << " A = " << A[i]
+              << " B = " << B[i]
+              << " C = " << C[i] << "\n";
+  }
+*/
 
-std::cerr << "n = " << n << "\n";
-for (int i=0; i<3; i++){
-  std::cerr << " mm  = " << mm[i]*255
-            << " min = " << min[i]
-            << " avr = " << int(avr[i])
-            << " max = " << max[i] << "\n";
-}
-
-for (int i=0; i<3; i++){
-  std::cerr << " A = " << A[i]
-            << " B = " << B[i]
-            << " C = " << C[i] << "\n";
-}
   // do the correction
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
