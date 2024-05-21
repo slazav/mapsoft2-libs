@@ -321,6 +321,21 @@ class ImageR : public Image {
       return color_rem_transp(get_argb(x,y),false);
     }
 
+    // Get 64-bit ARGB (prescaled) color for any image type.
+    uint64_t get_argb64(const size_t x, const size_t y) const {
+      if (t== IMAGE_64ARGB) return get64(x,y);
+      if (t== IMAGE_48RGB)  return get48(x,y);
+      return color_rgb_32to64(get_argb(x,y));
+    }
+
+    // Get 48-bit RGB color for any image type.
+    uint64_t get_rgb64(const size_t x, const size_t y) const {
+      if (t== IMAGE_48RGB)  return get48(x,y);
+      if (t== IMAGE_64ARGB) return get64(x,y);
+      return color_rgb_32to64(get_rgb(x,y));
+    }
+
+
     // Get 8-bit grey color for any image type.
     uint8_t get_grey8(const size_t x, const size_t y) const{
       if (t==IMAGE_8)  return get8(x,y);

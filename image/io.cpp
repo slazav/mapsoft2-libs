@@ -19,7 +19,7 @@ void ms2opt_add_image(GetOptSet & opts){
     "Explicitely set image format: jpeg, png, gif, tiff, pnm");
   opts.add("tiff_format", 1,0, g,
     "When writing TIFF, convert image to one of following forms: "
-    "argb, rgb, grey, pal (default depends on the image).");
+    "argb, rgb, argb64, rgb64, grey, pal (default depends on the image).");
   opts.add("tiff_compression", 1,0, g,
     "Set compression algorythm for writing TIFF files: "
     "none, ccit_rle, ccit_rlew, ccit_fax3, ccit_fax4, lzw (default), jpeg, packbits");

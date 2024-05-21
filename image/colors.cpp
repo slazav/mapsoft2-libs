@@ -96,6 +96,28 @@ uint32_t color_rem_transp(const uint32_t c, const bool gifmode){
   return (0xFF<<24)+(r<<16)+(g<<8)+b;
 }
 
+// remove transparency (for scaled colors)
+uint64_t color_rem_transp64(const uint64_t c, const bool gifmode){
+  uint64_t a = (c>>48)&0xFFFF;
+  if (a==0xFFFF) return c;
+
+  uint64_t r = (c>>32)&0xFFFF;
+  uint64_t g = (c>>16)&0xFFFF;
+  uint64_t b = c&0xFFFF;
+  if (r>a || g>a || b>a)
+    throw Err() << "color_rem_transp: non-prescaled color: 0x"
+                << std::hex << std::setfill('0') << std::setw(16) << c;
+  if (a==0) return gifmode? 0 : (0xFFFFl<<48);
+
+  r = (r*0xFFFF)/a;
+  g = (g*0xFFFF)/a;
+  b = (b*0xFFFF)/a;
+  if (r>0xFFFF) r=0xFFFF;
+  if (g>0xFFFF) g=0xFFFF;
+  if (b>0xFFFF) b=0xFFFF;
+  return (0xFFFFl<<48) + (r<<32) + (g<<16) + b;
+}
+
 // Convert RGB color to 8-bit greyscale
 uint8_t color_rgb_to_grey8(const uint32_t c){
   return rint(
@@ -112,22 +134,35 @@ uint16_t color_rgb_to_grey16(const uint32_t c){
     COLOR_LUMINB*((c<<8)&0xFF00) );
 }
 
-// Convert RGB color from 64 to 32 bpp
+// Convert RGB color from 64 to 32 bpp.
+// We want to keep max/min values:
+//    0xFFFF -> 0xFF -> 0xFFFF
+//    0x0000 -> 0x00 -> 0x0000
 uint32_t color_rgb_64to32(const uint64_t c){
   // AAaaRRrrGGggBBbb
   //         AARRGGBB
-  return ((c>>32) & 0xFF000000)
-       + ((c>>24) & 0xFF0000)
-       + ((c>>16) & 0xFF00)
-       + ((c>>8)  & 0xFF);
+  uint32_t a = (c>>48) & 0xFFFF;
+  uint32_t r = (c>>32) & 0xFFFF;
+  uint32_t g = (c>>16) & 0xFFFF;
+  uint32_t b = c & 0xFFFF;
+  a = (a*0xFF)/0xFFFF;
+  r = (r*0xFF)/0xFFFF;
+  g = (g*0xFF)/0xFFFF;
+  b = (b*0xFF)/0xFFFF;
+  return (a<<24) + (r<<16) + (g<<8) + b;
 }
 
 // Convert RGB color from 32 to 64 bpp
 uint64_t color_rgb_32to64(const uint32_t c){
-  return ((uint64_t)(c&0xFF000000)<<32)
-       + ((uint64_t)(c&0xFF0000)<<24)
-       + ((uint64_t)(c&0xFF00)<<16)
-       + ((uint64_t)(c&0xFF)<<8);
+  uint64_t a = (c>>24) & 0xFF;
+  uint64_t r = (c>>16) & 0xFF;
+  uint64_t g = (c>>8) & 0xFF;
+  uint64_t b = c & 0xFF;
+  a = (a*0xFFFF)/0xFF;
+  r = (r*0xFFFF)/0xFF;
+  g = (g*0xFFFF)/0xFF;
+  b = (b*0xFFFF)/0xFF;
+  return (a<<48) + (r<<32) + (g<<16) + b;
 }
 
 // Invert RGB color, keep transparency

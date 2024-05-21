@@ -33,6 +33,7 @@ uint32_t color_prescale(const uint32_t c);
 // Remove transparency (with color scaling).
 // if gifmode = true, then keep fully transparent colors.
 uint32_t color_rem_transp(const uint32_t c, const bool gifmode);
+uint64_t color_rem_transp64(const uint64_t c, const bool gifmode);
 
 // Convert RGB color to 8-bit greyscale
 uint8_t color_rgb_to_grey8(const uint32_t c);

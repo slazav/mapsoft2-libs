@@ -56,8 +56,13 @@ main(){
     assert_eq(color_rgb_to_grey8(0xFF000010), 0x2);
     assert_eq(color_rgb_to_grey16(0xFF000010), 0x1d5);
 
-    assert_eq(color_rgb_64to32(0x1234234534564567l), 0x12233445);
-    assert_eq(color_rgb_32to64(0x12345678), 0x1200340056007800l);
+    assert_eq(color_rgb_64to32(0x1234123412341234l), 0x12121212);
+    assert_eq(color_rgb_32to64(0x12121212), 0x1212121212121212l);
+    assert_eq(color_rgb_64to32(0xFFFFFFFFFFFFFFFF), 0xFFFFFFFF);
+    assert_eq(color_rgb_64to32(0x0), 0x0);
+    assert_eq(color_rgb_32to64(0xFFFFFFFF), 0xFFFFFFFFFFFFFFFF);
+    assert_eq(color_rgb_32to64(0x0), 0x0);
+
 
     assert_eq(color_rgb_invert(0xFF000000), 0xFFFFFFFF);
     assert_eq(color_rgb_invert(0x80000000), 0x80808080);

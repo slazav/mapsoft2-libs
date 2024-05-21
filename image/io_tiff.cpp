@@ -200,12 +200,20 @@ image_load_tiff(std::istream & str, const double scale){
                     << "PALETTE " << samples << "x" << bps;
 
       case PHOTOMETRIC_RGB:
-        if (samples == 3 && bps==8){ // RGB
+        if (samples == 3 && bps==8){ // 24RGB
           img = ImageR(w1,h1, IMAGE_24RGB);
           break;
         }
-        if (samples == 4 && bps==8){ // RGBA
+        if (samples == 3 && bps==16){ // 48RGB
+          img = ImageR(w1,h1, IMAGE_48RGB);
+          break;
+        }
+        if (samples == 4 && bps==8){ // 32RGBA
           img = ImageR(w1,h1, IMAGE_32ARGB);
+          break;
+        }
+        if (samples == 4 && bps==16){ // 64RGBA
+          img = ImageR(w1,h1, IMAGE_64ARGB);
           break;
         }
         if (samples == 1 && bps==8){ // G
@@ -260,13 +268,35 @@ image_load_tiff(std::istream & str, const double scale){
 
           case PHOTOMETRIC_RGB:
             if (samples==3){ // RGB
-              img.set24(x,y,
-                color_argb(0xFF, cbuf[3*xs], cbuf[3*xs+1], cbuf[3*xs+2]));
+              if (bps==8){
+                uint8_t r = cbuf[3*xs];
+                uint8_t g = cbuf[3*xs+1];
+                uint8_t b = cbuf[3*xs+2];
+                img.set24(x,y, color_argb(0xFF, r,g,b));
+              }
+              if (bps==16){
+                uint16_t r = ((uint16_t)cbuf[6*xs+0]<<8) + cbuf[6*xs+1];
+                uint16_t g = ((uint16_t)cbuf[6*xs+2]<<8) + cbuf[6*xs+3];
+                uint16_t b = ((uint16_t)cbuf[6*xs+4]<<8) + cbuf[6*xs+5];
+                img.set64(x,y, color_argb64(0xFFFF,r,g,b));
+              }
               break;
             }
-            if (samples==4){ // RGBA
-              img.set32(x,y,
-                color_argb(cbuf[4*xs+3], cbuf[4*xs], cbuf[4*xs+1], cbuf[4*xs+2]));
+            if (samples==4){ // RGBA -- // color scaling!
+              if (bps==8){
+                uint8_t r = cbuf[4*xs];
+                uint8_t g = cbuf[4*xs+1];
+                uint8_t b = cbuf[4*xs+2];
+                uint8_t a = cbuf[4*xs+3];
+                img.set32(x,y, color_argb(a,r,g,b));
+              }
+              if (bps==16){
+                uint16_t r = ((uint16_t)cbuf[8*xs+0]<<8) + cbuf[8*xs+1];
+                uint16_t g = ((uint16_t)cbuf[8*xs+2]<<8) + cbuf[8*xs+3];
+                uint16_t b = ((uint16_t)cbuf[8*xs+4]<<8) + cbuf[8*xs+5];
+                uint16_t a = ((uint16_t)cbuf[8*xs+6]<<8) + cbuf[8*xs+7];
+                img.set64(x,y, color_argb64(a,r,g,b));
+              }
               break;
             }
             if (samples==1){ // G
@@ -337,6 +367,8 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
       case IMAGE_8PAL:    samples=1; use_cmap=1; break;
       case IMAGE_FLOAT:   samples=3; break;
       case IMAGE_DOUBLE:  samples=3; break;
+      case IMAGE_64ARGB:  samples=4; bps=16; break;
+      case IMAGE_48RGB:   samples=3; bps=16; break;
       case IMAGE_UNKNOWN: samples=4; break;
     }
 
@@ -346,6 +378,8 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
     if (s != "") {
       if      (s == "argb")  {bps=8; samples = 4; use_cmap = 0; }
       else if (s == "rgb")   {bps=8; samples = 3; use_cmap = 0; }
+      else if (s == "argb64"){bps=16; samples = 4; use_cmap = 0; }
+      else if (s == "rgb64") {bps=16; samples = 3; use_cmap = 0; }
       else if (s == "grey")  {bps=8; samples = 1; use_cmap = 0; }
       else if (s == "pal")   {bps=8; samples = 1; use_cmap = 1;}
       else throw Err() << "image_save_tiff: unknown tiff_format setting: " << s << "\n";
@@ -443,20 +477,43 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
     for (size_t y=0; y<im.height(); y++){
       for (size_t x=0; x<im.width(); x++){
         uint32_t c;
-        //uint16_t c16;
+        uint64_t c64;
         switch (samples*bps){
+
+          case 64:
+            c64 = im.get_argb64(x, y);
+            cbuf[8*x+7] = (c64 >> 56) & 0xFF;
+            cbuf[8*x+6] = (c64 >> 48) & 0xFF;
+            c64 = color_rem_transp64(c64, false); // unscaled color!
+            cbuf[8*x+1] = (c64 >> 40) & 0xFF;
+            cbuf[8*x+0] = (c64 >> 32) & 0xFF;
+            cbuf[8*x+3] = (c64 >> 24) & 0xFF;
+            cbuf[8*x+2] = (c64 >> 16) & 0xFF;
+            cbuf[8*x+5] = (c64 >> 8)  & 0xFF;
+            cbuf[8*x+4] = c64 & 0xFF;
+            break;
+
+          case 48:
+            c64 = im.get_rgb64(x, y); // unscaled color
+            cbuf[6*x+1] = (c64 >> 40) & 0xFF;
+            cbuf[6*x+0] = (c64 >> 32) & 0xFF;
+            cbuf[6*x+3] = (c64 >> 24) & 0xFF;
+            cbuf[6*x+2] = (c64 >> 16) & 0xFF;
+            cbuf[6*x+5] = (c64 >> 8)  & 0xFF;
+            cbuf[6*x+4] = c64 & 0xFF;
+            break;
 
           case 32:
             c = im.get_argb(x, y);
             cbuf[4*x+3] = (c >> 24) & 0xFF;
-            c = color_rem_transp(c, false);
+            c = color_rem_transp(c, false); // unscaled color
             cbuf[4*x]   = (c >> 16) & 0xFF;
             cbuf[4*x+1] = (c >> 8)  & 0xFF;
             cbuf[4*x+2] = c & 0xFF;
             break;
 
           case 24:
-            c = im.get_rgb(x, y);
+            c = im.get_rgb(x, y); // unscaled color
             cbuf[3*x]   = (c >> 16) & 0xFF;
             cbuf[3*x+1] = (c >> 8)  & 0xFF;
             cbuf[3*x+2] = c & 0xFF;
