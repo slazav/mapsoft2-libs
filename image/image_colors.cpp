@@ -384,6 +384,8 @@ image_classify_alpha(const ImageR & img){
   return ret;
 }
 
+/***********************************************************/
+
 int
 image_classify_color(const ImageR & img, uint32_t *colors, size_t clen){
   int ret=0;
@@ -419,6 +421,8 @@ image_classify_color(const ImageR & img, uint32_t *colors, size_t clen){
   return ret;
 }
 
+/***********************************************************/
+
 void
 image_invert(ImageR & img){
   auto t = img.type();
@@ -452,3 +456,193 @@ image_invert(ImageR & img){
     }
   }
 }
+
+/***********************************************************/
+
+// This is based on my old (from year 2005) code 1628.c
+// which can be found in ph_scan repo on my github.
+// Transferred to mapsoft2 05.2024 -- Slava
+void
+image_autolevel(ImageR & img, size_t brd,
+  double mr, double mg, double mb, double t1, double t2){
+
+  // check image type
+
+  /************************************************/
+  /* build histogram */
+  long int H[3][0x10000];
+  memset(H, 0, sizeof(H));
+
+  size_t w = img.width();
+  size_t h = img.height();
+  if (h-2*brd-1<=0 || w-2*brd-1<=0)
+    throw Err() << "image_autolevel: too large border: brd";
+
+  size_t n = 0;
+  bool onech = false;
+  int  maxval = 0xFFFF;
+  for (size_t y=brd; y<h-brd; y++){
+    for (size_t x=brd; x<w-brd; x++){
+      switch (img.type()){
+        case IMAGE_48RGB:
+        case IMAGE_64ARGB: {
+          auto c = img.get_rgb64(x,y);
+          H[0][(c>>32)&0xFFFF]++;
+          H[1][(c>>16)&0xFFFF]++;
+          H[2][c&0xFFFF]++;
+          break;
+        }
+        case IMAGE_16: {
+          auto c = img.get16(x,y);
+          H[0][c]++;
+          onech=1;
+          break;
+        }
+        case IMAGE_24RGB:
+        case IMAGE_32ARGB: {
+          auto c = img.get_rgb(x,y);
+          H[0][(c>>16)&0xFF]++;
+          H[1][(c>>8)&0xFF]++;
+          H[2][c&0xFF]++;
+          maxval = 0xFF;
+          break;
+        }
+        case IMAGE_8: {
+          auto c = img.get8(x,y);
+          H[0][c]++;
+          onech=1;
+          maxval = 0xFF;
+          break;
+        }
+        default: throw Err() << "image_autolevel: unsupported image type";
+      }
+      n++;
+    }
+  }
+
+  /************************************************/
+  /* Calculate MIN/MAX/AVRG for color values */
+  size_t max[3], min[3]; // min/max levels for each color
+  double avr[3]; // average level for each color
+  {
+    for (int i=0;i<3;i++){
+      max[i]=maxval; min[i]=0; avr[i]=0;
+    }
+    long int sr1=0, sg1=0, sb1=0; // sum from the left side
+    long int sr2=0, sg2=0, sb2=0; // sum from the right side
+    size_t lth = rint(t1*n);
+    size_t hth = rint(t2*n);
+    for (int i=0; i<=maxval; i++){
+      int j = maxval-i; // right to left
+
+      if (onech){
+        sr1+=H[0][i];
+        sr2+=H[0][j];
+        if (sr1<lth+1) min[0]=i;
+        if (sr2<hth+1) max[0]=j;
+        avr[0]+=(double)(H[0][i])*i;
+      }
+      else {
+        sr1+=H[0][i];
+        sr2+=H[0][j];
+        sg1+=H[1][i];
+        sg2+=H[1][j];
+        sb1+=H[2][i];
+        sb2+=H[2][j];
+        if (sr1<lth+1) min[0]=i;
+        if (sr2<hth+1) max[0]=j;
+        if (sg1<lth+1) min[1]=i;
+        if (sg2<hth+1) max[1]=j;
+        if (sb1<lth+1) min[2]=i;
+        if (sb2<hth+1) max[2]=j;
+        avr[0]+=(double)H[0][i]*i;
+        avr[1]+=(double)H[1][i]*i;
+        avr[2]+=(double)H[2][i]*i;
+      }
+    }
+    avr[0]/=n;
+    avr[1]/=n;
+    avr[2]/=n;
+  }
+
+
+  /************************************************/
+  /* Find the color correction (A,B,C parameters) */
+  double A[3], B[3], C[3];
+  double mm[3] = {mr,mg,mb};
+
+  for (int i=0; i < (onech?1:3); i++){
+    B[i]=(1.0*max[i]/(max[i]-min[i]) - mm[i]*avr[i]/(avr[i]-min[i])) /
+         (1.0/(max[i]-min[i]) - mm[i]/(avr[i]-min[i]));
+    A[i]=maxval*(max[i]-B[i])/(max[i]-min[i]);
+    C[i]=A[i]*(B[i]-min[i]);
+  }
+
+std::cerr << "n = " << n << "\n";
+for (int i=0; i<3; i++){
+  std::cerr << " mm  = " << mm[i]*255
+            << " min = " << min[i]
+            << " avr = " << int(avr[i])
+            << " max = " << max[i] << "\n";
+}
+
+for (int i=0; i<3; i++){
+  std::cerr << " A = " << A[i]
+            << " B = " << B[i]
+            << " C = " << C[i] << "\n";
+}
+  // do the correction
+  for (size_t y=0; y<h; y++){
+    for (size_t x=0; x<w; x++){
+      switch (img.type()){
+        case IMAGE_48RGB:
+        case IMAGE_64ARGB: {
+          uint64_t c1 = img.get_rgb64(x,y);
+          uint64_t c2 = 0;
+          for (int i = 0; i<3; i++){
+            int c = (c1>>(16*(2-i)))&0xFFFF;
+            c = A[i]-C[i]/(B[i]-c);
+            if (c < 0) c=0;
+            if (c > maxval) c=maxval;
+            c2 += (uint64_t)c<<(16*(2-i));
+          }
+          img.set48(x,y,c2);
+          break;
+        }
+        case IMAGE_16: {
+          int c = img.get16(x,y);
+          c=A[0]-C[0]/(B[0]-c);
+          if (c < 0) c=0;
+          if (c > maxval) c=maxval;
+          img.set16(x,y,c);
+          break;
+        }
+        case IMAGE_24RGB:
+        case IMAGE_32ARGB: {
+          uint32_t c1 = img.get_rgb(x,y);
+          uint32_t c2 = 0;
+          for (int i = 0; i<3; i++){
+            int c = (c1>>(8*(2-i)))&0xFF;
+            c=A[i]-C[i]/(B[i]-c);
+            if (c < 0) c=0;
+            if (c > maxval) c=maxval;
+            c2 += (uint32_t)c<<(8*(2-i));
+          }
+          img.set48(x,y,c2);
+          break;
+        }
+        case IMAGE_8: {
+          int c = img.get8(x,y);
+          c=A[0]-C[0]/(B[0]-c);
+          if (c < 0) c=0;
+          if (c > maxval) c=maxval;
+          img.set8(x,y,c);
+          break;
+        }
+        default: throw Err() << "image_autolevel: unsupported image type";
+      }
+    }
+  }
+}
+
+

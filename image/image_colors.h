@@ -34,7 +34,15 @@ int image_classify_alpha(const ImageR & img);
 // colors[clen] array is filled with the color palette.
 int image_classify_color(const ImageR & img, uint32_t *colors, size_t clen=256);
 
-// invert colors (black <=> white), inplace, to change of image type
+// Invert colors (black <=> white), inplace, to change of image type
 void image_invert(ImageR & img);
+
+// Adjust color levels (darkest->0, lightest->max, middle->mr,mg,mb)
+// brd - border for calculation [px]
+// mr,mg,mb - middle levels (fraction of the full color range 0..1)
+// t1,t2 - min/max color threshold (fraction of points which will be too dark/too bright, 0..1)
+void image_autolevel(ImageR & img, size_t brd,
+  double mr, double mg, double mb, double t1, double t2);
+
 
 #endif
