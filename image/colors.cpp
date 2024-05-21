@@ -126,12 +126,28 @@ uint8_t color_rgb_to_grey8(const uint32_t c){
     COLOR_LUMINB*(c&0xFF) );
 }
 
+// Convert RGB color to 8-bit greyscale
+uint8_t color_rgb64_to_grey8(const uint64_t c){
+  return rint(
+    COLOR_LUMINR*((c>>32)&0xFFFF)/0xFF +
+    COLOR_LUMING*((c>>16)&0xFFFF)/0xFF +
+    COLOR_LUMINB*(c&0xFFFF)/0xFF );
+}
+
 // Convert RGB color to 16-bit greyscale
 uint16_t color_rgb_to_grey16(const uint32_t c){
   return rint(
     COLOR_LUMINR*((c>>8)&0xFF00) +
     COLOR_LUMING*(c&0xFF00) +
     COLOR_LUMINB*((c<<8)&0xFF00) );
+}
+
+// Convert RGB color to 16-bit greyscale
+uint16_t color_rgb64_to_grey16(const uint64_t c){
+  return rint(
+    COLOR_LUMINR*((c>>32)&0xFFFF) +
+    COLOR_LUMING*((c>>16)&0xFFFF) +
+    COLOR_LUMINB*(c&0xFFFF) );
 }
 
 // Convert RGB color from 64 to 32 bpp.

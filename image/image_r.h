@@ -340,6 +340,8 @@ class ImageR : public Image {
     uint8_t get_grey8(const size_t x, const size_t y) const{
       if (t==IMAGE_8)  return get8(x,y);
       if (t==IMAGE_16) return get16(x,y)>>8;
+      if (t==IMAGE_48RGB)  return color_rgb64_to_grey8(get48(x,y));
+      if (t==IMAGE_64ARGB) return color_rgb64_to_grey8(get64(x,y));
       return color_rgb_to_grey8(get_rgb(x,y));
     }
 
@@ -347,6 +349,8 @@ class ImageR : public Image {
     uint16_t get_agrey8(const size_t x, const size_t y) const{
       if (t==IMAGE_8)  return 0xFF00 + get8(x,y);
       if (t==IMAGE_16) return 0xFF00 + (get16(x,y)>>8);
+      if (t==IMAGE_48RGB)  return 0xFF00 + color_rgb64_to_grey8(get48(x,y));
+      if (t==IMAGE_64ARGB) return 0xFF00 + color_rgb64_to_grey8(get64(x,y)); // fixme
       uint32_t c = get_argb(x,y);
       return ((c>>16) & 0xFF00) +
              color_rgb_to_grey8(color_rem_transp(c,false));
@@ -356,6 +360,8 @@ class ImageR : public Image {
     uint16_t get_grey16(const size_t x, const size_t y) const{
       if (t==IMAGE_8)  return get8(x,y)<<8;
       if (t==IMAGE_16) return get16(x,y);
+      if (t==IMAGE_48RGB)  return color_rgb64_to_grey16(get48(x,y));
+      if (t==IMAGE_64ARGB) return color_rgb64_to_grey16(get64(x,y));
       return color_rgb_to_grey16(get_rgb(x,y));
     }
 
