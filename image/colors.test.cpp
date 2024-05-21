@@ -52,14 +52,24 @@ main(){
     assert_eq(color_prescale(0x80020406), 0x80010203);
 
     assert_eq(color_rgb_to_grey8(0xFF101010), 0x10);
-    assert_eq(color_rgb_to_grey16(0xFF101010), 0x1000);
     assert_eq(color_rgb_to_grey8(0xFF000010), 0x2);
-    assert_eq(color_rgb_to_grey16(0xFF000010), 0x1d5);
+    assert_eq(color_rgb_to_grey8(0xFF000000), 0x00);
+    assert_eq(color_rgb_to_grey8(0xFFFFFFFF), 0xFF);
+
+    assert_eq(color_rgb_to_grey16(0xFF101010), 0x1010);
+    assert_eq(color_rgb_to_grey16(0xFF000010), 0x1D7);
+    assert_eq(color_rgb_to_grey16(0xFF000000), 0x0000);
+    assert_eq(color_rgb_to_grey16(0xFFFFFFFF), 0xFFFF);
 
     assert_eq(color_rgb64_to_grey8(0xFFFF123412341234l), 0x12);
-    assert_eq(color_rgb64_to_grey16(0xFFFF123412341234l), 0x1234);
     assert_eq(color_rgb64_to_grey8(0xFFFF000000001000l), 0x2);
+    assert_eq(color_rgb64_to_grey8(0xFFFF000000000000l), 0x0);
+    assert_eq(color_rgb64_to_grey8(0xFFFFFFFFFFFFFFFFl), 0xFF);
+
+    assert_eq(color_rgb64_to_grey16(0xFFFF123412341234l), 0x1234);
     assert_eq(color_rgb64_to_grey16(0xFFFF000000001000l), 0x1d5);
+    assert_eq(color_rgb64_to_grey16(0xFFFF000000000000l), 0x0);
+    assert_eq(color_rgb64_to_grey16(0xFFFFFFFFFFFFFFFFl), 0xFFFF);
 
     assert_eq(color_rgb_64to32(0x1234123412341234l), 0x12121212);
     assert_eq(color_rgb_32to64(0x12121212), 0x1212121212121212l);
