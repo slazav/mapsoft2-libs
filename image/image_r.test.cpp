@@ -10,6 +10,27 @@ int
 main(){
   try{
     {
+       unsigned char buf[8];
+       ImageR::set64(buf, 0x1234567812345678l);
+       assert_eq(ImageR::get64(buf), 0x1234567812345678l);
+
+       ImageR::set48(buf, 0x1234567890123456l);
+       assert_eq(ImageR::get48(buf), 0xFFFF567890123456l);
+       assert_eq(ImageR::get64(buf), 0x1234567890123456l);
+
+       ImageR::set32(buf, 0x12345678);
+       assert_eq(ImageR::get32(buf), 0x12345678);
+
+       ImageR::set24(buf, 0x01234567);
+       assert_eq(ImageR::get24(buf), 0xFF234567);
+       assert_eq(ImageR::get32(buf), 0x12234567);
+
+       ImageR::set16(buf, 0x1234);
+       assert_eq(ImageR::get16(buf), 0x1234);
+    }
+
+
+    {
       ImageR im1;
       assert_eq(im1.width(), 0);
       assert_eq(im1.height(), 0);

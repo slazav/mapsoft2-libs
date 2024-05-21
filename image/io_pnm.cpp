@@ -131,7 +131,7 @@ pnm_read_head(std::istream & str) {
   return pnm;
 }
 
-// read a single row of data
+// read a single row of data (byte array in the pnm order)
 std::vector<uint8_t>
 pnm_read_row(std::istream & str, const pnm_t & pnm){
   std::vector<uint8_t> ret(pnm.row_size(), 0);
@@ -179,9 +179,12 @@ ImageR
 image_load_pnm(std::istream & str, const double scale){
 
   if (scale < 1) throw Err() << "image_load_pnm: wrong scale: " << scale;
+
+  // unscaled parameters
   auto pnm = pnm_read_head(str);
-  auto bytes = pnm.row_size();
+  auto bpr = pnm.row_size();
   auto bps = pnm.bps();
+  auto bpp = bps*pnm.depth;
 
   // scaled image size
   size_t w1 = floor((pnm.width-1)/scale+1);
@@ -194,7 +197,7 @@ image_load_pnm(std::istream & str, const double scale){
 
     case PPM_TYPE:
     case RPPM_TYPE:
-      img = ImageR(w1,h1, IMAGE_24RGB); // todo: IMAGE_48
+      img = ImageR(w1,h1, bps==1? IMAGE_24RGB:IMAGE_48RGB);
       break;
 
     case PGM_TYPE:
@@ -221,33 +224,32 @@ image_load_pnm(std::istream & str, const double scale){
       if (pnm.is_plain())
         pnm_read_row(str, pnm);
       else
-        str.seekg(bytes,std::ios_base::cur);
+        str.seekg(bpr,std::ios_base::cur);
       line++;
     }
 
-    // read line
+    // read line (byte array in the pnm order)
     auto cbuf = pnm_read_row(str, pnm);
     line++;
 
     // transfer line to the image
+
+//    if (scale==1 && (pnm.fmt == PBM_TYPE || pnm.fmt == RPBM_TYPE)){
+//      std::memcpy(img.data() + y*bps, cbuf.data(), bpr);
+//      continue;
+//    }
+
     for (size_t x=0; x<w1; ++x){
       int xs = scale==1.0? x:rint(x*scale);
-      switch (pnm.fmt) {
-        //case PAM_TYPE: TODO
-        case PPM_TYPE:
-        case RPPM_TYPE:
-          if (bps==1) img.set24(x,y, (cbuf[3*xs]<<16) + (cbuf[3*xs+1]<<8) + cbuf[3*xs+2] );
-          break;
-        case PGM_TYPE:
-        case RPGM_TYPE:
-          if (bps==1)      img.set8(x,y, cbuf[xs]);
-          else if (bps==2) img.set16(x,y, (cbuf[2*xs]<<8) + cbuf[2*xs+1]);
-          break;
-        case PBM_TYPE:
-        case RPBM_TYPE:
-          img.set1(x,y, ((cbuf[xs/8]) >> (7-(xs%8))) & 1);
-          break;
+
+      if (pnm.fmt == PBM_TYPE || pnm.fmt == RPBM_TYPE){
+        img.set1(x,y, ((cbuf[xs/8]) >> (7-(xs%8))) & 1);
+        continue;
       }
+      char *src = (char*)cbuf.data() + xs*bpp;
+      char *dst = (char*)img.data() + (y*w1+x)*bpp;
+      for (int i = 0; i<bpp; i+=1)
+        std::memcpy(dst + bpp - i - 1, src + i, 1);
     }
   }
   return img;
@@ -271,9 +273,13 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
     case IMAGE_16:     pnm.fmt=RPGM_TYPE; pnm.depth=1; pnm.maxval=0xFFFF; break;
     case IMAGE_8:      pnm.fmt=RPGM_TYPE; pnm.depth=1; pnm.maxval=0xFF;   break;
     case IMAGE_1:      pnm.fmt=RPBM_TYPE; pnm.depth=1; pnm.maxval=1;      break;
+    case IMAGE_64ARGB:
+    case IMAGE_48RGB:   pnm.fmt=RPPM_TYPE; pnm.depth=3; pnm.maxval=0xFFFF;   break;
     default: throw Err() << "image_save_pnm: unsupported image type";
   }
-  auto bytes = pnm.row_size();
+  auto bpr = pnm.row_size();
+  auto bps = pnm.bps();
+  auto bpp = bps*pnm.depth;
 
   // write header
   str << 'P' << (char)(pnm.fmt & 0xFF) << "\n"
@@ -281,41 +287,60 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
   if (pnm.fmt!=RPBM_TYPE && pnm.fmt!=PBM_TYPE) str << pnm.maxval << "\n";
 
   for (size_t y=0; y<img.height(); y++){
+    char *p = (char *)img.data() + bpr*y;
     switch (t){
+      case IMAGE_24RGB:
       case IMAGE_32ARGB: {
         for (size_t x=0; x<w; x++){
-          str.write((char*)img.data() + 4*(y*w+x)+2, 1);
-          str.write((char*)img.data() + 4*(y*w+x)+1, 1);
-          str.write((char*)img.data() + 4*(y*w+x), 1);
-        }
-        break;
-      }
-      case IMAGE_24RGB: {
-        str.write((char*)img.data() + bytes*y, bytes);
-        break;
-      }
-      case IMAGE_8PAL: {
-        for (size_t x=0; x<w; x++){
-          auto c = img.get8pal(x,y);
-          str.write((char*)&c+2, 1);
-          str.write((char*)&c+1, 1);
-          str.write((char*)&c, 1);
+          auto c = img.get_rgb(x,y); // unscale color!
+          str.write((char*)&c + 2, 1);
+          str.write((char*)&c + 1, 1);
+          str.write((char*)&c + 0, 1);
         }
         break;
       }
       case IMAGE_16: {
         for (size_t x=0; x<w; x++){
-          str.write((char*)img.data() + 2*(y*w+x)+1, 1);
-          str.write((char*)img.data() + 2*(y*w+x)+0, 1);
+          auto c = img.get16(x,y);
+          str.write((char*)&c+1, 1);
+          str.write((char*)&c, 1);
         }
         break;
       }
       case IMAGE_8: {
-        str.write((char*)img.data() + y*w, w);
+        for (size_t x=0; x<w; x++){
+          auto c = img.get8(x,y);
+          str.write((char*)&c, 1);
+        }
+        break;
+      }
+      case IMAGE_48RGB: {
+        for (size_t x=0; x<w; x++){
+          p+=x*bpp;
+          str.write(p + 4, bps);
+          str.write(p + 2, bps);
+          str.write(p + 0, bps);
+        }
+        break;
+      }
+      case IMAGE_8PAL: {
+        for (size_t x=0; x<w; x++){
+          auto c = img.get8pal(x,y);
+          str.write((char*)&c + 2, 1);
+          str.write((char*)&c + 1, 1);
+          str.write((char*)&c + 0, 1);
+        }
         break;
       }
       case IMAGE_1: {
-        str.write((char*)img.data() + y*bytes, bytes);
+        str.write((char*)img.data() + y*bpr, bpr);
+        break;
+      }
+      case IMAGE_64ARGB: {
+        for (size_t x=0; x<w; x++){
+          auto c = img.get64(x,y);
+          str.write((char*)&c, 8);
+        }
         break;
       }
     }

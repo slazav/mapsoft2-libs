@@ -105,6 +105,7 @@ main(){
       o.put("cmap_alpha", "full"); // ignored
       image_save_tiff(img, "test_tiff/img_32_apal.tif", o);
       I = image_load_tiff("test_tiff/img_32_apal.tif", 1);
+
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);

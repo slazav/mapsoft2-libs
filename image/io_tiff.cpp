@@ -184,6 +184,7 @@ image_load_tiff(std::istream & str, const double scale){
       case PHOTOMETRIC_PALETTE:
         if (samples == 1 && bps == 8) {
           img = ImageR(w1,h1, IMAGE_8PAL);
+          img.cmap.clear();
           uint16 *cmap[3];
           TIFFGetField(tif, TIFFTAG_COLORMAP, cmap, cmap+1, cmap+2);
           for (int i=0; i<256; i++){
@@ -259,12 +260,13 @@ image_load_tiff(std::istream & str, const double scale){
 
           case PHOTOMETRIC_RGB:
             if (samples==3){ // RGB
-              memcpy(img.data() + 3*(y*w1+x), cbuf + 3*xs, 3);
+              img.set24(x,y,
+                color_argb(0xFF, cbuf[3*xs], cbuf[3*xs+1], cbuf[3*xs+2]));
               break;
             }
             if (samples==4){ // RGBA
-              ((uint32_t*)img.data())[y*w1+x] =
-                 color_argb(cbuf[4*xs+3], cbuf[4*xs], cbuf[4*xs+1], cbuf[4*xs+2]);
+              img.set32(x,y,
+                color_argb(cbuf[4*xs+3], cbuf[4*xs], cbuf[4*xs+1], cbuf[4*xs+2]));
               break;
             }
             if (samples==1){ // G
@@ -276,11 +278,11 @@ image_load_tiff(std::istream & str, const double scale){
 
           case PHOTOMETRIC_MINISWHITE:
             if (bps==16){ // 16bit
-              ((uint16_t*)img.data())[y*w1+x] = 0xFFFF - ((uint16_t*)cbuf)[xs];
+              img.set16(x,y, 0xFFFF - ((uint16_t*)cbuf)[xs]);
               break;
             }
             if (bps==8){ // 8bit
-              img.data()[y*w1+x] = 0xFF - cbuf[xs];
+              img.set8(x,y, 0xFF - cbuf[xs]);
               break;
             }
             throw Err() << "image_load_tiff: unsupported format: "
@@ -288,11 +290,11 @@ image_load_tiff(std::istream & str, const double scale){
 
           case PHOTOMETRIC_MINISBLACK:
             if (bps==16){ // 16bit
-              ((uint16_t*)img.data())[y*w1+x] = ((uint16_t*)cbuf)[xs];
+              img.set16(x,y, ((uint16_t*)cbuf)[xs]);
               break;
             }
             if (bps==8){ // 8bit
-              img.data()[y*w1+x] = cbuf[xs];
+              img.set8(x,y, cbuf[xs]);
               break;
             }
             throw Err() << "image_load_tiff: unsupported format: "

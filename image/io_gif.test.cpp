@@ -132,6 +132,7 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
+
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe0e0e0);
       assert_eq(I.get_argb(128,0), 0xFF000000);

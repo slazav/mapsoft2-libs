@@ -445,6 +445,8 @@ image_invert(ImageR & img){
         case IMAGE_24RGB:  img.set24(x,y, color_rgb_invert(img.get24(x,y))); continue;
         case IMAGE_16:     img.set16(x,y, 0xFFFF - img.get16(x,y)); continue;
         case IMAGE_8:      img.set8(x,y,  0xFF-img.get8(x,y)); continue;
+        case IMAGE_64ARGB: img.set64(x,y, color_rgb64_invert(img.get64(x,y))); continue;
+        case IMAGE_48RGB:  img.set48(x,y, color_rgb64_invert(img.get32(x,y))); continue;
         default: throw "image_invert: unsupported image type";
       }
     }

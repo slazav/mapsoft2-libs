@@ -22,6 +22,9 @@ double color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled=tru
 uint32_t color_argb(const uint8_t a, const uint8_t r,
                     const uint8_t g, const uint8_t b);
 
+// Convert to prescale color
+uint32_t color_prescale(const uint32_t c);
+
 // Remove transparency (with color scaling).
 // if gifmode = true, then keep fully transparent colors.
 uint32_t color_rem_transp(const uint32_t c, const bool gifmode);
@@ -40,6 +43,9 @@ uint64_t color_rgb_32to64(const uint32_t c);
 
 // Invert RGB color, keep transparency
 uint32_t color_rgb_invert(const uint32_t c);
+
+// Invert RGB 64bit color, keep transparency
+uint64_t color_rgb64_invert(const uint64_t c);
 
 
 #endif

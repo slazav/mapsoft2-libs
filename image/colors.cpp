@@ -52,6 +52,18 @@ uint32_t color_argb(const uint8_t a, const uint8_t r,
          ((uint32_t)g*a/255<<8) + ((uint32_t)b*a/255);
 }
 
+// Convert to prescale color
+uint32_t color_prescale(const uint32_t c){
+  uint32_t a = c>>24;
+  if (a==0xFF) return c;
+  if (a==0) return 0;
+  uint32_t r = (c>>16)&0xFF;
+  uint32_t g = (c>>8)&0xFF;
+  uint32_t b = c&0xFF;
+  return (a<<24) + (r*a/255<<16) + (g*a/255<<8) + (b*a/255);
+}
+
+
 // remove transparency (for scaled colors)
 uint32_t color_rem_transp(const uint32_t c, const bool gifmode){
   int a = (c>>24)&0xFF;
@@ -110,9 +122,18 @@ uint64_t color_rgb_32to64(const uint32_t c){
 
 // Invert RGB color, keep transparency
 uint32_t color_rgb_invert(const uint32_t c){
-  int tr=c>>24;
-  return   (c&0xFF000000)
+  uint32_t tr=c>>24;
+  return   (tr << 24)
          + ((tr - ((c>>16)&0xFF)) << 16)
          + ((tr - (c>>8)&0xFF) << 8)
          + (tr - c&0xFF);
+}
+
+// Invert RGB color, keep transparency
+uint64_t color_rgb64_invert(const uint64_t c){
+  uint64_t tr=c>>48;
+  return   (tr << 48)
+         + ((tr - ((c>>32)&0xFFFF)) << 32)
+         + ((tr - (c>>16)&0xFFFF) << 16)
+         + (tr - c&0xFFFF);
 }

@@ -152,7 +152,7 @@ image_load_gif(const std::string & file, const double scale){
 
     if (h==h1 && w==w1){
       for (int y=0; y<h; ++y){
-        if (DGifGetLine(gif, img.data() + y*w, w) == GIF_ERROR) GifErr();
+        if (DGifGetLine(gif, (GifPixelType*)img.data() + y*w, w) == GIF_ERROR) GifErr();
       }
     }
     else {
@@ -263,7 +263,7 @@ image_save_gif(const ImageR & im, const std::string & file, const Opt & opt){
     if (EGifPutImageDesc(gif, 0,0, im8.width(), im8.height(),
       false, gif_cmap)==GIF_ERROR) GifErr();
 
-    if (EGifPutLine(gif, im8.data(), im8.width()*im8.height()) ==GIF_ERROR)
+    if (EGifPutLine(gif, (GifPixelType*)im8.data(), im8.width()*im8.height()) ==GIF_ERROR)
       GifErr();
 
   }

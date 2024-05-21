@@ -221,42 +221,38 @@ image_load_png(std::istream & str, const double scale){
         line++;
       }
 
-      if (img.type() == IMAGE_8PAL){
+      if (img.type() == IMAGE_8PAL || img.type() == IMAGE_8){
         for (int x=0; x<w1; ++x){
           int xs = scale==1.0? x:rint(x*scale);
-          img.data()[w1*y+x] = row_buf[xs];
+          img.set8(x,y, row_buf[xs]);
         }
       }
 
       else if (img.type() == IMAGE_24RGB){
         for (int x=0; x<w1; ++x){
-          int xs3 = 3*(scale==1.0? x:rint(x*scale));
-          memcpy(img.data()+3*(y*w1+x), row_buf + xs3, 3);
+          int xs = scale==1.0? x:rint(x*scale);
+          uint8_t r = row_buf[3*xs+0];
+          uint8_t g = row_buf[3*xs+1];
+          uint8_t b = row_buf[3*xs+2];
+          img.set24(x,y, (r<<16)+(g<<8)+b);
         }
       }
 
       else if (img.type() == IMAGE_16){
         for (int x=0; x<w1; ++x){
           int xs = scale==1.0? x:rint(x*scale);
-          // swap bytes
-          ((uint8_t*)img.data())[2*(w1*y+x)]   = ((uint8_t*)row_buf)[2*xs+1];
-          ((uint8_t*)img.data())[2*(w1*y+x)+1] = ((uint8_t*)row_buf)[2*xs];
-        }
-      }
-
-      else if (img.type() == IMAGE_8){
-        for (int x=0; x<w1; ++x){
-          int xs = scale==1.0? x:rint(x*scale);
-          img.data()[w1*y+x] = row_buf[xs];
+          img.set16(x,y, (row_buf[2*xs]<<8) + row_buf[2*xs+1]);
         }
       }
 
       else {
         for (int x=0; x<w1; ++x){
-          int xs4 = 4*(scale==1.0? x:rint(x*scale));
-          uint32_t c = color_argb(row_buf[xs4+3], row_buf[xs4],
-                                  row_buf[xs4+1], row_buf[xs4+2]);
-          img.set32(x,y, c);
+          int xs = scale==1.0? x:rint(x*scale);
+          uint8_t r = row_buf[4*xs+0];
+          uint8_t g = row_buf[4*xs+1];
+          uint8_t b = row_buf[4*xs+2];
+          uint8_t a = row_buf[4*xs+3];
+          img.set32(x,y, color_argb(a,r,g,b));
         }
       }
     }

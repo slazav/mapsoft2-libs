@@ -47,14 +47,26 @@ main(){
     assert_eq(color_argb(0xFF,1,2,3), 0xFF010203);
     assert_eq(color_argb(0x80,2,4,6), 0x80010203);
 
+    assert_eq(color_prescale(0x00010203), 0x00000000);
+    assert_eq(color_prescale(0xFF010203), 0xFF010203);
+    assert_eq(color_prescale(0x80020406), 0x80010203);
+
     assert_eq(color_rgb_to_grey8(0xFF101010), 0x10);
     assert_eq(color_rgb_to_grey16(0xFF101010), 0x1000);
     assert_eq(color_rgb_to_grey8(0xFF000010), 0x2);
     assert_eq(color_rgb_to_grey16(0xFF000010), 0x1d5);
 
+    assert_eq(color_rgb_64to32(0x1234234534564567l), 0x12233445);
+    assert_eq(color_rgb_32to64(0x12345678), 0x1200340056007800l);
+
     assert_eq(color_rgb_invert(0xFF000000), 0xFFFFFFFF);
     assert_eq(color_rgb_invert(0x80000000), 0x80808080);
     assert_eq(color_rgb_invert(0xFF010101), 0xFFFEFEFE);
+
+    assert_eq(color_rgb64_invert(0xFFFF000000000000l), 0xFFFFFFFFFFFFFFFFl);
+    assert_eq(color_rgb64_invert(0x8000000000000000l), 0x8000800080008000l);
+    assert_eq(color_rgb64_invert(0xFFFF000100010001l), 0xFFFFFFFEFFFEFFFEl);
+
 
   }
   catch (Err & e) {

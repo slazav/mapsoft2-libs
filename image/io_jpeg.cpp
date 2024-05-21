@@ -144,6 +144,7 @@ image_size_jpeg(std::istream & str){
 
 /**********************************************************/
 
+
 ImageR
 image_load_jpeg(std::istream & str, const double scale){
 
@@ -173,7 +174,7 @@ image_load_jpeg(std::istream & str, const double scale){
     else denom = 8;
     double sc = scale/denom;
 
-    cinfo.out_color_space = JCS_RGB; // always load in RGB mode
+    cinfo.out_color_space = JCS_EXT_BGR; // match our data
     cinfo.scale_denom = denom; // set denominator
     jpeg_start_decompress(&cinfo);
 
@@ -188,9 +189,9 @@ image_load_jpeg(std::istream & str, const double scale){
 
     // main loop
 
-    if (0 && w==w1 && h==h1){
+    if (w==w1 && h==h1){
       for (int y=0; y<h; ++y){
-        JSAMPLE *sbuf = img.data() + 3*y*w1;
+        JSAMPLE *sbuf = (JSAMPLE*)img.data() + 3*y*w1;
         jpeg_read_scanlines(&cinfo, &sbuf, 1);
       }
     }
@@ -204,7 +205,7 @@ image_load_jpeg(std::istream & str, const double scale){
           jpeg_read_scanlines(&cinfo, (JSAMPLE**)&buf, 1);
           line++;
         }
-        uint8_t *dst_buf = img.data() + 3*y*w1;
+        unsigned char *dst_buf = img.data() + 3*y*w1;
         for (int x=0; x<w1; ++x){
           int xs3 = 3*rint(x*sc);
           memcpy(dst_buf + 3*x, buf + xs3, 3);
