@@ -647,14 +647,14 @@ image_autolevel(ImageR & img, size_t brd,
 }
 
 
-// average distance from black or white at some line
+// Average value of a line.
 // helper for image_autocrop()
 double
 image_autocrop_avr(ImageR & img, size_t x, size_t y1, size_t y2, bool flip){
   double sum=0;
   for (size_t y=y1; y<y2; y++) {
     int v = flip? img.get_grey16(y,x): img.get_grey16(x,y);
-    sum += 1.0*std::min(v, 0xFFFF-v) / (y2-y1);
+    sum += 1.0*v / (y2-y1);
   }
   return sum/0xFFFF;
 }
@@ -673,19 +673,19 @@ image_autocrop(ImageR & img, size_t brd, double th){
   double y2ref = image_autocrop_avr(img, h-brd-1, brd,w-brd, 1);
 
   size_t x1=0,x2=0,y1=0,y2=0;
-  // find max x where average is less then 0.8*ref
+  // find max x where average is far from ref
   for (size_t x=0; x<brd; x++){
     double a1 = image_autocrop_avr(img, x,     brd,h-brd, 0);
     double a2 = image_autocrop_avr(img, w-x-1, brd,h-brd, 0);
-    if (a1 < x1ref*th) x1 = x;
-    if (a2 < x2ref*th) x2 = x;
+    if (a1 < x1ref*th || a1> 0xFFFF - (0xFFFF-x1ref)*th ) x1 = x;
+    if (a2 < x2ref*th || a2> 0xFFFF - (0xFFFF-x2ref)*th ) x2 = x;
   }
   // same for y
   for (size_t y=0; y<brd; y++){
     double a1 = image_autocrop_avr(img, y,     brd,w-brd, 1);
     double a2 = image_autocrop_avr(img, h-y-1, brd,w-brd, 1);
-    if (a1 < y1ref*th) y1 = y;
-    if (a2 < y2ref*th) y2 = y;
+    if (a1 < y1ref*th || a1> 0xFFFF - (0xFFFF-y1ref)*th ) y1 = y;
+    if (a2 < y2ref*th || a2> 0xFFFF - (0xFFFF-y2ref)*th ) y2 = y;
   }
 
   // std::cerr << x1 << " " << x2 << " " << y1 << " " << y2 << "\n";
