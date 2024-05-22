@@ -46,8 +46,8 @@ void image_autolevel(ImageR & img, size_t brd,
 
 // Crop black/white borders.
 // brd - max border width
-// t1, t2 - black/white threshold (fraction of the full color range 0..1)
-// max_pix how many useful pixels we can lost on each border
-dRect image_autocrop(ImageR & img, size_t brd, double threshold);
+// threshold - crop threshold, how far cropped lines should be
+// from the inner border lines (0..1)
+dRect image_autocrop(ImageR & img, size_t brd, double threshold=0.5);
 
 #endif

@@ -578,15 +578,15 @@ image_autolevel(ImageR & img, size_t brd,
     C[i]=A[i]*(B[i]-min[i]);
   }
 /*
-  std::cerr << "n = " << n << "\n";
+  std::cerr << "npts = " << n << "; \n";
   for (int i=0; i<3; i++){
-    std::cerr << " mm  = " << mm[i]*255
-              << " min = " << min[i]
-              << " avr = " << int(avr[i])
-              << " max = " << max[i] << "\n";
-    std::cerr << " A = " << A[i]
-              << " B = " << B[i]
-              << " C = " << C[i] << "\n";
+    std::cerr << "mm" << i << "  = " << mm[i] << "; "
+              << "min" << i << " = " << min[i] << "; "
+              << "avr" << i << " = " << int(avr[i]) << "; "
+              << "max" << i << " = " << max[i] << ";\n";
+    std::cerr << "A" << i << " = " << A[i] << "; "
+              << "B" << i << " = " << B[i] << "; "
+              << "C" << i << " = " << C[i] << ";\n";
   }
 */
 
@@ -600,9 +600,11 @@ image_autolevel(ImageR & img, size_t brd,
           uint64_t c2 = 0;
           for (int i = 0; i<3; i++){
             int c = (c1>>(16*(2-i)))&0xFFFF;
+            // we should crop c before conversion
+            // because (cnv(c) is not monotonous for low c)
+            if (c < min[i]) c=min[i];
+            if (c > max[i]) c=max[i];
             c = A[i]-C[i]/(B[i]-c);
-            if (c < 0) c=0;
-            if (c > maxval) c=maxval;
             c2 += (uint64_t)c<<(16*(2-i));
           }
           img.set48(x,y,c2);
@@ -610,9 +612,9 @@ image_autolevel(ImageR & img, size_t brd,
         }
         case IMAGE_16: {
           int c = img.get16(x,y);
+          if (c < min[0]) c=min[0];
+          if (c > max[0]) c=max[0];
           c=A[0]-C[0]/(B[0]-c);
-          if (c < 0) c=0;
-          if (c > maxval) c=maxval;
           img.set16(x,y,c);
           break;
         }
@@ -622,9 +624,9 @@ image_autolevel(ImageR & img, size_t brd,
           uint32_t c2 = 0;
           for (int i = 0; i<3; i++){
             int c = (c1>>(8*(2-i)))&0xFF;
+            if (c < min[i]) c=min[i];
+            if (c > max[i]) c=max[i];
             c=A[i]-C[i]/(B[i]-c);
-            if (c < 0) c=0;
-            if (c > maxval) c=maxval;
             c2 += (uint32_t)c<<(8*(2-i));
           }
           img.set48(x,y,c2);
@@ -632,9 +634,9 @@ image_autolevel(ImageR & img, size_t brd,
         }
         case IMAGE_8: {
           int c = img.get8(x,y);
+          if (c < min[0]) c=min[0];
+          if (c > max[0]) c=max[0];
           c=A[0]-C[0]/(B[0]-c);
-          if (c < 0) c=0;
-          if (c > maxval) c=maxval;
           img.set8(x,y,c);
           break;
         }
@@ -658,10 +660,11 @@ image_autocrop_avr(ImageR & img, size_t x, size_t y1, size_t y2, bool flip){
 }
 
 dRect
-image_autocrop(ImageR & img, size_t brd, double threshold){
+image_autocrop(ImageR & img, size_t brd, double th){
   size_t w = img.width();
   size_t h = img.height();
   if (brd>=w/2 || brd>=h/2) throw Err() << "image_autocrop: border is too big";
+  if (th<=0 || th>=1) throw Err() << "image_autocrop: threshold barameter should be >0 and <1";
 
   // reference values at the inner part of the border
   double x1ref = image_autocrop_avr(img,     brd, brd,h-brd, 0);
@@ -674,15 +677,15 @@ image_autocrop(ImageR & img, size_t brd, double threshold){
   for (size_t x=0; x<brd; x++){
     double a1 = image_autocrop_avr(img, x,     brd,h-brd, 0);
     double a2 = image_autocrop_avr(img, w-x-1, brd,h-brd, 0);
-    if (a1 < x1ref*0.8) x1 = x;
-    if (a2 < x2ref*0.8) x2 = x;
+    if (a1 < x1ref*th) x1 = x;
+    if (a2 < x2ref*th) x2 = x;
   }
   // same for y
   for (size_t y=0; y<brd; y++){
     double a1 = image_autocrop_avr(img, y,     brd,w-brd, 1);
     double a2 = image_autocrop_avr(img, h-y-1, brd,w-brd, 1);
-    if (a1 < y1ref*0.8) y1 = y;
-    if (a2 < y2ref*0.8) y2 = y;
+    if (a1 < y1ref*th) y1 = y;
+    if (a2 < y2ref*th) y2 = y;
   }
 
   // std::cerr << x1 << " " << x2 << " " << y1 << " " << y2 << "\n";
