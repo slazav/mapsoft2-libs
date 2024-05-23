@@ -6,6 +6,7 @@
 #include "io_png.h"
 #include "err/assert_err.h"
 #include "image_colors.h"
+#include "image_test.h"
 
 int
 main(){
@@ -24,24 +25,14 @@ main(){
       "image_load_png: not a PNG file: test_png/Readme.md");
 
     /*********************************************/
-    // Original image
-    ImageR img32(256,128, IMAGE_32ARGB);
-    for (size_t y=0; y<128; ++y){
-      for (size_t x=0; x<128; ++x){
-        img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
-        img32.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
-      }
-    }
-
     // * Create all types of images (32ARGB, 24RGB, 16, 8, 1, PAL).
     // * Save them with different image_save_png() options.
     // * Read saved file and check result.
 
     { // IMAGE_32ARGB
-      ImageR img = img32;
+      ImageR img = mk_test_32();
       image_save_png(img, "test_png/img_32_def.png");
       assert_eq(image_size_png("test_png/img_32_def.png"), iPoint(256,128));
-
       // because of color prescaling we do not have exact match with
       // original colors...
       ImageR I = image_load_png("test_png/img_32_def.png", 1);
@@ -149,12 +140,7 @@ main(){
 
     /*********************************************/
     { // IMAGE_24RGB
-      ImageR img(256,128, IMAGE_24RGB);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set24(x,y, color_rem_transp(img32.get_argb(x,y), false));
-        }
-      }
+      ImageR img = mk_test_24();
       image_save_png(img, "test_png/img_24_def.png");
       ImageR I = image_load_png("test_png/img_24_def.png", 1);
       assert_eq(I.type(), IMAGE_24RGB);
@@ -163,9 +149,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFFEFE00);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFFFD0000);
+      assert_eq(I.get_argb(255,127), 0xFFFE0000);
       assert_eq(I.get_argb(64,64), 0xFF808000);
-      assert_eq(I.get_argb(192,64), 0xFF7F0000);
+      assert_eq(I.get_argb(192,64), 0xFF800000);
 
       Opt o;
       o.put("png_format", "argb");
@@ -177,9 +163,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFFEFE00);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFFFD0000);
+      assert_eq(I.get_argb(255,127), 0xFFFE0000);
       assert_eq(I.get_argb(64,64), 0xFF808000);
-      assert_eq(I.get_argb(192,64), 0xFF7F0000);
+      assert_eq(I.get_argb(192,64), 0xFF800000);
 
       o.put("png_format", "grey");
       image_save_png(img, "test_png/img_24_grey.png", o);
@@ -214,24 +200,17 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xff090000);
+      assert_eq(I.get_argb(0,0), 0xff0E0000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
-      assert_eq(I.get_argb(128,0), 0xff090000);
-      assert_eq(I.get_argb(255,127), 0xfff30000);
+      assert_eq(I.get_argb(128,0), 0xff0E0000);
+      assert_eq(I.get_argb(255,127), 0xfff60000);
       assert_eq(I.get_argb(64,64), 0xFF8C7600);
-      assert_eq(I.get_argb(192,64), 0xFF890000);
+      assert_eq(I.get_argb(192,64), 0xFF8C0000);
     }
 
     /*********************************************/
     { // IMAGE_16
-      ImageR img(256,128, IMAGE_16);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get_argb(x,y), false);
-          img.set16(x,y, color_rgb_to_grey16(c));
-        }
-      }
-
+      ImageR img = mk_test_16();
       image_save_png(img, "test_png/img_16_def.png");
       ImageR I = image_load_png("test_png/img_16_def.png", 1);
       assert_eq(I.type(), IMAGE_16);
@@ -248,7 +227,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFE1E1E1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4B4B4B);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -262,7 +241,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -275,7 +254,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -288,7 +267,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -301,7 +280,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -312,25 +291,18 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xFF020202);
+      assert_eq(I.get_argb(0,0), 0xFF030303);
       assert_eq(I.get_argb(127,127), 0xFFDBDBDB);
-      assert_eq(I.get_argb(128,0), 0xFF020202);
-      assert_eq(I.get_argb(255,127), 0xFF4D4D4D);
+      assert_eq(I.get_argb(128,0), 0xFF030303);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF737373);
-      assert_eq(I.get_argb(192,64), 0xFF232323);
+      assert_eq(I.get_argb(192,64), 0xFF242424);
 
     }
 
     /*********************************************/
     { // IMAGE_8
-      ImageR img(256,128, IMAGE_8);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get_argb(x,y), false);
-          img.set8(x,y, color_rgb_to_grey8(c));
-        }
-      }
-
+      ImageR img = mk_test_8();
       image_save_png(img, "test_png/img_8_def.png");
       ImageR I = image_load_png("test_png/img_8_def.png", 1);
       assert_eq(I.type(), IMAGE_8);
@@ -403,15 +375,16 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xFF020202);
+      assert_eq(I.get_argb(0,0), 0xFF030303);
       assert_eq(I.get_argb(127,127), 0xFFDCDCDC);
-      assert_eq(I.get_argb(128,0), 0xFF020202);
-      assert_eq(I.get_argb(255,127), 0xFF4D4D4D);
+      assert_eq(I.get_argb(128,0), 0xFF030303);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF737373);
-      assert_eq(I.get_argb(192,64), 0xFF242424);
+      assert_eq(I.get_argb(192,64), 0xFF252525);
     }
 
     { // IMAGE_8PAL
+      ImageR img32 = mk_test_32();
       std::vector<uint32_t> colors = image_colormap(img32);
       ImageR img = image_remap(img32, colors);
       image_save_png(img, "test_png/img_8p_def.png");
@@ -497,12 +470,7 @@ main(){
     }
 
     { // IMAGE_1
-      ImageR img(256,128, IMAGE_1);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
-        }
-      }
+      ImageR img = mk_test_1();
       image_save_png(img, "test_png/img_1_def.png");
       ImageR I = image_load_png("test_png/img_1_def.png", 1);
       assert_eq(I.type(), IMAGE_8PAL);

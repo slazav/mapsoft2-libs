@@ -6,6 +6,7 @@
 #include "err/assert_err.h"
 #include "io_jpeg.h"
 #include "image_colors.h"
+#include "image_test.h"
 
 int
 main(){
@@ -24,30 +25,18 @@ main(){
       "image_load_jpeg: Not a JPEG file: starts with 0x45 0x6d: test_jpeg/Readme.md");
 
     /*********************************************/
-    // Original image
-    ImageR img32(256,128, IMAGE_32ARGB);
-    for (size_t y=0; y<128; ++y){
-      for (size_t x=0; x<128; ++x){
-        img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
-        img32.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
-      }
-    }
-
     // * Create all types of images (32ARGB, 24RGB, 16, 8, 1, PAL).
     // * Save them with different image_save_jpeg() options.
     // * Read saved file and check result.
 
     { // IMAGE_32ARGB
-      ImageR img = img32;
+      ImageR img = mk_test_32();
       image_save_jpeg(img, "test_jpeg/img_32_def.jpg");
       assert_eq(image_size_jpeg("test_jpeg/img_32_def.jpg"), iPoint(256,128));
-
       ImageR I = image_load_jpeg("test_jpeg/img_32_def.jpg", 1);
-      image_save_jpeg(I, "test_jpeg/img_32_def1.jpg");
       assert_eq(I.type(), IMAGE_24RGB);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-
       // check far from edges (smaller jpeg artifacts)
       assert(color_dist(I.get_argb(10,10),   0xff141400) < 5);
       assert(color_dist(I.get_argb(117,117), 0xffeaea00) < 5);
@@ -75,12 +64,7 @@ main(){
 
     /*********************************************/
     { // IMAGE_24RGB
-      ImageR img(256,128, IMAGE_24RGB);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set24(x,y, color_rem_transp(img32.get32(x,y), false));
-        }
-      }
+      ImageR img = mk_test_24();
       image_save_jpeg(img, "test_jpeg/img_24_def.jpg");
       ImageR I = image_load_jpeg("test_jpeg/img_24_def.jpg", 1);
       assert_eq(I.type(), IMAGE_24RGB);
@@ -88,7 +72,7 @@ main(){
       assert_eq(I.height(), 128);
       assert(color_dist(I.get_argb(10,10),   0xff141400) < 5);
       assert(color_dist(I.get_argb(117,117), 0xffeaea00) < 5);
-      assert(color_dist(I.get_argb(138,10),  0xFF090000) < 5);
+      assert(color_dist(I.get_argb(138,10),  0xFF140000) < 5);
       assert(color_dist(I.get_argb(245,117), 0xffE90000) < 5);
       assert(color_dist(I.get_argb(64,64),   0xFF808000) < 5);
       assert(color_dist(I.get_argb(192,64),  0xFF800000) < 5);
@@ -96,14 +80,7 @@ main(){
 
     /*********************************************/
     { // IMAGE_16
-      ImageR img(256,128, IMAGE_16);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get32(x,y), false);
-          img.set16(x,y, color_rgb_to_grey16(c));
-        }
-      }
-
+      ImageR img = mk_test_16();
       image_save_jpeg(img, "test_jpeg/img_16_def.jpg");
       ImageR I = image_load_jpeg("test_jpeg/img_16_def.jpg", 1);
       assert_eq(I.type(), IMAGE_24RGB);
@@ -111,23 +88,15 @@ main(){
       assert_eq(I.height(), 128);
       assert(color_dist(I.get_argb(10,10),   0xff111111) < 2);
       assert(color_dist(I.get_argb(117,117), 0xffcfcfcf) < 2);
-      assert(color_dist(I.get_argb(138,10),  0xFF030303) < 2);
+      assert(color_dist(I.get_argb(138,10),  0xFF060606) < 2);
       assert(color_dist(I.get_argb(245,117), 0xff454545) < 2);
       assert(color_dist(I.get_argb(64,64),   0xFF717171) < 2);
       assert(color_dist(I.get_argb(192,64),  0xFF262626) < 2);
     }
 
     /*********************************************/
-
     { // IMAGE_8
-      ImageR img(256,128, IMAGE_8);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get32(x,y), false);
-          img.set8(x,y, color_rgb_to_grey8(c));
-        }
-      }
-
+      ImageR img = mk_test_8();
       image_save_jpeg(img, "test_jpeg/img_8_def.jpg");
       ImageR I = image_load_jpeg("test_jpeg/img_8_def.jpg", 1);
       assert_eq(I.type(), IMAGE_24RGB);
@@ -135,14 +104,14 @@ main(){
       assert_eq(I.height(), 128);
       assert(color_dist(I.get_argb(10,10),   0xff111111) < 5);
       assert(color_dist(I.get_argb(117,117), 0xffcfcfcf) < 5);
-      assert(color_dist(I.get_argb(138,10),  0xFF030303) < 5);
+      assert(color_dist(I.get_argb(138,10),  0xFF060606) < 5);
       assert(color_dist(I.get_argb(245,117), 0xff454545) < 5);
       assert(color_dist(I.get_argb(64,64),   0xFF717171) < 5);
       assert(color_dist(I.get_argb(192,64),  0xFF262626) < 5);
     }
 
-
     { // IMAGE_8PAL
+      ImageR img32 = mk_test_32();
       std::vector<uint32_t> colors = image_colormap(img32);
       ImageR img = image_remap(img32, colors);
       image_save_jpeg(img, "test_jpeg/img_8p_def.jpg");
@@ -159,12 +128,7 @@ main(){
     }
 
     { // IMAGE_1
-      ImageR img(256,128, IMAGE_1);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
-        }
-      }
+      ImageR img = mk_test_1();
       image_save_jpeg(img, "test_jpeg/img_1_def.jpg");
       ImageR I = image_load_jpeg("test_jpeg/img_1_def.jpg", 1);
       assert_eq(I.type(), IMAGE_24RGB);

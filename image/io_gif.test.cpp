@@ -5,6 +5,7 @@
 #include "err/assert_err.h"
 #include "io_gif.h"
 #include "image_colors.h"
+#include "image_test.h"
 
 int
 main(){
@@ -23,21 +24,12 @@ main(){
       "image_load_gif: can't open file: test_gif/Readme.md");
 
     /*********************************************/
-    // Original image
-    ImageR img32(256,128, IMAGE_32ARGB);
-    for (size_t y=0; y<128; ++y){
-      for (size_t x=0; x<128; ++x){
-        img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
-        img32.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
-      }
-    }
-
     // * Create all types of images (32ARGB, 24RGB, 16, 8, 1, PAL).
     // * Save them with different image_save_gif() options.
     // * Read saved file and check result.
 
     { // IMAGE_32ARGB
-      ImageR img = img32;
+      ImageR img = mk_test_32();
       image_save_gif(img, "test_gif/img_32_def.gif");
       assert_eq(image_size_gif("test_gif/img_32_def.gif"), iPoint(256,128));
 
@@ -98,35 +90,23 @@ main(){
 
     /*********************************************/
     { // IMAGE_24RGB
-      ImageR img(256,128, IMAGE_24RGB);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set24(x,y, color_rem_transp(img32.get32(x,y), false));
-        }
-      }
+      ImageR img = mk_test_24();
       image_save_gif(img, "test_gif/img_24_def.gif");
       ImageR I = image_load_gif("test_gif/img_24_def.gif", 1);
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xff090000);
+      assert_eq(I.get_argb(0,0), 0xff060000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
-      assert_eq(I.get_argb(128,0), 0xFF090000);
-      assert_eq(I.get_argb(255,127), 0xfff30000);
+      assert_eq(I.get_argb(128,0), 0xFF060000);
+      assert_eq(I.get_argb(255,127), 0xfff60000);
       assert_eq(I.get_argb(64,64), 0xFF848600);
-      assert_eq(I.get_argb(192,64), 0xFF810000);
+      assert_eq(I.get_argb(192,64), 0xFF840000);
     }
 
     /*********************************************/
     { // IMAGE_16
-      ImageR img(256,128, IMAGE_16);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get32(x,y), false);
-          img.set16(x,y, color_rgb_to_grey16(c));
-        }
-      }
-
+      ImageR img = mk_test_16();
       image_save_gif(img, "test_gif/img_16_def.gif");
       ImageR I = image_load_gif("test_gif/img_16_def.gif", 1);
       assert_eq(I.type(), IMAGE_8PAL);
@@ -136,7 +116,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4c4c4c);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -145,14 +125,7 @@ main(){
     /*********************************************/
 
     { // IMAGE_8
-      ImageR img(256,128, IMAGE_8);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get32(x,y), false);
-          img.set8(x,y, color_rgb_to_grey8(c));
-        }
-      }
-
+      ImageR img = mk_test_8();
       image_save_gif(img, "test_gif/img_8_def.gif");
       ImageR I = image_load_gif("test_gif/img_8_def.gif", 1);
       assert_eq(I.type(), IMAGE_8PAL);
@@ -168,6 +141,7 @@ main(){
 
 
     { // IMAGE_8PAL
+      ImageR img32 = mk_test_32();
       std::vector<uint32_t> colors = image_colormap(img32);
       ImageR img = image_remap(img32, colors);
       image_save_gif(img, "test_gif/img_8p_def.gif");
@@ -185,12 +159,7 @@ main(){
 
 
     { // IMAGE_1
-      ImageR img(256,128, IMAGE_1);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
-        }
-      }
+      ImageR img = mk_test_1();
       image_save_gif(img, "test_gif/img_1_def.gif");
       ImageR I = image_load_gif("test_gif/img_1_def.gif", 1);
       assert_eq(I.type(), IMAGE_8PAL);

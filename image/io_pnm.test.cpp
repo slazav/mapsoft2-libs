@@ -6,6 +6,7 @@
 #include "io_pnm.h"
 #include "err/assert_err.h"
 #include "image_colors.h"
+#include "image_test.h"
 
 int
 main(){
@@ -33,49 +34,27 @@ main(){
     // This is because PNM is considered as a lossless intermediate format,
     // final converted images will be saved somewhere else.
 
-    // RGBA image
-    ImageR img32(256,128, IMAGE_32ARGB);
-    for (size_t y=0; y<128; ++y){
-      for (size_t x=0; x<128; ++x){
-        img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
-        img32.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
-      }
-    }
-
-    ImageR img64(256,128, IMAGE_64ARGB);
-    for (size_t y=0; y<128; ++y){
-      for (size_t x=0; x<128; ++x){
-        img64.set64(x,y,     color_argb64(0xFFFF, 400*x, 400*y, 0));
-        img64.set64(128+x,y, color_argb64(400*x,  400*y, 0,   0));
-      }
-    }
-
     /*********************************************/
-    { // IMAGE_48RGB, IMAGE_64RGBA
-
-      ImageR img(256,128, IMAGE_48RGB);
-      for (size_t y=0; y<img.height(); ++y)
-        for (size_t x=0; x<img.width(); ++x)
-          img.set48(x,y, img64.get64(x,y));
-
-
-      image_save_pnm(img64, "test_pnm/img_64.pnm");
+    { // IMAGE_64RGBA -> 48RGB
+      ImageR img = mk_test_64();
+      image_save_pnm(img, "test_pnm/img_64.pnm");
       assert_eq(image_size_pnm("test_pnm/img_64.pnm"), iPoint(256,128));
       ImageR img1 = image_load_pnm("test_pnm/img_64.pnm", 1);
-image_save_pnm(img1, "test_pnm/img_64_.pnm");
       assert_eq(img1.type(), IMAGE_48RGB);
       assert_eq(img1.width(), 256);
       assert_eq(img1.height(), 128);
 
-      for (size_t x=0; x<img.width(); x+=8){
-        for (size_t y=0; y<img.height(); y+=8){
-          assert_eq(img1.get_rgb(x,y), img.get_rgb(x,y));
-        }
-      }
+      for (size_t x=0; x<img.width(); x+=8)
+        for (size_t y=0; y<img.height(); y+=8)
+          assert_eq(img1.get48(x,y), color_rem_transp64(img.get64(x,y), false));
+    }
 
+    /*********************************************/
+    { // IMAGE_48RGB
+      ImageR img = mk_test_48();
       image_save_pnm(img, "test_pnm/img_48.pnm");
       assert_eq(image_size_pnm("test_pnm/img_48.pnm"), iPoint(256,128));
-      img1 = image_load_pnm("test_pnm/img_48.pnm", 1);
+      ImageR img1 = image_load_pnm("test_pnm/img_48.pnm", 1);
       assert_eq(img1.type(), IMAGE_48RGB);
       assert_eq(img1.width(), 256);
       assert_eq(img1.height(), 128);
@@ -84,48 +63,37 @@ image_save_pnm(img1, "test_pnm/img_64_.pnm");
           assert_eq(img1.get_rgb(x,y), img.get_rgb(x,y));
 
     }
-
-
     /*********************************************/
-    { // IMAGE_24RGB, IMAGE_32RGBA
-      ImageR img(256,128, IMAGE_24RGB);
-      for (size_t y=0; y<img.height(); ++y)
-        for (size_t x=0; x<img.width(); ++x)
-          img.set24(x,y, img32.get_rgb(x,y));
-
-
-      image_save_pnm(img32, "test_pnm/img_32.pnm");
+    { // IMAGE_36ARGB -> 24RGB
+      ImageR img = mk_test_32();
+      image_save_pnm(img, "test_pnm/img_32.pnm");
       assert_eq(image_size_pnm("test_pnm/img_32.pnm"), iPoint(256,128));
       ImageR img1 = image_load_pnm("test_pnm/img_32.pnm", 1);
       assert_eq(img1.type(), IMAGE_24RGB);
       assert_eq(img1.width(), 256);
       assert_eq(img1.height(), 128);
-
-      for (size_t x=0; x<img.width(); x+=8){
-        for (size_t y=0; y<img.height(); y+=8){
+      for (size_t x=0; x<img.width(); x+=8)
+        for (size_t y=0; y<img.height(); y+=8)
           assert_eq(img1.get_rgb(x,y), img.get_rgb(x,y));
-        }
-      }
+    }
 
+    /*********************************************/
+    { // IMAGE_24RGB
+      ImageR img = mk_test_24();
       image_save_pnm(img, "test_pnm/img_24.pnm");
       assert_eq(image_size_pnm("test_pnm/img_24.pnm"), iPoint(256,128));
-      img1 = image_load_pnm("test_pnm/img_24.pnm", 1);
+      ImageR img1 = image_load_pnm("test_pnm/img_24.pnm", 1);
       assert_eq(img1.type(), IMAGE_24RGB);
       assert_eq(img1.width(), 256);
       assert_eq(img1.height(), 128);
       for (size_t x=0; x<img.width(); x+=8)
         for (size_t y=0; y<img.height(); y+=8)
           assert_eq(img1.get_rgb(x,y), img.get_rgb(x,y));
-
     }
 
     /*********************************************/
     { // IMAGE_16
-      ImageR img(256,128, IMAGE_16);
-      for (size_t y=0; y<img.height(); ++y)
-        for (size_t x=0; x<img.width(); ++x)
-          img.set16(x,y, color_rgb_to_grey16(img32.get_rgb(x,y)));
-
+      ImageR img = mk_test_16();
       image_save_pnm(img, "test_pnm/img_16.pnm");
       ImageR img1 = image_load_pnm("test_pnm/img_16.pnm", 1);
       assert_eq(img1.type(), IMAGE_16);
@@ -138,11 +106,7 @@ image_save_pnm(img1, "test_pnm/img_64_.pnm");
 
     /*********************************************/
     { // IMAGE_8
-      ImageR img(256,128, IMAGE_8);
-      for (size_t y=0; y<img.height(); ++y)
-        for (size_t x=0; x<img.width(); ++x)
-          img.set8(x,y, color_rgb_to_grey8(img32.get_rgb(x,y)));
-
+      ImageR img = mk_test_8();
       image_save_pnm(img, "test_pnm/img_08.pnm");
       ImageR img1 = image_load_pnm("test_pnm/img_08.pnm", 1);
       assert_eq(img1.type(), IMAGE_8);
@@ -155,13 +119,7 @@ image_save_pnm(img1, "test_pnm/img_64_.pnm");
 
     /*********************************************/
     { // IMAGE_1
-     ImageR img(256,128, IMAGE_1);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
-        }
-      }
-
+      ImageR img = mk_test_1();
       image_save_pnm(img, "test_pnm/img_01.pnm");
       ImageR img1 = image_load_pnm("test_pnm/img_01.pnm", 1);
       assert_eq(img1.type(), IMAGE_1);
@@ -194,16 +152,17 @@ image_save_pnm(img1, "test_pnm/img_64_.pnm");
     }
 
     { //load from std::istream
+      ImageR img1 = image_load_pnm("test_pnm/img_24.pnm", 1);
       std::ifstream str("test_pnm/img_24.pnm");
       assert_err(image_load_pnm(str, 0),
         "image_load_pnm: wrong scale: 0");
-      ImageR img1 = image_load_pnm(str, 1);
-      assert_eq(img1.type(), IMAGE_24RGB);
-      assert_eq(img1.width(), 256);
-      assert_eq(img1.height(), 128);
+      ImageR img2 = image_load_pnm(str, 1);
+      assert_eq(img2.type(), img1.type());
+      assert_eq(img2.width(), img1.width());
+      assert_eq(img2.height(), img1.height());
       for (size_t x=0; x<img1.width(); x+=8)
         for (size_t y=0; y<img1.height(); y+=8)
-          assert_eq(img1.get_argb(x,y), img32.get_rgb(x,y));
+          assert_eq(img1.get_argb(x,y), img2.get_rgb(x,y));
 
     }
 
