@@ -332,7 +332,7 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
       }
       case IMAGE_64ARGB: {
         for (size_t x=0; x<w; x++){
-          auto c = img.get64(x,y);
+          auto c = color_rem_transp64(img.get64(x,y),false); // unscale
           for (int i=0; i<6; i++)
             str.write((char*)&c + 5-i, 1);
         }
