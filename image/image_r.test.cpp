@@ -128,7 +128,7 @@ main(){
       assert_eq(im.type(), IMAGE_1);
       assert_eq(im.get1(0,0), 1);
       assert_eq(im.get1(99,99), 1);
-      assert_eq(im.dsize(), 1250);
+      assert_eq(im.dsize(), 13*100); // 13 bytes per line
       im.fill1(0);
       assert_eq(im.get1(0,0), 0);
       assert_eq(im.get1(99,99), 0);
@@ -153,7 +153,7 @@ main(){
       assert_eq(im.type(), IMAGE_1);
       assert_eq(im.get1(0,0), 1);
       assert_eq(im.get1(98,100), 1);
-      assert_eq(im.dsize(), 1250);
+      assert_eq(im.dsize(), 1313);
       im.fill1(0);
       assert_eq(im.get1(0,0), 0);
       assert_eq(im.get1(98,100), 0);

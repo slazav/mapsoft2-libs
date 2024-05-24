@@ -84,6 +84,7 @@ main(){
     assert_eq(color_rgb_invert(0xFF010101), 0xFFFEFEFE);
 
     assert_eq(color_rgb64_invert(0xFFFF000000000000l), 0xFFFFFFFFFFFFFFFFl);
+    assert_eq(color_rgb64_invert(0xFFFFFFFFFFFFFFFFl), 0xFFFF000000000000l);
     assert_eq(color_rgb64_invert(0x8000000000000000l), 0x8000800080008000l);
     assert_eq(color_rgb64_invert(0xFFFF000100010001l), 0xFFFFFFFEFFFEFFFEl);
 

@@ -123,8 +123,8 @@ main(){
       image_save_pnm(img, "test_pnm/img_01.pnm");
       ImageR img1 = image_load_pnm("test_pnm/img_01.pnm", 1);
       assert_eq(img1.type(), IMAGE_1);
-      assert_eq(img1.width(), 256);
-      assert_eq(img1.height(), 128);
+      assert_eq(img1.width(), 250);
+      assert_eq(img1.height(), 125);
       for (size_t x=0; x<img.width(); x+=8)
         for (size_t y=0; y<img.height(); y+=8)
           assert_eq(img1.get_argb(x,y), img.get_argb(x,y));

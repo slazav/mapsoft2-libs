@@ -62,7 +62,7 @@ class ImageR : public Image {
         case IMAGE_16:     return w*h*2;
         case IMAGE_8:      return w*h;
         case IMAGE_8PAL:   return w*h;
-        case IMAGE_1:      return (w*h-1)/8+1;
+        case IMAGE_1:      return h*((w+7)/8);
         case IMAGE_FLOAT:  return (w*h)*sizeof(float);
         case IMAGE_DOUBLE: return (w*h)*sizeof(double);
         case IMAGE_64ARGB: return w*h*8;
@@ -226,11 +226,11 @@ class ImageR : public Image {
       for (size_t i=0; i<w*h; i++) data_.get()[i] = v;
     }
 
-
     // Fast get function for image type IMAGE_1.
+    // Same format as in raw PBM file: packed bits restarted on each line.
     bool get1(const size_t x, const size_t y) const{
-      size_t b = (w*y+x)/8; // byte
-      size_t o = 7-(w*y+x)%8; // offset
+      size_t b = y*((w+7)/8) + x/8; // byte
+      size_t o = 7-x%8; // offset
       uint8_t v = data_.get()[b];
       return (v >> o) & 1;
     }
@@ -241,8 +241,8 @@ class ImageR : public Image {
     }
     // Fast set function for image type IMAGE_1.
     void set1(const size_t x, const size_t y, const bool v){
-      size_t b = (w*y+x)/8; // byte
-      size_t o = 7-(w*y+x)%8; // offset
+      size_t b = y*((w+7)/8) + x/8; // byte
+      size_t o = 7-x%8; // offset
       uint8_t old = data_.get()[b];
       data_.get()[b] = v? old|(1<<o) : old&~(1<<o);
     }

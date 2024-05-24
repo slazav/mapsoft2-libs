@@ -79,7 +79,7 @@ ImageR mk_test_8(){
 }
 
 ImageR mk_test_1(){
-  ImageR img(256,128, IMAGE_1);
+  ImageR img(250,125, IMAGE_1);
   for (size_t y=0; y<img.height(); ++y){
     for (size_t x=0; x<img.width(); ++x){
       img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);

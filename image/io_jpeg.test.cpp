@@ -132,15 +132,15 @@ main(){
       image_save_jpeg(img, "test_jpeg/img_1_def.jpg");
       ImageR I = image_load_jpeg("test_jpeg/img_1_def.jpg", 1);
       assert_eq(I.type(), IMAGE_24RGB);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(img.get1(0,0), 1);
       assert_eq(img.get1(15,45), 1);
       assert_eq(img.get1(43,123), 0);
       assert_eq(img.get1(203,27), 1);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(15,45), 0xFF000000);
-      assert_eq(I.get_argb(43,123), 0xFFFFFFFF);
+      assert_eq(I.get_argb(43,123), 0xFFFDFDFD);
       assert_eq(I.get_argb(203,27), 0xFF000000);
     }
 

@@ -7,6 +7,7 @@
 #include <iomanip>
 #include "image_colors.h"
 #include "io_png.h"
+#include "io_pnm.h"
 #include "image_test.h"
 #include "err/assert_err.h"
 
@@ -132,10 +133,10 @@ main(){
 
     {
       ImageR img = mk_test_1();
-      image_save_png(image_crop(img, iRect(-10,-20, 128,128)), "test_crop/crop01_tl.png");
-      image_save_png(image_crop(img, iRect(138,20, 128,128)), "test_crop/crop01_br.png");
-      ImageR img1 = image_load_png("test_crop/crop01_tl.png");
-      ImageR img2 = image_load_png("test_crop/crop01_br.png");
+      image_save_pnm(image_crop(img, iRect(-10,-20, 128,128)), "test_crop/crop01_tl.pnm");
+      image_save_pnm(image_crop(img, iRect(138,20, 128,128)), "test_crop/crop01_br.pnm");
+      ImageR img1 = image_load_pnm("test_crop/crop01_tl.pnm");
+      ImageR img2 = image_load_pnm("test_crop/crop01_br.pnm");
       assert_eq(img1.width(), 118);
       assert_eq(img1.height(), 108);
       assert_eq(img2.width(), 118);
@@ -143,7 +144,9 @@ main(){
       assert_eq(img1.type(), IMAGE_1);
       assert_eq(img2.type(), IMAGE_1);
       assert_eq(img1.get1(0,0),img.get1(0,0));
+      assert_eq(img1.get1(10,5),img.get1(10,5));
       assert_eq(img2.get1(0,0),img.get1(138,20));
+      assert_eq(img2.get1(20,10),img.get1(158,40));
     }
 
 

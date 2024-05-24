@@ -163,8 +163,8 @@ main(){
       image_save_gif(img, "test_gif/img_1_def.gif");
       ImageR I = image_load_gif("test_gif/img_1_def.gif", 1);
       assert_eq(I.type(), IMAGE_8PAL);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(img.get1(0,0), 1);
       assert_eq(img.get1(15,45), 1);
       assert_eq(img.get1(43,123), 0);
