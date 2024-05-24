@@ -653,14 +653,28 @@ double
 image_autocrop_avr(ImageR & img, size_t x, size_t y1, size_t y2, bool flip){
   double sum=0;
   for (size_t y=y1; y<y2; y++) {
-    int v = flip? img.get_grey16(y,x): img.get_grey16(x,y);
-    sum += 1.0*v / (y2-y1);
+    sum+= 1.0*(flip? img.get_grey16(y,x): img.get_grey16(x,y))/0xFFFF;
   }
-  return sum/0xFFFF;
+  return sum/(y2-y1);
+}
+
+// Ratio of too light and too dark points.
+// helper for image_autocrop()
+double
+image_autocrop_rat(ImageR & img, size_t x, size_t y1, size_t y2, bool flip, double th){
+  size_t sum=0;
+  for (size_t y=y1; y<y2; y++) {
+    double v = 1.0*( flip? img.get_grey16(y,x): img.get_grey16(x,y) ) / 0xFFFF;
+    if (v < th || v > 1.0-th) sum+=1;
+  }
+  return (double)sum/(y2-y1);
 }
 
 dRect
 image_autocrop(ImageR & img, size_t brd, double th){
+  double th2 = 0.01;  // definition of a dark/light point
+  double th3 = 0.01;  // amount of dark/light points
+  int    dd = 2; // add extra points to non-zero borders
   size_t w = img.width();
   size_t h = img.height();
   if (brd>=w/2 || brd>=h/2) throw Err() << "image_autocrop: border is too big";
@@ -677,18 +691,24 @@ image_autocrop(ImageR & img, size_t brd, double th){
   for (size_t x=0; x<brd; x++){
     double a1 = image_autocrop_avr(img, x,     brd,h-brd, 0);
     double a2 = image_autocrop_avr(img, w-x-1, brd,h-brd, 0);
-    if (a1 < x1ref*th || a1> 0xFFFF - (0xFFFF-x1ref)*th ) x1 = x;
-    if (a2 < x2ref*th || a2> 0xFFFF - (0xFFFF-x2ref)*th ) x2 = x;
+    double r1 = image_autocrop_rat(img, x,     brd,h-brd, 0, th2);
+    double r2 = image_autocrop_rat(img, w-x-1, brd,h-brd, 0, th2);
+    if ((a1 < x1ref*th || a1> 1 - (1-x1ref)*th) && r1>th3) x1 = x;
+    if ((a2 < x2ref*th || a2> 1 - (1-x2ref)*th) && r2>th3) x2 = x;
   }
   // same for y
   for (size_t y=0; y<brd; y++){
     double a1 = image_autocrop_avr(img, y,     brd,w-brd, 1);
     double a2 = image_autocrop_avr(img, h-y-1, brd,w-brd, 1);
-    if (a1 < y1ref*th || a1> 0xFFFF - (0xFFFF-y1ref)*th ) y1 = y;
-    if (a2 < y2ref*th || a2> 0xFFFF - (0xFFFF-y2ref)*th ) y2 = y;
+    double r1 = image_autocrop_rat(img, y,     brd,w-brd, 1, th2);
+    double r2 = image_autocrop_rat(img, h-y-1, brd,w-brd, 1, th2);
+    if ((a1 < y1ref*th || a1> 1 - (1-y1ref)*th) && r1>th3) y1 = y;
+    if ((a2 < y2ref*th || a2> 1 - (1-y2ref)*th) && r2>th3) y2 = y;
   }
-
-  // std::cerr << x1 << " " << x2 << " " << y1 << " " << y2 << "\n";
+  if (x1>0) x1+=dd;
+  if (x2>0) x2+=dd;
+  if (y1>0) y1+=dd;
+  if (y2>0) y2+=dd;
   return dRect(x1,y1, w-x1-x2, h-y1-y2);
 }
 
