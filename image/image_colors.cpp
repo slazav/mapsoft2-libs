@@ -771,6 +771,7 @@ ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint
   // Modified IR channel: same size as img, shifted, with removed
   // correlation, always 16bit:
   ImageR ir1(w, h, IMAGE_16);
+  ir1.fill16(0xFFFF); // white
   {
     /* Weights of other channels in IR channel:
        The correction is I1 = I + a R + b G + c B;
@@ -803,7 +804,7 @@ ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint
         if (!img.check_crd(x1,y1)) continue;
         mI += (double)ir.get_grey16(x,y)/0xFFFF;
         if (rgb){
-          auto v = img.get_rgb(x1,y1); 
+          auto v = img.get_rgb(x1,y1);
           mR += (double)((v >> 16) & 0xFF)/0xFF;
           mG += (double)((v >> 8)  & 0xFF)/0xFF;
           mB += (double)(v & 0xFF)/0xFF;
@@ -828,7 +829,7 @@ ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint
 
         double dI = (double)ir.get_grey16(x,y)/0xFFFF - mI;
         if (rgb){
-          auto v = img.get_rgb(x1,y1); 
+          auto v = img.get_rgb(x1,y1);
           double dR = (double)((v >> 16) & 0xFF)/0xFF - mR;
           double dG = (double)((v >> 8)  & 0xFF)/0xFF - mG;
           double dB = (double)(v & 0xFF)/0xFF - mB;
@@ -879,7 +880,7 @@ ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint
           double dR = img.get_grey16(x1,y1)/0xFFFF - mR;
           I -= A*dR;
         }
-        ir1.set16(x,y, 0xFFFF*I);
+        ir1.set16(x1,y1, 0xFFFF*I);
       }
     }
   }
