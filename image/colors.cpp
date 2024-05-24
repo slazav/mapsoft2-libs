@@ -57,7 +57,7 @@ uint32_t color_argb(const uint8_t a, const uint8_t r,
 uint64_t color_argb64(const uint16_t a, const uint16_t r,
                      const uint16_t g, const uint16_t b){
   if (a==0) return 0;
-  if (a==0xFFFF) return (0xFFFFl<<48) + ((uint64_t)r<<32) + ((uint64_t)g<<16) + b;
+  if (a==0xFFFF) return (0xFFFFull<<48) + ((uint64_t)r<<32) + ((uint64_t)g<<16) + b;
   return ((uint64_t)a<<48) + ((uint64_t)r*a/0xFFFF<<32) +
          ((uint64_t)g*a/0xFFFF<<16) + ((uint64_t)b*a/0xFFFF);
 }
@@ -107,7 +107,7 @@ uint64_t color_rem_transp64(const uint64_t c, const bool gifmode){
   if (r>a || g>a || b>a)
     throw Err() << "color_rem_transp: non-prescaled color: 0x"
                 << std::hex << std::setfill('0') << std::setw(16) << c;
-  if (a==0) return gifmode? 0 : (0xFFFFl<<48);
+  if (a==0) return gifmode? 0 : (0xFFFFull<<48);
 
   r = (r*0xFFFF)/a;
   g = (g*0xFFFF)/a;
@@ -115,7 +115,7 @@ uint64_t color_rem_transp64(const uint64_t c, const bool gifmode){
   if (r>0xFFFF) r=0xFFFF;
   if (g>0xFFFF) g=0xFFFF;
   if (b>0xFFFF) b=0xFFFF;
-  return (0xFFFFl<<48) + (r<<32) + (g<<16) + b;
+  return (0xFFFFull<<48) + (r<<32) + (g<<16) + b;
 }
 
 // Convert RGB color to 8-bit greyscale

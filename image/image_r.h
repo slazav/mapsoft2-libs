@@ -120,7 +120,7 @@ class ImageR : public Image {
 
 
     static uint64_t get48(unsigned char *p){
-      uint64_t v = 0xFFFFl << 48;
+      uint64_t v = 0xFFFFull << 48;
       std::memcpy(&v, p, 6);
       return v;
     }

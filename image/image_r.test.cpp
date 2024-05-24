@@ -11,12 +11,12 @@ main(){
   try{
     {
        unsigned char buf[8];
-       ImageR::set64(buf, 0x1234567812345678l);
-       assert_eq(ImageR::get64(buf), 0x1234567812345678l);
+       ImageR::set64(buf, 0x1234567812345678ull);
+       assert_eq(ImageR::get64(buf), 0x1234567812345678ull);
 
-       ImageR::set48(buf, 0x1234567890123456l);
-       assert_eq(ImageR::get48(buf), 0xFFFF567890123456l);
-       assert_eq(ImageR::get64(buf), 0x1234567890123456l);
+       ImageR::set48(buf, 0x1234567890123456ull);
+       assert_eq(ImageR::get48(buf), 0xFFFF567890123456ull);
+       assert_eq(ImageR::get64(buf), 0x1234567890123456ull);
 
        ImageR::set32(buf, 0x12345678);
        assert_eq(ImageR::get32(buf), 0x12345678);
