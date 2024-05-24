@@ -11,6 +11,7 @@ ImageR mk_test_32();
 ImageR mk_test_24();
 ImageR mk_test_16();
 ImageR mk_test_8();
+ImageR mk_test_8p();
 ImageR mk_test_1();
 
 #endif

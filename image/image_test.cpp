@@ -1,4 +1,5 @@
 #include "image_test.h"
+#include "image_colors.h"
 
 ImageR mk_test_64(){
   ImageR img(256,128, IMAGE_64ARGB);
@@ -76,6 +77,11 @@ ImageR mk_test_8(){
     }
   }
   return img;
+}
+ImageR mk_test_8p(){
+  ImageR img = mk_test_32();
+  std::vector<uint32_t> colors = image_colormap(img);
+  return image_remap(img, colors);
 }
 
 ImageR mk_test_1(){

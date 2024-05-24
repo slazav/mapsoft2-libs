@@ -111,9 +111,7 @@ main(){
     }
 
     { // IMAGE_8PAL
-      ImageR img32 = mk_test_32();
-      std::vector<uint32_t> colors = image_colormap(img32);
-      ImageR img = image_remap(img32, colors);
+      ImageR img = mk_test_8p();
       image_save_jpeg(img, "test_jpeg/img_8p_def.jpg");
       ImageR I = image_load_jpeg("test_jpeg/img_8p_def.jpg", 1);
       assert_eq(I.type(), IMAGE_24RGB);

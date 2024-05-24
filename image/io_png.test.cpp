@@ -384,9 +384,7 @@ main(){
     }
 
     { // IMAGE_8PAL
-      ImageR img32 = mk_test_32();
-      std::vector<uint32_t> colors = image_colormap(img32);
-      ImageR img = image_remap(img32, colors);
+      ImageR img = mk_test_8p();
       image_save_png(img, "test_png/img_8p_def.png");
       ImageR I = image_load_png("test_png/img_8p_def.png", 1);
       assert_eq(I.type(), IMAGE_8PAL);

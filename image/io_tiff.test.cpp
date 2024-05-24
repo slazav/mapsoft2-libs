@@ -6,6 +6,7 @@
 #include "err/assert_err.h"
 #include "io_tiff.h"
 #include "image_colors.h"
+#include "image_test.h"
 
 int
 main(){
@@ -23,26 +24,12 @@ main(){
     assert_err(image_load_tiff("test_tiff/Readme.md"),
       "TIFF error: Not a TIFF or MDI file, bad magic number 27973 (0x6d45): test_tiff/Readme.md");
 
-    /*********************************************/
-    // Original image
-    ImageR img32(256,128, IMAGE_32ARGB);
-    for (size_t y=0; y<128; ++y){
-      for (size_t x=0; x<128; ++x){
-        img32.set32(x,y,     color_argb(0xFF, 2*x, 2*y, 0));
-        img32.set32(128+x,y, color_argb(2*x,  2*y, 0,   0));
-      }
-    }
-
-    assert_err(image_save_tiff(img32, "./non-existing/file", Opt()),
-      "Can't open file: ./non-existing/file");
-
-
     // * Create all types of images (32ARGB, 24RGB, 16, 8, 1, PAL).
     // * Save them with different image_save_tiff() options.
     // * Read saved file and check result.
 
     { // IMAGE_32ARGB
-      ImageR img = img32;
+      ImageR img = mk_test_32();
       image_save_tiff(img, "test_tiff/img_32_def.tif");
       assert_eq(image_size_tiff("test_tiff/img_32_def.tif"), iPoint(256,128));
 
@@ -140,12 +127,7 @@ main(){
 
     /*********************************************/
     { // IMAGE_24RGB
-      ImageR img(256,128, IMAGE_24RGB);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set24(x,y, color_rem_transp(img32.get_argb(x,y), false));
-        }
-      }
+      ImageR img = mk_test_24();
       image_save_tiff(img, "test_tiff/img_24_def.tif");
       ImageR I = image_load_tiff("test_tiff/img_24_def.tif", 1);
       assert_eq(I.type(), IMAGE_24RGB);
@@ -154,9 +136,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFFEFE00);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFFFD0000);
+      assert_eq(I.get_argb(255,127), 0xFFFE0000);
       assert_eq(I.get_argb(64,64), 0xFF808000);
-      assert_eq(I.get_argb(192,64), 0xFF7F0000);
+      assert_eq(I.get_argb(192,64), 0xFF800000);
 
       Opt o;
       o.put("tiff_format", "argb");
@@ -168,9 +150,9 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFFEFE00);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFFFD0000);
+      assert_eq(I.get_argb(255,127), 0xFFFE0000);
       assert_eq(I.get_argb(64,64), 0xFF808000);
-      assert_eq(I.get_argb(192,64), 0xFF7F0000);
+      assert_eq(I.get_argb(192,64), 0xFF800000);
 
       o.put("tiff_format", "grey");
       image_save_tiff(img, "test_tiff/img_24_grey.tif", o);
@@ -192,24 +174,17 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xFF090000);
+      assert_eq(I.get_argb(0,0), 0xFF0E0000);
       assert_eq(I.get_argb(127,127), 0xfff6f600);
-      assert_eq(I.get_argb(128,0), 0xff090000);
-      assert_eq(I.get_argb(255,127), 0xFFF30000);
+      assert_eq(I.get_argb(128,0), 0xff0E0000);
+      assert_eq(I.get_argb(255,127), 0xFFF60000);
       assert_eq(I.get_argb(64,64), 0xFF8C7600);
-      assert_eq(I.get_argb(192,64), 0xFF890000);
+      assert_eq(I.get_argb(192,64), 0xFF8C0000);
     }
 
     /*********************************************/
     { // IMAGE_16
-      ImageR img(256,128, IMAGE_16);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get_argb(x,y), false);
-          img.set16(x,y, color_rgb_to_grey16(c));
-        }
-      }
-
+      ImageR img = mk_test_16();
       image_save_tiff(img, "test_tiff/img_16_def.tif");
       ImageR I = image_load_tiff("test_tiff/img_16_def.tif", 1);
       assert_eq(I.type(), IMAGE_16);
@@ -232,7 +207,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -245,7 +220,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -258,7 +233,7 @@ main(){
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(127,127), 0xFFe1e1e1);
       assert_eq(I.get_argb(128,0), 0xFF000000);
-      assert_eq(I.get_argb(255,127), 0xFF4b4b4b);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF717171);
       assert_eq(I.get_argb(192,64), 0xFF262626);
 
@@ -269,25 +244,18 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xFF020202);
+      assert_eq(I.get_argb(0,0), 0xFF030303);
       assert_eq(I.get_argb(127,127), 0xFFDBDBDB);
-      assert_eq(I.get_argb(128,0), 0xFF020202);
-      assert_eq(I.get_argb(255,127), 0xFF4D4D4D);
+      assert_eq(I.get_argb(128,0), 0xFF030303);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF737373);
-      assert_eq(I.get_argb(192,64), 0xFF232323);
+      assert_eq(I.get_argb(192,64), 0xFF242424);
 
     }
 
     /*********************************************/
     { // IMAGE_8
-      ImageR img(256,128, IMAGE_8);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          uint32_t c = color_rem_transp(img32.get_argb(x,y), false);
-          img.set8(x,y, color_rgb_to_grey8(c));
-        }
-      }
-
+      ImageR img = mk_test_8();
       image_save_tiff(img, "test_tiff/img_8_def.tif");
       ImageR I = image_load_tiff("test_tiff/img_8_def.tif", 1);
       assert_eq(I.type(), IMAGE_8);
@@ -347,18 +315,17 @@ main(){
       assert_eq(I.type(), IMAGE_8PAL);
       assert_eq(I.width(), 256);
       assert_eq(I.height(), 128);
-      assert_eq(I.get_argb(0,0), 0xFF020202);
+      assert_eq(I.get_argb(0,0), 0xFF030303);
       assert_eq(I.get_argb(127,127), 0xFFDCDCDC);
-      assert_eq(I.get_argb(128,0), 0xFF020202);
-      assert_eq(I.get_argb(255,127), 0xFF4D4D4D);
+      assert_eq(I.get_argb(128,0), 0xFF030303);
+      assert_eq(I.get_argb(255,127), 0xFF4C4C4C);
       assert_eq(I.get_argb(64,64), 0xFF737373);
-      assert_eq(I.get_argb(192,64), 0xFF242424);
+      assert_eq(I.get_argb(192,64), 0xFF252525);
     }
 
 
     { // IMAGE_8PAL
-      std::vector<uint32_t> colors = image_colormap(img32);
-      ImageR img = image_remap(img32, colors);
+      ImageR img = mk_test_8p();
       image_save_tiff(img, "test_tiff/img_8p_def.tif");
       ImageR I = image_load_tiff("test_tiff/img_8p_def.tif", 1);
       assert_eq(I.type(), IMAGE_8PAL);
@@ -430,17 +397,12 @@ main(){
 
 
     { // IMAGE_1
-      ImageR img(256,128, IMAGE_1);
-      for (size_t y=0; y<img.height(); ++y){
-        for (size_t x=0; x<img.width(); ++x){
-          img.set1(x,y, 1-(int)fabs(600*sin(2*M_PI*x/255)*sin(2*M_PI*y/255))%2);
-        }
-      }
+      ImageR img = mk_test_1();
       image_save_tiff(img, "test_tiff/img_1_def.tif");
       ImageR I = image_load_tiff("test_tiff/img_1_def.tif", 1);
       assert_eq(I.type(), IMAGE_8);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(img.get1(0,0), 1);
       assert_eq(img.get1(15,45), 1);
       assert_eq(img.get1(43,123), 0);
@@ -455,8 +417,8 @@ main(){
       image_save_tiff(img, "test_tiff/img_1_argb.tif", o);
       I = image_load_tiff("test_tiff/img_1_argb.tif", 1);
       assert_eq(I.type(), IMAGE_32ARGB);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(15,45), 0xFF000000);
       assert_eq(I.get_argb(43,123), 0xFFFFFFFF);
@@ -466,8 +428,8 @@ main(){
       image_save_tiff(img, "test_tiff/img_1_rgb.tif", o);
       I = image_load_tiff("test_tiff/img_1_rgb.tif", 1);
       assert_eq(I.type(), IMAGE_24RGB);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(15,45), 0xFF000000);
       assert_eq(I.get_argb(43,123), 0xFFFFFFFF);
@@ -477,8 +439,8 @@ main(){
       image_save_tiff(img, "test_tiff/img_1_grey.tif", o);
       I = image_load_tiff("test_tiff/img_1_grey.tif", 1);
       assert_eq(I.type(), IMAGE_8);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(15,45), 0xFF000000);
       assert_eq(I.get_argb(43,123), 0xFFFFFFFF);
@@ -489,8 +451,8 @@ main(){
       image_save_tiff(img, "test_tiff/img_1_pal.tif", o);
       I = image_load_tiff("test_tiff/img_1_pal.tif", 1);
       assert_eq(I.type(), IMAGE_8PAL);
-      assert_eq(I.width(), 256);
-      assert_eq(I.height(), 128);
+      assert_eq(I.width(), 250);
+      assert_eq(I.height(), 125);
       assert_eq(I.get_argb(0,0), 0xFF000000);
       assert_eq(I.get_argb(15,45), 0xFF000000);
       assert_eq(I.get_argb(43,123), 0xFFFFFFFF);
