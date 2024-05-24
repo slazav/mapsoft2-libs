@@ -1,4 +1,5 @@
 #include "image_colors.h"
+#include "geom/point_int.h"
 #include <map>
 #include <vector>
 #include <algorithm>
@@ -463,10 +464,8 @@ image_invert(ImageR & img){
 // which can be found in ph_scan repo on my github.
 // Transferred to mapsoft2 05.2024 -- Slava
 void
-image_autolevel(ImageR & img, size_t brd,
+image_autolevel(ImageR & img, const size_t brd,
   double mr, double mg, double mb, double t1, double t2){
-
-  // check image type
 
   /************************************************/
   /* build histogram */
@@ -647,6 +646,7 @@ image_autolevel(ImageR & img, size_t brd,
 }
 
 
+/***********************************************************/
 // Average value of a line.
 // helper for image_autocrop()
 double
@@ -671,7 +671,7 @@ image_autocrop_rat(ImageR & img, size_t x, size_t y1, size_t y2, bool flip, doub
 }
 
 dRect
-image_autocrop(ImageR & img, size_t brd, double th){
+image_autocrop(ImageR & img, const size_t brd, double th){
   double th2 = 0.01;  // definition of a dark/light point
   double th3 = 0.01;  // amount of dark/light points
   int    dd = 2; // add extra points to non-zero borders
@@ -712,6 +712,7 @@ image_autocrop(ImageR & img, size_t brd, double th){
   return dRect(x1,y1, w-x1-x2, h-y1-y2);
 }
 
+/***********************************************************/
 ImageR
 image_crop(ImageR & img, const iRect & r){
 
@@ -752,3 +753,267 @@ image_crop(ImageR & img, const iRect & r){
   }
   return out;
 }
+
+/***********************************************************/
+ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint & sh, const double th){
+
+  bool rgb;
+  if (img.type()==IMAGE_48RGB || img.type()==IMAGE_24RGB) rgb=1;
+  else if (img.type()==IMAGE_8 || img.type()==IMAGE_16) rgb=0;
+  else throw Err() << "image_ir_undust: unsupported image type";
+
+  size_t w = img.width(), h = img.height();
+  if (brd>=w/2 || brd>=h/2) throw Err() << "image_ir_undust: border is too big";
+
+
+  /***********************************************/
+  // Step 1: reduce dispersion of the IR channel using RGB image.
+  // Modified IR channel: same size as img, shifted, with removed
+  // correlation, always 16bit:
+  ImageR ir1(w, h, IMAGE_16);
+  {
+    /* Weights of other channels in IR channel:
+       The correction is I1 = I + a R + b G + c B;
+       We want to minimize <(I1 - <I1>)^2>
+
+       d/da=0:  <(I1 - <I1>)(R - <R>)> =
+                <(I -<I>)(R-<R>)> + a <(R -<R>)^2>
+                   + b <(G-<G>)(R -<R>)> + b <(B-<B>)(R -<R>)> = 0
+
+       corr(I,R) + a corr(R,R) + b corr(G,R) + c corr(B,R) = 0
+       corr(I,G) + a corr(R,G) + b corr(G,G) + c corr(B,G) = 0
+       corr(I,B) + a corr(R,B) + b corr(G,B) + c corr(B,B) = 0
+
+       | RR GR BR |  a    | IR |
+       | RG GG BG |  b  = | IG |
+       | RB GB BB |  c    | IB |
+
+       d0 = RR GG BB + RB GR BG + RG GB BR - RB GG BR - RG GR BB - RR GB BG;
+       d1 = IR GG BB + IB GR BG + IG GB BR - IB GG BR - IG GR BB - IR GB BG;
+       d2 = RR IG BB + RB IR BG + RG IB BR - RB IG BR - RG IR BB - RR IB BG;
+       d3 = RR GG IB + RB GR IG + RG GB IR - RB GG IR - RG GR IB - RR GB IG;
+
+    */
+    // calculate average values
+    double mR=0, mG=0, mB=0, mI=0;
+    int n=0;
+    for (int x=brd; x<ir.width()-brd; x++){
+      for (int y=brd; y<ir.height()-brd; y++){
+        int x1 = x+sh.x, y1 = y+sh.y;
+        if (!img.check_crd(x1,y1)) continue;
+        mI += (double)ir.get_grey16(x,y)/0xFFFF;
+        if (rgb){
+          auto v = img.get_rgb(x1,y1); 
+          mR += (double)((v >> 16) & 0xFF)/0xFF;
+          mG += (double)((v >> 8)  & 0xFF)/0xFF;
+          mB += (double)(v & 0xFF)/0xFF;
+        }
+        else {
+          mR += img.get_grey16(x1,y1)/0xFFFF;
+        }
+        n++;
+      }
+    }
+    mR/=n; mG/=n; mB/=n; mI/=n;
+
+    // calculate correlations
+    double RR=0, RG=0, RB=0,
+                 GG=0, GB=0,
+                       BB=0,
+           IR=0, IB=0, IG=0;
+    for (int x=brd; x<ir.width()-brd; x++){
+      for (int y=brd; y<ir.height()-brd; y++){
+        int x1 = x+sh.x, y1 = y+sh.y;
+        if (!img.check_crd(x1,y1)) continue;
+
+        double dI = (double)ir.get_grey16(x,y)/0xFFFF - mI;
+        if (rgb){
+          auto v = img.get_rgb(x1,y1); 
+          double dR = (double)((v >> 16) & 0xFF)/0xFF - mR;
+          double dG = (double)((v >> 8)  & 0xFF)/0xFF - mG;
+          double dB = (double)(v & 0xFF)/0xFF - mB;
+          RR += dR*dR/n;
+          RG += dR*dG/n;
+          RB += dR*dB/n;
+          GG += dG*dG/n;
+          GB += dG*dB/n;
+          BB += dB*dB/n;
+          IR += dI*dR/n;
+          IG += dI*dG/n;
+          IB += dI*dB/n;
+        }
+        else {
+          double dR = img.get_grey16(x1,y1)/0xFFFF - mR;
+          RR += dR*dR/n;
+          IR += dI*dR/n;
+        }
+      }
+    }
+
+    // solve linear system (for greyscale image almost all correlations are 0)
+    double d0 = RR*GG*BB + RB*RG*GB + RG*GB*RB - RB*GG*RB - RG*RG*BB - RR*GB*GB;
+    double d1 = IR*GG*BB + IB*RG*GB + IG*GB*RB - IB*GG*RB - IG*RG*BB - IR*GB*GB;
+    double d2 = RR*IG*BB + RB*IR*GB + RG*IB*RB - RB*IG*RB - RG*IR*BB - RR*IB*GB;
+    double d3 = RR*GG*IB + RB*RG*IG + RG*GB*IR - RB*GG*IR - RG*RG*IB - RR*GB*IG;
+    double A = d1/d0;
+    double B = d2/d0;
+    double C = d3/d0;
+    // fprintf(stderr, "> %f %f %f  %f %f %f\n", RR,GG,BB, RG, RB, GB);
+    // fprintf(stderr, "> %f %f %f\n", A,B,C);
+
+    // modify IR image
+    for (int x=0; x<ir.width(); x++){
+      for (int y=0; y<ir.height(); y++){
+        int x1 = x+sh.x, y1 = y+sh.y;
+        if (!img.check_crd(x1,y1)) continue;
+
+        double I = (double)ir.get_grey16(x,y)/0xFFFF;
+        if (rgb){
+          auto v = img.get_rgb(x1,y1); 
+          double dR = (double)((v >> 16) & 0xFF)/0xFF - mR;
+          double dG = (double)((v >> 8)  & 0xFF)/0xFF - mG;
+          double dB = (double)(v & 0xFF)/0xFF - mB;
+          I -= A*dR + B*dG + C*dB;
+        }
+        else {
+          double dR = img.get_grey16(x1,y1)/0xFFFF - mR;
+          I -= A*dR;
+        }
+        ir1.set16(x,y, 0xFFFF*I);
+      }
+    }
+  }
+
+  /********************************************************/
+  // Step 2: detect dust (bitmask)
+  std::set<iPoint> mask;
+  {
+    // calculate average value of the modified IR channel
+    double mI=0;
+    for (int x=brd; x<w-brd; x++){
+      for (int y=brd; y<h-brd; y++){
+        mI += ir.get16(x,y);
+      }
+    }
+    mI /= 0xFFFF*(w-2*brd)*(h-2*brd);
+
+    // detect dust (everything below mI-th)
+    for (int x=0; x<w; x++){
+      for (int y=0; y<h; y++){
+        double dI = mI - (double)ir1.get16(x,y)/0xFFFF;
+        if (dI > th) mask.emplace(x,y);
+      }
+    }
+
+    // expand dust by 1px
+    std::set<iPoint> add;
+    for (const auto & p:mask)
+      for (int i=0;i<8;i++) add.emplace(adjacent(p, i));
+    mask.insert(add.begin(), add.end());
+  }
+
+  /********************************************************/
+  // Step 3: interpolate holes
+
+  for (size_t x=0; x<w; x++){
+    for (size_t y=0; y<h; y++){
+      iPoint p0(x,y);
+      if (!mask.count(p0)) continue;
+
+      std::set<iPoint> B1,B2,S;
+      B1.insert(p0);
+
+      // find points to be used in interpolation
+      double maxw=0;
+      do {
+        // expand border B1->B2
+        // - only points within the mask
+        // - only points which are further from p0
+        // put points outside the mask to S, check weight (1/d^2)
+        for (const auto & p:B1){
+          double d0 = dist2d(p0,p);
+          for (int i=0;i<8;i++){
+            iPoint p1 = adjacent(p, i+1);
+            if (!img.check_crd(p1.x,p1.y)) continue;
+            if (B2.count(p1) || B1.count(p1) || S.count(p1)) continue;
+
+            double d1 = dist2d(p0,p1);
+            if (d1<=d0) continue;
+            double curw = 1.0/pow(d1,6);
+            if (maxw>0 && curw<=0.1*maxw) continue;
+
+            if (!mask.count(p1)){
+              S.insert(p1);
+              if (maxw == 0) maxw = curw;
+              continue;
+            }
+            B2.insert(p1);
+          }
+        }
+        B1.swap(B2);
+        B2.clear();
+      } while (B1.size());
+
+      // do interpolation
+      double sR=0, sG=0, sB=0, sN=0;
+      for (const auto & p:S){
+        double w = 1.0/pow(dist2d(p0,p),6);
+        sN += w;
+
+        switch (img.type()){
+          case IMAGE_48RGB:{
+            auto v = img.get48(p.x,p.y);
+            sR += w*((v >> 32) & 0xFFFF);
+            sG += w*((v >> 16) & 0xFFFF);
+            sB += w*(v & 0xFFFF);
+            break;
+          }
+          case IMAGE_24RGB:{
+            auto v = img.get24(p.x,p.y);
+            sR += w*((v >> 16) & 0xFF);
+            sG += w*((v >>  8) & 0xFF);
+            sB += w*(v & 0xFF);
+            break;
+          }
+          case IMAGE_16:{
+            sR += w*img.get16(p.x,p.y);
+            break;
+          }
+          case IMAGE_8:{
+            sR += w*img.get8(p.x,p.y);
+            break;
+          }
+        }
+      }
+      // set value
+      switch (img.type()){
+        case IMAGE_48RGB:{
+          uint64_t v = ((uint64_t)rint(sR/sN) << 32)
+                     + ((uint64_t)rint(sG/sN) << 16)
+                     + (uint64_t)rint(sB/sN);
+          img.set48(p0.x,p0.y, v);
+          break;
+        }
+        case IMAGE_24RGB:{
+          uint64_t v = ((uint32_t)rint(sR/sN) << 16)
+                     + ((uint32_t)rint(sG/sN) << 8)
+                     + (uint32_t)rint(sB/sN);
+          img.set24(p0.x,p0.y, v);
+          break;
+        }
+        case IMAGE_16:{
+          int v = (int)rint(sR/sN);
+          img.set16(p0.x,p0.y, v);
+          break;
+        }
+        case IMAGE_8:{
+          int v = (int)rint(sR/sN);
+          img.set8(p0.x,p0.y, v);
+          break;
+        }
+      }
+    }
+  }
+  return img;
+}
+
