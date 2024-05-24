@@ -50,4 +50,7 @@ void image_autolevel(ImageR & img, size_t brd,
 // from the inner border lines (0..1)
 dRect image_autocrop(ImageR & img, size_t brd, double threshold=0.5);
 
+// crop image to the rectangle (keep same image type)
+ImageR image_crop(ImageR & img, const iRect & r);
+
 #endif

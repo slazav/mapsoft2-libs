@@ -8,7 +8,7 @@ MOD_SOURCES := colors.cpp image.cpp image_t.cpp\
 
 SIMPLE_TESTS := colors image_r image_t image_colors\
                 io io_gif io_jpeg io_png io_tiff io_pnm\
-                image_reduce image_cache
+                image_reduce image_cache image_crop
 
 PKG_CONFIG = libjpeg libpng libtiff-4
 LDLIBS = -lgif

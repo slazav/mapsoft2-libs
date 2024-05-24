@@ -692,3 +692,43 @@ image_autocrop(ImageR & img, size_t brd, double th){
   return dRect(x1,y1, w-x1-x2, h-y1-y2);
 }
 
+ImageR
+image_crop(ImageR & img, const iRect & r){
+
+  // What is better: reduce range to the image size if needed,
+  // or fill areas outside the image with 0?
+  iRect r1 = intersect(r, iRect(0,0,img.width(),img.height()));
+
+  ImageR out(r1.w, r1.h, img.type());
+  out.cmap = img.cmap;
+
+  if (img.type()==IMAGE_1){
+    // we need some signed type to find x+r1.x!
+    for (int y = 0; y<r1.h; y++){
+      for (int x = 0; x<r1.w; x++){
+        int xs = r1.x+x, ys = r1.y+y;
+        if (img.check_crd(xs, ys))
+          out.set1(x,y, img.get1(xs, ys));
+        else
+          out.set1(x,y, 0);
+      }
+    }
+    return out;
+  }
+
+  int bpp = img.dsize()/img.width()/img.height();
+  if (bpp==0) return out;
+
+  // we need some signed type to find x+r1.x!
+  for (int y = 0; y<r1.h; y++){
+    for (int x = 0; x<r1.w; x++){
+      int xs = r1.x+x, ys = r1.y+y;
+        if (img.check_crd(xs, ys))
+          std::memcpy(out.data()+bpp*(out.width()*y+x),
+                      img.data()+bpp*(img.width()*ys+xs), bpp);
+        else
+          std::memset(out.data()+bpp*(out.width()*y+x), 0, bpp);
+    }
+  }
+  return out;
+}
