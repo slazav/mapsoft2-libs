@@ -290,7 +290,7 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
     char *p = (char *)img.data() + bpr*y;
     switch (t){
       case IMAGE_24RGB:
-      case IMAGE_32ARGB: {
+      case IMAGE_32ARGB:
         for (size_t x=0; x<w; x++){
           auto c = img.get_rgb(x,y); // unscale color!
           str.write((char*)&c + 2, 1);
@@ -298,8 +298,7 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
           str.write((char*)&c + 0, 1);
         }
         break;
-      }
-      case IMAGE_8PAL: {
+      case IMAGE_8PAL:
         for (size_t x=0; x<w; x++){
           auto c = img.get8pal(x,y);
           str.write((char*)&c + 2, 1);
@@ -307,42 +306,36 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
           str.write((char*)&c + 0, 1);
         }
         break;
-      case IMAGE_16: {
+      case IMAGE_16:
         for (size_t x=0; x<w; x++){
           auto c = img.get16(x,y);
           str.write((char*)&c+1, 1);
           str.write((char*)&c, 1);
         }
         break;
-      }
-      case IMAGE_8: {
+      case IMAGE_8:
         for (size_t x=0; x<w; x++){
           auto c = img.get8(x,y);
           str.write((char*)&c, 1);
         }
         break;
-      }
-      case IMAGE_48RGB: {
+      case IMAGE_48RGB:
         for (size_t x=0; x<w; x++){
           auto c = img.get48(x,y);
           for (int i=0; i<6; i++)
             str.write((char*)&c + 5-i, 1);
         }
         break;
-      }
-      case IMAGE_64ARGB: {
+      case IMAGE_64ARGB:
         for (size_t x=0; x<w; x++){
           auto c = color_rem_transp64(img.get64(x,y),false); // unscale
           for (int i=0; i<6; i++)
             str.write((char*)&c + 5-i, 1);
         }
         break;
-      }
-      }
-      case IMAGE_1: {
+      case IMAGE_1:
         str.write((char*)img.data() + y*bpr, bpr);
         break;
-      }
     }
   }
 }
