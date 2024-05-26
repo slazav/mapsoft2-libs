@@ -89,6 +89,18 @@ main(){
     assert_feq(p1.len2d(), sqrt(5), 1e-6);
     assert_feq(len2d(p1), sqrt(5), 1e-6);
 
+    assert_eq(std::isnan(len(dPoint(NAN,NAN,NAN))), 1);
+    assert_eq(std::isnan(len(dPoint(NAN,NAN,0))), 1);
+    assert_eq(std::isnan(len(dPoint(0,0,NAN))), 1);
+    assert_eq(std::isnan(len2d(dPoint(NAN,NAN,0))), 1);
+    assert_eq(std::isnan(len2d(dPoint(0,0,NAN))), 0);
+
+    assert_eq(std::isnan(mlen(dPoint(NAN,NAN,NAN))), 1);
+    assert_eq(std::isnan(mlen(dPoint(NAN,NAN,0))), 1);
+    assert_eq(std::isnan(mlen(dPoint(0,0,NAN))), 1);
+    assert_eq(std::isnan(mlen2d(dPoint(NAN,NAN,0))), 1);
+    assert_eq(std::isnan(mlen2d(dPoint(0,0,NAN))), 0);
+
     assert_deq(norm(p2), dPoint(1,0), 1e-6);
     assert_eq(p2, iPoint(10,0,0));
 
@@ -180,7 +192,7 @@ main(){
     assert_feq(pscal(p1,p1), 9, 1e-6);
     assert_deq(p1,p1, 1e-6);
     assert_feq(dist(p1,iPoint(0,0)), 3, 1e-6);
-
+    assert_eq(std::isnan(dist(dPoint(1,2),dPoint(NAN,0))), 1);
     assert_feq(pscal2d(p1,p2), 16, 1e-6);
     assert_feq(pscal2d(p1,p1), 5, 1e-6);
     assert_feq(dist2d(p1,p1), 0, 1e-6);
