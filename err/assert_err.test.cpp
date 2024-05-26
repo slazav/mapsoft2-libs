@@ -40,7 +40,9 @@ main(){
     assert_deq(1, 2-1, 1e-6);
     assert_deq(2-1, 1, 1e-6);
 
-
+    int n=1;
+    assert_eq(n+1, 2);
+    assert_deq(n+0.1, 1.1, 1e-6);
 
   }
   catch (Err & e) {
