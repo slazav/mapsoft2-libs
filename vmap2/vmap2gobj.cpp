@@ -661,15 +661,21 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
   // expand short lines
   if (short_expand>0){
     for (auto l = O.begin(); l!=O.end(); ++l){
-      if (l->length2d() < short_expand && l->size()>0) {
-        auto n = l->size()-1;
-        auto p0 = (*l)[0], p1=(*l)[1]; // saving points (line could have 1 segment)
-        auto p2 = (*l)[n-1], p3=(*l)[n];
-        auto l1 = dist2d(p0,p1);   // first segment
-        auto l2 = dist2d(p2,p3); // last segment
+      if (l->size()<2) continue;
+      if (l->length2d() >= short_expand) continue;
+      auto n = l->size()-1;
+      auto p0 = (*l)[0], p1=(*l)[1]; // saving points (line could have 1 segment)
+      auto p2 = (*l)[n-1], p3=(*l)[n];
+      auto l1 = dist2d(p0,p1);   // first segment
+      auto l2 = dist2d(p2,p3); // last segment
+      if (l1+l2 > 0){
         auto dl = short_expand - l->length2d();
         (*l)[0] = p0 + (p0-p1) * dl/(l1+l2);
         (*l)[n] = p3 + (p3-p2) * dl/(l1+l2);
+      }
+      else {
+        (*l)[0] = p0 + dPoint(1,0) * short_expand;
+        (*l)[n] = p3 - dPoint(1,0) * short_expand;
       }
     }
   }
