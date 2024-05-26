@@ -40,9 +40,13 @@ LineWalker::dist() const {
 dPoint
 LineWalker::tang() const{
   if (ls.size() < 2) return dPoint(1,0);
-  dPoint p1 = is_end() ? line[current_n-1] : line[current_n];
-  dPoint p2 = is_end() ? line[current_n]   : line[current_n+1];
-  return ::norm(p2-p1);
+  size_t n1 = is_end() ? current_n-1:current_n;
+  size_t n2 = is_end() ? current_n:current_n+1;
+  // skip repeated points
+  while (line[n2]==line[n1] && n2 < ls.size()-1) n2++;
+  while (line[n2]==line[n1] && n1 >0) n1--;
+  if (line[n2]==line[n1]) return dPoint(1,0);
+  return  ::norm(line[n2]-line[n1]);
 }
 
 dPoint
@@ -141,4 +145,5 @@ bool
 LineWalker::is_begin() const{
   return (current_n == 0);
 }
+
 

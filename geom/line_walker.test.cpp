@@ -108,8 +108,33 @@ main(){
     assert_deq(lw.get_points(6), dLine("[[2,1],[2,2],[3,2],[4,3],[5,4]]"), 1e-6);
     assert_eq(lw.is_end(), true);
 
+    // Empty line
     dLine el;
     assert_err(LineWalker elw(el), "LineWalker: empty line");
+
+    { // 1 point
+      LineWalker lw(dLine("[[1,1]]"));
+      assert_eq(lw.is_begin(), 1);
+      assert_eq(lw.is_end(), 1);
+      assert_eq(lw.length(), 0.0);
+      assert_eq(lw.dist(), 0.0);
+      assert_deq(lw.norm(), dPoint(0,1), 1e-6);
+      assert_deq(lw.tang(), dPoint(1,0), 1e-6);
+      assert_eq(lw.ang(), 0.0);
+      assert_deq(lw.pt(), dPoint(1,1), 1e-6);
+    }
+
+    { // 2 same point
+      LineWalker lw(dLine("[[1,1],[1,1]]"));
+      assert_eq(lw.is_begin(), 1);
+      assert_eq(lw.is_end(), 0);
+      assert_eq(lw.length(), 0.0);
+      assert_eq(lw.dist(), 0.0);
+      assert_deq(lw.norm(), dPoint(0,1), 1e-6);
+      assert_deq(lw.tang(), dPoint(1,0), 1e-6);
+      assert_eq(lw.ang(), 0.0);
+      assert_deq(lw.pt(), dPoint(1,1), 1e-6);
+    }
 
   }
   catch (Err & e) {
