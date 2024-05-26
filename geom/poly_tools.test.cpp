@@ -318,36 +318,45 @@ main(){
       assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(0,0), dPoint(1,0), p0), true);
       assert_deq(p0, dPoint(0,0), 1e-6);
 
-      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(0,0), dPoint(0,0), dPoint(-1,-1), p0), false); // same line
-      assert_deq(p0, dPoint(0,0), 1e-6);
-
       // empty lines - no crossings
 
       assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(0,0), dPoint(0,0), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       assert_eq(segment_cross_2d(dPoint(1,1), dPoint(-1,-1), dPoint(2,2), dPoint(2,2), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       assert_eq(segment_cross_2d(dPoint(0,0), dPoint(0,0), dPoint(-1,-1), dPoint(1,1), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       assert_eq(segment_cross_2d(dPoint(2,2), dPoint(2,2), dPoint(-1,-1), dPoint(1,1), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       // segments on the same line - no crossing
 
+      assert_eq(segment_cross_2d(dPoint(1,1), dPoint(0,0), dPoint(0,0), dPoint(-1,-1), p0), false);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
+
       assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(0,0), dPoint(1,1), dPoint(2,2), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       assert_eq(segment_cross_2d(dPoint(0,0), dPoint(-1,-1), dPoint(0,0), dPoint(1,1), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(1,1), dPoint(0,0), dPoint(2,2), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       assert_eq(segment_cross_2d(dPoint(-1,-1), dPoint(1,1), dPoint(-1,-1), dPoint(1,1), p0), false);
-      assert_deq(p0, dPoint(NAN,NAN), 1e-6);
+      assert_eq(std::isnan(p0.x), 1);
+      assert_eq(std::isnan(p0.y), 1);
 
       // crossing outside segments
 
