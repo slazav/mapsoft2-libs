@@ -40,7 +40,7 @@
 
 // compare two double values and check that difference is less then e
 #define assert_feq(v1,v2,e)\
-  {if (fabs((v1) - (v2)) > e){\
+  {if (std::isnan((v1) - (v2)) || fabs((v1) - (v2)) > e){\
     throw Err()\
       << "assert_feq: " << __FILE__ << ":" << __LINE__ << ": arguments are not equal:\n"\
       << "v1: " << #v1  << "\n"\
@@ -51,7 +51,7 @@
 
 // compare two objects with a dist(a,b) function, check thet the result is less then e
 #define assert_deq(v1,v2,e)\
-  {if (dist((v1),(v2)) > e){\
+  {if (std::isnan(dist((v1),(v2))) || dist((v1),(v2)) > e){\
     throw Err()\
       << "assert_feq: " << __FILE__ << ":" << __LINE__ << ": arguments are not equal:\n"\
       << "v1: " << #v1  << "\n"\
