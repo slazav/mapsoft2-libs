@@ -28,8 +28,10 @@ LineWalker::length() const {
 dPoint
 LineWalker::pt() const{
   if (is_end()) return line[current_n];
-  else return (line[current_n] + (line[current_n+1]-line[current_n]) *
-               (current_l-ls[current_n])/(ls[current_n+1]-ls[current_n]) );
+  double dl=ls[current_n+1]-ls[current_n];
+  if (dl==0) return line[current_n];
+  return line[current_n] +
+    (line[current_n+1]-line[current_n]) * (current_l-ls[current_n])/dl;
 }
 
 double
@@ -67,7 +69,6 @@ LineWalker::get_points(double dl){
   if (dl <= 0) return ret;
 
   double l = current_l + dl;
-
   // add the first point
   ret.push_back(pt());
   if (is_end()) return ret;
