@@ -177,6 +177,7 @@ GObjMulti::prepare_range(const dRect & range){
 
 void
 GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
+  if (!c) throw Err() << "GObjMulti::set_cnv: cnv is NULL";
   cnv = c;
   // start ignoring (and counting) signals from sub-objects.
   redraw_counter=0;
