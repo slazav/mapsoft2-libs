@@ -55,7 +55,7 @@ public:
 
   // constructor
   GObjMulti(bool isolate=true):
-    error_policy(GOBJ_MULTI_ERR_WARN), redraw_counter(-1), isolate(isolate) {}
+    error_policy(GOBJ_MULTI_ERR_WARN), redraw_counter(-1), isolate(isolate), cnv(new ConvBase) {}
 
   // Add new object at some depth (larger depth - earlier the object is drawn)
   void add(int depth, std::shared_ptr<GObj> o);
