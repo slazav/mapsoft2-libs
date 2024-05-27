@@ -73,6 +73,7 @@ GObjWpts::set_opt(const Opt & opt){
 
 void
 GObjWpts::set_cnv(const std::shared_ptr<ConvBase> c) {
+  if (!c) throw Err() << "GObjWpts::set_cnv: cnv is NULL";
   cnv = c;
   update_data();
   redraw_me();

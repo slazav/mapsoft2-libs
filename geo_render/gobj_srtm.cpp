@@ -128,6 +128,7 @@ GObjSRTM::redraw() {
 
 void
 GObjSRTM::set_cnv(const std::shared_ptr<ConvBase> c) {
+  if (!c) throw Err() << "GObjSRTM::set_cnv: cnv is NULL";
   cnv = c;
   tiles.clear();
   redraw_me();

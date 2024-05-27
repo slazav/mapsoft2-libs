@@ -55,6 +55,7 @@ GObjTrk::set_opt(const Opt & o){
 
 void
 GObjTrk::set_cnv(const std::shared_ptr<ConvBase> c) {
+  if (!c) throw Err() << "GObjTrk::set_cnv: cnv is NULL";
   cnv = c;
   update_crd();
   redraw_me();

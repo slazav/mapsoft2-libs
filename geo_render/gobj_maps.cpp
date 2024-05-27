@@ -65,6 +65,7 @@ GObjMaps::set_opt(const Opt & opt) {
 
 void
 GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
+  if (!cnv) throw Err() << "GObjMaps::set_cnv: cnv is NULL";
   range = dRect();
   for (auto & d:data){
 

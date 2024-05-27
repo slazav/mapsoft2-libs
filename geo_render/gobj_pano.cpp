@@ -41,6 +41,7 @@ GObjPano::set_opt(const Opt & o){
 // set_cnv is only used for rescaling.
 void
 GObjPano::set_cnv(const std::shared_ptr<ConvBase> c) {
+  if (!c) throw Err() << "GObjPano::set_cnv: cnv is NULL";
   width = width0/c->get_scale_src().x;
   std::lock_guard<std::mutex> lk(cache_mutex);
   ray_cache.clear();
