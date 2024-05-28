@@ -308,11 +308,11 @@ SRTM::get_raw(const dPoint& p){
   // beyond image range: 0..1200 for 1200x1200 image.
   // In this case we need the next tile:
   bool ox = (w%2==0 && crd.x==w);
-  bool oy = (h%2==0 && crd.y==h);
+  bool oy = (h%2==0 && crd.y==0);
   if (ox || oy){
     dPoint p1(p);
     if (ox) p1.x = ceil(p.x)+1e-6;
-    if (oy) p1.y = ceil(p.y)+1e-6;
+    if (oy) p1.y = floor(p.y)-1e-6;
     return get_raw(p1);
   }
 
