@@ -781,7 +781,7 @@ SRTM::find_peaks(const dRect & range, int DH, size_t PS){
         short max = SRTM_VAL_UNDEF;
         iPoint maxpt;
         for (auto const & b:brd){
-          short h1 = get_h(b*d);
+          short h1 = get_h((dPoint)b*d);
           // original point is too close to data edge
           if ((h1<SRTM_VAL_MIN) && (dist(b,p)<1.5)) {max = h1; break;}
           if (h1>max) {max = h1; maxpt=b;}
