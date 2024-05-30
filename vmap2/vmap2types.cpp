@@ -89,8 +89,9 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
           continue;
         }
         if (vs[1] == "fig_pic"){
-          if (vs.size()!=3) throw Err() << "+ fig_pic: argument expected: <fig path>";
+          if (vs.size()!=3 && vs.size()!=4) throw Err() << "+ fig_pic: argument expected: <fig path> [<scale>]";
           read_fig(path + vs[2], o->second.fig_pic);
+          if (vs.size()==4) o->second.fig_pic *= str_to_type<double>(vs[3]);
           continue;
         }
         if (vs[1] == "mp_start"){
