@@ -92,6 +92,10 @@ struct FigObj : iLine {
     for (iterator i=begin(); i!=end(); i++) *i += p;
     center_x+=p.x;
     center_y+=p.y;
+    start_x+=p.x;
+    start_y+=p.y;
+    end_x+=p.x;
+    end_y+=p.y;
     return *this;
   }
 
@@ -100,6 +104,10 @@ struct FigObj : iLine {
     for (iterator i=begin(); i!=end(); i++) *i -= p;
     center_x-=p.x;
     center_y-=p.y;
+    start_x-=p.x;
+    start_y-=p.y;
+    end_x-=p.x;
+    end_y-=p.y;
     return *this;
   }
 
@@ -109,6 +117,15 @@ struct FigObj : iLine {
     for (iterator i=begin(); i!=end(); i++) *i /= k;
     center_x/=k;
     center_y/=k;
+    radius_x/=k;
+    start_x/=k;
+    start_y/=k;
+    end_x/=k;
+    end_y/=k;
+    radius/=k;
+    radius_x/=k;
+    radius_y/=k;
+    font_size/=k;
     return *this;
   }
 
@@ -118,6 +135,14 @@ struct FigObj : iLine {
     for (iterator i=begin(); i!=end(); i++) *i *= k;
     center_x*=k;
     center_y*=k;
+    start_x*=k;
+    start_y*=k;
+    end_x*=k;
+    end_y*=k;
+    radius*=k;
+    radius_x*=k;
+    radius_y*=k;
+    font_size*=k;
     return *this;
   }
 
