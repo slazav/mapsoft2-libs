@@ -112,9 +112,8 @@ struct FigObj : iLine {
   }
 
   /// Divide coordinates by k
-  template <typename T>
-  FigObj & operator/= (const T k) {
-    for (iterator i=begin(); i!=end(); i++) *i /= k;
+  FigObj & operator/= (const double k) {
+    for (auto & p:*this) p = (dPoint)p/k;
     center_x/=k;
     center_y/=k;
     radius_x/=k;
@@ -130,9 +129,8 @@ struct FigObj : iLine {
   }
 
   /// Multiply coordinates by k
-  template <typename T>
-  FigObj & operator*= (const T k) {
-    for (iterator i=begin(); i!=end(); i++) *i *= k;
+  FigObj & operator*= (const double k) {
+    for (auto & p:*this) p = (dPoint)p*k;
     center_x*=k;
     center_y*=k;
     start_x*=k;
@@ -153,12 +151,10 @@ struct FigObj : iLine {
   FigObj operator- (const iPoint & p) const { FigObj ret(*this); return ret-=p; }
 
   /// Divide coordinates by k
-  template <typename T>
-  FigObj operator/ (const T k) const { FigObj ret(*this); return ret/=k; }
+  FigObj operator/ (const double k) const { FigObj ret(*this); return ret/=k; }
 
   /// Multiply coordinates by k
-  template <typename T>
-  FigObj operator* (const T k) const { FigObj ret(*this); return ret*=k; }
+  FigObj operator* (const double k) const { FigObj ret(*this); return ret*=k; }
 
   /// Invert coordinates
   FigObj operator- () const {
