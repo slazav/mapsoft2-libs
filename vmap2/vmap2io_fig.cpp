@@ -416,7 +416,9 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
         case VMAP2_ALIGN_SE: o1.sub_type=2; break;
       }
       o1.angle = std::isnan(angle)? 0:angle;
-      o1.font_size = o.scale * o1.font_size * 96.0/types.dpi;
+      // In vmap2 font is set like in libcairo, in pixels.
+      // Magic factor, to have exactly same font size in xfig:
+      o1.font_size = o.scale * o1.font_size * 86/types.dpi;
       o1.push_back(pt0);
       fig.push_back(o1);
       continue;
