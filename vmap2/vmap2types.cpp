@@ -55,6 +55,7 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
       if (vs[0] == "set_dpi") {
         if (vs.size()!=2) throw Err() << "set_dpi: argument expected: <dpi>";
         dpi=str_to_type<double>(vs[1]);
+        continue;
       }
 
       // type <type> -- add description of an object type
