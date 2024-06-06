@@ -432,7 +432,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       std::cerr << VMap2obj::print_type(t) << "\n";
   }
 
-  write_fig(ofile, fig);
+  write_fig(ofile, fig, opts);
 }
 
 /****************************************************************************/
