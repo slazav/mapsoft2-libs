@@ -31,6 +31,7 @@ ms2opt_add_geofig_data(GetOptSet & opts){
   opts.add("map_depth", 1,0,g, "FIG depth for raster maps (default 500).");
   opts.add("map_marg",  1,0,g, "Margins for raster maps (pixels, default 50).");
   opts.add("map_dir",   1,0,g, "Directory for raster map tiles (default fig_images).");
+  opts.add("add_comm",  1,0,g, "Add a comment to all created fig objects.");
 
 }
 
@@ -274,6 +275,8 @@ fig_add_wpts(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
     "2 1 0 2 0 7 6 0 -1 1 1 1 -1 0 0");
   std::string txt_templ = o.get<std::string>("txt_templ",
     "4 0 8 5 -1 18 6 0.0000 4");
+  // comment can contain newline, will be splitted properly when writing fig
+  std::string add_comm  = o.get("add_comm");
 
   auto wpt_tmpl = figobj_template(wpt_templ);
   auto txt_tmpl = figobj_template(txt_templ);
@@ -284,6 +287,7 @@ fig_add_wpts(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
       auto wpt_obj(wpt_tmpl);
       wpt_obj.push_back(p);
       if (!raw) wpt_obj.comment.push_back(std::string("WPT ") + w.name);
+      if (add_comm!="") wpt_obj.comment.push_back(add_comm);
       F.push_back(wpt_obj);
 
       if (w.name=="") continue;
@@ -291,6 +295,7 @@ fig_add_wpts(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
       txt_obj.push_back(p+iPoint(30,30));
       txt_obj.text = w.name;
       if (!raw) txt_obj.comment.push_back(std::string("WPL"));
+      if (add_comm!="") txt_obj.comment.push_back(add_comm);
       F.push_back(txt_obj);
     }
   }
@@ -304,6 +309,7 @@ fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   bool raw = o.get("raw", false);
   std::string trk_templ = o.get<std::string>("trk_templ",
     "2 1 0 1 1 7 7 0 -1 1 1 1 -1 0 0");
+  std::string add_comm  = o.get("add_comm");
 
   auto trk_tmpl = figobj_template(trk_templ);
 
@@ -312,6 +318,7 @@ fig_add_trks(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
     auto trk_obj(trk_tmpl);
     trk_obj.set_points(l);
     if (!raw) trk_obj.comment.push_back(std::string("TRK ") + t.name);
+    if (add_comm!="") trk_obj.comment.push_back(add_comm);
     F.push_back(trk_obj);
   }
 }
@@ -326,6 +333,7 @@ fig_add_maps(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
   int depth = o.get("map_depth", 500);
   int marg  = o.get("map_marg",  50);
   std::string dir_name = o.get("map_dir",  "fig_images");
+  std::string add_comm  = o.get("add_comm");
 
   // put all maps into one map_list
   GeoMapList maps;
@@ -392,6 +400,7 @@ fig_add_maps(Fig & F, const GeoMap & m, const GeoData & d, const Opt & o){
       fo.push_back(tlc*rescale);
       fo.image_file = fname.str();
       fo.comment.push_back("MAP "+fname.str());
+      if (add_comm!="") fo.comment.push_back(add_comm);
       F.push_back(fo);
     }
   }
