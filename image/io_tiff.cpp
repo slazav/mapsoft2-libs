@@ -77,7 +77,7 @@ static toff_t
 TiffStrRSizeProc(thandle_t handle){
   auto str = (std::istream*) handle;
   auto pos0 = str->tellg();
-  str->seekg(std::ios_base::end);
+  str->seekg(0, std::ios_base::end);
   auto pos1 = str->tellg();
   str->seekg(pos0, std::ios_base::beg);
   return pos1;
@@ -87,7 +87,7 @@ static toff_t
 TiffStrWSizeProc(thandle_t handle){
   auto str = (std::ostream*) handle;
   auto pos0 = str->tellp();
-  str->seekp(std::ios_base::end);
+  str->seekp(0, std::ios_base::end);
   auto pos1 = str->tellp();
   str->seekp(pos0, std::ios_base::beg);
   return pos1;
