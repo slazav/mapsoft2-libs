@@ -279,16 +279,6 @@ class ImageR : public Image {
     }
 
 
-    // Color get function for IMAGE_UNKNOWN.
-    virtual uint32_t getUcol(const size_t x, const size_t y) const{
-      return bgcolor;
-    }
-    // Color set function for IMAGE_UNKNOWN.
-    // To be redefined in non-standard image classes.
-    virtual void setUcol(const size_t x, const size_t y){
-    }
-
-
     /******************************************************/
     // Universal get functions, should work for any image type
     // Coordinate range still should be checked before.
@@ -302,13 +292,10 @@ class ImageR : public Image {
         case IMAGE_8:      return get8col(x,y);
         case IMAGE_8PAL:   return get8pal(x,y);
         case IMAGE_1:      return get1col(x,y);
-        case IMAGE_FLOAT:  return 0; // todo: rainbow calculation?
-        case IMAGE_DOUBLE: return 0; // todo: rainbow calculation?
         case IMAGE_64ARGB: return color_rgb_64to32(get64(x,y));
         case IMAGE_48RGB:  return color_rgb_64to32(get48(x,y));
-        case IMAGE_UNKNOWN: return getUcol(x,y);
       }
-      return 0;
+      throw Err() << "can't get color for this image type";
     }
 
     // Get RGB color for any image type.
@@ -372,7 +359,7 @@ class ImageR : public Image {
       if (t==IMAGE_16) return (double)get16(x,y);
       if (t==IMAGE_8)  return (double)get8(x,y);
       if (t==IMAGE_1)  return (double)get1(x,y);
-      throw Err() << "Image::get_double: unsupported image type";
+      throw Err() << "can't get value for this image type";
     }
 
     /******************************************************/

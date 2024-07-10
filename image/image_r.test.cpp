@@ -60,9 +60,9 @@ main(){
       assert_eq(im.type(), IMAGE_UNKNOWN);
       assert(!im.is_empty());
       assert(im);
-//      assert_err(im.get_argb(5,5), "Image::get_argb: unsupported image type");
-//      assert_err(im.get_rgb(5,5),  "Image::get_argb: unsupported image type");
-      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+      assert_err(im.get_argb(5,5), "can't get color for this image type");
+      assert_err(im.get_rgb(5,5),  "can't get color for this image type");
+      assert_err(im.get_double(5,5), "can't get value for this image type");
     }
 
     { // 32bpp image
@@ -85,7 +85,7 @@ main(){
 
       assert_eq(im.get_argb(5,5), bg);
       assert_eq(im.get_rgb(5,5),  0xFF121314);
-      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+      assert_err(im.get_double(5,5), "can't get value for this image type");
     }
 
     { // 24bpp image
@@ -107,7 +107,7 @@ main(){
 
       assert_eq(im.get_argb(5,5), 0xFF000010);
       assert_eq(im.get_rgb(5,5),  0xFF000010);
-      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+      assert_err(im.get_double(5,5), "can't get value for this image type");
     }
 
     { // 64bpp image
@@ -132,7 +132,7 @@ main(){
       assert_eq(im.get_rgb(5,5),  0xFF000010);
       assert_eq(im.get_argb64(5,5), bg);
       assert_eq(im.get_rgb64(5,5),  0xFFFF000000001024ll); // scaling!
-      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+      assert_err(im.get_double(5,5), "can't get value for this image type");
     }
 
     { // 48bpp image
@@ -157,7 +157,7 @@ main(){
       assert_eq(im.get_rgb(5,5),  0xFF000010);
       assert_eq(im.get_argb64(5,5), 0xFFFF000000001012ll);
       assert_eq(im.get_rgb64(5,5),  0xFFFF000000001012ll);
-      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+      assert_err(im.get_double(5,5), "can't get value for this image type");
     }
 
 
@@ -270,6 +270,10 @@ main(){
       assert_eq(im.get1(2,1), 0);
       assert_eq(im.get1(98,100), 1);
 
+      assert_eq(im.get_argb(5,5), 0xFFFFFFFF);
+      assert_eq(im.get_rgb(5,5),  0xFFFFFFFF);
+      assert_eq(im.get_argb(0,9), 0xFF000000);
+      assert_eq(im.get_rgb(0,9),  0xFF000000);
       assert_feq(im.get_double(2,9), 1, 1e-6);
     }
 
@@ -289,6 +293,8 @@ main(){
       assert_feq(im.getD(0,1), 1, 1e-8);
       assert_feq(im.getD(0,2), 1e-8, 1e-8);
 
+      assert_err(im.get_argb(5,5), "can't get color for this image type");
+      assert_err(im.get_rgb(5,5),  "can't get color for this image type");
       assert_feq(im.get_double(0,1), 1, 1e-6);
     }
 
@@ -308,6 +314,8 @@ main(){
       assert_feq(im.getF(0,1), 1, 1e-8);
       assert_feq(im.getF(0,2), 1e-8, 1e-8);
 
+      assert_err(im.get_argb(5,5), "can't get color for this image type");
+      assert_err(im.get_rgb(5,5),  "can't get color for this image type");
       assert_feq(im.get_double(0,1), 1, 1e-6);
     }
 
