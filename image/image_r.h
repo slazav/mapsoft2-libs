@@ -345,7 +345,7 @@ class ImageR : public Image {
 
     // Get 16-bit grey color for any image type.
     uint16_t get_grey16(const size_t x, const size_t y) const{
-      if (t==IMAGE_8)  return get8(x,y)<<8;
+      if (t==IMAGE_8) {auto c = get8(x,y); return (c<<8) + c;}
       if (t==IMAGE_16) return get16(x,y);
       if (t==IMAGE_48RGB)  return color_rgb64_to_grey16(get48(x,y));
       if (t==IMAGE_64ARGB) return color_rgb64_to_grey16(get64(x,y));
