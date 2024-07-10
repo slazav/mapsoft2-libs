@@ -78,6 +78,8 @@ main(){
       assert_eq(im.get32(2,0), 2);
       assert_eq(im.get32(0,0), 0xFF000010);
       assert_eq(im.get32(639,479), 0xFF000010);
+
+      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
     }
 
     { // 24bpp image
@@ -97,6 +99,8 @@ main(){
       assert_eq(im.get24(2,0), 0xFF000002);
       assert_eq(im.get24(0,0), 0xFF000010);
       assert_eq(im.get24(639,479), 0xFF000010);
+
+      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
     }
 
     { // 8bpp image
@@ -118,6 +122,8 @@ main(){
       assert_eq(im.get8(2,0), 255);
       assert_eq(im.get8(2,2), 255);
       assert_eq(im.get8(2,3), 254);
+
+      assert_feq(im.get_double(2,9), 5.0, 1e-6);
     }
 
     { // 1bpp image, w*h % 8 = 0
@@ -143,6 +149,8 @@ main(){
       assert_eq(im.get1(2,0), 1);
       assert_eq(im.get1(2,1), 0);
       assert_eq(im.get1(99,99), 1);
+
+      assert_feq(im.get_double(2,9), 1, 1e-6);
     }
 
     { // 1bpp image, w*h % 8 != 0
@@ -168,6 +176,8 @@ main(){
       assert_eq(im.get1(2,0), 1);
       assert_eq(im.get1(2,1), 0);
       assert_eq(im.get1(98,100), 1);
+
+      assert_feq(im.get_double(2,9), 1, 1e-6);
     }
 
     { // double image
@@ -176,16 +186,35 @@ main(){
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
       assert_eq(im.type(), IMAGE_DOUBLE);
-      assert_eq(im.getD(0,0), 0.123);
-      assert_eq(im.getD(99,99), 0.123);
+      assert_feq(im.getD(0,0), 0.123, 1e-8);
+      assert_feq(im.getD(99,99), 0.123, 1e-8);
 
       im.setD(0,1, 1);
       im.setD(0,2, 1e-8);
 
-      assert_eq(im.getD(0,1), 1);
-      assert_eq(im.getD(0,2), 1e-8);
+      assert_feq(im.getD(0,1), 1, 1e-8);
+      assert_feq(im.getD(0,2), 1e-8, 1e-8);
+
+      assert_feq(im.get_double(0,1), 1, 1e-6);
     }
 
+    { // float image
+      ImageR im(100,100, IMAGE_FLOAT);
+      im.fillF(0.123);
+      assert_eq(im.width(), 100);
+      assert_eq(im.height(), 100);
+      assert_eq(im.type(), IMAGE_FLOAT);
+      assert_feq(im.getF(0,0), 0.123, 1e-8);
+      assert_feq(im.getF(99,99), 0.123, 1e-8);
+
+      im.setF(0,1, 1);
+      im.setF(0,2, 1e-8);
+
+      assert_feq(im.getF(0,1), 1, 1e-8);
+      assert_feq(im.getF(0,2), 1e-8, 1e-8);
+
+      assert_feq(im.get_double(0,1), 1, 1e-6);
+    }
 
 
   }

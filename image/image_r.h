@@ -365,6 +365,16 @@ class ImageR : public Image {
       return color_rgb_to_grey16(get_rgb(x,y));
     }
 
+    // get double value for any image type.
+    double get_double(const size_t x, const size_t y) const {
+      if (t==IMAGE_DOUBLE) return getD(x,y);
+      if (t==IMAGE_FLOAT)  return (double)getF(x,y);
+      if (t==IMAGE_16) return (double)get16(x,y);
+      if (t==IMAGE_8)  return (double)get8(x,y);
+      if (t==IMAGE_1)  return (double)get1(x,y);
+      throw Err() << "Image::get_double: unsupported image type";
+    }
+
     /******************************************************/
     // overrides for Image interface
 
