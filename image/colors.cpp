@@ -42,8 +42,7 @@ color_dist(const uint32_t c1, const uint32_t c2, const bool prescaled){
 }
 
 
-// Assemble 32-bit color from a,r,g,b components.
-// Prescaled semi-transparent colors are used
+// Assemble 32-bit prescaled semi-transparent color from a,r,g,b components.
 uint32_t color_argb(const uint8_t a, const uint8_t r,
                     const uint8_t g, const uint8_t b){
   if (a==0) return 0;
@@ -52,8 +51,7 @@ uint32_t color_argb(const uint8_t a, const uint8_t r,
          ((uint32_t)g*a/255<<8) + ((uint32_t)b*a/255);
 }
 
-// Assemble 64-bit color from a,r,g,b components.
-// Prescaled semi-transparent colors are used
+// Assemble 64-bit prescaled semi-transparent color from a,r,g,b components.
 uint64_t color_argb64(const uint16_t a, const uint16_t r,
                      const uint16_t g, const uint16_t b){
   if (a==0) return 0;
@@ -74,7 +72,7 @@ uint32_t color_prescale(const uint32_t c){
 }
 
 
-// remove transparency (for scaled colors)
+// remove transparency (for prescaled colors)
 uint32_t color_rem_transp(const uint32_t c, const bool gifmode){
   int a = (c>>24)&0xFF;
   if (a==255) return c;
@@ -96,7 +94,7 @@ uint32_t color_rem_transp(const uint32_t c, const bool gifmode){
   return (0xFF<<24)+(r<<16)+(g<<8)+b;
 }
 
-// remove transparency (for scaled colors)
+// remove transparency (for prescaled 64-bit colors)
 uint64_t color_rem_transp64(const uint64_t c, const bool gifmode){
   uint64_t a = (c>>48)&0xFFFF;
   if (a==0xFFFF) return c;
@@ -126,7 +124,7 @@ uint8_t color_rgb_to_grey8(const uint32_t c){
     COLOR_LUMINB*(c&0xFF) );
 }
 
-// Convert RGB color to 8-bit greyscale
+// Convert RGB 64-bit color to 8-bit greyscale
 uint8_t color_rgb64_to_grey8(const uint64_t c){
   double k = 1.0*0xFF/0xFFFF;
   return rint(
@@ -145,7 +143,7 @@ uint16_t color_rgb_to_grey16(const uint32_t c){
     COLOR_LUMINB*(c&0xFF)*k);
 }
 
-// Convert RGB color to 16-bit greyscale
+// Convert RGB 64-bit color to 16-bit greyscale
 uint16_t color_rgb64_to_grey16(const uint64_t c){
   return rint(
     COLOR_LUMINR*((c>>32)&0xFFFF) +
@@ -154,34 +152,29 @@ uint16_t color_rgb64_to_grey16(const uint64_t c){
 }
 
 // Convert RGB color from 64 to 32 bpp.
-// We want to keep max/min values:
-//    0xFFFF -> 0xFF -> 0xFFFF
-//    0x0000 -> 0x00 -> 0x0000
 uint32_t color_rgb_64to32(const uint64_t c){
   // AAaaRRrrGGggBBbb
   //         AARRGGBB
-  uint32_t a = (c>>48) & 0xFFFF;
-  uint32_t r = (c>>32) & 0xFFFF;
-  uint32_t g = (c>>16) & 0xFFFF;
-  uint32_t b = c & 0xFFFF;
-  a = (a*0xFF)/0xFFFF;
-  r = (r*0xFF)/0xFFFF;
-  g = (g*0xFF)/0xFFFF;
-  b = (b*0xFF)/0xFFFF;
+  uint32_t a = (c>>56) & 0xFF;
+  uint32_t r = (c>>40) & 0xFF;
+  uint32_t g = (c>>24) & 0xFF;
+  uint32_t b = (c>>8)  & 0xFF;
   return (a<<24) + (r<<16) + (g<<8) + b;
 }
 
 // Convert RGB color from 32 to 64 bpp
+// We want to keep max/min values:
+//    0xFFFF -> 0xFF -> 0xFFFF
+//    0x0000 -> 0x00 -> 0x0000
 uint64_t color_rgb_32to64(const uint32_t c){
   uint64_t a = (c>>24) & 0xFF;
   uint64_t r = (c>>16) & 0xFF;
   uint64_t g = (c>>8) & 0xFF;
   uint64_t b = c & 0xFF;
-  a = (a*0xFFFF)/0xFF;
-  r = (r*0xFFFF)/0xFF;
-  g = (g*0xFFFF)/0xFF;
-  b = (b*0xFFFF)/0xFF;
-  return (a<<48) + (r<<32) + (g<<16) + b;
+  return (a<<56) + (a<<48)
+       + (r<<40) + (r<<32)
+       + (g<<24) + (g<<16)
+       + (b<<8)  + b;
 }
 
 // Invert RGB color, keep transparency
