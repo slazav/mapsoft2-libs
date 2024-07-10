@@ -9,6 +9,9 @@
 int
 main(){
   try{
+
+    // Static functions for reading/writing 24,32,48,64 (a)rgb
+    // values to a memory buffer:
     {
        unsigned char buf[8];
        ImageR::set64(buf, 0x1234567812345678ull);
@@ -29,28 +32,6 @@ main(){
        assert_eq(ImageR::get16(buf), 0x1234);
     }
 
-
-    {
-      ImageR im1;
-      assert_eq(im1.width(), 0);
-      assert_eq(im1.height(), 0);
-      assert_eq(im1.type(), IMAGE_UNKNOWN);
-      assert(im1.is_empty());
-      assert(!im1);
-
-      ImageR im2(100,100, IMAGE_32ARGB);
-
-      assert_eq(type_to_str(im1), "ImageR(empty)");
-
-      assert_eq(type_to_str(im2), "ImageR(100x100, ARGB, 32bpp)");
-
-      assert_eq(im2.width(), 100);
-      assert_eq(im2.height(), 100);
-      assert_eq(im2.type(), IMAGE_32ARGB);
-      assert(!im2.is_empty());
-      assert(im2);
-    }
-
     {
       assert_err(ImageR im2(100,0,  IMAGE_32ARGB),    "non-positive image dimension: 100x0");
       assert_err(ImageR im2(0,1,    IMAGE_32ARGB),    "non-positive image dimension: 0x1");
@@ -59,10 +40,32 @@ main(){
       //    "ImageR: can't allocate memory for ImageR(100x18446744073709551615, ARGB, 32bpp): std::bad_alloc");
     }
 
+    // empty image
+    {
+      ImageR im;
+      assert_eq(type_to_str(im), "ImageR(empty)");
+      assert_eq(im.width(), 0);
+      assert_eq(im.height(), 0);
+      assert_eq(im.type(), IMAGE_UNKNOWN);
+      assert(im.is_empty());
+      assert(!im);
+    }
 
+    // UNKNOWN type
+    {
+      ImageR im(100,100, IMAGE_UNKNOWN);
+      assert_eq(type_to_str(im), "ImageR(100x100, Unknown data format)");
+      assert_eq(im.width(), 100);
+      assert_eq(im.height(), 100);
+      assert_eq(im.type(), IMAGE_UNKNOWN);
+      assert(!im.is_empty());
+      assert(im);
+      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+    }
 
     { // 32bpp image
       ImageR im(640,480, IMAGE_32ARGB);
+      assert_eq(type_to_str(im), "ImageR(640x480, ARGB, 32bpp)");
       im.fill32(0xFF000010);
       assert_eq(im.width(), 640);
       assert_eq(im.height(), 480);
@@ -76,14 +79,13 @@ main(){
       assert_eq(im.get32(0,9), 1);
       assert_eq(im.get32(2,9), 5);
       assert_eq(im.get32(2,0), 2);
-      assert_eq(im.get32(0,0), 0xFF000010);
-      assert_eq(im.get32(639,479), 0xFF000010);
 
       assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
     }
 
     { // 24bpp image
       ImageR im(640,480, IMAGE_24RGB);
+      assert_eq(type_to_str(im), "ImageR(640x480, RGB, 24bpp)");
       im.fill24(0x10);
       assert_eq(im.width(), 640);
       assert_eq(im.height(), 480);
@@ -97,14 +99,56 @@ main(){
       assert_eq(im.get24(0,9), 0xFF000001);
       assert_eq(im.get24(2,9), 0xFF000005);
       assert_eq(im.get24(2,0), 0xFF000002);
-      assert_eq(im.get24(0,0), 0xFF000010);
-      assert_eq(im.get24(639,479), 0xFF000010);
 
       assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
     }
 
+    { // 64bpp image
+      ImageR im(640,480, IMAGE_64ARGB);
+      assert_eq(type_to_str(im), "ImageR(640x480, ARGB, 64bpp)");
+      uint64_t bg=0xFFEE000000001012ll;
+      im.fill64(bg);
+      assert_eq(im.width(), 640);
+      assert_eq(im.height(), 480);
+      assert_eq(im.type(), IMAGE_64ARGB);
+      assert_eq(im.get64(0,0), bg);
+      assert_eq(im.get64(639,479), bg);
+
+      im.set64(0,9, 1);
+      im.set64(2,9, 5);
+      im.set64(2,0, 2);
+      assert_eq(im.get64(0,9), 1);
+      assert_eq(im.get64(2,9), 5);
+      assert_eq(im.get64(2,0), 2);
+
+      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+    }
+
+    { // 48bpp image
+      ImageR im(640,480, IMAGE_48RGB);
+      assert_eq(type_to_str(im), "ImageR(640x480, RGB, 48bpp)");
+      uint64_t bg=1012;
+      im.fill48((0x1234ll<<48) + bg);
+      assert_eq(im.width(), 640);
+      assert_eq(im.height(), 480);
+      assert_eq(im.type(), IMAGE_48RGB);
+      assert_eq(im.get48(0,0), (0xFFFFll<<48) + bg);
+      assert_eq(im.get48(639,479), (0xFFFFll<<48) + bg);
+
+      im.set48(0,9, 1);
+      im.set48(2,9, 5);
+      im.set48(2,0, 2);
+      assert_eq(im.get48(0,9), (0xFFFFll<<48) + 1);
+      assert_eq(im.get48(2,9), (0xFFFFll<<48) + 5);
+      assert_eq(im.get48(2,0), (0xFFFFll<<48) + 2);
+
+      assert_err(im.get_double(5,5), "Image::get_double: unsupported image type");
+    }
+
+
     { // 8bpp image
       ImageR im(100,100, IMAGE_8);
+      assert_eq(type_to_str(im), "ImageR(100x100, Grey, 8bpp)");
       im.fill8(11);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
@@ -126,15 +170,40 @@ main(){
       assert_feq(im.get_double(2,9), 5.0, 1e-6);
     }
 
-    { // 1bpp image, w*h % 8 = 0
-      ImageR im(100,100, IMAGE_1);
-      im.fill1(1);
+    { // 16bpp image
+      ImageR im(100,100, IMAGE_16);
+      assert_eq(type_to_str(im), "ImageR(100x100, Grey, 16bpp)");
+      im.fill16(300);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
+      assert_eq(im.type(), IMAGE_16);
+      assert_eq(im.get16(0,0), 300);
+      assert_eq(im.get16(99,99), 300);
+
+      im.set16(0,9, 1);
+      im.set16(2,9, 350);
+      im.set16(2,0, 256*256-1);
+      im.set16(2,2, -1);
+      im.set16(2,3, -2);
+      assert_eq(im.get16(0,9), 1);
+      assert_eq(im.get16(2,9), 350);
+      assert_eq(im.get16(2,0), 256*256-1);
+      assert_eq(im.get16(2,2), 256*256-1);
+      assert_eq(im.get16(2,3), 256*256-2);
+
+      assert_feq(im.get_double(2,9), 350.0, 1e-6);
+    }
+
+    { // 1bpp image, w*h % 8 = 0
+      ImageR im(256,128, IMAGE_1);
+      assert_eq(type_to_str(im), "ImageR(256x128, B/W, 1bpp)");
+      im.fill1(1);
+      assert_eq(im.width(), 256);
+      assert_eq(im.height(), 128);
       assert_eq(im.type(), IMAGE_1);
       assert_eq(im.get1(0,0), 1);
       assert_eq(im.get1(99,99), 1);
-      assert_eq(im.dsize(), 13*100); // 13 bytes per line
+      assert_eq(im.dsize(), 128*256/8);
       im.fill1(0);
       assert_eq(im.get1(0,0), 0);
       assert_eq(im.get1(99,99), 0);
@@ -155,6 +224,7 @@ main(){
 
     { // 1bpp image, w*h % 8 != 0
       ImageR im(99,101, IMAGE_1);
+      assert_eq(type_to_str(im), "ImageR(99x101, B/W, 1bpp)");
       im.fill1(1);
       assert_eq(im.width(), 99);
       assert_eq(im.height(), 101);
@@ -182,6 +252,7 @@ main(){
 
     { // double image
       ImageR im(100,100, IMAGE_DOUBLE);
+      assert_eq(type_to_str(im), "ImageR(100x100, double)");
       im.fillD(0.123);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
@@ -200,6 +271,7 @@ main(){
 
     { // float image
       ImageR im(100,100, IMAGE_FLOAT);
+      assert_eq(type_to_str(im), "ImageR(100x100, float)");
       im.fillF(0.123);
       assert_eq(im.width(), 100);
       assert_eq(im.height(), 100);
