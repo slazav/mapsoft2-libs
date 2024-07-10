@@ -331,7 +331,7 @@ class ImageR : public Image {
     // Get 48-bit RGB color for any image type.
     uint64_t get_rgb64(const size_t x, const size_t y) const {
       if (t== IMAGE_48RGB)  return get48(x,y);
-      if (t== IMAGE_64ARGB) return get64(x,y);
+      if (t== IMAGE_64ARGB) return color_rem_transp64(get64(x,y), 0);
       return color_rgb_32to64(get_rgb(x,y));
     }
 
