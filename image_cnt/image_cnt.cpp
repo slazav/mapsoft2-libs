@@ -27,33 +27,6 @@ void erase_kv (std::multimap<lPoint, lPoint> & mm, const lPoint & k, const lPoin
   }
 }
 
-// Merge oriented segments
-dMultiLine
-merge_cntr(std::multimap<lPoint, lPoint> & segs) {
-
-  dMultiLine ret;
-  while (segs.size()){
-    dLine l;
-    auto p1 = segs.begin()->first;
-    auto p2 = segs.begin()->second;
-    l.emplace_back(p1.x*pt_acc, p1.y*pt_acc, p1.z);
-    l.emplace_back(p2.x*pt_acc, p2.y*pt_acc, p2.z);
-    erase_kv(segs, p1, p2);
-
-    while (segs.count(p2)){
-      auto p3 = segs.find(p2)->second;
-      // filter stright lines (mostly for borders):
-      if (dist(norm(p2-p1),norm(p3-p2)) < pt_acc) l.resize(l.size()-1);
-      l.emplace_back(p3.x*pt_acc, p3.y*pt_acc, p3.z);
-      erase_kv(segs, p2, p3);
-      p1 = p2;
-      p2 = p3;
-    }
-    if (l.size()) ret.push_back(l);
-  }
-  return ret;
-}
-
 // filter a single line (one step), return number of modifications
 size_t
 filter_line(dLine & line, const ImageR & img, const double v0, const double vtol){
@@ -223,7 +196,28 @@ image_cnt(const ImageR & img,
   // Step 2: merge segments into Multilines
   std::map<double, dMultiLine> ret;
   for (auto & s:segs){
-    ret[s.first] = merge_cntr(s.second);
+    auto v0 = s.first;
+    auto & seg = s.second;
+
+    while (seg.size()){
+      dLine l;
+      auto p1 = seg.begin()->first;
+      auto p2 = seg.begin()->second;
+      l.emplace_back(p1.x*pt_acc, p1.y*pt_acc, p1.z);
+      l.emplace_back(p2.x*pt_acc, p2.y*pt_acc, p2.z);
+      erase_kv(seg, p1, p2);
+
+      while (seg.count(p2)){
+        auto p3 = seg.find(p2)->second;
+        // filter stright lines (mostly for borders):
+        if (dist(norm(p2-p1),norm(p3-p2)) < pt_acc) l.resize(l.size()-1);
+        l.emplace_back(p3.x*pt_acc, p3.y*pt_acc, p3.z);
+        erase_kv(seg, p2, p3);
+        p1 = p2;
+        p2 = p3;
+      }
+      if (l.size()) ret[v0].push_back(l);
+    }
   }
 
   // Step 3: filter
