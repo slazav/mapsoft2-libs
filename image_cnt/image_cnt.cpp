@@ -142,12 +142,14 @@ image_cnt(const ImageR & img,
       for (auto i2 = i1+1; i2!=ml.end(); ++i2){
         if (i2->size()==0) continue;
         if (dist(*i1->rbegin(), *i2->begin()) < pt_acc){
-          i1->insert(i1->end(), i2->begin()+1, i2->end());
+          i1->resize(i1->size()-1);
+          i1->insert(i1->end(), i2->begin(), i2->end());
           i2->clear();
           continue;
         }
         if (dist(*i1->begin(), *i2->rbegin()) < pt_acc){
-          i2->insert(i2->end(), i1->begin()+1, i1->end());
+          i2->resize(i2->size()-1);
+          i2->insert(i2->end(), i1->begin(), i1->end());
           i1->clear();
           continue;
         }
