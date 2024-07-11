@@ -12,15 +12,24 @@
 #include "rainbow/rainbow.h"
 
 /*
-Read-only access to a SRTM data.
+DEM/SRTM data accsess.
 
 Original data can be downloaded from ftp://e0mss21u.ecs.nasa.gov/srtm/
 Fixed data can be downloaded from http://www.viewfinderpanoramas.org/dem3.html
 
-SRTM data is stored in [SN][0-9][0-9][EF][0-1][0-9][0-9].hgt
-or .hgt.gz, or .tif files. Each one contains 1x1 degree area.
 
-Default data directory is DIR=$HOME/.srtm_data
+- Default data directory is DIR=$HOME/.srtm_data, it can be changed
+with --srtm_dir option.
+
+- Data is stored in [SN][0-9][0-9][EF][0-1][0-9][0-9].hgt
+or .hgt.gz, or .tif files. Each tile contains 1x1 degree area.
+
+- Tiles can have different resolution (1200x1200, 3600x3600, 1800x3600,
+etc) mixed in one folder.
+
+- SRTM data (but not Alos) have extra data points (1201x1201 points
+instead of 1200x1200) which should match points on adjacent tiles. These
+points are ignored here.
 
 */
 
@@ -144,12 +153,10 @@ class SRTM {
     /******************************/
 
     // make vector data: contours
-    // use kx parameter to use only every kx-th horizontal point.
-    // if kx == 0 then use some latitude-dependent default.
-    std::map<short, dMultiLine> find_contours(const dRect & range, int step, int kx=0, double smooth = 0.0);
+    std::map<double, dMultiLine> find_contours(const dRect & range, double step, double vtol = 0.0);
 
     // make vector data: slope contours
-    dMultiLine find_slope_contours(const dRect & range, double val, int kx=0, double smooth = 0.0);
+    dMultiLine find_slope_contours(const dRect & range, double val, double vtol = 0.0);
 
     // make vector data: peaks
     std::map<dPoint, short> find_peaks(const dRect & range, int DH, size_t PS);

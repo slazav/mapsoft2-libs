@@ -8,6 +8,7 @@
 #include "geom/point_int.h"
 #include "geom/poly_tools.h"
 #include "filename/filename.h"
+#include "image_cnt/image_cnt.h"
 #include <zlib.h>
 #include <tiffio.h>
 
@@ -516,84 +517,10 @@ SRTM::get_color(const dPoint & p, bool raw) {
 
 /************************************************/
 
-// Coordinates of 4 data cell corners: [0,0] [0,1] [1,1] [1,0]
-iPoint crn (int k, int kx=1){ k%=4; return iPoint(kx*(k/2), (k%3>0)?1:0); }
-
-// Directions of 4 data cell sides
-iPoint dir (int k, int kx=1){ return crn(k+1, kx)-crn(k, kx); }
-
-// Erase a key-value pair from multimap
-void erase_kv (std::multimap<iPoint, iPoint> & mm, const iPoint & k, const iPoint &v){
-  auto i = mm.lower_bound(k);
-  while (i != mm.upper_bound(k)){
-    if (i->second == v) i=mm.erase(i);
-    else i++;
-  }
-}
-
-// Merge contours.
-// Sizes of pf and pb should be same, they should contain
-// pairs p1->p2 and p2->p1 of coordinates multiplied by 1e6.
-dMultiLine merge_cntr(std::multimap<iPoint, iPoint> & pf,
-                      std::multimap<iPoint, iPoint> & pb){
-
-  dMultiLine ret;
-  while (pf.size()){
-    iLine l;
-    auto p1 = pf.begin()->first;
-    auto p2 = pf.begin()->second;
-    l.push_back(p1);
-    l.push_back(p2);
-    pf.erase(p1);
-    pb.erase(p2);
-
-    while (1){
-
-     if (pf.count(p2)){
-        auto p3 = pf.find(p2)->second;
-        l.push_back(p3);
-        erase_kv(pf, p2, p3);
-        erase_kv(pb, p3, p2);
-        p2 = p3;
-      }
-
-      else if (pb.count(p2)){
-        auto p3 = pb.find(p2)->second;
-        l.push_back(p3);
-        erase_kv(pb, p2, p3);
-        erase_kv(pf, p3, p2);
-        p2 = p3;
-      }
-
-      else if (pf.count(p1)){
-        auto p3 = pf.find(p1)->second;
-        l.insert(l.begin(), p3);
-        erase_kv(pf, p1, p3);
-        erase_kv(pb, p3, p1);
-        p1 = p3;
-      }
-
-      else if (pb.count(p1)){
-        auto p3 = pb.find(p1)->second;
-        l.insert(l.begin(), p3);
-        erase_kv(pb, p1, p3);
-        erase_kv(pf, p3, p1);
-        p1 = p3;
-      }
-
-      else break;
-    }
-    if (l.size()) ret.push_back((dLine)l*1e-6);
-  }
-  return ret;
-}
-
-
-std::map<short, dMultiLine>
-SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
+std::map<double, dMultiLine>
+SRTM::find_contours(const dRect & range, double step, double vtol){
 
   dPoint d = get_step(range.cnt());
-  double E = std::min(d.x,d.y)/3; // distance for merging
 
   // integer rectangle covering the area
   iRect irange = ceil(range/d);
@@ -611,73 +538,15 @@ SRTM::find_contours(const dRect & range, int step, int kx, double smooth){
     }
   }
 
-  std::map<short, std::multimap<iPoint, iPoint> > pf, pb;
-
-  int count = 0;
-  for (int y=y1; y<y2; y++){
-    for (int x=x1; x<x2; x++){
-
-      iPoint p(x,y);
-      // Crossing of all 4 data cell sides with contours
-      // (coordinate v along the 4-segment line).
-      // Add -0.1m to avoid crossings at corners.
-      std::multimap<short, dPoint> pts;
-
-      for (int k=0; k<4; k++){
-        iPoint p1 = p+crn(k);
-        iPoint p2 = p+crn(k+1);
-        auto h1 = (int16_t)img.get16(p1.x-x1, p1.y-y1);
-        auto h2 = (int16_t)img.get16(p2.x-x1, p2.y-y1);
-
-        if (h2==h1) continue;
-        if ((h1<SRTM_VAL_MIN) || (h2<SRTM_VAL_MIN)) continue;
-        int min = (h1<h2)? h1:h2;
-        int max = (h1<h2)? h2:h1;
-        min = int( floor(double(min)/step)) * step;
-        max = int( ceil(double(max)/step))  * step;
-        for (int hh = min; hh<=max; hh+=step){
-          double v = double(hh-h1+0.1)/double(h2-h1);
-          if ((v<0)||(v>1)) continue;
-          dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*v;
-          cr.x*=d.x;
-          cr.y*=d.y;
-          pts.emplace(hh, cr);
-        }
-      }
-      // Put contours which are crossing the data cell 2 or 4 times to `ret`.
-      short h=SRTM_VAL_UNDEF;
-      dPoint p1, p2;
-
-      for (auto const & i:pts){
-        if (h!=i.first){
-          h  = i.first;
-          p1 = i.second;
-          continue;
-        }
-        else {
-          p2 = i.second;
-          pf[h].emplace(p1*1e6, p2*1e6);
-          pb[h].emplace(p2*1e6, p1*1e6);
-          h = SRTM_VAL_UNDEF;
-        }
-      }
-    }
-  }
-
-  // merge contours
-  std::map<short, dMultiLine> ret;
-  for(const auto & pp : pf){
-    auto h = pp.first;
-    ret[h] = merge_cntr(pf[h], pb[h]);
-  }
+  std::map<double, dMultiLine> ret = image_cnt(img, NAN, NAN, step, 0, vtol);
+  for (auto & r:ret) r.second = (dPoint(x1,y1)+r.second)*d;
   return ret;
 }
 
 dMultiLine
-SRTM::find_slope_contours(const dRect & range, double val, int kx, double smooth){
+SRTM::find_slope_contours(const dRect & range, double val, double vtol){
 
   dPoint d = get_step(range.cnt());
-  double E = std::min(d.x,d.y)/3; // distance for merging
 
   // integer rectangle covering the area
   iRect irange = ceil(range/d);
@@ -695,53 +564,11 @@ SRTM::find_slope_contours(const dRect & range, double val, int kx, double smooth
     }
   }
 
-  // Find contours
-  // Add one extra point on each side to put zero values there
-  // and get closed contours.
+  std::map<double, dMultiLine> ret = image_cnt(img, val, val, 1.0, 0, vtol);
+  if (ret.size()==0) return dMultiLine();
 
-  // Put each pair of points into two arrays
-  // for both directions
-  std::multimap<iPoint, iPoint> pf, pb;
-
-  for (int y=y1-1; y<=y2; y++){
-    for (int x=x1-1; x<=x2; x++){
-
-      iPoint p(x,y);
-      // Crossing of all 4 data cell sides with contours
-      // (coordinate v along the 4-segment line).
-      dLine pts;
-      for (int k=0; k<4; k++){
-        iPoint p1 = p+crn(k);
-        iPoint p2 = p+crn(k+1);
-        float v1 = 0, v2 = 0;
-        if (p1.y>=y1 && p1.y<=y2 && p1.x>=x1 && p1.x<=x2)
-          v1 = img.getF(p1.x-x1, p1.y-y1);
-
-        if (p2.y>=y1 && p2.y<=y2 && p2.x>=x1 && p2.x<=x2)
-          v2 = img.getF(p2.x-x1, p2.y-y1);
-
-        float min = (v1<v2)? v1:v2;
-        float max = (v1<v2)? v2:v1;
-        if (min < val && max >= val){
-          double v = (val-v1)/(v2-v1);
-          dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*v;
-          cr.x*=d.x;
-          cr.y*=d.y;
-          pts.push_back(cr);
-        }
-      }
-      // Put contours which are crossing the data cell 2 or 4 times to `ret`.
-      for (size_t i=1; i<pts.size(); i+=2){
-        dPoint p1 = pts[i-1], p2 = pts[i];
-        pf.emplace(1e6*p1, 1e6*p2);
-        pb.emplace(1e6*p2, 1e6*p1);
-      }
-    }
-  }
-
-  std::cerr << "merge slope contours\n";
-  auto ret = merge_cntr(pf, pb);
-  return ret;
+  for (auto & r:ret) r.second = (dPoint(x1,y1)+r.second)*d;
+  return ret.begin()->second;
 }
 
 
