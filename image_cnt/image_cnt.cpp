@@ -180,9 +180,8 @@ image_cnt(const ImageR & img,
     // filter stright lines (mostly for borders)
     for (auto & l:ml){
       auto i1 = l.begin();
-      while (i1!=l.end()){
+      while (i1+2!=l.end()){
         auto i2=i1+1, i3=i1+2;
-        if (i2 == l.end() || i3==l.end()) break;
         if (dist(norm(*i2-*i1), norm(*i3-*i2)) < pt_acc)
           l.erase(i2);
         else ++i1;
@@ -193,9 +192,8 @@ image_cnt(const ImageR & img,
     if (vtol>0){
       for (auto & l:ml){
         auto i1 = l.begin();
-        while (i1!=l.end()){
+        while (i1+2!=l.end()){
           auto i2=i1+1, i3=i1+2;
-          if (i2 == l.end() || i3==l.end()) break;
           dPoint rng = img_vrange(*i1, *i3, img);
           if (fabs(rng.x-v0) < vtol && fabs(rng.y-v0) < vtol ||
               std::isinf(rng.x) || std::isinf(rng.y))
