@@ -564,7 +564,7 @@ SRTM::find_slope_contours(const dRect & range, double val, double vtol){
     }
   }
 
-  std::map<double, dMultiLine> ret = image_cnt(img, val, val, 1.0, 0, vtol);
+  std::map<double, dMultiLine> ret = image_cnt(img, val, val, 1.0, 1, vtol);
   if (ret.size()==0) return dMultiLine();
 
   for (auto & r:ret) r.second = (dPoint(x1,y1)+r.second)*d;
