@@ -103,14 +103,20 @@ image_cnt(const ImageR & img,
 
         for (double vv=min; vv<=max; vv+=vstep){
 
-          if (brd && closed && v1>=vv && v2>=vv){
+          // Method have lots of problems if vv can be
+          // equal to v1 or v2. Shift bad values:
+          double sh = 1e-3*vstep;
+          double v1a = (fabs(vv-v1)>sh/2)? v1 : v1 - sh;
+          double v2a = (fabs(vv-v2)>sh/2)? v2 : v2 - sh;
+
+          if (brd && closed && v1a>=vv && v2a>=vv){
             push_seg(ret[vv], p1, p2);
             continue;
           }
 
-          if (v1==v2) continue;
+          if (v1a==v2a) continue;
 
-          double d = double(vv-v1)/double(v2-v1);
+          double d = double(vv-v1a)/double(v2a-v1a);
           if ((d<0)||(d>=1)) continue;
 
           dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*d;
