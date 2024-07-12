@@ -288,36 +288,19 @@ SRTM::get_step(const iPoint& p){
 // Low-level get function: rounding coordinate to the nearest point
 int16_t
 SRTM::get_raw(const dPoint& p){
-  // find tile
+  // find tile, load image, get width and height
   iPoint key = floor(p);
   if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
   auto im = srtm_cache.get(key);
   if (im.is_empty()) return SRTM_VAL_NOFILE;
-  // find coordinate in the tile (with extra point!)
-  iPoint crd;
   auto w = im.width(), h = im.height();
-  // x=0..w, y=0..h
-  crd.x = rint((p.x-key.x)*(w%2==1 ? w-1 : w));
-  crd.y = rint((p.y-key.y)*(h%2==1 ? h-1 : h));
 
-  crd.y = h - crd.y; // 0..h
-
-  // Here I can see how smart were SRTM engeneers with
-  // their extra point: if resolution of two tiles is
-  // different then rounding or interpolation of points
-  // between them is not trivial!
-
-  // If we do not have extra point, coordinate can go
-  // beyond image range: 0..1200 for 1200x1200 image.
-  // In this case we need the next tile:
-  bool ox = (w%2==0 && crd.x==w);
-  bool oy = (h%2==0 && crd.y==h);
-  if (ox || oy){
-    dPoint p1(p);
-    if (ox) p1.x = ceil(p.x)+1e-6;
-    if (oy) p1.y = floor(p.y)-1e-6;
-    return get_raw(p1);
-  }
+  // Pixel coordinate (different for SRTM/ALOS):
+  //   nearest pixel(srtm) = rint((pt - tile)*(width-1))  0..width-1
+  //   nearest pixel(alos) = h- floor((pt - tile)*width) 0..width-1
+  iPoint crd;
+  crd.x = (w%2==1) ? rint((p.x - floor(p.x))*(w-1)) : floor((p.x - floor(p.x))*w);
+  crd.y = (h%2==1) ? rint((ceil(p.y)  - p.y)*(h-1)) : floor((ceil(p.y)  - p.y)*h);
 
   // Use overlay
   if (overlay.count(key) && overlay[key].count(crd))

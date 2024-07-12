@@ -16,20 +16,23 @@ DEM/SRTM data accsess.
 
 Original data can be downloaded from ftp://e0mss21u.ecs.nasa.gov/srtm/
 Fixed data can be downloaded from http://www.viewfinderpanoramas.org/dem3.html
-
+ALOS data: https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm
 
 - Default data directory is DIR=$HOME/.srtm_data, it can be changed
 with --srtm_dir option.
 
 - Data is stored in [SN][0-9][0-9][EF][0-1][0-9][0-9].hgt
 or .hgt.gz, or .tif files. Each tile contains 1x1 degree area.
+Different resolutions and formats can be mixed in a singe folder.
 
-- Tiles can have different resolution (1200x1200, 3600x3600, 1800x3600,
-etc) mixed in one folder.
+SRTM data: https://surferhelp.goldensoftware.com/subsys/HGT_NASA_SRTM_Data_File_Description.htm
+1x1-degree tiles, 1201x1201 or 3601x3601 pixels. Resolution is 1/1200 or 1/3600 degree.
+Center of lower-left pixel is at integer degree coordinate. First and last column/row are identical.
 
-- SRTM data (but not Alos) have extra data points (1201x1201 points
-instead of 1200x1200) which should match points on adjacent tiles. These
-points are ignored here.
+ALOS format: https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/data/aw3d30v4.1_product_e_1.0.pdf
+1x1-degree tiles, 3600x3600, 1800x3600, 1200x3600, 600x3600 pixels, TIFF
+It's not so clearly written, but I assume that resolution is 1/3600, 1/1800 degree,
+center of lower-left point is at integer degree coordinate + 1/2 of the resolution.
 
 */
 
