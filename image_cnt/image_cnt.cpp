@@ -3,10 +3,7 @@
 #include "image_cnt.h"
 
 // Coordinates of 4 data cell corners: [0,0] [0,1] [1,1] [1,0]
-iPoint crn (int k, int kx=1){ k%=4; return iPoint(kx*(k/2), (k%3>0)?1:0); }
-
-// Directions of 4 data cell sides
-iPoint dir (int k, int kx=1){ return crn(k+1, kx)-crn(k, kx); }
+iPoint crn (int k){ k%=4; return iPoint(k/2, (k%3>0)?1:0); }
 
 // we use int64_t points with some factor for intermediate coordinate calculations
 const double pt_acc = 1e-4;
@@ -116,7 +113,7 @@ image_cnt(const ImageR & img,
 
           if (v1a==v2a) continue;
 
-          double d = double(vv-v1a)/double(v2a-v1a);
+          double d = (vv-v1a)/(v2a-v1a);
           if ((d<0)||(d>=1)) continue;
 
           dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*d;
