@@ -25,6 +25,7 @@ class GObjSRTM : public GObj {
 
   bool cnt; // draw contours?
   int cnt_step;
+  double cnt_vtol;
   int cnt_smult;
   uint32_t cnt_color;
   double cnt_w;

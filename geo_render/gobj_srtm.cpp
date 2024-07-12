@@ -14,6 +14,8 @@ ms2opt_add_drawsrtm(GetOptSet & opts){
     "Draw contours (0|1, default - 1).");
   opts.add("srtm_cnt_step",1,0,g,
     " Contour step [m], default 50.");
+  opts.add("srtm_cnt_vtol",1,0,g,
+    " altitude tolerance for smoothing contours [m], default 5");
   opts.add("srtm_cnt_smult",1,0,g,
     " Step multiplier for thick contours, default - 5.");
   opts.add("srtm_cnt_col",1,0,g,
@@ -60,6 +62,7 @@ GObjSRTM::get_def_opt(){
   // contours parameters
   o.put("srtm_cnt",       1);
   o.put("srtm_cnt_step",  50);
+  o.put("srtm_cnt_vtol",  5);
   o.put("srtm_cnt_smult", 5);
   o.put("srtm_cnt_col",   0xFF000000);
   o.put("srtm_cnt_w",     0.25);
@@ -95,6 +98,7 @@ GObjSRTM::set_opt(const Opt & o){
   // contours parameters
   cnt          = o.get<bool>("srtm_cnt",      1);
   cnt_step     = o.get<int>("srtm_cnt_step",  50);
+  cnt_vtol     = o.get<double>("srtm_cnt_vtol",  5);
   cnt_smult    = o.get<int>("srtm_cnt_smult", 5);
   cnt_color    = o.get<int>("srtm_cnt_col",   0xFF000000);
   cnt_w        = o.get<double>("srtm_cnt_w",    0.25);
@@ -179,11 +183,11 @@ render_tile(const dRect & draw_range){
   // draw contours
   if (cnt) {
     auto srtm_lock = srtm->get_lock();
-    auto c_data = srtm->find_contours(wgs_range, cnt_step);
+    auto c_data = srtm->find_contours(wgs_range, cnt_step, cnt_vtol);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
       if (is_stopped()) return false;
-      bool isth = c.first%(cnt_step*cnt_smult); // is it a thick contour
+      bool isth = int(c.first)%(cnt_step*cnt_smult); // is it a thick contour
       cr->set_line_width(cnt_w*(isth? 1:cnt_wmult));
       dMultiLine l = c.second;
       cnv->bck(l);
