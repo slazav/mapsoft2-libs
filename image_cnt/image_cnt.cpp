@@ -27,7 +27,7 @@ img_vrange(const dPoint & p1, const dPoint & p2, const ImageR & img){
   size_t w = img.width(), h = img.height();
   double min=+INFINITY, max=-INFINITY;
 
-  //find crossing of p1-p2 and integer x lines
+  // find crossing of p1-p2 and integer x lines
   if (p1.x!=p2.x){
     int x1 = ceil(std::min(p1.x,p2.x)), x2 = floor(std::max(p1.x,p2.x))+1;
 
@@ -93,8 +93,6 @@ image_cnt(const ImageR & img,
         if (std::isnan(vmin)) {
           min = (v1<v2)? v1:v2;
           min = floor(min/vstep) * vstep;
-          max = (v1<v2)? v2:v1;
-          max = ceil(max/vstep) * vstep;
         }
         if (std::isnan(vmax)) {
           max = (v1<v2)? v2:v1;
@@ -104,8 +102,11 @@ image_cnt(const ImageR & img,
         if (min > max) throw Err() << "image_cnt: min > max";
 
         for (double vv=min; vv<=max; vv+=vstep){
-          if (brd && closed && v1>=vv && v2>=vv)
+
+          if (brd && closed && v1>=vv && v2>=vv){
             push_seg(ret[vv], p1, p2);
+            continue;
+          }
 
           if (v1==v2) continue;
 
