@@ -11,6 +11,19 @@ const double pt_acc = 1e-4;
 // push segment to multiline
 void
 push_seg(dMultiLine & ml, const dPoint & p1, const dPoint & p2){
+
+  for (auto & l:ml){
+    if (l.size()==0) continue;
+    if (dist(*l.rbegin(), p1) < pt_acc){
+      l.push_back(p2);
+      return;
+    }
+    if (dist(*l.begin(), p2) < pt_acc){
+      l.insert(l.begin(), p1);
+      return;
+    }
+  }
+
   dLine l;
   l.push_back(p1);
   l.push_back(p2);
