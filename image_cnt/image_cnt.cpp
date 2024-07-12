@@ -155,7 +155,8 @@ image_cnt(const ImageR & img,
     auto & ml = s.second;
 
     for (auto i1 = ml.begin(); i1!=ml.end(); ++i1){
-      for (auto i2 = i1+1; i2!=ml.end(); ++i2){
+      for (auto i2 = ml.begin(); i2!=ml.end(); ++i2){
+        if (i1==i2) continue;
         if (i2->size()<2 || i1->size()<2) continue;
         if (dist(*i1->rbegin(), *i2->begin()) < pt_acc){
           i1->insert(i1->end(), i2->begin()+1, i2->end());
