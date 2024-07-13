@@ -73,7 +73,6 @@ CBInterp::CBInterp(){
   const pair_t data_list[] = {
     pair_t("nearest", "nearest"),
     pair_t("linear",  "linear"),
-    pair_t("cubic",   "cubic"),
   };
   set_values(data_list,
     data_list+sizeof(data_list)/sizeof(pair_t));

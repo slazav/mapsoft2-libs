@@ -255,7 +255,6 @@ SRTM::set_opt(const Opt & opt){
   auto srtm_interp_s = opt.get("srtm_interp", "linear");
   if      (srtm_interp_s == "nearest") srtm_interp = SRTM_NEAREST;
   else if (srtm_interp_s == "linear")  srtm_interp = SRTM_LINEAR;
-  else if (srtm_interp_s == "cubic")   srtm_interp = SRTM_CUBIC;
   else throw Err() << "SRTM: unknown srtm_interp setting: " << srtm_interp_s;
 
   // surface parameters
@@ -292,8 +291,8 @@ SRTM::get_step(const iPoint& p){
 }
 
 // Low-level get function: rounding coordinate to the nearest point
-int16_t
-SRTM::get_raw(const dPoint& p){
+double
+SRTM::get_nearest(const dPoint& p){
   auto tile = get_tile(floor(p));
   if (tile.is_empty()) return SRTM_VAL_NOFILE;
 
@@ -346,9 +345,8 @@ SRTM::get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts)
   return;
 }
 
-
 // Bilinear interpolation
-int16_t
+double
 SRTM::get_interp(const dPoint& p){
   auto tile = get_tile(floor(p));
   if (tile.is_empty()) return SRTM_VAL_NOFILE;
@@ -410,66 +408,11 @@ SRTM::get_interp(const dPoint& p){
   return SRTM_VAL_UNDEF;
 }
 
-
-
-
-// Cubic interpolation (used in get_val_int16()).
-// see http://www.paulinternet.nl/?page=bicubic
-double
-cubic_interp(const double h[4], const double x){
-  return h[1] + 0.5 * x*(h[2] - h[0] + x*(2.0*h[0] - 5.0*h[1] + 4.0*h[2] -
-              h[3] + x*(3.0*(h[1] - h[2]) + h[3] - h[0])));
-}
-
-// interpolate 1-point or 2-points holes
-// maybe this can be written smarter...
-void
-int_holes(double h[4]){
-  if ((h[0]>SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)) return;
-  for (int cnt=0; cnt<2; cnt++){
-    if      ((h[0]<=SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN)) h[0]=2*h[1]-h[2];
-    else if ((h[1]<=SRTM_VAL_MIN) && (h[0]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN)) h[1]=(h[0]+h[2])/2;
-    else if ((h[1]<=SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)) h[1]=2*h[2]-h[3];
-    else if ((h[2]<=SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)) h[2]=(h[1]+h[3])/2;
-    else if ((h[2]<=SRTM_VAL_MIN) && (h[0]>SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN)) h[2]=2*h[1]-h[0];
-    else if ((h[3]<=SRTM_VAL_MIN) && (h[1]>SRTM_VAL_MIN) && (h[2]>SRTM_VAL_MIN)) h[3]=2*h[2]-h[1];
-    else break;
-  }
-  if ((h[1]<=SRTM_VAL_MIN) && (h[2]<=SRTM_VAL_MIN) && (h[0]>SRTM_VAL_MIN) && (h[3]>SRTM_VAL_MIN)){
-    h[1]=(2*h[0] + h[3])/3;
-    h[2]=(h[0] + 2*h[3])/3;
-  }
-}
-
 // Get with interpolation
 double
 SRTM::get_h(const dPoint& p, bool raw){
-  auto h0 = get_raw(p);
-  if (h0<SRTM_VAL_MIN || raw || srtm_interp == SRTM_NEAREST) return h0;
-
-  if (srtm_interp == SRTM_LINEAR) {
-    return get_interp(p);
-  }
-
-  if (srtm_interp == SRTM_CUBIC) {
-    dPoint d = get_step(p);
-    double x = p.x - floor(p.x);
-    double y = p.y - floor(p.y);
-    double sx = floor(x/d.x)*d.x - x;
-    double sy = floor(y/d.y)*d.y - y;
-    double hx[4], hy[4];
-
-    for (int i=0; i<4; i++){
-      for (int j=0; j<4; j++){
-        hx[j]=get_raw(p + dPoint(sx+d.x*(j-1), sy+d.y*(i-1)));
-      }
-      int_holes(hx);
-      hy[i]= cubic_interp(hx, -sx/d.x);
-    }
-    int_holes(hy);
-    return cubic_interp(hy, -sy/d.y);
-  }
-
+  if (raw || srtm_interp == SRTM_NEAREST) return get_nearest(p);
+  if (srtm_interp == SRTM_LINEAR) { return get_interp(p); }
   throw Err() << "SRTM: unknown interpolation style: " << srtm_interp;
 }
 

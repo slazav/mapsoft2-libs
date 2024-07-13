@@ -139,7 +139,6 @@ class SRTM {
     typedef enum {
       SRTM_NEAREST=0,
       SRTM_LINEAR=1,
-      SRTM_CUBIC=2,
     } style_t;
 
     style_t srtm_interp;
@@ -151,10 +150,11 @@ class SRTM {
     // Get points for interpolation (0,1,2,4 points) for a given tile.
     void get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts);
 
-    // Low-level get function: rounding coordinate to the nearest point
-    int16_t get_raw(const dPoint& p);
+    // Get altitude at the nearest point
+    double get_nearest(const dPoint& p);
 
-    int16_t get_interp(const dPoint& p);
+    // Get altitude with bilinear interpolation
+    double get_interp(const dPoint& p);
 
     // get with interpolation
     double get_h(const dPoint& p, bool raw=false);
