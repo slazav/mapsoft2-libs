@@ -12,10 +12,10 @@
 #include <zlib.h>
 #include <tiffio.h>
 
-
+/**********************************************************/
 // load srtm data from *.hgt file
 ImageR
-read_file(const std::string & file){
+read_hgt_file(const std::string & file){
   FILE *F = fopen(file.c_str(), "rb");
   if (!F) return ImageR();
 
@@ -47,7 +47,7 @@ read_file(const std::string & file){
 
 // load srtm data from *.hgt.gz file
 ImageR
-read_zfile(const std::string & file){
+read_zhgt_file(const std::string & file){
   gzFile F = gzopen(file.c_str(), "rb");
   if (!F) return ImageR();
 
@@ -85,7 +85,7 @@ read_zfile(const std::string & file){
 
 // load srtm data from *.tif file
 ImageR
-read_tfile(const std::string & file){
+read_demtif_file(const std::string & file){
 
   // open Tiff file, get width and height
   if (!file_exists(file)) return ImageR();
@@ -132,11 +132,15 @@ read_tfile(const std::string & file){
   return im;
 }
 
+/**********************************************************/
+// load SRTM tile
+SRTMTile::SRTMTile(const std::string & dir, const iPoint & key){
+  w = 0; h = 0;
+  empty = true;
+  srtm = false;
 
-bool
-SRTM::load(const iPoint & key){
   if ((key.x < -180) || (key.x >= 180) ||
-      (key.y <  -90) || (key.y >=  90)) return false;
+      (key.y <  -90) || (key.y >=  90)) return;
 
   char EW = key.x<0 ? 'W':'E';
   char NS = key.y<0 ? 'S':'N';
@@ -146,29 +150,39 @@ SRTM::load(const iPoint & key){
   file << NS << std::setfill('0') << std::setw(2) << abs(key.y)
        << EW << std::setw(3) << abs(key.x);
 
+  ImageR im;
+
   // try <name>.hgt.gz
-  ImageR im = read_zfile(srtm_dir + "/" + file.str() + ".hgt.gz");
+  im= read_zhgt_file(dir + "/" + file.str() + ".hgt.gz");
 
   // try <name>.hgt
   if (im.is_empty())
-    im = read_file(srtm_dir + "/" + file.str() + ".hgt");
+    im = read_hgt_file(dir + "/" + file.str() + ".hgt");
 
   // try <name>.tif
   if (im.is_empty())
-    im = read_tfile(srtm_dir + "/" + file.str() + ".tif");
+    im = read_demtif_file(dir + "/" + file.str() + ".tif");
 
   if (im.is_empty())
-    im = read_tfile(srtm_dir + "/" + file.str() + ".tiff");
+    im = read_demtif_file(dir + "/" + file.str() + ".tiff");
 
   if (im.is_empty())
     std::cerr << "SRTM: can't find file: " << file.str() << "\n";
 
-  srtm_cache.add(key, im);
-  return !im.is_empty();
+  if (im.is_empty()) return;
+
+  // TODO: read overlay
+
+  ImageR::operator=(im);
+  w = im.width();
+  h = im.height();
+  srtm = (w%2 == 1);
+
+  empty = !(w > 2 && h > 1);
+  if (!empty) step = srtm? dPoint(1.0/(w-1), 1.0/(h-1)) : dPoint(1.0/w, 1.0/h);
 }
 
-
-/************************************************/
+/**********************************************************/
 
 void
 ms2opt_add_srtm(GetOptSet & opts){
@@ -273,41 +287,21 @@ SRTM::set_opt(const Opt & opt){
 // (0,0) if data is missing.
 dPoint
 SRTM::get_step(const iPoint& p){
-  // find tile
-  dPoint ret;
-  iPoint key = floor(p);
-  if ((!srtm_cache.contains(key)) && (!load(key))) return ret;
-  auto im = srtm_cache.get(key);
-  if (im.is_empty()) return ret;
-  auto w = im.width(), h = im.height();
-  ret.x = 1.0/(w%2==1 ? w-1 : w);
-  ret.y = 1.0/(h%2==1 ? h-1 : h);
-  return ret;
+  return get_tile(floor(p)).step;
 }
 
 // Low-level get function: rounding coordinate to the nearest point
 int16_t
 SRTM::get_raw(const dPoint& p){
-  // find tile, load image, get width and height
-  iPoint key = floor(p);
-  if ((!srtm_cache.contains(key)) && (!load(key))) return SRTM_VAL_NOFILE;
-  auto im = srtm_cache.get(key);
-  if (im.is_empty()) return SRTM_VAL_NOFILE;
-  auto w = im.width(), h = im.height();
+  auto tile = get_tile(floor(p));
+  if (tile.is_empty()) return SRTM_VAL_NOFILE;
 
-  // Pixel coordinate (different for SRTM/ALOS):
-  //   nearest pixel(srtm) = rint((pt - tile)*(width-1))  0..width-1
-  //   nearest pixel(alos) = h- floor((pt - tile)*width) 0..width-1
-  iPoint crd;
-  crd.x = (w%2==1) ? rint((p.x - floor(p.x))*(w-1)) : floor((p.x - floor(p.x))*w);
-  crd.y = (h%2==1) ? rint((ceil(p.y)  - p.y)*(h-1)) : floor((ceil(p.y)  - p.y)*h);
+  // Pixel coordinate, [0..1200)
+  dPoint pix((p.x - floor(p.x))/tile.step.x, (ceil(p.y) - p.y)/tile.step.y);
 
-  // Use overlay
-  if (overlay.count(key) && overlay[key].count(crd))
-     return overlay[key][crd];
-
-  // obtain the point
-  return (int16_t)im.get16(crd.x, crd.y);
+  // Nearest pixel [0..1200] for SRTM, [0..1199] for ALOS
+  iPoint ipix = (tile.srtm) ? rint(pix) : floor(pix);
+  return tile.get_unsafe(ipix);
 }
 
 // Cubic interpolation (used in get_val_int16()).
@@ -419,27 +413,23 @@ SRTM::overlay_cut(const dLine & l){
       iPoint key(x,y);
 
       // load image (only for w and h)
-      if ((!srtm_cache.contains(key)) && (!load(key))) continue;
-      auto im = srtm_cache.get(key);
-      size_t w = im.width(), h=im.height();
-      if (im.is_empty()) continue;
+      auto tile = get_tile(key);
+      if (tile.is_empty()) continue;
 
       std::set<iPoint> pts;
       // not very efficient
-      for (size_t cx = 0; cx < w; cx++){
-        for (size_t cy = 0; cy < h; cy++){
+      for (size_t cx = 0; cx < tile.w; cx++){
+        for (size_t cy = 0; cy < tile.h; cy++){
           dPoint p(key);
-          p.x += (double)cx/(w%2==1 ? w-1 : w);
-          p.y += 1.0 - (double)cy/(h%2==1 ? h-1 : h);
+          p.x += (double)cx/(tile.w%2==1 ? tile.w-1 : tile.w);  // FIXME
+          p.y += 1.0 - (double)cy/(tile.h%2==1 ? tile.h-1 : tile.h);
           if (pt.test_pt(p)) pts.emplace(cx,cy);
         }
       }
 
       if (!pts.size()) continue;
-      if (!overlay.count(key)) overlay[key] = std::map<iPoint, int16_t>();
-
       for (const auto & p:pts)
-        overlay[key][p] = SRTM_VAL_UNDEF;
+        tile.overlay[p] = SRTM_VAL_UNDEF;
     }
   }
 }
@@ -451,21 +441,14 @@ SRTM::overlay_clear(const dLine & l){
   for (int x = floor(r.x); x<ceil(r.x+r.w); x++){
     for (int y = floor(r.y); y<ceil(r.y+r.h); y++){
       iPoint key(x,y);
-      if (!overlay.count(key)) continue;
+      auto tile = get_tile(key);
+      if (tile.is_empty()) continue;
 
-      if ((!srtm_cache.contains(key)) && (!load(key))) continue;
-      auto im = srtm_cache.get(key);
-      size_t w = im.width(), h=im.height();
-      if (im.is_empty()) continue;
-      dPoint d;
-      d.x = 1.0/(w%2==1 ? w-1 : w);
-      d.y = 1.0/(h%2==1 ? h-1 : h);
-
-      auto i = overlay[key].begin();
-      while (i!=overlay[key].end()){
+      auto i = tile.overlay.begin();
+      while (i!=tile.overlay.end()){
         dPoint p1(i->first);
-        dPoint p2(p1.x*d.x + key.x, 1.0 - p1.y*d.y + key.y);
-        if (pt.test_pt(p2)) i = overlay[key].erase(i);
+        dPoint p2(p1.x*tile.step.x + key.x, 1.0 - p1.y*tile.step.y + key.y); // FIXME
+        if (pt.test_pt(p2)) i = tile.overlay.erase(i);
         else i++;
       }
 

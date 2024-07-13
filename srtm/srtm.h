@@ -12,17 +12,17 @@
 #include "rainbow/rainbow.h"
 
 /*
-DEM/SRTM data accsess.
+DEM/SRTM data access.
 
-Original data can be downloaded from ftp://e0mss21u.ecs.nasa.gov/srtm/
-Fixed data can be downloaded from http://www.viewfinderpanoramas.org/dem3.html
+Original SRTM data: ftp://e0mss21u.ecs.nasa.gov/srtm/
+Fixed SRTM data: from http://www.viewfinderpanoramas.org/dem3.html
 ALOS data: https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm
 
 - Default data directory is DIR=$HOME/.srtm_data, it can be changed
 with --srtm_dir option.
 
 - Data is stored in [SN][0-9][0-9][EF][0-1][0-9][0-9].hgt
-or .hgt.gz, or .tif files. Each tile contains 1x1 degree area.
+or .hgt.gz, .tif, or .tiff files. Each file contains 1x1 degree area.
 Different resolutions and formats can be mixed in a singe folder.
 
 SRTM data: https://surferhelp.goldensoftware.com/subsys/HGT_NASA_SRTM_Data_File_Description.htm
@@ -31,21 +31,14 @@ Center of lower-left pixel is at integer degree coordinate. First and last colum
 
 ALOS format: https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/data/aw3d30v4.1_product_e_1.0.pdf
 1x1-degree tiles, 3600x3600, 1800x3600, 1200x3600, 600x3600 pixels, TIFF
-It's not so clearly written, but I assume that resolution is 1/3600, 1/1800 degree,
+It's not so clearly written, but I assume that resolution is 1/3600, 1/1800, etc. degree,
 center of lower-left point is at integer degree coordinate + 1/2 of the resolution.
 
 */
 
-// default size of SRTM cache
+// default size of SRTM tile cache
 #define SRTM_CACHE_SIZE 32
 
-// default data width
-#define SRTM_DEF_WIDTH 1201
-
-// max size of a hole for interpolation
-#define SRTM_MAX_INT_PTS 100000
-
-//
 #define SRTM_VAL_NOFILE -32767 // file not found
 #define SRTM_VAL_UNDEF  -32768 // hole in data
 #define SRTM_VAL_MIN    -32000 // min of altitude data (for testing)
@@ -63,24 +56,48 @@ void ms2opt_add_srtm_surf(GetOptSet & opts);
 
 /********************************************************************/
 
+struct SRTMTile: public ImageR {
+  SRTMTile(const std::string & dir, const iPoint & key); // load tile
+
+  std::map<iPoint, int16_t> overlay; // overlay data
+  bool srtm;   // SRTM/ALOS data format
+  dPoint step; // x/y steps in degrees
+  size_t w, h; // image dimensions
+
+  bool empty;
+  bool is_empty() {return empty;} // slightly different from Image::is_empty
+
+  // be sure that image type is IMAGE_16 and crd is in the image
+  inline int16_t get_unsafe(const iPoint & crd){
+    // Use overlay
+    if (overlay.count(crd)) return overlay[crd];
+
+    // obtain the point
+    return get16(crd.x, crd.y);
+  }
+};
+
+/********************************************************************/
+
 class SRTM {
 
   /// SRTM data folder.
   std::string srtm_dir;
 
   /// data cache. key is lon,lat in degrees, images are of IMAGE_16 type
-  Cache<iPoint, ImageR> srtm_cache;
-
-  /// overlay
-  std::map<iPoint, std::map<iPoint, int16_t> > overlay;
+  Cache<iPoint, SRTMTile> srtm_cache;
 
   // Locking srtm cache
   std::mutex cache_mutex;
 
   bool interp_holes; // interpolate holes in data
 
-  /// load data into cache
-  bool load(const iPoint & key);
+  // get tile
+  inline SRTMTile & get_tile(const iPoint & key) {
+    if (!srtm_cache.contains(key))
+      srtm_cache.add(key, SRTMTile(srtm_dir, key));
+    return srtm_cache.get(key);
+  }
 
   public:
 
