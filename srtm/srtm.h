@@ -163,14 +163,6 @@ class SRTM {
     double get_s(const dPoint& p, bool raw=false);
 
     /******************************/
-    // overlay things
-
-    // cut hole in the data
-    void overlay_cut(const dLine & l);
-
-    void overlay_clear(const dLine & l);
-
-    /******************************/
     // color surface interface
 
     enum draw_mode_t {

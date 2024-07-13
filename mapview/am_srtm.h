@@ -263,47 +263,5 @@ public:
 
 };
 
-/**********************************************************/
-// Cut overlay hole
-class AMSrtmCut : public ActionModeRegion {
-  dLine line;
-  dRect rect;
-
-  public:
-
-    AMSrtmCut (Mapview * mapview) : ActionModeRegion(mapview) { }
-
-    std::string get_name() override { return "Make hole in SRTM overlay"; }
-    std::string get_icon() { return "cut"; }
-
-    void on_select(const dLine & l) override{
-      dLine l1(l);
-      mapview->viewer.get_cnv().frw(l1);
-      mapview->srtm.overlay_cut(l1);
-      mapview->obj_srtm->redraw();
-    }
-};
-
-/**********************************************************/
-// Clear overlay
-class AMSrtmClear : public ActionModeRegion {
-  dLine line;
-  dRect rect;
-
-  public:
-
-    AMSrtmClear (Mapview * mapview) : ActionModeRegion(mapview) { }
-
-    std::string get_name() override { return "Clear SRTM overlay"; }
-    std::string get_icon() { return "Clear"; }
-
-    void on_select(const dLine & l) override{
-      dLine l1(l);
-      mapview->viewer.get_cnv().frw(l1);
-      mapview->srtm.overlay_clear(l1);
-      mapview->obj_srtm->redraw();
-    }
-};
-
 #endif
 

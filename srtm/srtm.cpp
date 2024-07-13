@@ -441,60 +441,6 @@ SRTM::get_s(const dPoint& p, bool raw){
 
 /************************************************/
 
-void
-SRTM::overlay_cut(const dLine & l){
-  auto r = l.bbox();
-  dPolyTester pt(l);
-  for (int x = floor(r.x); x<ceil(r.x+r.w); x++){
-    for (int y = floor(r.y); y<ceil(r.y+r.h); y++){
-      iPoint key(x,y);
-
-      // load image (only for w and h)
-      auto tile = get_tile(key);
-      if (tile.is_empty()) continue;
-
-      std::set<iPoint> pts;
-      // not very efficient
-      for (size_t cx = 0; cx < tile.w; cx++){
-        for (size_t cy = 0; cy < tile.h; cy++){
-          dPoint p(key);
-          p.x += (double)cx/(tile.w%2==1 ? tile.w-1 : tile.w);  // FIXME
-          p.y += 1.0 - (double)cy/(tile.h%2==1 ? tile.h-1 : tile.h);
-          if (pt.test_pt(p)) pts.emplace(cx,cy);
-        }
-      }
-
-      if (!pts.size()) continue;
-      for (const auto & p:pts)
-        tile.overlay[p] = SRTM_VAL_UNDEF;
-    }
-  }
-}
-
-void
-SRTM::overlay_clear(const dLine & l){
-  auto r = l.bbox();
-  dPolyTester pt(l);
-  for (int x = floor(r.x); x<ceil(r.x+r.w); x++){
-    for (int y = floor(r.y); y<ceil(r.y+r.h); y++){
-      iPoint key(x,y);
-      auto tile = get_tile(key);
-      if (tile.is_empty()) continue;
-
-      auto i = tile.overlay.begin();
-      while (i!=tile.overlay.end()){
-        dPoint p1(i->first);
-        dPoint p2(p1.x*tile.step.x + key.x, 1.0 - p1.y*tile.step.y + key.y); // FIXME
-        if (pt.test_pt(p2)) i = tile.overlay.erase(i);
-        else i++;
-      }
-
-    }
-  }
-}
-
-/************************************************/
-
 uint32_t
 SRTM::get_color(const double h, const double s){
   switch (draw_mode){
