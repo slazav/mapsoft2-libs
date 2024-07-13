@@ -134,7 +134,8 @@ read_demtif_file(const std::string & file){
 
 /**********************************************************/
 // load SRTM tile
-SRTMTile::SRTMTile(const std::string & dir, const iPoint & key){
+SRTMTile::SRTMTile(const std::string & dir, const iPoint & key_){
+  key = key_;
   w = 0; h = 0;
   empty = true;
   srtm = false;
@@ -296,13 +297,121 @@ SRTM::get_raw(const dPoint& p){
   auto tile = get_tile(floor(p));
   if (tile.is_empty()) return SRTM_VAL_NOFILE;
 
-  // Pixel coordinate, [0..1200)
-  dPoint pix((p.x - floor(p.x))/tile.step.x, (ceil(p.y) - p.y)/tile.step.y);
-
-  // Nearest pixel [0..1200] for SRTM, [0..1199] for ALOS
-  iPoint ipix = (tile.srtm) ? rint(pix) : floor(pix);
-  return tile.get_unsafe(ipix);
+  // Pixel coordinate, [0..1200) for srtm,  [-0.5 .. 1199.5) for alos
+  dPoint px = rint(tile.ll2px(p));
+  if (px.x<0) px.x=0;
+  if (px.y<0) px.y=0;
+  if (px.x>=tile.w) px.x=tile.w-1;
+  if (px.y>=tile.h) px.y=tile.h-1;
+  return tile.get_unsafe(px);
 }
+
+void
+SRTM::get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts){
+  auto tile = get_tile(key);
+  if (tile.empty) return;
+
+  // Pixel coordinate (could be outside the image)
+  dPoint px = tile.ll2px(p);
+  int x1 = floor(px.x), x2 = x1+1;
+  int y1 = floor(px.y), y2 = y1+1;
+
+  // side tiles
+  if (x1 < 0) { x1 = 0; x2=-1; }
+  if (x2 >= (int)tile.w) { x2 = (int)tile.w-1; x1 = -1; }
+  if (y1 < 0) { y1 = 0; y2=-1; }
+  if (y2 >= (int)tile.h) { y2 = (int)tile.h-1; y1 = -1; }
+
+  // now coords are either valid or -1
+  if (x1!=-1 && y1!=-1){
+    dPoint pt = tile.px2ll(dPoint(x1,y1));
+    pt.z = tile.get_unsafe(iPoint(x1,y1));
+    if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
+  }
+  if (x1!=-1 && y2!=-1){
+    dPoint pt = tile.px2ll(dPoint(x1,y2));
+    pt.z = tile.get_unsafe(iPoint(x1,y2));
+    if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
+  }
+  if (x2!=-1 && y1!=-1){
+    dPoint pt = tile.px2ll(dPoint(x2,y1));
+    pt.z = tile.get_unsafe(iPoint(x2,y1));
+    if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
+  }
+  if (x2!=-1 && y2!=-1){
+    dPoint pt = tile.px2ll(dPoint(x2,y2));
+    pt.z = tile.get_unsafe(iPoint(x2,y2));
+    if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
+  }
+  return;
+}
+
+
+// Bilinear interpolation
+int16_t
+SRTM::get_interp(const dPoint& p){
+  auto tile = get_tile(floor(p));
+  if (tile.is_empty()) return SRTM_VAL_NOFILE;
+
+  // Pixel coordinate, [0..1200)
+  dPoint px = tile.ll2px(p);
+  int x1 = floor(px.x), x2 = x1+1;
+  int y1 = floor(px.y), y2 = y1+1;
+
+  // This should always work for SRTM.
+  // But ALOS has 0.5 pixel shift and 1 pixel smaller image,
+  // coordinate could be outside the image on any side.
+  if (x1>0 && y1>0 && x2<tile.w && y2<tile.h){
+    double sx = px.x - x1;
+    double sy = px.y - y1;
+    double h1 = tile.get_unsafe(iPoint(x1, y1));
+    double h2 = tile.get_unsafe(iPoint(x1, y2));
+    if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
+
+    double h3 = tile.get_unsafe(iPoint(x2, y1));
+    double h4 = tile.get_unsafe(iPoint(x2, y2));
+    if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
+
+    return h1*(1-sx)*(1-sy) + h2*(1-sx)*sy + h3*sx*(1-sy) + h4*sy*sx;
+  }
+  else {
+    // collect points from adjecent tiles
+    std::set<dPoint> pts;
+    dPoint pa = tile.px2ll(dPoint(x1,y1));
+    dPoint pb = tile.px2ll(dPoint(x2,y2));
+    for (int kx = floor(pa.x); kx<=floor(pb.x); kx++){
+      for (int ky = floor(pb.y); ky<=floor(pa.y); ky++){
+        get_interp_pts(iPoint(kx,ky), p, pts);
+      }
+    }
+
+    // We want to do something close to bilinear interpolation.
+    // In most cases we shold have 4 points (unless some tiles are missing).
+    dPoint p1,p2,p3,p4;
+    p1.z = p2.z = p3.z = p4.z = SRTM_VAL_UNDEF;
+
+    // sort points
+    for (const auto & pp:pts){
+      if (pp.x<=p.x && pp.y<=p.y) {p1 = pp; continue;}
+      if (pp.x<=p.x && pp.y>p.y)  {p2 = pp; continue;}
+      if (pp.x>p.x  && pp.y<=p.y) {p3 = pp; continue;}
+      if (pp.x>p.x  && pp.y>p.y)  {p4 = pp; continue;}
+    }
+    if ((p1.z<SRTM_VAL_MIN)||(p2.z<SRTM_VAL_MIN)||
+        (p3.z<SRTM_VAL_MIN)||(p4.z<SRTM_VAL_MIN)){
+      return SRTM_VAL_UNDEF;
+    }
+
+    dPoint p12 = p1.y==p2.y? (p1+p2)/2 : p1 + (p2-p1)*(p.y - p1.y)/(p2.y-p1.y);
+    dPoint p34 = p3.y==p4.y? (p3+p4)/2 : p3 + (p4-p3)*(p.y - p3.y)/(p4.y-p3.y);
+    dPoint p1234 = p12.x==p34.x? (p12+p34)/2 : p12 + (p34-p12)*(p.x - p12.x)/(p34.x-p12.x);
+    return (int16_t)p1234.z;
+  }
+  return SRTM_VAL_UNDEF;
+}
+
+
+
 
 // Cubic interpolation (used in get_val_int16()).
 // see http://www.paulinternet.nl/?page=bicubic
@@ -339,22 +448,7 @@ SRTM::get_h(const dPoint& p, bool raw){
   if (h0<SRTM_VAL_MIN || raw || srtm_interp == SRTM_NEAREST) return h0;
 
   if (srtm_interp == SRTM_LINEAR) {
-    dPoint d = get_step(p);
-    double x = p.x - floor(p.x);
-    double y = p.y - floor(p.y);
-    double sx = floor(x/d.x)*d.x - x;
-    double sy = floor(y/d.y)*d.y - y;
-
-    auto h1 = get_raw(p + dPoint(sx, sy));
-    auto h2 = get_raw(p + dPoint(sx, sy+d.y));
-    if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-    double h12 = h1 - (h2-h1)*sy/d.y;
-
-    auto h3=get_raw(p + dPoint(sx+d.x, sy));
-    auto h4=get_raw(p + dPoint(sx+d.x, sy+d.y));
-    if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
-    double h34 = h3 - (h4-h3)*sy/d.y;
-    return h12 - (h34-h12)*sx/d.x;
+    return get_interp(p);
   }
 
   if (srtm_interp == SRTM_CUBIC) {

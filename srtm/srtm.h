@@ -59,6 +59,7 @@ void ms2opt_add_srtm_surf(GetOptSet & opts);
 struct SRTMTile: public ImageR {
   SRTMTile(const std::string & dir, const iPoint & key); // load tile
 
+  iPoint key;
   std::map<iPoint, int16_t> overlay; // overlay data
   bool srtm;   // SRTM/ALOS data format
   dPoint step; // x/y steps in degrees
@@ -66,6 +67,20 @@ struct SRTMTile: public ImageR {
 
   bool empty;
   bool is_empty() {return empty;} // slightly different from Image::is_empty
+
+  // Convert lonlat coordinate to pixel coordinate
+  inline dPoint ll2px(const dPoint & p){
+    dPoint px((p.x - key.x)/step.x, (key.y + 1.0 - p.y)/step.y, p.z);
+    if (!srtm) px-=dPoint(0.5,0.5);
+    return px;
+  }
+
+  // Convert pixel coordinate to lonlat
+  inline dPoint px2ll(const dPoint & p){
+    dPoint ret(p);
+    if (!srtm) ret +=dPoint(0.5,0.5);
+    return dPoint(key.x + ret.x*step.x, key.y + 1.0 - ret.y*step.y, p.z);
+  }
 
   // be sure that image type is IMAGE_16 and crd is in the image
   inline int16_t get_unsafe(const iPoint & crd){
@@ -75,6 +90,8 @@ struct SRTMTile: public ImageR {
     // obtain the point
     return get16(crd.x, crd.y);
   }
+
+
 };
 
 /********************************************************************/
@@ -131,8 +148,13 @@ class SRTM {
     // (0,0) if data is missing.
     dPoint get_step(const iPoint& p);
 
+    // Get points for interpolation (0,1,2,4 points) for a given tile.
+    void get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts);
+
     // Low-level get function: rounding coordinate to the nearest point
     int16_t get_raw(const dPoint& p);
+
+    int16_t get_interp(const dPoint& p);
 
     // get with interpolation
     double get_h(const dPoint& p, bool raw=false);
