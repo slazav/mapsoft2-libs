@@ -11,24 +11,29 @@ int
 main(){
   try{
 
-    int mult=10;
-    double vmin = NAN;
-    double vmax = NAN;
+    int w=64, h=32;  // grid size
+    int mult=10;     // image size will be bigget by this factor
+
+    double amp = 1.0;   // amplitude of the function
+    double namp = 0.05; // noise amplitude
+
+    double step = 0.2; // countour step
+    double vmin = NAN; // countour start value
+    double vmax = NAN; // countour end value
 //    double vmin = 0.3;
 //    double vmax = 0.3;
-    double step = 0.2;
-    double vtol = 0.03;
-    bool closed = 1;
 
+    double vtol = 0.03; // tolerance for contour filtering
+    bool closed = 1;    // produce closed/open contours
 
-    ImageR img(64,32, IMAGE_DOUBLE);
-    ImageR cimg(64*mult,32*mult, IMAGE_32ARGB);
+    ImageR img(w,h, IMAGE_DOUBLE);
+    ImageR cimg(w*mult,h*mult, IMAGE_32ARGB);
     Rainbow R(-1, +1);
 
     for (size_t y=0; y<img.height(); y++){
       for (size_t x=0; x<img.width(); x++){
-        double v = cos(M_2_PI*x/32.0) * sin(M_2_PI*y/32.0);
-        v +=  0.05 + 0.05*(double)rand()/RAND_MAX;
+        double v = amp*cos(M_2_PI*x/32.0) * sin(M_2_PI*y/32.0)
+                 + namp*(double)rand()/RAND_MAX;
         img.setD(x,y, v);
         for (size_t dx=0; dx<mult; dx++){
           for (size_t dy=0; dy<mult; dy++){
