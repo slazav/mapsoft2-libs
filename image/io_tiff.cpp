@@ -319,29 +319,52 @@ image_load_tiff(std::istream & str, const double scale){
 
     img = tiff_make_image(tif, w1, h1, samples, bps, photometric);
 
-
     // Main loop
 
-    // allocate buffer
-    size_t scan = TIFFScanlineSize(tif);
-    cbuf = (uint8_t *)_TIFFmalloc(scan);
 
-    size_t line = 0;
-    for (size_t y=0; y<h1; ++y){
+    // is it a tiled image
+    uint32_t tw=0, th=0;
+    TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tw);
+    TIFFGetField(tif, TIFFTAG_TILELENGTH, &th);
 
-      if (can_skip_lines) line = y*scale;
-
-      while (line<=rint(y*scale)){
-        TIFFReadScanline(tif, cbuf, line);
-        ++line;
-      }
-
-      for (size_t x=0; x<w1; ++x){
-        int xs = scale==1.0? x:rint(x*scale);
-        tiff_image_pt(img, x, y, cbuf, xs, samples, bps, photometric);
+    if (tw && th){
+      cbuf = (uint8_t *)_TIFFmalloc(TIFFTileSize(tif));
+      // loop through all tiles
+      for (size_t ys = 0; ys < h; ys += th){
+        for (size_t xs = 0; xs < w; xs += tw){
+          TIFFReadTile(tif, cbuf, xs, ys, 0, 0);
+          // loop through all image coords located in the tile
+          int x1 = rint(xs/scale);
+          int y1 = rint(ys/scale);
+          int x2 = std::min((int)w1, (int)rint((xs+tw)/scale));
+          int y2 = std::min((int)h1, (int)rint((ys+th)/scale));
+          for (int y=y1; y<y2; y++){
+            for (int x=x1; x<x2; x++){
+              int xt = rint(x*scale) - xs;
+              int yt = rint(y*scale) - ys;
+              tiff_image_pt(img, x, y, cbuf, yt*tw+xt, samples, bps, photometric);
+            }
+          }
+        }
       }
     }
+    else {
+      // Non-tiled images
+      cbuf = (uint8_t *)_TIFFmalloc(TIFFScanlineSize(tif));
 
+      size_t line = 0;
+      for (size_t y=0; y<h1; ++y){
+        if (can_skip_lines) line = y*scale;
+        while (line<=rint(y*scale)){
+          TIFFReadScanline(tif, cbuf, line);
+          ++line;
+        }
+        for (size_t x=0; x<w1; ++x){
+          int xs = scale==1.0? x:rint(x*scale);
+          tiff_image_pt(img, x, y, cbuf, xs, samples, bps, photometric);
+        }
+      }
+    }
   }
   catch (Err & e) {
     if (cbuf) _TIFFfree(cbuf);
