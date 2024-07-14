@@ -136,6 +136,145 @@ iPoint image_size_tiff(std::istream & str){
 }
 
 /**********************************************************/
+// LOading Tiff file
+
+// Create image according with TIFF type
+ImageR
+tiff_make_image(TIFF* tif, const size_t w1, const size_t h1,
+                const int samples, const int bps, const uint16_t photometric) {
+
+  // create image (type depends on TIFF type)
+  switch (photometric){
+
+    case PHOTOMETRIC_PALETTE:
+      if (samples == 1 && bps == 8) {
+        ImageR img(w1,h1, IMAGE_8PAL);
+        img.cmap.clear();
+        uint16_t *cmap[3];
+        TIFFGetField(tif, TIFFTAG_COLORMAP, cmap, cmap+1, cmap+2);
+        for (int i=0; i<256; i++){
+          img.cmap.push_back(
+            (((uint32_t)cmap[0][i] & 0xFF00)<<8) +
+             ((uint32_t)cmap[1][i] & 0xFF00) +
+            (((uint32_t)cmap[2][i] & 0xFF00)>>8) +
+            0xFF000000);
+        }
+        return img;
+      }
+      throw Err() << "image_load_tiff: unsupported format: "
+                  << "PALETTE " << samples << "x" << bps;
+
+    case PHOTOMETRIC_RGB:
+
+      if (samples == 3 && bps==8) // 24RGB
+        return ImageR(w1,h1, IMAGE_24RGB);
+
+      if (samples == 3 && bps==16) // 48RGB
+        return ImageR(w1,h1, IMAGE_48RGB);
+
+      if (samples == 4 && bps==8) // 32RGBA
+        return ImageR(w1,h1, IMAGE_32ARGB);
+
+      if (samples == 4 && bps==16) // 64RGBA
+        return ImageR(w1,h1, IMAGE_64ARGB);
+
+      if (samples == 1 && bps==8) // G
+        return ImageR(w1,h1, IMAGE_8);
+
+      throw Err() << "image_load_tiff: unsupported format: "
+                  << "RGB " << samples << "x" << bps;
+
+    case PHOTOMETRIC_MINISWHITE:
+    case PHOTOMETRIC_MINISBLACK:
+
+      if (samples == 1 && bps==16) // 16bit
+        return ImageR(w1,h1, IMAGE_16);
+
+      if (samples == 1 && bps == 8) // 8bit
+        return ImageR(w1,h1, IMAGE_8);
+
+      throw Err() << "image_load_tiff: unsupported format: "
+                  << "MINISWHITE/MINISBLACK " << samples << "x" << bps;
+  }
+  throw Err() << "image_load_tiff: unsupported photometric type: " << photometric;
+}
+
+/*******************/
+// Transfer point from tiff buffer to image.
+// Some checks are skipped because ther were done in tiff_make_image().
+void
+tiff_image_pt(ImageR & img, const int x, const int y, uint8_t cbuf[], const int xs,
+          const int samples, const int bps, const uint16_t photometric) {
+
+  switch (photometric){
+
+    case PHOTOMETRIC_PALETTE:
+      img.set8(x,y, cbuf[xs]);
+      break;
+
+    case PHOTOMETRIC_RGB:
+      if (samples==3){ // RGB
+        if (bps==8){
+          uint8_t r = cbuf[3*xs];
+          uint8_t g = cbuf[3*xs+1];
+          uint8_t b = cbuf[3*xs+2];
+          img.set24(x,y, color_argb(0xFF, r,g,b));
+        }
+        if (bps==16){
+          uint16_t r = ((uint16_t)cbuf[6*xs+0]<<8) + cbuf[6*xs+1];
+          uint16_t g = ((uint16_t)cbuf[6*xs+2]<<8) + cbuf[6*xs+3];
+          uint16_t b = ((uint16_t)cbuf[6*xs+4]<<8) + cbuf[6*xs+5];
+          img.set64(x,y, color_argb64(0xFFFF,r,g,b));
+        }
+        break;
+      }
+      if (samples==4){ // RGBA -- // color scaling!
+        if (bps==8){
+          uint8_t r = cbuf[4*xs];
+          uint8_t g = cbuf[4*xs+1];
+          uint8_t b = cbuf[4*xs+2];
+          uint8_t a = cbuf[4*xs+3];
+          img.set32(x,y, color_argb(a,r,g,b));
+        }
+        if (bps==16){
+          uint16_t r = ((uint16_t)cbuf[8*xs+0]<<8) + cbuf[8*xs+1];
+          uint16_t g = ((uint16_t)cbuf[8*xs+2]<<8) + cbuf[8*xs+3];
+          uint16_t b = ((uint16_t)cbuf[8*xs+4]<<8) + cbuf[8*xs+5];
+          uint16_t a = ((uint16_t)cbuf[8*xs+6]<<8) + cbuf[8*xs+7];
+          img.set64(x,y, color_argb64(a,r,g,b));
+        }
+        break;
+      }
+      if (samples==1 && bps==8){ // G
+        img.set8(x,y, cbuf[xs]);
+        break;
+      }
+
+    case PHOTOMETRIC_MINISWHITE:
+      if (bps==16){ // 16bit
+        img.set16(x,y, 0xFFFF - ((uint16_t*)cbuf)[xs]);
+        break;
+      }
+      if (bps==8){ // 8bit
+        img.set8(x,y, 0xFF - cbuf[xs]);
+        break;
+      }
+
+    case PHOTOMETRIC_MINISBLACK:
+      if (bps==16){ // 16bit
+        img.set16(x,y, ((uint16_t*)cbuf)[xs]);
+        break;
+      }
+      if (bps==8){ // 8bit
+        img.set8(x,y, cbuf[xs]);
+        break;
+      }
+    default:
+      throw Err() << "image_load_tiff: unsupported photometric type: " << photometric;
+  }
+}
+
+/*******************/
 
 ImageR
 image_load_tiff(std::istream & str, const double scale){
@@ -178,75 +317,14 @@ image_load_tiff(std::istream & str, const double scale){
     //std::cerr << "TIFF TYPE: " << photometric << " "
     //          << samples << "x" << bps << "\n";
 
-    // create image (type depends on TIFF type)
-    switch (photometric){
+    img = tiff_make_image(tif, w1, h1, samples, bps, photometric);
 
-      case PHOTOMETRIC_PALETTE:
-        if (samples == 1 && bps == 8) {
-          img = ImageR(w1,h1, IMAGE_8PAL);
-          img.cmap.clear();
-          uint16 *cmap[3];
-          TIFFGetField(tif, TIFFTAG_COLORMAP, cmap, cmap+1, cmap+2);
-          for (int i=0; i<256; i++){
-            img.cmap.push_back(
-              (((uint32)cmap[0][i] & 0xFF00)<<8) +
-               ((uint32)cmap[1][i] & 0xFF00) +
-              (((uint32)cmap[2][i] & 0xFF00)>>8) +
-              0xFF000000);
-          }
-          break;
-        }
-        throw Err() << "image_load_tiff: unsupported format: "
-                    << "PALETTE " << samples << "x" << bps;
 
-      case PHOTOMETRIC_RGB:
-        if (samples == 3 && bps==8){ // 24RGB
-          img = ImageR(w1,h1, IMAGE_24RGB);
-          break;
-        }
-        if (samples == 3 && bps==16){ // 48RGB
-          img = ImageR(w1,h1, IMAGE_48RGB);
-          break;
-        }
-        if (samples == 4 && bps==8){ // 32RGBA
-          img = ImageR(w1,h1, IMAGE_32ARGB);
-          break;
-        }
-        if (samples == 4 && bps==16){ // 64RGBA
-          img = ImageR(w1,h1, IMAGE_64ARGB);
-          break;
-        }
-        if (samples == 1 && bps==8){ // G
-          img = ImageR(w1,h1, IMAGE_8);
-          break;
-        }
-        throw Err() << "image_load_tiff: unsupported format: "
-                    << "RGB " << samples << "x" << bps;
-
-      case PHOTOMETRIC_MINISWHITE:
-      case PHOTOMETRIC_MINISBLACK:
-        if (samples == 1 && bps==16){ // 16bit
-          img = ImageR(w1,h1, IMAGE_16);
-          break;
-        }
-        if (samples == 1 && bps == 8){ // 8bit
-          img = ImageR(w1,h1, IMAGE_8);
-          break;
-        }
-        throw Err() << "image_load_tiff: unsupported format: "
-                    << "MINISWHITE/MINISBLACK " << samples << "x" << bps;
-
-      default: throw Err() << "image_load_tiff: unsupported photometric type: " << photometric;
-    }
-
+    // Main loop
 
     // allocate buffer
     size_t scan = TIFFScanlineSize(tif);
-    cbuf = (uint8 *)_TIFFmalloc(scan);
-
-    // Main loop
-    // Note that there are less checks then in the image creation switch().
-    //
+    cbuf = (uint8_t *)_TIFFmalloc(scan);
 
     size_t line = 0;
     for (size_t y=0; y<h1; ++y){
@@ -260,81 +338,10 @@ image_load_tiff(std::istream & str, const double scale){
 
       for (size_t x=0; x<w1; ++x){
         int xs = scale==1.0? x:rint(x*scale);
-        switch (photometric){
-
-          case PHOTOMETRIC_PALETTE:
-            img.data()[y*w1+x] = cbuf[xs];
-            break;
-
-          case PHOTOMETRIC_RGB:
-            if (samples==3){ // RGB
-              if (bps==8){
-                uint8_t r = cbuf[3*xs];
-                uint8_t g = cbuf[3*xs+1];
-                uint8_t b = cbuf[3*xs+2];
-                img.set24(x,y, color_argb(0xFF, r,g,b));
-              }
-              if (bps==16){
-                uint16_t r = ((uint16_t)cbuf[6*xs+0]<<8) + cbuf[6*xs+1];
-                uint16_t g = ((uint16_t)cbuf[6*xs+2]<<8) + cbuf[6*xs+3];
-                uint16_t b = ((uint16_t)cbuf[6*xs+4]<<8) + cbuf[6*xs+5];
-                img.set64(x,y, color_argb64(0xFFFF,r,g,b));
-              }
-              break;
-            }
-            if (samples==4){ // RGBA -- // color scaling!
-              if (bps==8){
-                uint8_t r = cbuf[4*xs];
-                uint8_t g = cbuf[4*xs+1];
-                uint8_t b = cbuf[4*xs+2];
-                uint8_t a = cbuf[4*xs+3];
-                img.set32(x,y, color_argb(a,r,g,b));
-              }
-              if (bps==16){
-                uint16_t r = ((uint16_t)cbuf[8*xs+0]<<8) + cbuf[8*xs+1];
-                uint16_t g = ((uint16_t)cbuf[8*xs+2]<<8) + cbuf[8*xs+3];
-                uint16_t b = ((uint16_t)cbuf[8*xs+4]<<8) + cbuf[8*xs+5];
-                uint16_t a = ((uint16_t)cbuf[8*xs+6]<<8) + cbuf[8*xs+7];
-                img.set64(x,y, color_argb64(a,r,g,b));
-              }
-              break;
-            }
-            if (samples==1){ // G
-              img.data()[y*w1+x] = cbuf[xs];
-              break;
-            }
-            throw Err() << "image_load_tiff: unsupported format: "
-                        << "RGB " << samples << "x" << bps;
-
-          case PHOTOMETRIC_MINISWHITE:
-            if (bps==16){ // 16bit
-              img.set16(x,y, 0xFFFF - ((uint16_t*)cbuf)[xs]);
-              break;
-            }
-            if (bps==8){ // 8bit
-              img.set8(x,y, 0xFF - cbuf[xs]);
-              break;
-            }
-            throw Err() << "image_load_tiff: unsupported format: "
-                        << "MINISWHITE " << samples << "x" << bps;
-
-          case PHOTOMETRIC_MINISBLACK:
-            if (bps==16){ // 16bit
-              img.set16(x,y, ((uint16_t*)cbuf)[xs]);
-              break;
-            }
-            if (bps==8){ // 8bit
-              img.set8(x,y, cbuf[xs]);
-              break;
-            }
-            throw Err() << "image_load_tiff: unsupported format: "
-                        << "MINISBLACK " << samples << "x" << bps;
-
-          default: throw Err() <<
-            "image_load_tiff: unsupported photometric type: " << photometric;
-        }
+        tiff_image_pt(img, x, y, cbuf, xs, samples, bps, photometric);
       }
     }
+
   }
   catch (Err & e) {
     if (cbuf) _TIFFfree(cbuf);
@@ -457,7 +464,7 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
         TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
     }
 
-    uint16 cmap[3][256];
+    uint16_t cmap[3][256];
     if (use_cmap){
       for (size_t i=0; i<im8.cmap.size(); i++){
         cmap[0][i] = (im8.cmap[i]>>8)&0xFF00;
@@ -472,7 +479,7 @@ void image_save_tiff(const ImageR & im, std::ostream & str, const Opt & opt){
     int scan = samples*bps*im.width()/8;
 
     buf = _TIFFmalloc(scan);
-    uint8 *cbuf = (uint8 *)buf;
+    uint8_t *cbuf = (uint8_t *)buf;
 
     for (size_t y=0; y<im.height(); y++){
       for (size_t x=0; x<im.width(); x++){
