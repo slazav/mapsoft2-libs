@@ -356,19 +356,16 @@ SRTM::get_interp(const dPoint& p){
 
     // We want to do something close to bilinear interpolation.
     // In most cases we shold have 4 points (unless some tiles are missing).
+    if (pts.size()!=4) return SRTM_VAL_UNDEF;
     dPoint p1,p2,p3,p4;
-    p1.z = p2.z = p3.z = p4.z = SRTM_VAL_UNDEF;
+    p1 = p2 = p3 = p4 = *pts.begin();
 
     // sort points
     for (const auto & pp:pts){
-      if (pp.x<=p.x && pp.y<=p.y) {p1 = pp; continue;}
-      if (pp.x<=p.x && pp.y>p.y)  {p2 = pp; continue;}
-      if (pp.x>p.x  && pp.y<=p.y) {p3 = pp; continue;}
-      if (pp.x>p.x  && pp.y>p.y)  {p4 = pp; continue;}
-    }
-    if ((p1.z<SRTM_VAL_MIN)||(p2.z<SRTM_VAL_MIN)||
-        (p3.z<SRTM_VAL_MIN)||(p4.z<SRTM_VAL_MIN)){
-      return SRTM_VAL_UNDEF;
+      if (p1.x + p1.y < pp.x + pp.y) p1 = pp; // max(x+y), trc
+      if (p2.x - p1.y < pp.x - pp.y) p2 = pp; // max(x-y), brc
+      if (p3.x - p1.y > pp.x - pp.y) p3 = pp; // min(x-y), tlc
+      if (p4.x + p1.y > pp.x + pp.y) p4 = pp; // min(x+y), blc
     }
 
     dPoint p12 = p1.y==p2.y? (p1+p2)/2 : p1 + (p2-p1)*(p.y - p1.y)/(p2.y-p1.y);
