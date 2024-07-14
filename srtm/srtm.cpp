@@ -8,6 +8,7 @@
 #include "geom/point_int.h"
 #include "geom/poly_tools.h"
 #include "filename/filename.h"
+#include "image/io_tiff.h"
 #include "image_cnt/image_cnt.h"
 #include <zlib.h>
 #include <tiffio.h>
@@ -86,50 +87,20 @@ read_zhgt_file(const std::string & file){
 // load srtm data from *.tif file
 ImageR
 read_demtif_file(const std::string & file){
-
-  // open Tiff file, get width and height
-  if (!file_exists(file)) return ImageR();
-  TIFF* tif = TIFFOpen(file.c_str(), "rb");
-  if (!tif) throw Err() << "can't open tiff file: " << file;
-
-  int tiff_w, tiff_h;
-  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_w);
-  TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &tiff_h);
-
-  int scan = TIFFScanlineSize(tif);
-  int bpp = scan/tiff_w;
-  auto *cbuf = (uint8_t *)_TIFFmalloc(scan);
-
-
-  ImageR im(tiff_w, tiff_h, IMAGE_16);
+  FILE *F = fopen(file.c_str(), "rb");
+  if (!F) return ImageR();
+  fclose(F);
 
   try {
+    ImageR img = image_load_tiff(file);
+    if (img.type() != IMAGE_16)
+      throw Err() << "srtm: 16-bit tiff image expected";
+    return img;
 
-    // check format: should be 16bpp greyscale
-    int photometric=0;
-    TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
-    if (photometric != PHOTOMETRIC_MINISBLACK)
-      throw Err() << "unsupported photometric type: " << photometric;
-    if (bpp != 2)
-      throw Err() << "not a 2 byte-per-pixel tiff";
-
-    // read image
-    for (int y = 0; y<tiff_h; y++){
-      TIFFReadScanline(tif, cbuf, y);
-      for (int x = 0; x<tiff_w; x++){
-        im.set16(x,y, (cbuf[2*x+1]<<8) + cbuf[2*x]);
-      }
-    }
   }
   catch (Err & e) {
-    _TIFFfree(cbuf);
-    TIFFClose(tif);
     throw Err() << "srtm: " << file << ": " << e.str();
   }
-
-  _TIFFfree(cbuf);
-  TIFFClose(tif);
-  return im;
 }
 
 /**********************************************************/
