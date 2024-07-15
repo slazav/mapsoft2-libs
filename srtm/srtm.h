@@ -162,6 +162,14 @@ class SRTM {
     // get slope
     double get_s(const dPoint& p, bool raw=false);
 
+    // Get raster image with original points (if possible)
+    // rng -- lonlat range
+    // blc -- return lonlat coordinate of lower-left point
+    // step -- return step in drgrees
+    // Point grid is taken from the tile in the middle of the range.
+    // Other tiles will be interpolated to this grid.
+    ImageR get_img(const dRect & rng, dPoint & blc, dPoint & step);
+
     /******************************/
     // color surface interface
 

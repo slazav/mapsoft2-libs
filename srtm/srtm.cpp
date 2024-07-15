@@ -407,6 +407,34 @@ SRTM::get_s(const dPoint& p, bool raw){
   return atan(U)*180.0/M_PI;
 }
 
+ImageR
+SRTM::get_img(const dRect & rng, dPoint & blc, dPoint & step){
+  iPoint key0 = floor(rng.cnt());
+  auto tile0 = get_tile(key0); // main tile
+  iPoint c1 = floor(tile0.ll2px(rng.tlc()));
+  iPoint c2 = ceil(tile0.ll2px(rng.brc()));
+  std::swap(c1.y, c2.y);
+  step = tile0.step;
+  blc = c1;
+
+  ImageR img(c2.x-c1.x, c2.y-c1.y, IMAGE_16);
+  // render main tile
+  for (int y=c1.y; y<c2.y; y++){
+    for (int x=c1.x; x<c2.x; x++){
+      if (x>0 && y>0 && x<tile0.w && y<tile0.h) {
+        img.set16(x-c1.x, y-c1.y, tile0.get_unsafe(iPoint(x,y)));
+      }
+      else {
+        dPoint pt = tile0.px2ll(dPoint(x,y));
+        int16_t c = (int16_t)get_interp(pt);
+        if (c<SRTM_VAL_MIN) c=0;
+        img.set16(x-c1.x, y-c1.y, c);
+      }
+    }
+  }
+  return img;
+}
+
 /************************************************/
 
 uint32_t
