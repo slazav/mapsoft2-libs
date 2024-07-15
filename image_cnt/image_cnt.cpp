@@ -202,7 +202,8 @@ image_cnt(const ImageR & img,
       auto i1 = l.begin();
       while (i1+2!=l.end()){
         auto i2=i1+1, i3=i1+2;
-        if (dist(norm(*i2-*i1), norm(*i3-*i2)) < pt_acc)
+          if (dist(*i1,*i2)<pt_acc || dist(*i2,*i3)<pt_acc ||
+              dist(norm(*i2-*i1), norm(*i3-*i2)) < pt_acc)
           l.erase(i2);
         else ++i1;
       }
