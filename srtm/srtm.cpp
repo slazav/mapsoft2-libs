@@ -87,9 +87,7 @@ read_zhgt_file(const std::string & file){
 // load srtm data from *.tif file
 ImageR
 read_demtif_file(const std::string & file){
-  FILE *F = fopen(file.c_str(), "rb");
-  if (!F) return ImageR();
-  fclose(F);
+  if (!file_exists(file)) return ImageR();
 
   try {
     ImageR img = image_load_tiff(file);
