@@ -581,22 +581,25 @@ SRTM::find_peaks(const dRect & range, int DH, size_t PS){
 dMultiLine
 SRTM::find_holes(const dRect & range){
 
-  // integer rectangle covering the area
   dPoint d = get_step(range.cnt());
+
+  // integer rectangle covering the area
   iRect irange = ceil(range/d);
+
   int x1  = irange.tlc().x;
   int x2  = irange.brc().x;
   int y1  = irange.tlc().y;
   int y2  = irange.brc().y;
 
   std::set<iPoint> set;
-  for (int y=y2; y>y1; y--){
-    for (int x=x1; x<x2-1; x++){
-      short h = get_h(dPoint(x,y));
-      if (h!=SRTM_VAL_UNDEF) continue;
-      set.insert(dPoint(x*d.x, y*d.y));
+  for (int y=y1; y<=y2; y++){
+    for (int x=x1; x<=x2; x++){
+      dPoint p(x*d.x,y*d.y);
+      auto h = get_h(p);
+      set.emplace(rint(p));
     }
   }
+
   // convert points to polygons
   dMultiLine ret = border_line(set);
   return (ret - dPoint(0.5,0.5))*d;
