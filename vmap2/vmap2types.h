@@ -28,6 +28,7 @@ public:
   int    label_type;    // type number for related labels, -1 for none
   float  label_def_scale; // initial scale for labels
   VMap2objAlign  label_def_align; // initial align for labels
+  dPoint label_def_mshift;        // initial shift in meters for labels
   int    label_mkpt;    // reconnect labels to point objects, type number or -1 for none
   int    label_maxnum;  // max number of labels (-1 for inf, -2 for auto).
   VMap2type(): mp_start(0), mp_end(0), label_type(-1),

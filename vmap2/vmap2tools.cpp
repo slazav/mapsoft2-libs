@@ -305,12 +305,21 @@ do_make_label(const VMap2obj & o, const VMap2type & t){
     << "can't make label: empty object";
 
   // Label position.
-  dPoint pt0 = r.cnt();
+  dPoint pt0;
+  nearest_vertex(o, r.cnt(), &pt0,
+    (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
 
-  dLine pts;
-  pts.push_back(pt0);
-  label.push_back(pts);
+  if (t.label_def_mshift != dPoint()){
+    // convert meters to degrees
+    dPoint sh = t.label_def_mshift;
+    sh *= 1.0/6380e3 * 180/M_PI;
+    sh.y /= cos(M_PI*pt0.y/180.0);
+    pt0+=sh;
+  }
 
+  label.add_point(pt0);
+  nearest_vertex(o, pt0, &label.ref_pt,
+    (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
   label.name = o.name;
   label.ref_type = o.type;
   nearest_vertex(o, pt0, &label.ref_pt,

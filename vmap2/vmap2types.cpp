@@ -112,6 +112,11 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
           o->second.label_def_align = VMap2obj::parse_align(vs[2]);
           continue;
         }
+        if (vs[1] == "label_def_mshift"){
+          if (vs.size()!=4) throw Err() << "+ label_def_mshift: 2 arguments expected: <dx> <dy>";
+          o->second.label_def_mshift = dPoint(str_to_type<double>(vs[2]), str_to_type<double>(vs[3]));
+          continue;
+        }
         if (vs[1] == "label_mkpt"){
           if (vs.size()!=3) throw Err() << "+ label_mkpt: argument expected: <type number or -1>";
           o->second.label_mkpt = str_to_type<int>(vs[2]);
