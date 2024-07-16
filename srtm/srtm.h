@@ -83,9 +83,10 @@ struct SRTMTile: public ImageR {
   }
 
   // be sure that image type is IMAGE_16 and crd is in the image
-  inline int16_t get_unsafe(const iPoint & crd){
+  inline int16_t get_unsafe(const iPoint & crd, const bool use_overlay) {
     // Use overlay
-    if (overlay.count(crd)) return overlay[crd];
+    if (use_overlay && overlay.count(crd))
+      return overlay.find(crd)->second;
 
     // obtain the point
     return get16(crd.x, crd.y);
@@ -107,7 +108,7 @@ class SRTM {
   // Locking srtm cache
   std::mutex cache_mutex;
 
-  bool interp_holes; // interpolate holes in data
+  bool use_overlay;
 
   // get tile
   inline SRTMTile & get_tile(const iPoint & key) {
@@ -205,7 +206,6 @@ class SRTM {
 
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);
-
 
 };
 

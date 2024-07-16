@@ -103,6 +103,7 @@ read_demtif_file(const std::string & file){
   }
 }
 
+
 /**********************************************************/
 // load SRTM tile
 SRTMTile::SRTMTile(const std::string & dir, const iPoint & key_){
@@ -143,7 +144,22 @@ SRTMTile::SRTMTile(const std::string & dir, const iPoint & key_){
 
   if (im.is_empty()) return;
 
-  // TODO: read overlay
+  // load binary overlay file
+  {
+    std::string fname = dir + "/" + file.str() + ".ovl";
+    FILE *F = fopen(fname.c_str(), "rb");
+    if (F) {
+      while (!feof(F)){
+        int16_t x,y,v;
+        if (fread(&x, sizeof(x),1, F) &&
+            fread(&y, sizeof(y),1, F) &&
+            fread(&v, sizeof(v),1, F)){
+          overlay.emplace(iPoint(x,y), v);
+        }
+      }
+      fclose(F);
+    }
+  }
 
   ImageR::operator=(im);
   w = im.width();
@@ -159,13 +175,9 @@ SRTMTile::SRTMTile(const std::string & dir, const iPoint & key_){
 void
 ms2opt_add_srtm(GetOptSet & opts){
   const char *g = "SRTM";
-  opts.add("srtm_dir", 1,0,g,
-    "Set srtm data folder, default - $HOME/.srtm_data");
-  opts.add("srtm_interp_holes", 1,0,g,
-    "Interpolate holes (0|1, default 1).");
-
-  opts.add("srtm_interp", 1,0,g,
-    "Interpolation (nearest, linear, cubic. Default: linear).");
+  opts.add("srtm_dir", 1,0,g, "Set srtm data folder, default - $HOME/.srtm_data");
+  opts.add("srtm_use_overlay", 1,0,g, "Use overlay (0|1, default 1).");
+  opts.add("srtm_interp", 1,0,g, "Interpolation (nearest, linear, cubic. Default: linear).");
 }
 
 void
@@ -196,7 +208,7 @@ Opt
 SRTM::get_def_opt() {
   Opt o;
   o.put("srtm_dir", std::string(getenv("HOME")? getenv("HOME"):"") + "/.srtm_data");
-  o.put("srtm_interp_holes", 1);
+  o.put("srtm_use_overlay", 1);
   o.put("srtm_interp", "linear");
 
   o.put("srtm_draw_mode", "shades");
@@ -250,6 +262,9 @@ SRTM::set_opt(const Opt & opt){
     R = Rainbow(smin,smax, RAINBOW_BURNING);
 
   bgcolor = opt.get<int>("srtm_bgcolor", 0x60FF0000);
+
+  use_overlay = opt.get<bool>("srtm_use_overlay", 1);
+
 }
 
 /************************************************/
@@ -273,7 +288,7 @@ SRTM::get_nearest(const dPoint& p){
   if (px.y<0) px.y=0;
   if (px.x>=tile.w) px.x=tile.w-1;
   if (px.y>=tile.h) px.y=tile.h-1;
-  return tile.get_unsafe(px);
+  return tile.get_unsafe(px, use_overlay);
 }
 
 void
@@ -295,22 +310,22 @@ SRTM::get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts)
   // now coords are either valid or -1
   if (x1!=-1 && y1!=-1){
     dPoint pt = tile.px2ll(dPoint(x1,y1));
-    pt.z = tile.get_unsafe(iPoint(x1,y1));
+    pt.z = tile.get_unsafe(iPoint(x1,y1), use_overlay);
     if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
   }
   if (x1!=-1 && y2!=-1){
     dPoint pt = tile.px2ll(dPoint(x1,y2));
-    pt.z = tile.get_unsafe(iPoint(x1,y2));
+    pt.z = tile.get_unsafe(iPoint(x1,y2), use_overlay);
     if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
   }
   if (x2!=-1 && y1!=-1){
     dPoint pt = tile.px2ll(dPoint(x2,y1));
-    pt.z = tile.get_unsafe(iPoint(x2,y1));
+    pt.z = tile.get_unsafe(iPoint(x2,y1), use_overlay);
     if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
   }
   if (x2!=-1 && y2!=-1){
     dPoint pt = tile.px2ll(dPoint(x2,y2));
-    pt.z = tile.get_unsafe(iPoint(x2,y2));
+    pt.z = tile.get_unsafe(iPoint(x2,y2), use_overlay);
     if (pt.z>=SRTM_VAL_MIN) pts.insert(pt);
   }
   return;
@@ -333,12 +348,12 @@ SRTM::get_interp(const dPoint& p){
   if (x1>0 && y1>0 && x2<tile.w && y2<tile.h){
     double sx = px.x - x1;
     double sy = px.y - y1;
-    double h1 = tile.get_unsafe(iPoint(x1, y1));
-    double h2 = tile.get_unsafe(iPoint(x1, y2));
+    double h1 = tile.get_unsafe(iPoint(x1, y1), use_overlay);
+    double h2 = tile.get_unsafe(iPoint(x1, y2), use_overlay);
     if ((h1<SRTM_VAL_MIN)||(h2<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
 
-    double h3 = tile.get_unsafe(iPoint(x2, y1));
-    double h4 = tile.get_unsafe(iPoint(x2, y2));
+    double h3 = tile.get_unsafe(iPoint(x2, y1), use_overlay);
+    double h4 = tile.get_unsafe(iPoint(x2, y2), use_overlay);
     if ((h3<SRTM_VAL_MIN)||(h4<SRTM_VAL_MIN)) return SRTM_VAL_UNDEF;
 
     return h1*(1-sx)*(1-sy) + h2*(1-sx)*sy + h3*sx*(1-sy) + h4*sy*sx;
@@ -424,7 +439,7 @@ SRTM::get_img(const dRect & rng, dPoint & blc, dPoint & step){
   for (int y=c1.y; y<c2.y; y++){
     for (int x=c1.x; x<c2.x; x++){
       if (x>0 && y>0 && x<tile0.w && y<tile0.h) {
-        img.set16(x-c1.x, y-c1.y, tile0.get_unsafe(iPoint(x,y)));
+        img.set16(x-c1.x, y-c1.y, tile0.get_unsafe(iPoint(x,y), use_overlay));
       }
       else {
         dPoint pt = tile0.px2ll(dPoint(x,y));
