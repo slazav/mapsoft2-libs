@@ -264,7 +264,7 @@ SRTM::get_step(const iPoint& p){
 // Low-level get function: rounding coordinate to the nearest point
 double
 SRTM::get_nearest(const dPoint& p){
-  auto tile = get_tile(floor(p));
+  auto & tile = get_tile(floor(p));
   if (tile.is_empty()) return SRTM_VAL_NOFILE;
 
   // Pixel coordinate, [0..1200) for srtm,  [-0.5 .. 1199.5) for alos
@@ -278,7 +278,7 @@ SRTM::get_nearest(const dPoint& p){
 
 void
 SRTM::get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts){
-  auto tile = get_tile(key);
+  auto & tile = get_tile(key);
   if (tile.empty) return;
 
   // Pixel coordinate (could be outside the image)
@@ -319,7 +319,7 @@ SRTM::get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts)
 // Bilinear interpolation
 double
 SRTM::get_interp(const dPoint& p){
-  auto tile = get_tile(floor(p));
+  auto & tile = get_tile(floor(p));
   if (tile.is_empty()) return SRTM_VAL_NOFILE;
 
   // Pixel coordinate, [0..1200)
@@ -410,7 +410,9 @@ SRTM::get_s(const dPoint& p, bool raw){
 ImageR
 SRTM::get_img(const dRect & rng, dPoint & blc, dPoint & step){
   iPoint key0 = floor(rng.cnt());
-  auto tile0 = get_tile(key0); // main tile
+  // main tile - we want to copy it, because it can be removed from the cache
+  auto tile0 = get_tile(key0);
+  if (tile0.is_empty()) return ImageR();
   iPoint c1 = floor(tile0.ll2px(rng.tlc()));
   iPoint c2 = ceil(tile0.ll2px(rng.brc()));
   std::swap(c1.y, c2.y);
