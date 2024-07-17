@@ -91,7 +91,7 @@ class ImageT: public Image {
       iPoint crd(x%tsize, y%tsize);
       if (swapy) key.y = (1<<zoom) - key.y - 1;
       if (!tiles.contains(key)) load_key(key);
-      auto img = tiles.get(key);
+      auto & img = tiles.get(key);
       if (img.is_empty()) return 0;
       return img.get_argb(crd.x, crd.y);
     }
