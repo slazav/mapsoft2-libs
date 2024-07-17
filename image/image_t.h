@@ -32,7 +32,7 @@ We request background downloading of the coordinate range
 object. `Downloader::update_clean_list` is done in `prepare_range` to
 remove URLs which we do not need anymore.
 
-Then a point is read by `get_color` method, the image is unpacked
+Then a point is read by `get_rgb` method, the image is unpacked
 removed from Downloader cache and put into tile cache (this cache has fixed
 capacity, 16 tiles).
 
@@ -51,9 +51,9 @@ class ImageT: public Image {
   std::string tmpl;
   size_t tsize;
   bool swapy;
-  Cache<iPoint, ImageR> tiles;
   int zoom;
-  Downloader dmanager;
+  mutable Cache<iPoint, ImageR> tiles;
+  mutable Downloader dmanager;
 
   public:
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256):
@@ -83,10 +83,10 @@ class ImageT: public Image {
     void clear_queue();
 
     // load tile to the cache
-    void load_key(const iPoint & key);
+    void load_key(const iPoint & key) const;
 
     // get point color
-    uint32_t get_color_fast(const size_t x, const size_t y) override {
+    uint32_t get_argb(const size_t x, const size_t y) const override {
       iPoint key(x/tsize, y/tsize, zoom);
       iPoint crd(x%tsize, y%tsize);
       if (swapy) key.y = (1<<zoom) - key.y - 1;
@@ -97,7 +97,7 @@ class ImageT: public Image {
     }
 
     // get an image
-    ImageR get_image(const iRect & r);
+    ImageR get_image(const iRect & r) const;
 
     std::ostream & print (std::ostream & s) const override{
       s << "ImageT(" << tmpl << ")";

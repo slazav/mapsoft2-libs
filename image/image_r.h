@@ -95,12 +95,13 @@ class ImageR : public Image {
 
 
     /******************************************************/
-    // Fast get/set/fill functions for different image types.
-    // Return raw data or uint32_t ARGB color (*col versions)
+    // Fast get/set/fill functions for specific image types.
     // Image type and coordinate range should be checked before.
+    // Work with raw data.
     // Static functions define internal byte order!
     // We want IMAGE_32 to match with Cairo format
 
+    // only for IMAGE_64ARGB
 
     static uint64_t get64(unsigned char *p){ return *(uint64_t*)p; }
     static void set64(unsigned char *p, const uint64_t v){ *(uint64_t*)p = v; }
@@ -114,10 +115,11 @@ class ImageR : public Image {
       set64(data_.get() + 8*(w*y+x), v);
     }
     // Fill function for image type IMAGE_32ARGB.
-    void fill64(const uint64_t v) const{
+    void fill64(const uint64_t v) {
       for (size_t i=0; i<w*h; i++) set64(data_.get() + 8*i, v);
     }
 
+    // only for IMAGE_48RGB
 
     static uint64_t get48(unsigned char *p){
       uint64_t v = 0xFFFFull << 48;
@@ -136,10 +138,11 @@ class ImageR : public Image {
       set48(data_.get() + 6*(w*y+x), v);
     }
     // Fill function for image type IMAGE_24RGB
-    void fill48(const uint64_t v) const{
+    void fill48(const uint64_t v) {
       for (size_t i=0; i<w*h; i++) set48(data_.get() + 6*i, v);
     }
 
+    // only for IMAGE_32ARGB
 
     static uint32_t get32(unsigned char *p){ return *(uint32_t*)p; }
     static void set32(unsigned char *p, const uint32_t v){ *(uint32_t*)p = v; }
@@ -153,10 +156,11 @@ class ImageR : public Image {
       set32(data_.get() + 4*(w*y+x), v);
     }
     // Fill function for image type IMAGE_32ARGB.
-    void fill32(const uint32_t v) const{
+    void fill32(const uint32_t v) {
       for (size_t i=0; i<w*h; i++) set32(data_.get() + 4*i, v);
     }
 
+    // only for IMAGE_24RGB
 
     static uint32_t get24(unsigned char *p){
       uint32_t v = 0xFF << 24;
@@ -175,10 +179,11 @@ class ImageR : public Image {
       set24(data_.get() + 3*(w*y+x), v);
     }
     // Fill function for image type IMAGE_24RGB
-    void fill24(const uint32_t v) const{
+    void fill24(const uint32_t v) {
       for (size_t i=0; i<w*h; i++) set24(data_.get() + 3*i, v);
     }
 
+    // only for IMAGE_16
 
     static uint16_t get16(unsigned char *p){ return *(uint16_t*)p; }
     static void set16(unsigned char *p, const uint16_t v){ *(uint16_t*)p = v; }
@@ -198,10 +203,11 @@ class ImageR : public Image {
       set16(data_.get() + 2*(w*y+x), v);
     }
     // Fill function for image type IMAGE_16
-    void fill16(const uint16_t v) const{
+    void fill16(const uint16_t v) {
       for (size_t i=0; i<w*h; i++) set16(data_.get() + 2*i, v);
     }
 
+    // only for IMAGE_8
 
     // Fast get function for image type IMAGE_8
     uint8_t get8(const size_t x, const size_t y) const{
@@ -222,9 +228,11 @@ class ImageR : public Image {
       data_.get()[w*y+x] = v;
     }
     // Fill function for image type IMAGE_8
-    void fill8(const uint8_t v) const{
+    void fill8(const uint8_t v) {
       for (size_t i=0; i<w*h; i++) data_.get()[i] = v;
     }
+
+    // only for IMAGE_1
 
     // Fast get function for image type IMAGE_1.
     // Same format as in raw PBM file: packed bits restarted on each line.
@@ -247,11 +255,12 @@ class ImageR : public Image {
       data_.get()[b] = v? old|(1<<o) : old&~(1<<o);
     }
     // Fill function for image type IMAGE_1.
-    void fill1(const bool v) const{
+    void fill1(const bool v) {
       for (size_t i=0; i<dsize(); i++)
         data_.get()[i] = v? 0xFF:0x00;
     }
 
+    // only for IMAGE_FLOAT
 
     // Fast get function for image type IMAGE_FLOAT
     float getF(const size_t x, const size_t y) const{
@@ -260,11 +269,12 @@ class ImageR : public Image {
     void setF(const size_t x, const size_t y, const float v){
       ((float*)data_.get())[w*y+x] = v; }
     // Fill function for image type IMAGE_FLOAT
-    void fillF(const float v) const{
+    void fillF(const float v) {
       for (size_t i=0; i<w*h; i++)
         ((float*)data_.get())[i] = v;
     }
 
+    // only for IMAGE_DOUBLE
 
     // Fast get function for image type IMAGE_DOUBLE
     double getD(const size_t x, const size_t y) const{
@@ -273,7 +283,7 @@ class ImageR : public Image {
     void setD(const size_t x, const size_t y, const double v){
       ((double*)data_.get())[w*y+x] = v; }
     // Fill function for image type IMAGE_DOUBLE
-    void fillD(const double v) const{
+    void fillD(const double v) {
       for (size_t i=0; i<w*h; i++)
         ((double*)data_.get())[i] = v;
     }
@@ -284,7 +294,7 @@ class ImageR : public Image {
     // Coordinate range still should be checked before.
 
     // Get ARGB (prescaled) color for any image type.
-    uint32_t get_argb(const size_t x, const size_t y) const {
+    uint32_t get_argb(const size_t x, const size_t y) const override {
       switch (t){
         case IMAGE_32ARGB: return get32(x,y);
         case IMAGE_24RGB:  return get24(x,y);
@@ -299,7 +309,7 @@ class ImageR : public Image {
     }
 
     // Get RGB color for any image type.
-    uint32_t get_rgb(const size_t x, const size_t y) const{
+    uint32_t get_rgb(const size_t x, const size_t y) const {
       if (t==IMAGE_24RGB) return get24(x,y);
       if (t==IMAGE_16)    return get16col(x,y);
       if (t==IMAGE_8)     return get8col(x,y);
@@ -324,7 +334,7 @@ class ImageR : public Image {
 
 
     // Get 8-bit grey color for any image type.
-    uint8_t get_grey8(const size_t x, const size_t y) const{
+    uint8_t get_grey8(const size_t x, const size_t y) const {
       if (t==IMAGE_8)  return get8(x,y);
       if (t==IMAGE_16) return get16(x,y)>>8;
       if (t==IMAGE_48RGB)  return color_rgb64_to_grey8(get48(x,y));
@@ -333,7 +343,7 @@ class ImageR : public Image {
     }
 
     // Get alpha channel + 8-bit grey color for any image type.
-    uint16_t get_agrey8(const size_t x, const size_t y) const{
+    uint16_t get_agrey8(const size_t x, const size_t y) const  {
       if (t==IMAGE_8)  return 0xFF00 + get8(x,y);
       if (t==IMAGE_16) return 0xFF00 + (get16(x,y)>>8);
       if (t==IMAGE_48RGB)  return 0xFF00 + color_rgb64_to_grey8(get48(x,y));
@@ -344,7 +354,7 @@ class ImageR : public Image {
     }
 
     // Get 16-bit grey color for any image type.
-    uint16_t get_grey16(const size_t x, const size_t y) const{
+    uint16_t get_grey16(const size_t x, const size_t y) const  {
       if (t==IMAGE_8) {auto c = get8(x,y); return (c<<8) + c;}
       if (t==IMAGE_16) return get16(x,y);
       if (t==IMAGE_48RGB)  return color_rgb64_to_grey16(get48(x,y));
@@ -353,7 +363,7 @@ class ImageR : public Image {
     }
 
     // get double value for any image type.
-    double get_double(const size_t x, const size_t y) const {
+    double get_double(const size_t x, const size_t y) const override {
       if (t==IMAGE_DOUBLE) return getD(x,y);
       if (t==IMAGE_FLOAT)  return (double)getF(x,y);
       if (t==IMAGE_16) return (double)get16(x,y);
@@ -374,9 +384,7 @@ class ImageR : public Image {
       return x1>=0 && x2<w && y1>=0 && y2<h;
     }
 
-    // redefine Image::get_color:
-    uint32_t get_color_fast(const size_t x, const size_t y) override { return get_argb(x,y); }
-
+    /******************************************************/
 
     std::ostream & print (std::ostream & s) const override{
       if (width()==0 || height()==0) {

@@ -58,7 +58,7 @@ ImageT::clear_queue(){
 }
 
 void
-ImageT::load_key(const iPoint & key) {
+ImageT::load_key(const iPoint & key) const {
   if (tiles.contains(key)) return;
   auto url = make_url(tmpl, key);
   try {
@@ -83,11 +83,11 @@ ImageT::load_key(const iPoint & key) {
 }
 
 ImageR
-ImageT::get_image(const iRect & r){
+ImageT::get_image(const iRect & r) const{
   ImageR ret(r.w,r.h, IMAGE_32ARGB);
   for (int y = 0; y<r.h; ++y)
     for (int x = 0; x<r.w; ++x)
-      ret.set32(x, swapy?r.h-1-y:y, get_color_fast(x+r.x,y+r.y));
+      ret.set32(x, swapy?r.h-1-y:y, get_argb(x+r.x,y+r.y));
   return ret;
 }
 

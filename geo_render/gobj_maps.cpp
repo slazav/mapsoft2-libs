@@ -204,11 +204,11 @@ GObjMaps::render_tile(const dRect & draw_range) {
 
         int color;
         if (smooth){
-          if (avr<1) color = image_src->get_color_int4(p);
-          else       color = image_src->get_color_avrg(p, avr);
+          if (avr<1) color = image_src->get_argb_int4(p);
+          else       color = image_src->get_argb_avrg(p, avr);
         }
         else {
-          color = image_src->get_color(p);
+          color = image_src->get_argb(p);
         }
         image_dst.set32(xd, yd, color);
       }

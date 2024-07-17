@@ -586,7 +586,7 @@ main(){
 
     { // blue.PNG
       ImageR I = image_load_png("test_png/blue.PNG");
-      assert_eq(I.get_color(100,100), 0xFF9ABFDD);
+      assert_eq(I.get_argb(100,100), 0xFF9ABFDD);
     }
 /*
 std::cerr << std::hex << I.get_argb(0,0) << "\n";
