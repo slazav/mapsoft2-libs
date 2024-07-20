@@ -197,20 +197,21 @@ image_cnt(const ImageR & img,
       else ++i1;
     }
 
-    // filter stright lines (mostly for borders)
+    // filter stright border lines
     for (auto & l:ml){
       auto i1 = l.begin();
       while (i1+2!=l.end()){
         auto i2=i1+1, i3=i1+2;
-          if (dist(*i1,*i2)<pt_acc || dist(*i2,*i3)<pt_acc ||
-              dist(norm(*i2-*i1), norm(*i3-*i2)) < pt_acc)
-          l.erase(i2);
+        if (i1->z && i2->z && i3->z &&
+           (dist(*i1,*i2)<pt_acc || dist(*i2,*i3)<pt_acc ||
+            dist(norm(*i2-*i1), norm(*i3-*i2)) < pt_acc)) l.erase(i2);
         else ++i1;
       }
     }
 
 /*
-    // simple filter with vtol
+    // V1 filter with vtol.
+    // Remove points while altitude along the line is within the tolerance.
     if (vtol>0){
       for (auto & l:ml){
         auto i1 = l.begin();
@@ -225,8 +226,8 @@ image_cnt(const ImageR & img,
       }
     }
 */
-    // Filter with vtol
-    // Slower version - minimize line length
+    // V2 filter with vtol.
+    // Iteratively minimize line length.
     if (vtol>0){
       for (auto & l:ml){
         double maxsh = 2*pt_acc;
@@ -234,7 +235,7 @@ image_cnt(const ImageR & img,
           maxsh = 0;
           for (auto i1 = l.begin(); i1+2!=l.end(); i1++){
             auto i2=i1+1, i3=i1+2;
-            if (i2->z) continue; // skip border points
+            if (dist(*i1,*i2)>1.5 || dist(*i2,*i3)>1.5) continue;
 
             // can we move i2?
             dPoint p2 = (*i1+*i3)/2;
