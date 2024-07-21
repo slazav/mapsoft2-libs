@@ -5,13 +5,15 @@
 // Coordinates of 4 data cell corners: [0,0] [0,1] [1,1] [1,0]
 iPoint crn (int k){ k%=4; return iPoint(k/2, (k%3>0)?1:0); }
 
-// we use int64_t points with some factor for intermediate coordinate calculations
+// We work with integer grid. Accuracy should be much smaller then 1.
 const double pt_acc = 1e-4;
 
 // push segment to multiline
 void
 push_seg(dMultiLine & ml, const dPoint & p1, const dPoint & p2){
 
+  // Try to attach segment to an existing line.
+  // Try both sides, assuming same segment orientation.
   for (auto & l:ml){
     if (l.size()==0) continue;
     if (dist(*l.rbegin(), p1) < pt_acc){
@@ -24,6 +26,7 @@ push_seg(dMultiLine & ml, const dPoint & p1, const dPoint & p2){
     }
   }
 
+  // create new line
   dLine l;
   l.push_back(p1);
   l.push_back(p2);
@@ -71,7 +74,7 @@ img_vrange(const dPoint & p1, const dPoint & p2, const ImageR & img){
   return dPoint(min,max);
 }
 
-// Get value
+// Get value with bilinear interpolation
 double img_int4(const dPoint & p, const ImageR & img){
   size_t w = img.width(), h = img.height();
   iPoint p1 = floor(p), p2 = ceil(p);
@@ -103,6 +106,7 @@ image_cnt(const ImageR & img,
     for (int x=0; x<w-1; x++){
 
       iPoint p(x,y);
+      // container for previous points inside each loop
       std::map<double, std::set<dPoint>> pts;
 
       // Crossing of all 4 data cell sides with contours
@@ -110,10 +114,12 @@ image_cnt(const ImageR & img,
       for (int k=0; k<4; k++){
         iPoint p1 = p+crn(k);
         iPoint p2 = p+crn(k+1);
+
+        // Set z coordinate to 1 on the boundary
         p1.z = (p1.x==0 || p1.x==w-1 || p1.y==0 || p1.y==h-1) ? 1:0;
         p2.z = (p2.x==0 || p2.x==w-1 || p2.y==0 || p2.y==h-1) ? 1:0;
-
         bool brd = p1.z && p2.z;
+
         auto v1 = img.get_double(p1.x, p1.y);
         auto v2 = img.get_double(p2.x, p2.y);
 
@@ -138,6 +144,7 @@ image_cnt(const ImageR & img,
           double v1a = (fabs(vv-v1)>sh/2)? v1 : v1 - sh;
           double v2a = (fabs(vv-v2)>sh/2)? v2 : v2 - sh;
 
+          // contour along the border if closed=true
           if (brd && closed && v1a>=vv && v2a>=vv){
             push_seg(ret[vv], p1, p2);
             continue;
@@ -145,23 +152,35 @@ image_cnt(const ImageR & img,
 
           if (v1a==v2a) continue;
 
+          // find crossing of the cell side with the contour:
           double d = (vv-v1a)/(v2a-v1a);
           if ((d<0)||(d>=1)) continue;
 
+          // One more hack with shift:
+          // If crossing is too close to the corner then merge can fail.
+          // We want points on different segments to be more then
+          // pt_acc from each other. Shift by pt_acc on each side will give
+          // sqrt(2)*pt_acc min distance.
+          if (d<pt_acc)   d = pt_acc;
+          if (d>1-pt_acc) d = 1-pt_acc;
+
           dPoint cr = (dPoint)p1 + (dPoint)(p2-p1)*d;
+
+          // find pairs of crossings, add to the Multiline:
           if (!pts[vv].empty()){
             dPoint crp = *pts[vv].begin();
             pts[vv].clear();
-            if (v1>vv) push_seg(ret[vv], cr,crp);
-            if (v2>vv) push_seg(ret[vv], crp,cr);
+            if (v1a>vv) push_seg(ret[vv], cr,crp);
+            if (v2a>vv) push_seg(ret[vv], crp,cr);
           }
           else {
             pts[vv].insert(cr);
           }
 
+          // segment along the border:
           if (brd && closed) {
-            if (v1>vv) push_seg(ret[vv], p1,cr);
-            if (v2>vv) push_seg(ret[vv], cr,p2);
+            if (v1a>vv) push_seg(ret[vv], p1,cr);
+            if (v2a>vv) push_seg(ret[vv], cr,p2);
           }
         }
       }
