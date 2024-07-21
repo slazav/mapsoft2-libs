@@ -17,8 +17,9 @@ main(){
     int mult=5; // image size will be bigget by this factor
 
     double step = 100; // countour step
-    double vmin = NAN; // countour start value
+    double vmin = 0; // countour start value
     double vmax = NAN; // countour end value
+
     double cmin=0, cmax=3000; // min/max value for the color image
 
     double vtol = 5; // tolerance for contour filtering
@@ -61,6 +62,18 @@ main(){
     cr->set_line_width(3);
     cr->stroke();
 
+    // draw tolerances
+    ret = image_cnt(img, vmin-vtol, vmax, step, closed, 0);
+    for (const auto & l:ret)
+      cr->mkpath_smline((double)mult*l.second, 0, 0);
+    ret = image_cnt(img, vmin+vtol, vmax, step, closed, 0);
+    for (const auto & l:ret)
+      cr->mkpath_smline((double)mult*l.second, 0, 0);
+    cr->cap_round();
+    cr->set_line_width(1);
+    cr->set_color_a(0xFF888888);
+    cr->stroke();
+
     // line filtering
     auto ret1 = image_cnt(img, vmin, vmax, step, closed, vtol);
     for (const auto & l:ret1)
@@ -74,7 +87,6 @@ main(){
       cr->mkpath_points((double)mult*l.second);
     cr->set_line_width(3);
     cr->stroke();
-
 
     // save image
     image_save(cr.get_image(), "test2.png");
