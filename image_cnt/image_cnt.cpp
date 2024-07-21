@@ -249,11 +249,27 @@ image_cnt(const ImageR & img,
     // Iteratively minimize line length.
     if (vtol>0){
       for (auto & l:ml){
+        if (l.size()<3) continue;
         double maxsh = 2*pt_acc;
+        bool closed = dist(*l.begin(), *l.rbegin()) < pt_acc;
+        if (closed) l.resize(l.size()-1);
+
         while (maxsh > pt_acc){
           maxsh = 0;
-          for (auto i1 = l.begin(); i1+2!=l.end(); i1++){
-            auto i2=i1+1, i3=i1+2;
+          for (auto i1 = l.begin(); i1!=l.end(); i1++){
+            auto i2=i1+1;
+            auto i3=i1+2;
+
+            if (closed){
+              if (i2 == l.end()) {i2 =l.begin(); i3 = i2+1;}
+              else if (i3 == l.end()) i3 = l.begin();
+            }
+            else if (i3 == l.end()) continue;
+
+            if (i3 == l.end()){
+              if (closed) i3 = l.begin();
+              else continue;
+            }
             if (dist(*i1,*i2)>1.5 || dist(*i2,*i3)>1.5) continue;
 
             // can we move i2?
@@ -268,6 +284,8 @@ image_cnt(const ImageR & img,
 
           }
         }
+        if (closed) l.push_back(*l.begin());
+
         // filter stright lines
         auto i1 = l.begin();
         while (i1+2!=l.end()){
