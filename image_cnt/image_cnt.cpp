@@ -254,7 +254,7 @@ image_cnt(const ImageR & img,
         bool closed = dist(*l.begin(), *l.rbegin()) < pt_acc;
         if (closed) l.resize(l.size()-1);
 
-        while (maxsh > pt_acc){
+        while (maxsh > pt_acc/2){
           maxsh = 0;
           for (auto i1 = l.begin(); i1!=l.end(); i1++){
             auto i2=i1+1;
