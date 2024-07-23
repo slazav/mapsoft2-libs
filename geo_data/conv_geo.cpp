@@ -110,6 +110,8 @@ ConvGeo::ConvGeo(const std::string & src,
   pj = std::shared_ptr<void>(
       proj_create_crs_to_crs_from_pj(pcp, psrc, pdst, NULL, NULL),
       proj_destroy);
+  proj_destroy(psrc);
+  proj_destroy(pdst);
   auto pjp = (PJ*) pj.get();
   if (!pjp) {
     int err = proj_context_errno(pcp);
