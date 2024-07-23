@@ -43,17 +43,20 @@ svg_to_pattern(const std::string & fname, double scx, double scy, double dx, dou
     if (!svg && err) throw Err() << fname << ": " << err->message;
     if (!svg) throw Err() << fname << ": can't load SVG file";
 
-    RsvgDimensionData dim;
-    rsvg_handle_get_dimensions(svg, &dim);
-    int w = dim.width;
-    int h = dim.height;
+    gdouble dw, dh;
+    if (!rsvg_handle_get_intrinsic_size_in_pixels(svg, &dw, &dh))
+      throw Err() << fname << ": can't convert dimensions to pixels";
+
+    int w = ceil(dw);
+    int h = ceil(dh);
     if (wret) *wret=w*scx;
     if (hret) *hret=w*scy;
 
     auto surf = Cairo::ImageSurface::create (Cairo::FORMAT_ARGB32, w, h);
     auto cr = Cairo::Context::create(surf);
-    if (!rsvg_handle_render_cairo(svg,cr->cobj()))
-      throw Err() << fname << ": can't render SVG image";
+    RsvgRectangle rect = {0.0,0.0,dw,dh};
+    if (!rsvg_handle_render_document(svg,cr->cobj(), &rect, &err))
+      throw Err() << fname << ": can't render SVG image: " << err->message;
     g_object_unref(svg);
 
     auto patt = Cairo::SurfacePattern::create(surf);
