@@ -67,7 +67,8 @@ public:
   static bool is_rad(const std::string & str);
 
 private:
-  std::shared_ptr<void> pj, pc;
+  std::shared_ptr<void> pc; // proj context
+  std::shared_ptr<void> pj; // crs_to_crs, should be destroyed after context
   bool cnv2d; // Do 2D or 3D conversion
 //  bool su_src, su_dst; // Use automatic 6-degree zones (for SU coordinate system)
 };
