@@ -404,7 +404,7 @@ image_save_png(const ImageR & im, std::ostream & str,
 
     png_write_info(png_ptr, info_ptr);
     // for 16-bit RGB this will not be enough!
-    png_bytep buf = (png_bytep)png_malloc(png_ptr, im.width()*4);
+    buf = (png_bytep)png_malloc(png_ptr, im.width()*4);
     if (!buf) throw Err() << "PNG: malloc error";
 
     for (size_t y=0; y<im.height(); y++){
