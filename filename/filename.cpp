@@ -64,7 +64,9 @@ file_rel_path(const std::string &fname, const std::string &ref_name){
   if (ref_name.size()==0 || ref_name[0]=='/'){
      char * cwd = getcwd(NULL, 0);
      if (!cwd) throw Err() << "can't get cwd: " << strerror(errno);
-     return std::string(cwd) + "/" + fname;
+     std::string ret(cwd);
+     free(cwd);
+     return ret + "/" + fname;
   }
 
   // reference dirs

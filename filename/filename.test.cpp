@@ -109,7 +109,9 @@ int main() {
     assert_eq(file_rel_path("d1/a.png",    "d2/b.map"),     "../d1/a.png");
     assert_eq(file_rel_path("d1/a.png",    "d1/d2/b.map"),  "../a.png");
     assert_eq(file_rel_path("/d1/a.png",   "/d1/b.map"),   "/d1/a.png");
-    assert_eq(file_rel_path("a.png",       "/d1/b.map"),    std::string(getcwd(0,0)) + "/a.png");
+    char * cwd = getcwd(0,0);
+    assert_eq(file_rel_path("a.png",       "/d1/b.map"),    std::string(cwd) + "/a.png");
+    free(cwd);
     assert_eq(file_rel_path("a.png",       "a/b/c/d/b.map"),  "../../../../a.png");
 
     file_mkdir("."); // no need to do anything
