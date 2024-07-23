@@ -204,7 +204,7 @@ Opt::check_conflict(const std::list<std::string> & confl) const {
 std::ostream & operator<< (std::ostream & s, const Opt & o){
   json_t *J = json_object();
   for (auto i: o){
-    json_object_set(J, i.first.c_str(), json_string(i.second.c_str()));
+    json_object_set_new(J, i.first.c_str(), json_string(i.second.c_str()));
   }
   char *ret = json_dumps(J, JSON_SORT_KEYS);
   json_decref(J);
