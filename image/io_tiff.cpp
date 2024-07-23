@@ -115,7 +115,7 @@ TIFF* TIFFStreamWOpen(std::ostream & str){
 // getting file dimensions from stream
 iPoint image_size_tiff(std::istream & str){
   TIFF* tif = NULL;
-  uint32_t w, h;
+  uint32_t w = 0, h = 0;
 
   try {
     TIFFSetErrorHandler((TIFFErrorHandler)&my_error_exit);
@@ -293,7 +293,7 @@ image_load_tiff(std::istream & str, const double scale){
     if (!tif) throw Err() << "image_load_tiff: can't load tiff";
 
     // image dimensions
-    uint32_t w, h;
+    uint32_t w = 0, h = 0;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
 
@@ -302,7 +302,7 @@ image_load_tiff(std::istream & str, const double scale){
     uint32_t h1 = floor((h-1)/scale+1);
 
     // can we do random access to lines?
-    int compression_type, rows_per_strip;
+    int compression_type=0, rows_per_strip=0;
     TIFFGetField(tif, TIFFTAG_COMPRESSION,  &compression_type);
     TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rows_per_strip);
     bool can_skip_lines =
