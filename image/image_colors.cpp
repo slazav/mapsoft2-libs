@@ -724,6 +724,9 @@ image_crop(ImageR & img, const iRect & r){
   out.cmap = img.cmap;
 
   if (img.type()==IMAGE_1){
+    // For BW images it's not enough to fill all points,
+    // to avoid "uninitialised byte(s)" errors in valgrind.
+    out.fill1(0);
     // we need some signed type to find x+r1.x!
     for (int y = 0; y<r1.h; y++){
       for (int x = 0; x<r1.w; x++){
