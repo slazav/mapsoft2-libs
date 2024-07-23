@@ -123,14 +123,10 @@ image_size_jpeg(std::istream & str){
   cinfo.err = jpeg_std_error(&jerr);
   jerr.error_exit = my_error_exit;
   error_pref = "image_size_jpeg";
-  if (setjmp(jpg_jmp_buf)) throw jpg_err;
-  // note: it is an error to do jpeg_destroy_decompress
-  // before jpeg_create_decompress.
-
-
-  jpeg_create_decompress(&cinfo);
 
   try {
+    if (setjmp(jpg_jmp_buf)) throw jpg_err;
+    jpeg_create_decompress(&cinfo);
     jpeg_stream_src(&cinfo, &str);
     jpeg_read_header(&cinfo, TRUE);
   }
