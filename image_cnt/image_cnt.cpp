@@ -258,18 +258,13 @@ image_cnt(const ImageR & img,
           maxsh = 0;
           for (auto i1 = l.begin(); i1!=l.end(); i1++){
             auto i2=i1+1;
-            auto i3=i1+2;
+            auto i3=(i2!=l.end()) ? i2+1: i2;
 
             if (closed){
               if (i2 == l.end()) {i2 =l.begin(); i3 = i2+1;}
               else if (i3 == l.end()) i3 = l.begin();
             }
             else if (i3 == l.end()) continue;
-
-            if (i3 == l.end()){
-              if (closed) i3 = l.begin();
-              else continue;
-            }
             if (dist(*i1,*i2)>1.5 || dist(*i2,*i3)>1.5) continue;
 
             // can we move i2?
