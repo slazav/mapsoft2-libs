@@ -88,6 +88,17 @@ main(){
     cr->set_line_width(3);
     cr->stroke();
 
+    // find summits
+    cr->set_color_a(0xFF000000);
+    cr->set_line_width(5);
+    auto peaks = image_peaks(img, 20);
+    for (const auto & pt:peaks){
+      cr->move_to(pt * mult);
+      cr->line_to(pt * mult);
+      cr->text(type_to_str((int)pt.z).c_str(), pt*mult + iPoint(10,0), 0);
+    }
+    cr->stroke();
+
     // save image
     image_save(cr.get_image(), "test2.png");
 

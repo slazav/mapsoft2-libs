@@ -17,4 +17,13 @@ image_cnt(const ImageR & img,
           const double vmin, const double vmax, const double vstep,
           const bool closed, const double vtol=0.0);
 
+
+// Find peaks on the image.
+// Parameters:
+//   img -- image of any type which supports get_double() (see image/image_r.h)
+//   DH -- min "distance" between peaks (minimum acsent needed to move to the nearest peak)
+//   PS -- When calculating a peak do not collect more then PS points
+//        (0 means image.width * image.height)
+dLine image_peaks(const ImageR & img, double DH, size_t PS=0);
+
 #endif

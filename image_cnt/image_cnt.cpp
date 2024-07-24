@@ -1,5 +1,6 @@
 #include <set>
 #include "err/err.h"
+#include "geom/point_int.h"
 #include "image_cnt.h"
 
 // Coordinates of 4 data cell corners: [0,0] [0,1] [1,1] [1,0]
@@ -310,3 +311,50 @@ image_cnt(const ImageR & img,
   return ret;
 }
 
+/********************************************************************/
+dLine
+image_peaks(const ImageR & img, double DH, size_t PS){
+  if (PS == 0) PS = img.width() * img.height();
+
+  dLine ret;
+  std::set<iPoint> done;
+  for (int y=0; y<img.height(); y++){
+    for (int x=0; x<img.width(); x++){
+
+      iPoint p(x,y);
+      if (done.count(p)>0) continue;
+      double h0 = img.get_double(x,y);
+
+      std::set<iPoint> pts, brd;
+      add_set_and_border(p, pts, brd);
+      do{
+        // find maximum of the border
+        double max = -INFINITY;
+        iPoint maxpt;
+        for (auto const & b:brd){
+          if (img.check_crd(b.x, b.y)){
+            double h1 = img.get_double(b.x, b.y);
+            if (h1>max) {max = h1; maxpt=b;}
+          }
+          else {
+            // is original point is too close to data edge
+            if (dist(b,p)<1.5) {max = -INFINITY; break;}
+          }
+        }
+        if (std::isinf(max)) break;
+
+        // if max is higher then original point:
+        if (max > h0) { break; }
+
+        // if we descended more then DH or covered area more then PS:
+        if ((h0 - max > DH ) || (pts.size() > PS)) {
+          ret.emplace_back(x, y, h0);
+          break;
+        }
+        add_set_and_border(maxpt, pts, brd);
+        done.insert(maxpt);
+      } while (true);
+    }
+  }
+  return ret;
+}
