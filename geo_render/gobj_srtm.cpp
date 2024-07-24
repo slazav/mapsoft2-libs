@@ -215,23 +215,20 @@ render_tile(const dRect & draw_range){
     auto srtm_lock = srtm->get_lock();
     wgs_range = cnv->frw_acc(expand(draw_range,peaks_text_size*4));
     auto p_data = srtm->find_peaks(wgs_range, peaks_dh, peaks_ps);
+    cnv->bck(p_data);
     cr->set_color(peaks_color);
     cr->set_line_width(peaks_w);
-    for (auto & d:p_data){
+    for (const auto & pt:p_data){
       if (is_stopped()) return false;
-      dPoint p0 = d.first;
-      cnv->bck(p0);
-      cr->move_to(p0);
-      cr->line_to(p0);
+      cr->move_to(pt);
+      cr->line_to(pt);
     }
     cr->stroke();
     if (peaks_text){
       cr->set_fc_font(peaks_color, peaks_text_font.c_str(), peaks_text_size);
-      for(auto & d:p_data){
-        dPoint p0 = d.first;
-        cnv->bck(p0);
-        cr->move_to(p0 + dPoint(2,2));
-        cr->text_path(type_to_str(d.second));
+      for(const auto & pt:p_data){
+        cr->move_to(pt + dPoint(2,2));
+        cr->text_path(type_to_str((int)pt.z));
       }
       cr->set_line_width(2);
       cr->set_color(0xFFFFFFFF);

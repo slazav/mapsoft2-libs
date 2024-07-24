@@ -166,7 +166,7 @@ class SRTM {
     // Get raster image with original points (if possible)
     // rng -- lonlat range
     // blc -- return lonlat coordinate of lower-left point
-    // step -- return step in drgrees
+    // step -- return conversion factor points -> degrees
     // Point grid is taken from the tile in the middle of the range.
     // Other tiles will be interpolated to this grid.
     ImageR get_img(const dRect & rng, dPoint & blc, dPoint & step);
@@ -202,7 +202,7 @@ class SRTM {
     dMultiLine find_slope_contours(const dRect & range, double val, double vtol = 0.0);
 
     // make vector data: peaks
-    std::map<dPoint, short> find_peaks(const dRect & range, int DH, size_t PS);
+    dLine find_peaks(const dRect & range, double DH, size_t PS);
 
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);

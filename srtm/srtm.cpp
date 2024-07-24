@@ -426,24 +426,29 @@ SRTM::get_img(const dRect & rng, dPoint & blc, dPoint & step){
   // main tile - we want to copy it, because it can be removed from the cache
   auto tile0 = get_tile(key0);
   if (tile0.is_empty()) return ImageR();
-  iPoint c1 = floor(tile0.ll2px(rng.tlc()));
-  iPoint c2 = ceil(tile0.ll2px(rng.brc()));
-  std::swap(c1.y, c2.y);
+
+  dPoint c1p = tile0.ll2px(rng.tlc());
+  dPoint c2p = tile0.ll2px(rng.brc());
+
+  iPoint c1(floor(c1p.x), floor(c2p.y));
+  iPoint c2(ceil(c2p.x), ceil(c1p.y));
+  blc = tile0.px2ll(iPoint(c1.x, c2.y));
+
   step = tile0.step;
-  blc = c1;
+  step.z = 1.0;
 
   ImageR img(c2.x-c1.x, c2.y-c1.y, IMAGE_16);
   // render main tile
   for (int y=c1.y; y<c2.y; y++){
     for (int x=c1.x; x<c2.x; x++){
       if (x>0 && y>0 && x<tile0.w && y<tile0.h) {
-        img.set16(x-c1.x, y-c1.y, tile0.get_unsafe(iPoint(x,y), use_overlay));
+        img.set16(x-c1.x, c2.y-y-1, tile0.get_unsafe(iPoint(x,y), use_overlay));
       }
       else {
         dPoint pt = tile0.px2ll(dPoint(x,y));
         int16_t c = (int16_t)get_interp(pt);
         if (c<SRTM_VAL_MIN) c=0;
-        img.set16(x-c1.x, y-c1.y, c);
+        img.set16(x-c1.x, c2.y-y-1, c);
       }
     }
   }
@@ -479,27 +484,12 @@ SRTM::get_color(const dPoint & p, bool raw) {
 
 std::map<double, dMultiLine>
 SRTM::find_contours(const dRect & range, double step, double vtol){
-
-  dPoint d = get_step(range.cnt());
-
-  // integer rectangle covering the area
-  iRect irange = ceil(range/d);
-
-  int x1  = irange.tlc().x;
-  int x2  = irange.brc().x;
-  int y1  = irange.tlc().y;
-  int y2  = irange.brc().y;
-
   // Extract altitudes for the whole range, make image
-  ImageR img(x2-x1+1, y2-y1+1, IMAGE_16);
-  for (int y=y1; y<=y2; y++){
-    for (int x=x1; x<=x2; x++){
-      img.set16(x-x1,y-y1, get_h(dPoint(x*d.x,y*d.y)));
-    }
-  }
+  dPoint blc, d;
+  ImageR img = get_img(range, blc, d);
 
   std::map<double, dMultiLine> ret = image_cnt(img, NAN, NAN, step, 0, vtol);
-  for (auto & r:ret) r.second = (dPoint(x1,y1)+r.second)*d;
+  for (auto & r:ret) r.second = blc + r.second*d;
   return ret;
 }
 
@@ -532,65 +522,12 @@ SRTM::find_slope_contours(const dRect & range, double val, double vtol){
 }
 
 
-std::map<dPoint, short>
-SRTM::find_peaks(const dRect & range, int DH, size_t PS){
-
-  // integer rectangle covering the area
-  dPoint d = get_step(range.cnt());
-  iRect irange = ceil(range/d);
-  int x1  = irange.tlc().x;
-  int x2  = irange.brc().x;
-  int y1  = irange.tlc().y;
-  int y2  = irange.brc().y;
-
-  // Summit finder:
-  // 1. Find all local maxima with altitude h0 (they can contain multiple points).
-  // 2. From each of them build a set of points by adding the highest point
-  //    of the set boundary.
-  // 3. If altitude of the last added point is less then h0-DH, or if
-  //    set size is larger then PS, then stop the calculation and
-  //    say that the original point is a summit.
-  // 4. If altitude of the last added point is more then h0, then
-  //    the original point is not a summit.
-
-  std::set<iPoint> done;
-  std::map<dPoint, short> ret;
-  for (int y=y2; y>y1; y--){
-    for (int x=x1; x<x2-1; x++){
-
-      iPoint p(x,y);
-      if (done.count(p)>0) continue;
-      short h0 = get_h(dPoint(x,y)*d);
-      if (h0 < SRTM_VAL_MIN) continue;
-
-      std::set<iPoint> pts, brd;
-      add_set_and_border(p, pts, brd);
-      do{
-        // find maximum of the border
-        short max = SRTM_VAL_UNDEF;
-        iPoint maxpt;
-        for (auto const & b:brd){
-          short h1 = get_h((dPoint)b*d);
-          // original point is too close to data edge
-          if ((h1<SRTM_VAL_MIN) && (dist(b,p)<1.5)) {max = h1; break;}
-          if (h1>max) {max = h1; maxpt=b;}
-        }
-        if (max < SRTM_VAL_MIN) break;
-
-        // if max is higher then original point:
-        if (max > h0) { break; }
-
-        // if we descended more then DH or covered area more then PS:
-        if ((h0 - max > DH ) || (pts.size() > PS)) {
-          ret[dPoint(p)*d] = h0;
-          break;
-        }
-        add_set_and_border(maxpt, pts, brd);
-        done.insert(maxpt);
-      } while (true);
-    }
-  }
-  return ret;
+dLine
+SRTM::find_peaks(const dRect & range, double DH, size_t PS){
+  dPoint blc, d;
+  ImageR img = get_img(range, blc, d);
+  auto ret = image_peaks(img, DH, PS);
+  return ret*d + blc;
 }
 
 dMultiLine
