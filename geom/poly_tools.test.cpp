@@ -272,6 +272,7 @@ main(){
       assert_deq(nearest_pt(dPoint(0,0,0),  dPoint(-1,1,1), dPoint(+1,1,10), true),  dPoint(0,1,5.5), 1e-6);
 
     }
+
     // segment_cross_2d
     {
       dPoint p0;
@@ -373,7 +374,6 @@ main(){
       assert_deq(p0, dPoint(0,0), 1e-6);
 
     }
-
 
     // line_filter_v1
     {
