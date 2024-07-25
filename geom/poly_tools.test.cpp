@@ -207,6 +207,23 @@ main(){
       assert_eq(ml, dMultiLine("[[]]"));
     }
 
+    // join_cross
+    {
+      dMultiLine ml("["
+        "[[0,0],[10,0],[10,10],[0,10]],"
+        "[[-1,2],[1,2],[-1,1]],"  // crossing on last segments
+        "[[11,1],[12,1],[11,2]]," // outside
+        "[[1,-1],[2,-1],[2,1],[1,1]]"
+       "]");
+      join_cross(ml);
+      assert_eq(iMultiLine(ml), iMultiLine("["
+        "[[0,2],[1,2],[-1,1],[-1,2],[0,2],"
+        "[0,0],[2,0],[2,1],[1,1],[1,-1],[2,-1],[2,0],"
+        "[10,0],[10,10],[0,10]],"
+        "[[11,1],[12,1],[11,2]]"
+       "]"));
+    }
+
      // figure_line, figure_bbox
     {
       assert_eq(figure_line<int>("[1,2]"), iMultiLine("[[1,2]]")); // Point

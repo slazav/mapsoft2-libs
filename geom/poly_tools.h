@@ -265,7 +265,6 @@ bool segment_cross_2d(const PT & p1, const PT & p2,
   return true;
 }
 
-
 // Join a multi-segment polygon into a single-segment one
 // using shortest cuts.
 template<typename CT, typename PT>
@@ -341,6 +340,56 @@ void remove_holes(MultiLine<CT,PT> & L){
     }
   }
 }
+
+// Join crossing segments. This should be compatable with test_hole
+template<typename CT, typename PT>
+void join_cross(MultiLine<CT,PT> & L){
+
+  // go through each pair of lines:
+  for (auto l1=L.begin(); l1!=L.end(); l1++){
+    if (l1->size()==0) continue;
+
+    auto l2=l1+1;
+    while (l2!=L.end()){
+      if (l2->size()==0) {l2++; continue;}
+
+      // find crossing, save iterators for crossing segments:
+      bool cr = false;
+      dPoint cp;
+      auto p1b = l1->end(), p1e = l1->end(), p2b = l2->end(), p2e = l2->end();
+      for (p1b = l1->begin(); p1b!=l1->end(); ++p1b){
+        p1e = p1b + 1;
+        if (p1e == l1->end()) p1e = l1->begin();
+
+        for (p2b=l2->begin(); p2b!=l2->end(); ++p2b){
+          p2e = p2b + 1;
+          if (p2e == l2->end()) p2e = l2->begin();
+
+          cr = segment_cross_2d(*p1b,*p1e, *p2b,*p2e, cp);
+          if (cr) break;
+        }
+        if (cr) break;
+      }
+
+      // process crossing: merge l2 into l1
+      if (!cr) {l2++; continue; }
+
+      Line<CT,PT> l1new;
+      if (p1e != l1->begin())
+        l1new.insert(l1new.end(), l1->begin(), p1e);
+      l1new.insert(l1new.end(), cp);
+      l1new.insert(l1new.end(), p2e, l2->end());
+      if (p2e != l2->begin())
+        l1new.insert(l1new.end(), l2->begin(), p2e);
+      l1new.insert(l1new.end(), cp);
+      l1new.insert(l1new.end(), p1e, l1->end());
+      l1->swap(l1new);
+      l2 = L.erase(l2);
+    }
+  }
+}
+
+/**********************************************************/
 
 /// Read a figure from the string.
 /// The figure can be Point, Line/Multiline, Rect.
