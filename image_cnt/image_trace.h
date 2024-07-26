@@ -24,4 +24,7 @@ ImageR trace_map_dirs(const ImageR & img, int nmax, bool down);
 // use sink directions to calculate areas
 ImageR trace_map_areas(const ImageR & dirs);
 
+// calculate difference between point altitude and average altitude of its sink area
+ImageR trace_map_dh(const ImageR & dem, const ImageR & dirs, int rad = 0);
+
 #endif

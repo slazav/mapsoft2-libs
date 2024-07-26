@@ -30,24 +30,28 @@ main(){
     // trace rivers
 
     ImageR rrd = trace_map_dirs(img, 10000, true);
+    ImageR rrh = trace_map_dh(img, rrd, 0);
     ImageR rra = trace_map_areas(rrd);
-    dPoint rrng = rra.get_double_range();
-    Rainbow R1(rrng.x, rrng.y, "CBb");
+    dPoint rrng = rrh.get_double_range();
+    Rainbow R1(rrng.x, -200, "bBCW");
 
     ImageR mmd = trace_map_dirs(img, 10000, false);
+    ImageR mmh = trace_map_dh(img, mmd, 50);
     ImageR mma = trace_map_areas(mmd);
-    dPoint mrng = rra.get_double_range();
+    dPoint mrng = mmh.get_double_range();
+    Rainbow R2(200, mrng.y, "WMRr");
 
     ImageR cimg(w,h, IMAGE_32ARGB);
     cimg.fill32(0xFFFFFFFF);
-    Rainbow R2(mrng.x, mrng.y, "MRr");
 
     for (size_t y=0; y<img.height(); y++){
       for (size_t x=0; x<img.width(); x++){
-        double r = rra.get_double(x,y);
-        double m = mma.get_double(x,y);
-        if (r>128) cimg.set32(x, y, R1.get(r));
-        if (m>128) cimg.set32(x, y, R2.get(m));
+        double ra = rra.get_double(x,y);
+        double ma = mma.get_double(x,y);
+        double rh = rrh.get_double(x,y);
+        double mh = mmh.get_double(x,y);
+        if (ra > 256 && rh<0) cimg.set32(x, y, 0xFF0000FF);
+        if (ma > 256 && mh>200) cimg.set32(x, y, 0xFF804000);
       }
     }
 

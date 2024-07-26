@@ -207,6 +207,45 @@ trace_map_areas(const ImageR & dirs){
   return areas;
 }
 
+ImageR
+trace_map_dh(const ImageR & dem, const ImageR & dirs, int rad){
+  if (dirs.type() != IMAGE_8) throw Err() << "trace_map_areas: wrong image type";
+  size_t w = dirs.width(), h=dirs.height();
+
+  // calculate sink areas
+  ImageR areas(w,h, IMAGE_DOUBLE); areas.fillD(0.0);
+  ImageR hsum(w,h, IMAGE_DOUBLE); hsum.fillD(0.0);
+
+  for (size_t y=0; y<h; y++){
+    for (size_t x=0; x<w; x++){
+      iPoint p = iPoint(x, y);
+      double h = dem.get_double(p.x,p.y);
+      size_t i = 0;
+
+      while (dirs.check_crd(p.x, p.y)) {
+        i++;
+        if (rad && i>rad) break;
+        double a = areas.getD(p.x,p.y);
+        double s = hsum.getD(p.x,p.y);
+        areas.setD(p.x,p.y, a + 1);
+        hsum.setD(p.x,p.y, s + h);
+        int dir = dirs.get8(p.x,p.y);
+        if (dir < 0 || dir > 7) break;
+        p = adjacent(p, dir);
+      }
+    }
+  }
+  for (size_t y=0; y<h; y++){
+    for (size_t x=0; x<w; x++){
+      double h = dem.get_double(x,y);
+      double a = areas.getD(x,y);
+      double s = hsum.getD(x,y);
+      hsum.setD(x,y, h - s/a);
+    }
+  }
+  return hsum;
+}
+
 
 /********************************************************************/
 // Trace area of one river/mountain
