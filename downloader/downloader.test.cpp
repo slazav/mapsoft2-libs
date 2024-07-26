@@ -1,5 +1,6 @@
 ///\cond HIDDEN (do not show this in Doxyden)
 
+#include <curl/curl.h> // curl_version_info
 #include "downloader.h"
 #include "err/assert_err.h"
 #include <stdio.h>
@@ -43,8 +44,15 @@ main(){
     s = D.get(pref + "/downloader.h");
     assert_eq(s.substr(0,20), "#ifndef DOWNLOADER_H")
 
-    assert_err(D.get(pref+"/missing_file"),
-      "Couldn't read a file:// file: " + pref + "/missing_file");
+    int curlv = curl_version_info(CURLVERSION_NOW)->version_num;
+    if (curlv >= 0x080900) { // 8.9.0
+      assert_err(D.get(pref+"/missing_file"),
+        "Could not read a file:// file: " + pref + "/missing_file");
+    }
+    else {
+      assert_err(D.get(pref+"/missing_file"),
+        "Couldn't read a file:// file: " + pref + "/missing_file");
+    }
 
     D.clear();
     assert_eq(D.get_status(pref + "/downloader.h"), -1);
