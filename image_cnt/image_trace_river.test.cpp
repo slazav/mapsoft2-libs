@@ -15,9 +15,7 @@ main(){
   try{
 
     int w, h;   // grid size
-    int mult=3; // image size will be bigger by this factor
     double vmin = NAN, vmax = NAN, vstep = 100, vtol = 2; // contour parameters
-
     double cmin=0, cmax=3000; // min/max value for the color image
 
 
@@ -27,16 +25,12 @@ main(){
     h = img.height();
 
     // make color image
-    ImageR cimg(w*mult,h*mult, IMAGE_32ARGB);
+    ImageR cimg(w,h, IMAGE_32ARGB);
     Rainbow R(cmin, cmax);
     for (size_t y=0; y<img.height(); y++){
       for (size_t x=0; x<img.width(); x++){
         double v = img.get_double(x,y);
-        for (size_t dx=0; dx<mult; dx++){
-          for (size_t dy=0; dy<mult; dy++){
-            cimg.set32(mult*x+dx, mult*y+dy, R.get(v));
-          }
-        }
+        cimg.set32(x, y, R.get(v));
       }
     }
     CairoWrapper cr;
@@ -46,9 +40,9 @@ main(){
     // find and draw contours (no filtering)
     auto ret = image_cnt(img, vmin, vmax, vstep, 0, vtol);
     for (const auto & l:ret)
-      cr->mkpath_smline((double)mult*l.second, 0, 0);
+      cr->mkpath_smline(l.second, 0, 0);
     cr->cap_round();
-    cr->set_line_width(1);
+    cr->set_line_width(0.3);
     cr->set_color_a(0xFF000000);
     cr->stroke();
 
@@ -56,13 +50,14 @@ main(){
     cr->cap_round();
     cr->set_line_width(2);
     cr->set_color_a(0xFF0000FF);
-    dLine r1 = trace_river(img, iPoint(540,160), 1000, -1, true);
-    cr->mkpath_smline((double)mult*r1, 0, 0);
+    dLine r1 = trace_river(img, iPoint(311,141), 1000, -1, true);
+    cr->mkpath_smline(r1, 0, 0);
     cr->stroke();
 
     // trace a ridge
-    r1 = trace_river(img, iPoint(150,370), 10000, -1, false);
-    cr->mkpath_smline((double)mult*r1, 0, 0);
+    cr->set_color_a(0xFF803000);
+    r1 = trace_river(img, iPoint(38,158), 10000, -1, false);
+    cr->mkpath_smline(r1, 0, 0);
     cr->stroke();
 
     // save image
