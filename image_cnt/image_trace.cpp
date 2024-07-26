@@ -281,6 +281,14 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
     }
     ret.push_back(l);
   }
+
+  // smooth lines within pixel precision
+  for (auto & l:ret){
+    for (size_t i = 0; i+2<l.size(); i++){
+      l[i+1] = (l[i] + l[i+1])/2;
+    }
+  }
+
   return ret;
 }
 
