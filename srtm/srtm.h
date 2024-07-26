@@ -204,6 +204,10 @@ class SRTM {
     // make vector data: peaks
     dLine find_peaks(const dRect & range, double DH, size_t PS);
 
+    // make vector data: rivers or mountains
+    dMultiLine trace_map(const dRect & range, const int nmax, const bool down,
+                         const double mina, const double mindh);
+
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);
 

@@ -10,6 +10,7 @@
 #include "filename/filename.h"
 #include "image/io_tiff.h"
 #include "image_cnt/image_cnt.h"
+#include "image_cnt/image_trace.h"
 #include <zlib.h>
 #include <tiffio.h>
 
@@ -529,6 +530,20 @@ SRTM::find_peaks(const dRect & range, double DH, size_t PS){
   auto ret = image_peaks(img, DH, PS);
   return ret*d + blc;
 }
+
+dMultiLine
+SRTM::trace_map(const dRect & range, const int nmax, const bool down,
+                const double mina, const double mindh){
+  dPoint blc, d;
+  ImageR img = get_img(range, blc, d);
+
+  // area convertion factor: km^2 / pix^2
+  double k =  pow(6380 * M_PI/180, 2) * d.x * d.y * cos(M_PI*range.cnt().y/180.0);
+
+  auto ret = ::trace_map(img, nmax, down, mina/k, mindh);
+  return ret*d + blc;
+}
+
 
 dMultiLine
 SRTM::find_holes(const dRect & range){
