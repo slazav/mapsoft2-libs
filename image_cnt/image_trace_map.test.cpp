@@ -28,24 +28,26 @@ main(){
 
 
     // trace rivers
-    Rainbow R1(0, 16, "CBb");
-    Rainbow R2(0, 16, "MRr");
+
     ImageR rrd = trace_map_dirs(img, 10000, true);
     ImageR rra = trace_map_areas(rrd);
+    dPoint rrng = rra.get_double_range();
+    Rainbow R1(rrng.x, rrng.y, "CBb");
 
     ImageR mmd = trace_map_dirs(img, 10000, false);
     ImageR mma = trace_map_areas(mmd);
+    dPoint mrng = rra.get_double_range();
 
     ImageR cimg(w,h, IMAGE_32ARGB);
     cimg.fill32(0xFFFFFFFF);
+    Rainbow R2(mrng.x, mrng.y, "MRr");
 
     for (size_t y=0; y<img.height(); y++){
       for (size_t x=0; x<img.width(); x++){
-
         double r = rra.get_double(x,y);
         double m = mma.get_double(x,y);
-        if (r>128) cimg.set32(x, y, R1.get(log(r-128)));
-        if (m>128) cimg.set32(x, y, R2.get(log(m-128)));
+        if (r>128) cimg.set32(x, y, R1.get(r));
+        if (m>128) cimg.set32(x, y, R2.get(m));
       }
     }
 
