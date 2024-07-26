@@ -322,6 +322,7 @@ main(){
       assert_err(im.get_argb(5,5), "can't get color for this image type");
       assert_err(im.get_rgb(5,5),  "can't get color for this image type");
       assert_feq(im.get_double(0,1), 1, 1e-6);
+      assert_deq(im.get_double_range(), dPoint(1e-8, 1.0), 1e-6);
     }
 
     { // float image
@@ -345,6 +346,7 @@ main(){
       assert_err(im.get_argb(5,5), "can't get color for this image type");
       assert_err(im.get_rgb(5,5),  "can't get color for this image type");
       assert_feq(im.get_double(0,1), 1, 1e-6);
+      assert_deq(im.get_double_range(), dPoint(1e-8, 1.0), 1e-6);
     }
 
 

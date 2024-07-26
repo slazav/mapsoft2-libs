@@ -372,6 +372,19 @@ class ImageR : public Image {
       throw Err() << "can't get value for this image type";
     }
 
+    // get range of double values
+    dPoint get_double_range() const {
+      dPoint mm(+INFINITY, -INFINITY);
+      for (size_t x=0; x<w; x++){
+        for (size_t y=0; y<h; y++){
+          double v = get_double(x,y);
+          if (v < mm.x) mm.x = v;
+          if (v > mm.y) mm.y = v;
+        }
+      }
+      return mm;
+    }
+
     /******************************************************/
     // overrides for Image interface
 
