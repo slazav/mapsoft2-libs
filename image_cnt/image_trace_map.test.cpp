@@ -26,37 +26,25 @@ main(){
     w = img.width();
     h = img.height();
 
-
-    // trace rivers
-
-    ImageR rrd = trace_map_dirs(img, 10000, true);
-    ImageR rrh = trace_map_dh(img, rrd, 0);
-    ImageR rra = trace_map_areas(rrd);
-    dPoint rrng = rrh.get_double_range();
-    Rainbow R1(rrng.x, -200, "bBCW");
-
-    ImageR mmd = trace_map_dirs(img, 10000, false);
-    ImageR mmh = trace_map_dh(img, mmd, 50);
-    ImageR mma = trace_map_areas(mmd);
-    dPoint mrng = mmh.get_double_range();
-    Rainbow R2(200, mrng.y, "WMRr");
-
     ImageR cimg(w,h, IMAGE_32ARGB);
     cimg.fill32(0xFFFFFFFF);
 
-    for (size_t y=0; y<img.height(); y++){
-      for (size_t x=0; x<img.width(); x++){
-        double ra = rra.get_double(x,y);
-        double ma = mma.get_double(x,y);
-        double rh = rrh.get_double(x,y);
-        double mh = mmh.get_double(x,y);
-        if (ra > 256 && rh<0) cimg.set32(x, y, 0xFF0000FF);
-        if (ma > 256 && mh>200) cimg.set32(x, y, 0xFF804000);
-      }
-    }
-
     CairoWrapper cr;
     cr.set_surface_img(cimg);
+
+    auto riv = trace_map(img, 10000, true, 256, 200);
+    cr->mkpath_smline(riv, 0, 0);
+    cr->cap_round();
+    cr->set_line_width(1);
+    cr->set_color_a(0xFF0000FF);
+    cr->stroke();
+
+    auto mnt = trace_map(img, 10000, false, 128, 200);
+    cr->mkpath_smline(mnt, 0, 0);
+    cr->cap_round();
+    cr->set_line_width(1);
+    cr->set_color_a(0xFF803000);
+    cr->stroke();
 
     // find and draw contours (no filtering)
     auto ret = image_cnt(img, vmin, vmax, vstep, 0, vtol);

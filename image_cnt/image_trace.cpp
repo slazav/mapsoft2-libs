@@ -141,7 +141,7 @@ trace_go_down(const ImageR & img, const iPoint & p0, ImageR & dirs, int nmax, bo
 
     // If we processed > nmax points but can't do step down, it's
     // a no-sink point:
-    if (G.ns>nmax) break;
+    if (nmax && G.ns>nmax) break;
 
     // if we reach already processed point:
     if (dirs.get8(G.p2.x, G.p2.y)!=255) {
@@ -187,7 +187,8 @@ trace_map_dirs(const ImageR & img, int nmax, bool down){
 
 ImageR
 trace_map_areas(const ImageR & dirs){
-  if (dirs.type() != IMAGE_8) throw Err() << "trace_map_areas: wrong image type";
+  if (dirs.type() != IMAGE_8)
+    throw Err() << "trace_map_areas: wrong image type";
   size_t w = dirs.width(), h=dirs.height();
 
   // calculate sink areas
@@ -207,44 +208,82 @@ trace_map_areas(const ImageR & dirs){
   return areas;
 }
 
-ImageR
-trace_map_dh(const ImageR & dem, const ImageR & dirs, int rad){
-  if (dirs.type() != IMAGE_8) throw Err() << "trace_map_areas: wrong image type";
+
+dMultiLine
+trace_map(const ImageR & dem, const int nmax, const bool down,
+          const double mina, const double mindh){
+
+  ImageR dirs = trace_map_dirs(dem, nmax, down);
+
   size_t w = dirs.width(), h=dirs.height();
+  if (dirs.type() != IMAGE_8)
+    throw Err() << "trace_map: wrong image type";
+  if (dem.width() != w || dem.height() != h)
+    throw Err() << "trace_map: wrong image dimensions";
 
   // calculate sink areas
   ImageR areas(w,h, IMAGE_DOUBLE); areas.fillD(0.0);
-  ImageR hsum(w,h, IMAGE_DOUBLE); hsum.fillD(0.0);
+  ImageR hdiff(w,h, IMAGE_DOUBLE); hdiff.fillD(0.0);
 
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
       iPoint p = iPoint(x, y);
       double h = dem.get_double(p.x,p.y);
-      size_t i = 0;
 
       while (dirs.check_crd(p.x, p.y)) {
-        i++;
-        if (rad && i>rad) break;
         double a = areas.getD(p.x,p.y);
-        double s = hsum.getD(p.x,p.y);
+        double s = hdiff.getD(p.x,p.y);
         areas.setD(p.x,p.y, a + 1);
-        hsum.setD(p.x,p.y, s + h);
+        hdiff.setD(p.x,p.y, s + h);
         int dir = dirs.get8(p.x,p.y);
         if (dir < 0 || dir > 7) break;
         p = adjacent(p, dir);
       }
     }
   }
+
+  std::map<iPoint, double> pts;
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
       double h = dem.get_double(x,y);
       double a = areas.getD(x,y);
-      double s = hsum.getD(x,y);
-      hsum.setD(x,y, h - s/a);
+      double s = hdiff.getD(x,y);
+      double dh = fabs(h - s/a);
+      hdiff.setD(x,y, dh);
+      if (a > mina && dh > mindh) pts.emplace(iPoint(x,y), h);
     }
   }
-  return hsum;
+
+  dMultiLine ret;
+  while (pts.size()){
+    //find highest (for rivers) or lowest (for mountains) point in pts:
+    double mh = pts.begin()->second;
+    iPoint p = pts.begin()->first;
+    for (const auto & i: pts){
+      if (down  && mh < i.second) {mh = i.second; p = i.first;}
+      if (!down && mh > i.second) {mh = i.second; p = i.first;}
+    }
+
+    //start from this point and go along the river/ridge
+    dLine l;
+    double a0 = areas.getD(p.x, p.y);
+    while (dirs.check_crd(p.x, p.y)) {
+      l.push_back(p);
+      pts.erase(p);
+      int dir = dirs.get8(p.x, p.y);
+      if (dir < 0 || dir > 7) break; // end of trace
+
+      double a = areas.getD(p.x,p.y);
+      double dh = hdiff.getD(p.x,p.y);
+      if (a > 2*a0 && dh>mindh) break; // stop if a bigger river came
+      p = adjacent(p, dir);
+      a0 = a;
+    }
+    ret.push_back(l);
+  }
+  return ret;
 }
+
 
 
 /********************************************************************/
