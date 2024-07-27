@@ -336,6 +336,7 @@ void image_save_pnm(const ImageR & img, std::ostream & str, const Opt & opt){
       case IMAGE_1:
         str.write((char*)img.data() + y*bpr, bpr);
         break;
+      default: throw Err() << "image_save_pnm: unsupported image type";
     }
   }
 }

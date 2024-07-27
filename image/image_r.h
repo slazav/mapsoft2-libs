@@ -304,8 +304,8 @@ class ImageR : public Image {
         case IMAGE_1:      return get1col(x,y);
         case IMAGE_64ARGB: return color_rgb_64to32(get64(x,y));
         case IMAGE_48RGB:  return color_rgb_64to32(get48(x,y));
+        default: throw Err() << "can't get color for this image type";
       }
-      throw Err() << "can't get color for this image type";
     }
 
     // Get RGB color for any image type.

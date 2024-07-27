@@ -987,6 +987,7 @@ ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint
             sR += w*img.get8(p.x,p.y);
             break;
           }
+          default: throw Err() << "image_ir_undust: unsupported image type";
         }
       }
       // set value
@@ -1015,6 +1016,7 @@ ImageR image_ir_undust(ImageR & img, ImageR & ir, const size_t brd, const dPoint
           img.set8(p0.x,p0.y, v);
           break;
         }
+        default: throw Err() << "image_ir_undust: unsupported image type";
       }
     }
   }
