@@ -415,9 +415,8 @@ SRTM::get_s(const dPoint& p, bool raw){
   if (h1 < SRTM_VAL_MIN || h2 < SRTM_VAL_MIN ||
       h3 < SRTM_VAL_MIN || h4 < SRTM_VAL_MIN) return NAN;
 
-  // convert deg/px -> m/px
   d *= 6380e3 * M_PI/180;
-  d.x /= cos(M_PI*p.y/180.0);
+  d.x *= cos(M_PI*p.y/180.0);
   double  U = hypot((h2-h1)/d.x, (h4-h3)/d.y);
   return atan(U)*180.0/M_PI;
 }
@@ -539,7 +538,7 @@ SRTM::trace_map(const dRect & range, const int nmax, const bool down,
   ImageR img = get_img(range, blc, d);
 
   // area convertion factor: km^2 / pix^2
-  double k =  pow(6380 * M_PI/180, 2) * d.x * d.y / cos(M_PI*range.cnt().y/180.0);
+  double k =  pow(6380 * M_PI/180, 2) * d.x * d.y * cos(M_PI*range.cnt().y/180.0);
 
   auto ret = ::trace_map(img, nmax, down, mina/k, mindh);
   return ret*d + blc;
