@@ -48,7 +48,7 @@
 #define assert_feq(v1,v2,e)\
   {\
   auto v1a=(v1); auto v2a=(v2);\
-  if (std::isnan(v1a-v2a) || fabs(v1a-v2a) > e){\
+  if (std::isnan((double)(v1a-v2a)) || fabs(double(v1a-v2a)) > e){\
     throw Err()\
       << "assert_feq: " << __FILE__ << ":" << __LINE__ << ": arguments are not equal:\n"\
       << "v1: " << #v1 << "\n"\
