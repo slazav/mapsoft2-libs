@@ -36,7 +36,7 @@ enum ImageDataType {
 /*********************************************************************/
 class ImageR : public Image {
   private:
-    std::shared_ptr<unsigned char[]> data_;
+    std::shared_ptr<unsigned char> data_;
     size_t w,h; // width, height
     ImageDataType t;
 
@@ -85,7 +85,8 @@ class ImageR : public Image {
       if (type==IMAGE_8PAL) cmap.resize(256);
 
       try{
-        data_ = std::shared_ptr<unsigned char[]>(new unsigned char[dsize()]);
+        data_ = std::shared_ptr<unsigned char>(
+          new unsigned char[dsize()], std::default_delete<unsigned char[]>());
       }
       catch (const std::bad_alloc & e) {
         throw Err() << "ImageR: can't allocate memory for "
