@@ -215,8 +215,8 @@ for (size_t i = 0; i<N; i++){
     else throw Err() << "Unknown operation";
   }
 
-//  double a1 = line_area(line1);
-//  double a2 = line_area(line2);
+//  double a1 = line1.area();
+//  double a2 = line2.area();
 //  std::cerr << "areas: " << a1 << "  " << a2 << "\n";
 
   // we have at least one crossing. Let's start from this point

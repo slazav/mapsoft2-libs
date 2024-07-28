@@ -688,18 +688,6 @@ margin_classifier(const Line<CT,PT> & L1, const Line<CT,PT> & L2,
   return maxdist;
 }
 
-// Find area of a polygon (sign shows orientation).
-template <typename CT, typename PT>
-double line_area(const Line<CT,PT> & line){
-  double ret = 0.0;
-  for (size_t i = 0; i < line.size(); i++){
-    auto p1 = line[i];
-    auto p2 = i>0? line[i-1]: line[line.size()-1];
-    ret += (p1.x - p2.x)*(p1.y + p2.y)/2.0;
-  }
-  return ret;
-}
-
 // Check if pts2 is a hole inside pts1:
 // all points of pts2 are inside pts1.
 // all points of pts1 are outside pts2,
