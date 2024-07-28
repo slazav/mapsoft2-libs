@@ -464,17 +464,9 @@ do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels){
 
     bool closed = (o.get_class() == VMAP2_POLYGON);
 
-    dMultiLine pts;
-    for (auto & line:o){
-      rect_crop(r, line, closed);
-      auto ml = rect_split_cropped(r, line, closed);
-      pts.insert(pts.end(), ml.begin(), ml.end());
-    }
-    if (pts.empty()){
-      map.del(id);
-      continue;
-    }
-    o.set_coords(pts);
-    map.put(id, o);
+    o.set_coords(rect_crop_multi(r, o, closed));
+
+    if (o.empty()) map.del(id);
+    else map.put(id, o);
   }
 }
