@@ -16,5 +16,10 @@ bool rect_crop(const dRect & cutter, dLine & line, bool closed=false);
 dMultiLine rect_split_cropped(const dRect & cutter,
   const dLine & cropped, bool closed=false);
 
+
+// Crop MultiLine to a cutter rectangle
+dMultiLine rect_crop_multi(const dRect & cutter,
+  const dMultiLine & obj, bool closed=false);
+
 ///@}
 #endif

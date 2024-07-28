@@ -1,8 +1,8 @@
 #!/bin/sh -eu
 
-for i in test_data/line_rectcrop?.fig; do
+for i in test_data/line_rectcrop_m*.fig; do
   base="${i##*/}"
-  ./line_rectcrop.test "test_data/$base" "results/$base"
+  ./line_rectcrop_m.test "test_data/$base" "results/$base"
   if [ -s "expected/$base" ]; then
     diff -- "results/$base" "expected/$base"
   else

@@ -215,3 +215,135 @@ rect_split_cropped(const dRect & cutter,
   return ret;
 }
 
+
+dMultiLine
+rect_crop_multi(const dRect & cutter, const dMultiLine & obj, bool closed){
+  dMultiLine ret;
+
+  // open lines
+  if (!closed) {
+    for (const auto & line:obj){
+      dLine l = line;
+      rect_crop(cutter, l, closed);
+      auto pts = rect_split_cropped(cutter, l, closed);
+      ret.insert(ret.end(), pts.begin(), pts.end());
+    }
+    return ret;
+  }
+
+  // First crop without splitting
+  for (const auto & line:obj){
+    dLine l = line;
+    rect_crop(cutter, l, closed);
+    ret.push_back(l);
+  }
+
+  if (ret.size()==0) return ret;
+
+  // For closed line (polygons) we want to join some contours
+  // (assuming EVEN-ODD rule).
+
+  // Its important to have these variables. Comparing with
+  // cutter.x+cutter.w directly can fail because of rounding.
+  double xl=cutter.x;
+  double xh=cutter.x+cutter.w;
+  double yl=cutter.y;
+  double yh=cutter.y+cutter.h;
+
+  // Step1: find segment on a cutter side from one part, and
+  // point inside this segment on another part; connect them
+
+  // l1: each non-empty part
+  for (auto l1=ret.begin(); l1!=ret.end(); ++l1){
+    if (l1->size() == 0) continue;
+    // p1a, p1b: each segment of part l1
+    for (auto p1a=l1->begin(); p1a!=l1->end(); ++p1a){
+      auto p1b = p1a+1;
+      if (p1b == l1->end()) p1b=l1->begin();
+
+      // continue if the segment is not on a cutter side:
+      bool bxl = p1a->x == xl && p1b->x == xl;
+      bool bxh = p1a->x == xh && p1b->x == xh;
+      bool byl = p1a->y == yl && p1b->y == yl;
+      bool byh = p1a->y == yh && p1b->y == yh;
+      if (!bxl && !bxh && !byl && !byh) continue;
+
+      // l2: another non-empty part:
+      for (auto l2=ret.begin(); l2!=ret.end(); ++l2){
+        if (l2->size()==0 || l2==l1) continue;
+
+        // p2: each point of part l2
+        for (auto p2=l2->begin(); p2!=l2->end(); ++p2){
+
+          // continue if p2 is not inside p1a-p1b:
+          double minx = std::min(p1a->x, p1b->x);
+          double miny = std::min(p1a->y, p1b->y);
+          double maxx = std::max(p1a->x, p1b->x);
+          double maxy = std::max(p1a->y, p1b->y);
+          if ((!bxl || p2->x != xl || p2->y < miny || p2->y > maxy) &&
+              (!bxh || p2->x != xh || p2->y < miny || p2->y > maxy) &&
+              (!byl || p2->y != yl || p2->x < minx || p2->x > maxx) &&
+              (!byh || p2->y != yh || p2->x < minx || p2->x > maxx)) continue;
+
+          // connect line parts
+          dLine nl;
+          nl.insert(nl.end(), p2, l2->end());
+          nl.insert(nl.end(), l2->begin(), p2);
+          nl.insert(nl.end(), *p2);
+          if (nl.area()*l1->area()>0) nl.invert();
+
+          // tricky thing, insert can invalidate all l1 iterators!
+          size_t idx = p1a - l1->begin(); // index of p1a
+          l1->insert(p1b, nl.begin(), nl.end());
+          l2->clear();
+          p1a = l1->begin() + idx;
+          p1b = p1a+1;
+          if (p1b == l1->end()) p1b=l1->begin();
+
+          break;
+        } // points of l2
+      } // l2
+    } // points of l1
+  } // l1
+
+
+  // step2: split lines
+  for (auto l = ret.begin(); l != ret.end(); ++l){
+    if (l->size() == 0) continue;
+    auto pts = rect_split_cropped(cutter, *l, true);
+    l->clear();
+    size_t idx = ret.size();
+    ret.insert(ret.end(), pts.begin(), pts.end());
+    l = ret.begin() + idx;
+  }
+
+  // step 3: remove extra points
+  for (auto l1 = ret.begin(); l1!=ret.end(); ++l1){
+    if (l1->size() == 0) continue;
+
+    auto p1a = l1->begin();
+    while (p1a!=l1->end()) {
+      auto p1b = p1a+1;
+      if (p1b == l1->end()) p1b = l1->begin();
+      auto p1c = p1b+1;
+      if (p1c == l1->end()) p1c = l1->begin();
+
+      if ((p1a->x == xl && p1b->x == xl && p1c->x == xl) ||
+          (p1a->x == xh && p1b->x == xh && p1c->x == xh) ||
+          (p1a->y == yl && p1b->y == yl && p1c->y == yl) ||
+          (p1a->y == yh && p1b->y == yh && p1c->y == yh))
+        p1a=l1->erase(p1b)-1;
+      else
+        ++p1a;
+    }
+  }
+
+  // step 4: remove empty segments
+  auto l = ret.begin();
+  while (l != ret.end()){
+    if (l->size()==0) l = ret.erase(l);
+    else ++l;
+  }
+
+  return ret;
+}
