@@ -91,6 +91,14 @@ main(){
     assert_eq(l3.npts(), 3);
     assert_eq(l3.npts(), npts(l3));
 
+    // area
+    l3 = str_to_type<iLine>("[[0,0],[2,0],[2,1],[0,1]]");
+    assert_feq(l3.area(), -2, 1e-6);
+    assert_feq(area(l3), -2, 1e-6);
+    l3 = str_to_type<iLine>("[[0,0],[0,1],[2,1],[2,0]]");
+    assert_feq(l3.area(), 2, 1e-6);
+    assert_feq(area(l3), 2, 1e-6);
+
     // bbox
     assert_eq(iLine().bbox(), iRect());
     assert_eq(l2.bbox(), iRect(0,0,1,2));

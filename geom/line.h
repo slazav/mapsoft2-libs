@@ -177,6 +177,17 @@ struct Line : std::vector<PT> {
     return ret;
   }
 
+  // Find 2D area of a polygon (sign shows orientation).
+  double area() const {
+    double ret = 0.0;
+    for (size_t i = 0; i < this->size(); i++){
+      auto p1 = (*this)[i];
+      auto p2 = i>0? (*this)[i-1]: (*this)[this->size()-1];
+      ret += (p1.x - p2.x)*(p1.y + p2.y)/2.0;
+    }
+    return ret;
+  }
+
   /// Line bounding box in x-y plane
   Rect<CT> bbox() const{
     if (this->size()<1) return Rect<CT>();
@@ -297,6 +308,11 @@ double length(const Line<CT,PT> & l){ return l.length(); }
 /// \relates Line
 template <typename CT, typename PT>
 double length2d(const Line<CT,PT> & l){ return l.length2d(); }
+
+// Find 2D area of a polygon (sign shows orientation).
+/// \relates Line
+template <typename CT, typename PT>
+double area(const Line<CT,PT> & l){ return l.area(); }
 
 /// Line bounding box
 /// \relates Line

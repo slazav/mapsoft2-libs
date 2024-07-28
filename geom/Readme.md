@@ -151,6 +151,7 @@ Line is a std::vector of Point.
   - `l.length()`, `length(l)` -- line length.
   - `l.npts()`, `npts(l)` -- number of points.
   - `l.length2d()`, `length2d(l)` -- 2D line length.
+  - `l.area()`, `area(l)` -- 2D area of closed polygon, sign shows orientation.
   - `l.bbox()`, `bbox(l)` -- return a bounding box (Rect object) in x-y plane.
   - `l1.is_shifted(l2, sh)`, `is_shifted(l1, l2, sh)` -- check if line l2 is a
     shifted version of l1, return the shift.
