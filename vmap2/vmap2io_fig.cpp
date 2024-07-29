@@ -337,7 +337,7 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
         fig.push_back(o1);
         // remove name and comment in all segments
         // except the first one:
-        o1.comment.clear();
+        if (o.get_class() == VMAP2_POLYGON) o1.comment.clear();
         fig_set_opts(o1, fig_opts);
       }
       continue;
