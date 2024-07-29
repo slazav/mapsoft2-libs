@@ -23,7 +23,6 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
   if (cl!=VMAP2_NONE){
     VMap2obj o1(trk_type);
     for (auto const & tr:data.trks){
-
       for (auto const & pts:(dMultiLine)tr){
         if (pts.size()==0) continue;
         o1.set_coords(pts);
@@ -69,29 +68,19 @@ vmap2_to_gpx(VMap2 & vmap2, const std::string & ofile, const Opt & opts){
   auto wpt_pref = opts.get("wpt_pref", "=");
 
   GeoData data;
-  auto cl = VMap2obj::get_class(trk_type);
 
   // Convert tracks:
-  if (cl!=VMAP2_NONE){
+  if (VMap2obj::get_class(trk_type)!=VMAP2_NONE){
     dMultiLine ml;
-
     for (const auto i: vmap2.find(trk_type)){
-      dMultiLine o = vmap2.get(i);
-
-      // Join crossing parts of the object.
-      // This should prevent disappearing of badly aligned holes
-      // during reading of gpx file (current check_hole function
-      // will work correctly)
-      if (cl == VMAP2_POLYGON) join_cross(o);
-
+      auto o = vmap2.get(i);
       ml.insert(ml.end(), o.begin(), o.end());
     }
     data.trks.push_back(GeoTrk(ml));
   }
 
   // Convert waypoints:
-  cl = VMap2obj::get_class(wpt_type);
-  if (cl!=VMAP2_NONE){
+  if (VMap2obj::get_class(wpt_type)!=VMAP2_NONE){
     GeoWptList wpts;
     for (const auto i: vmap2.find(wpt_type)){
       auto o = vmap2.get(i);

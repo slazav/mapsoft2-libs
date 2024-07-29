@@ -321,14 +321,8 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
     if (o.get_class() == VMAP2_LINE ||
         o.get_class() == VMAP2_POLYGON){
       o1.type=2;
-      if (o.get_class() == VMAP2_POLYGON){
+      if (o.get_class() == VMAP2_POLYGON)
         o1.close();
-        // Join crossing parts of the object.
-        // This should prevent disappearing of badly aligned holes
-        // during reading of fig file (current check_hole function
-        // will work correctly)
-        join_cross(pts);
-      }
       else
         o1.open();
       for (const auto & l:pts){
