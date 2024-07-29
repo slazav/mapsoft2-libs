@@ -344,22 +344,27 @@ void remove_holes(MultiLine<CT,PT> & L){
 // Join crossing segments. This should be compatable with test_hole
 template<typename CT, typename PT>
 void join_cross(MultiLine<CT,PT> & L){
+  if (L.size()==0) return;
 
   // go through each pair of lines:
-  for (auto l1=L.begin(); l1!=L.end(); l1++){
-    if (l1->size()==0) continue;
+  auto l1=L.begin();
+  while (l1!=L.end()){
+    if (l1->size()==0) {++l1; continue;}
 
-    auto l2=l1+1;
-    while (l2!=L.end()){
-      if (l2->size()==0) {l2++; continue;}
+    bool cr = false;
+    dPoint cp;
+
+    auto l2=L.begin();
+    auto p1b = l1->end(), p1e = l1->end(), p2b = l2->end(), p2e = l2->end();
+
+    for (l2=l1+1; l2!=L.end(); ++l2){
+      if (l2->size()==0) continue;
 
       // find crossing, save iterators for crossing segments:
-      bool cr = false;
-      dPoint cp;
-      auto p1b = l1->end(), p1e = l1->end(), p2b = l2->end(), p2e = l2->end();
       for (p1b = l1->begin(); p1b!=l1->end(); ++p1b){
         p1e = p1b + 1;
         if (p1e == l1->end()) p1e = l1->begin();
+
 
         for (p2b=l2->begin(); p2b!=l2->end(); ++p2b){
           p2e = p2b + 1;
@@ -370,22 +375,20 @@ void join_cross(MultiLine<CT,PT> & L){
         }
         if (cr) break;
       }
-
-      // process crossing: merge l2 into l1
-      if (!cr) {l2++; continue; }
-
-      Line<CT,PT> l1new;
-      if (p1e != l1->begin())
-        l1new.insert(l1new.end(), l1->begin(), p1e);
-      l1new.insert(l1new.end(), cp);
-      l1new.insert(l1new.end(), p2e, l2->end());
-      if (p2e != l2->begin())
-        l1new.insert(l1new.end(), l2->begin(), p2e);
-      l1new.insert(l1new.end(), cp);
-      l1new.insert(l1new.end(), p1e, l1->end());
-      l1->swap(l1new);
-      l2 = L.erase(l2);
+      if (cr) break;
     }
+
+    if (!cr) {++l1; continue;}
+
+    // process crossing: merge l2 into l1
+    Line<CT,PT> ln;
+    if (cp!=*p1b) ln.insert(ln.end(), cp);
+    ln.insert(ln.end(), p2e, l2->end());
+    ln.insert(ln.end(), l2->begin(), p2e);
+    if (cp!=*p1e) ln.insert(ln.end(), cp);
+
+    l1->insert(p1e, ln.begin(), ln.end());
+    L.erase(l2);
   }
 }
 
