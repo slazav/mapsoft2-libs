@@ -59,6 +59,21 @@ public:
   /// Add new object to the map, return object ID.
   uint32_t add(const VMap2obj & o);
 
+  // Check if line l is a hole inside some object of type t.
+  // If yes, insert it into the object. Return true if line was inserted.
+  // Function is_hole from geom module is used for tests.
+  // This function is needed for importing formats which do not support
+  // multi-segment objects (fig, gpx).
+  bool try_add_hole(const uint32_t t, const dLine & l);
+
+  // Collect all holes (objects located within the first loop of obj,
+  // having same type as obj and no name and comment). Holes are deleted
+  // from the map and transferred into obj.
+  // Function is_hole from geom module is used for tests.
+  // This function is needed for importing formats which do not support
+  // multi-segment objects (fig, gpx).
+  void try_colect_holes(VMap2obj & obj);
+
   /// Rewrite existing object (add if not exist)
   void put(const uint32_t id, const VMap2obj & o);
 

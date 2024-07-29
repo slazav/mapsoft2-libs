@@ -91,6 +91,53 @@ VMap2::add(const VMap2obj & o){
   return id;
 }
 
+bool
+VMap2::try_add_hole(const uint32_t type, const dLine & l){
+  if (l.size()==0) return false;
+
+  // all objects of type t near l
+  auto objects = find(type, l.bbox());
+
+ // If l is inside the first loop of obj, merge l into obj
+  for (auto const id:objects){
+    auto obj = get(id);
+    if (obj.size()>0 && check_hole(obj[0], l)){
+      obj.push_back(l);
+      put(id, obj);
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+VMap2::try_colect_holes(VMap2obj & obj){
+  if (obj.size()==0) return;
+
+  // all objects of same type near first loop of obj
+  auto objects = find(obj.type, obj[0].bbox());
+
+  for (auto const id:objects){
+    auto o = get(id);
+
+    // holes should not have name and comment:
+    if (o.name != "" || o.comm != "") continue;
+
+    // If all loops of o are inside obj[0], merge it:
+    bool all_in = true;
+    for (const auto & pts: o) {
+      if (!check_hole(obj[0], pts)){
+        all_in = false;
+        break;
+      }
+    }
+    if (all_in){
+      obj.insert(obj.end(), o.begin(), o.end());
+      del(id);
+    }
+  }
+}
+
 void
 VMap2::put(const uint32_t id, const VMap2obj & o){
 
