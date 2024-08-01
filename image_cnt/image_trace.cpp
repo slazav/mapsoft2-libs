@@ -221,10 +221,9 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
   if (dem.width() != w || dem.height() != h)
     throw Err() << "trace_map: wrong image dimensions";
 
-  // calculate sink areas
+  // calculate sink areas and sum of altitudes in these areas
   ImageR areas(w,h, IMAGE_DOUBLE); areas.fillD(0.0);
   ImageR hdiff(w,h, IMAGE_DOUBLE); hdiff.fillD(0.0);
-
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
       iPoint p = iPoint(x, y);
@@ -242,6 +241,8 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
     }
   }
 
+  // Make set of all points with large enough area,
+  // update hdiff image to have h - s/a
   std::map<iPoint, double> pts;
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
@@ -250,10 +251,11 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
       double s = hdiff.getD(x,y);
       double dh = fabs(h - s/a);
       hdiff.setD(x,y, dh);
-      if (a > mina && dh > mindh) pts.emplace(iPoint(x,y), h);
+      if (a > mina) pts.emplace(iPoint(x,y), h);
     }
   }
 
+  // trace rivers/ridges
   dMultiLine ret;
   while (pts.size()){
     //find highest (for rivers) or lowest (for mountains) point in pts:
@@ -264,17 +266,22 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
       if (!down && mh > i.second) {mh = i.second; p = i.first;}
     }
 
+    // visible flag
+    bool visible = false;
+
     //start from this point and go along the river/ridge
     dLine l;
     double a0 = areas.getD(p.x, p.y);
     while (dirs.check_crd(p.x, p.y)) {
-      l.push_back(p);
       pts.erase(p);
       int dir = dirs.get8(p.x, p.y);
-      if (dir < 0 || dir > 7) break; // end of trace
 
       double a = areas.getD(p.x,p.y);
       double dh = hdiff.getD(p.x,p.y);
+      if (dh > mindh) visible = true;
+      if (visible) l.push_back(p);
+
+      if (dir < 0 || dir > 7) break; // stop at the end of trace
       if (a > 2*a0 && dh>mindh) break; // stop if a bigger river came
       p = adjacent(p, dir);
       a0 = a;
