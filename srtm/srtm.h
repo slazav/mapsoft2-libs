@@ -10,6 +10,7 @@
 #include "image/image_r.h"
 #include "geom/multiline.h"
 #include "rainbow/rainbow.h"
+#include "image_cnt/image_trace.h"
 
 /*
 DEM/SRTM data access.
@@ -204,9 +205,10 @@ class SRTM {
     // make vector data: peaks
     dLine find_peaks(const dRect & range, double DH, size_t PS);
 
-    // make vector data: rivers or mountains
-    dMultiLine trace_map(const dRect & range, const int nmax, const bool down,
-                         const double mina, const double mindh);
+    // make vector data: rivers or mountains (parameters are described in image_cnt/image_trace.h)
+    dMultiLine trace_map(const dRect & range, const int nmax, const bool down, const double mina,
+          const start_detect_t start_detect = TRACE_START_SIDEH2, const double start_par = 10.0,
+          const size_t smooth_passes = 2);
 
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);

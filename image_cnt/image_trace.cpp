@@ -210,8 +210,9 @@ trace_map_areas(const ImageR & dirs){
 
 
 dMultiLine
-trace_map(const ImageR & dem, const int nmax, const bool down,
-          const double mina, const double mindh){
+trace_map(const ImageR & dem, const int nmax, const bool down, const double mina,
+          const start_detect_t start_detect, const double start_par,
+          const size_t smooth_passes){
 
   ImageR dirs = trace_map_dirs(dem, nmax, down);
 
@@ -227,13 +228,15 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
       iPoint p = iPoint(x, y);
-      double h = dem.get_double(p.x,p.y);
+      double H = dem.get_double(p.x,p.y);
 
       while (dirs.check_crd(p.x, p.y)) {
-        double a = areas.getD(p.x,p.y);
-        double s = hdiff.getD(p.x,p.y);
-        areas.setD(p.x,p.y, a + 1);
-        hdiff.setD(p.x,p.y, s + h);
+        double A = areas.getD(p.x,p.y);
+        areas.setD(p.x,p.y, A + 1);
+        if (start_detect == TRACE_START_MINDH){
+          double S = hdiff.getD(p.x,p.y);
+          hdiff.setD(p.x,p.y, S + H);
+        }
         int dir = dirs.get8(p.x,p.y);
         if (dir < 0 || dir > 7) break;
         p = adjacent(p, dir);
@@ -246,53 +249,101 @@ trace_map(const ImageR & dem, const int nmax, const bool down,
   std::map<iPoint, double> pts;
   for (size_t y=0; y<h; y++){
     for (size_t x=0; x<w; x++){
-      double h = dem.get_double(x,y);
-      double a = areas.getD(x,y);
-      double s = hdiff.getD(x,y);
-      double dh = fabs(h - s/a);
-      hdiff.setD(x,y, dh);
-      if (a > mina) pts.emplace(iPoint(x,y), h);
+      double A = areas.getD(x,y);
+      if (start_detect == TRACE_START_MINDH){
+        double H = dem.get_double(x,y);
+        double S = hdiff.getD(x,y);
+        double dh = fabs(H - S/A);
+        hdiff.setD(x,y, dh);
+      }
+      if (A > mina) pts.emplace(iPoint(x,y), A);
     }
   }
 
   // trace rivers/ridges
   dMultiLine ret;
   while (pts.size()){
-    //find highest (for rivers) or lowest (for mountains) point in pts:
-    double mh = pts.begin()->second;
+
+    // alwaws start with a point with smallest area
+    double A0 = pts.begin()->second;
     iPoint p = pts.begin()->first;
     for (const auto & i: pts){
-      if (down  && mh < i.second) {mh = i.second; p = i.first;}
-      if (!down && mh > i.second) {mh = i.second; p = i.first;}
+      if (A0 > i.second) {A0 = i.second; p = i.first;}
     }
 
-    // visible flag
+    // Visibility flag. It could be different conditions
+    // for setting and clearing it.
     bool visible = false;
 
-    //start from this point and go along the river/ridge
+    // Start from this point and go along the river/ridge
+    // Note that area always increase on this way, hdiff - not.
     dLine l;
-    double a0 = areas.getD(p.x, p.y);
+    // std::cerr << "start trace: " << p << " " << A0 << "\n";
     while (dirs.check_crd(p.x, p.y)) {
-      pts.erase(p);
+
+      double A = areas.getD(p.x,p.y);
       int dir = dirs.get8(p.x, p.y);
 
-      double a = areas.getD(p.x,p.y);
-      double dh = hdiff.getD(p.x,p.y);
-      if (dh > mindh) visible = true;
-      if (visible) l.push_back(p);
+      // select where to make the trace visible (only once)
+      if (!visible) {
+        switch (start_detect) {
+        case TRACE_START_MINDH: {
+          double dH = hdiff.getD(p.x,p.y);
+          if (dH > start_par) visible = true;
+          break;
+        }
+        case TRACE_START_SIDEH2: {
+          // double step in perpendicular direction
+          auto p1 = adjacent(p, dir+2); p1 = adjacent(p1, dir+2);
+          auto p2 = adjacent(p, dir-2); p2 = adjacent(p2, dir-2);
+          if (dem.check_crd(p1.x, p1.y) && dem.check_crd(p2.x, p2.y)){
+            double H0 = dem.get_double(p.x, p.y);
+            double dH1 = H0 - dem.get_double(p1.x, p1.y);
+            double dH2 = H0 - dem.get_double(p2.x, p2.y);
+            if (down) {dH1 = -dH1; dH2 = -dH2;}
+            if(dH1 > start_par && dH2 > start_par) visible = true;
+          }
+          break;
+        }
+        case TRACE_START_NONE:
+          visible = true;
+          break;
+        }
+      }
 
+      // is it a node?
+      bool node = A > A0+mina;
+      A0 = A;
+
+      // std::cerr << "  " << p << " A=" << A << " dir=" << dir
+      //   << (visible ? " vis":"") << (node ? " *":"") << "\n";
+
+      if (visible) l.push_back(dPoint(p.x, p.y, node? 1:0));
+      else
+      if (l.size()>1) {
+        ret.push_back(l);
+        l.clear();
+      }
+      if (pts.count(p)==0) break; // stop at processed point
+      if (!visible && node) break; // stop if a non-visible river meet another river (it could be visible)
+
+      pts.erase(p);
       if (dir < 0 || dir > 7) break; // stop at the end of trace
-      if (a > 2*a0 && dh>mindh) break; // stop if a bigger river came
+
       p = adjacent(p, dir);
-      a0 = a;
     }
-    ret.push_back(l);
+    // std::cerr << "  stop: " << (l.size() ? l[l.size()-1] : dPoint()) << " " << l.size() << "pts \n";
+    if (l.size()>1) ret.push_back(l);
   }
 
   // smooth lines within pixel precision
-  for (auto & l:ret){
-    for (size_t i = 0; i+2<l.size(); i++){
-      l[i+1] = (l[i] + l[i+1])/2;
+  for (size_t i =0; i<smooth_passes; i++){
+    for (auto & l:ret){
+      for (size_t i = 0; i+2<l.size(); i++){
+        if (l[i+1].z != 0.0) continue;
+        l[i+1] = (l[i] + l[i+1])/2;
+        l[i+1].z = 0.0;
+      }
     }
   }
 

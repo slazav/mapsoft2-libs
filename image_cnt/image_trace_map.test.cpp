@@ -32,18 +32,18 @@ main(){
     CairoWrapper cr;
     cr.set_surface_img(cimg);
 
-    auto riv = trace_map(img, 10000, true, 256, 200);
+    auto riv = trace_map(img, 10000, true, 32);
     cr->mkpath_smline(riv, 0, 0);
     cr->cap_round();
     cr->set_line_width(1);
-    cr->set_color_a(0xFF0000FF);
+    cr->set_color_a(0x800000FF);
     cr->stroke();
 
-    auto mnt = trace_map(img, 10000, false, 128, 200);
+    auto mnt = trace_map(img, 10000, false, 32);
     cr->mkpath_smline(mnt, 0, 0);
     cr->cap_round();
     cr->set_line_width(1);
-    cr->set_color_a(0xFF803000);
+    cr->set_color_a(0x80803000);
     cr->stroke();
 
     // find and draw contours (no filtering)

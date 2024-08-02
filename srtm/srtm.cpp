@@ -532,15 +532,17 @@ SRTM::find_peaks(const dRect & range, double DH, size_t PS){
 }
 
 dMultiLine
-SRTM::trace_map(const dRect & range, const int nmax, const bool down,
-                const double mina, const double mindh){
+SRTM::trace_map(const dRect & range, const int nmax, const bool down, const double mina,
+          const start_detect_t start_detect, const double start_par,
+          const size_t smooth_passes){
+
   dPoint blc, d;
   ImageR img = get_img(range, blc, d);
 
   // area convertion factor: km^2 / pix^2
   double k =  pow(6380 * M_PI/180, 2) * d.x * d.y * cos(M_PI*range.cnt().y/180.0);
 
-  auto ret = ::trace_map(img, nmax, down, mina/k, mindh);
+  auto ret = ::trace_map(img, nmax, down, mina/k, start_detect, start_par, smooth_passes);
   return ret*d + blc;
 }
 
