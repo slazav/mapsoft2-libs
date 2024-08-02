@@ -700,13 +700,12 @@ template <typename CT, typename PT>
 bool
 check_hole(const Line<CT,PT> & pts1, const Line<CT,PT> & pts2){
   PolyTester<CT,PT> pt1(pts1);
-  for (const auto & p2:pts2){
-    if (!pt1.test_pt(p2, true)) return false;
-  }
-  PolyTester<CT,PT> pt2(pts2);
-  for (const auto & p1:pts1){
-    if (pt2.test_pt(p1, false)) return false;
-  }
+  for (const auto & p2:pts2) if (!pt1.test_pt(p2, true)) return false;
+
+//  PolyTester<CT,PT> pt2(pts2);
+//  for (const auto & p1:pts1){
+//    if (pt2.test_pt(p1, false)) return false;
+//  }
   return true;
 }
 
