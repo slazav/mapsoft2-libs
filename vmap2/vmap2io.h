@@ -25,10 +25,13 @@ void ms2opt_add_vmap2osm(GetOptSet & opts);
 
 // Read files (format is determined from file extension), add all
 // objects to vmap2
-void vmap2_import(const std::vector<std::string> & files,
-                  const VMap2types & types,
-                  VMap2 & vmap2,
-                  const Opt & opts);
+void vmap2_import(const std::string & ifile,
+                  const VMap2types & types, VMap2 & vmap2, const Opt & opts);
+
+void vmap2_import(const std::vector<std::string> & ifiles,
+                  const VMap2types & types, VMap2 & vmap2, const Opt & opts);
+
+/****************************************************************************/
 
 // Write vmap2 to a different format
 void vmap2_export(VMap2 & vmap2, const VMap2types & types,

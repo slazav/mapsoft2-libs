@@ -89,37 +89,41 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
 }
 
 /****************************************************************************/
-void vmap2_import(const std::vector<std::string> & ifiles, const VMap2types & types,
-                 VMap2 & vmap2, const Opt & opts){
+void
+vmap2_import(const std::string & ifile, const VMap2types & types,
+             VMap2 & vmap2, const Opt & opts){
 
-  for (const auto ifile:ifiles){
-    if (file_ext_check(ifile, ".vmap2db")){
-      if (ifile == vmap2.get_dbname()) throw Err()
-        << "Can't copy from vmap2 database to itself: " << ifile;
-      VMap2 in(ifile);
-      in.iter_start();
-      while (!in.iter_end()) vmap2.add(in.iter_get_next().second);
-    }
-    else if (file_ext_check(ifile, ".vmap2")){
-      vmap2.read(ifile);
-    }
-    else if (file_ext_check(ifile, ".vmap")){
-      vmap_to_vmap2(ifile, types, vmap2, opts);
-    }
-    else if (file_ext_check(ifile, ".mp")){
-      mp_to_vmap2(ifile, types, vmap2, opts);
-    }
-    else if (file_ext_check(ifile, ".fig")){
-      fig_to_vmap2(ifile, types, vmap2, opts);
-    }
-    else if (file_ext_check(ifile, ".osm")){
-      osm_to_vmap2(ifile, vmap2, opts);
-    }
-    else if (file_ext_check(ifile, ".gpx")){
-      gpx_to_vmap2(ifile, vmap2, opts);
-    }
-    else throw Err() << "unsupported file extension: " << ifile;
+  if (file_ext_check(ifile, ".vmap2db")){
+    if (ifile == vmap2.get_dbname()) throw Err()
+      << "Can't copy from vmap2 database to itself: " << ifile;
+    VMap2 in(ifile);
+    in.iter_start();
+    while (!in.iter_end()) vmap2.add(in.iter_get_next().second);
   }
+  else if (file_ext_check(ifile, ".vmap2")){
+    vmap2.read(ifile);
+  }
+  else if (file_ext_check(ifile, ".vmap")){
+    vmap_to_vmap2(ifile, types, vmap2, opts);
+  }
+  else if (file_ext_check(ifile, ".mp")){
+    mp_to_vmap2(ifile, types, vmap2, opts);
+  }
+  else if (file_ext_check(ifile, ".fig")){
+    fig_to_vmap2(ifile, types, vmap2, opts);
+  }
+  else if (file_ext_check(ifile, ".osm")){
+    osm_to_vmap2(ifile, vmap2, opts);
+  }
+  else if (file_ext_check(ifile, ".gpx")){
+    gpx_to_vmap2(ifile, vmap2, opts);
+  }
+  else throw Err() << "unsupported file extension: " << ifile;
+}
+
+void vmap2_import(const std::vector<std::string> & ifiles,
+                  const VMap2types & types, VMap2 & vmap2, const Opt & opts){
+  for (const auto & ifile:ifiles) vmap2_import(ifile, types, vmap2, opts);
 }
 
 /****************************************************************************/
