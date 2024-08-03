@@ -30,7 +30,7 @@ gpx_to_vmap2(const std::string & ifile, VMap2 & vmap2, const Opt & opts){
         // for polygons try to find holes
         if (cl == VMAP2_POLYGON) {
           if (vmap2.try_add_hole(trk_type, pts)) continue;
-          vmap2.try_colect_holes(o1);
+          vmap2.try_collect_holes(o1);
         }
         vmap2.add(o1);
       }

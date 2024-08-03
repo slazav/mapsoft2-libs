@@ -111,7 +111,7 @@ VMap2::try_add_hole(const uint32_t type, const dLine & l){
 }
 
 void
-VMap2::try_colect_holes(VMap2obj & obj){
+VMap2::try_collect_holes(VMap2obj & obj){
   if (obj.size()==0) return;
 
   // all objects of same type near first loop of obj

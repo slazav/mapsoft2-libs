@@ -157,7 +157,7 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     // for polygons try to find holes
     if (o1.get_class() == VMAP2_POLYGON) {
       if (comm.size()==0 && vmap2.try_add_hole(type, pts)) continue;
-      vmap2.try_colect_holes(o1);
+      vmap2.try_collect_holes(o1);
     }
 
     // tags - space-separated list of words

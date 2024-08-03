@@ -72,7 +72,7 @@ public:
   // Function is_hole from geom module is used for tests.
   // This function is needed for importing formats which do not support
   // multi-segment objects (fig, gpx).
-  void try_colect_holes(VMap2obj & obj);
+  void try_collect_holes(VMap2obj & obj);
 
   /// Rewrite existing object (add if not exist)
   void put(const uint32_t id, const VMap2obj & o);
