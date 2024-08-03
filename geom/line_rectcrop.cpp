@@ -311,9 +311,10 @@ rect_crop_multi(const dRect & cutter, const dMultiLine & obj, bool closed){
   for (auto l = ret.begin(); l != ret.end(); ++l){
     if (l->size() == 0) continue;
     auto pts = rect_split_cropped(cutter, *l, true);
-    l->clear();
-    size_t idx = ret.size();
-    ret.insert(ret.end(), pts.begin(), pts.end());
+    if (pts.size() < 2) continue;
+    l->swap(pts[0]);
+    size_t idx = pts.size() + l - ret.begin();
+    ret.insert(l+1, pts.begin()+1, pts.end());
     l = ret.begin() + idx;
   }
 
