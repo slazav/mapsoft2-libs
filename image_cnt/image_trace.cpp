@@ -209,6 +209,64 @@ trace_map_areas(const ImageR & dirs){
 }
 
 
+// RMS difference from a best-fit plane 2r+1 x 2r+1
+double plane_dev(const Image & dem, const iPoint & p, const int r){
+  if (r<1) return 0.0;
+
+  // Let's calculate coordinates from p and altitude from h(p)
+  // RMS difference is D = avr(h(x,y) - A*x - B*y)^2
+  // best fit plane: dD/dA = 0, dD/dB = 0,
+  //   A* avr(x^2) + B*avr(x*y) = avr(h*x)
+  //   A* avr(x*y) + B*avr(y^2) = avr(h*y)
+  // A = (sum(h*x)*sum(y^2) - sum(h*y)*sum(x*y)) / (sum(x^2)*sum(y^2) - sum(x*y)^2)
+  // B = (sum(h*y)*sum(x^2) - sum(h*x)*sum(x*y)) / (sum(x^2)*sum(y^2) - sum(x*y)^2)
+  double sn(0), shh(0), shx(0), shy(0), sxy(0), sxx(0), syy(0);
+  double h0 = dem.get_double(p.x, p.y);
+  for (int x = -r; x<=r; x++){
+    for (int y = -r; y<=r; y++){
+      if (!dem.check_crd(p.x+x,p.y+y)) continue;
+      double h = dem.get_double(p.x+x, p.y+y) - h0;
+      shx += x*h; shy += y*h;
+      sxy += x*y; sxx += x*x; syy += y*y;
+      shh += h*h;
+      sn+=1;
+    }
+  }
+  double det = sxx*syy - sxy*sxy;
+  if (det == 0) return 0;
+  double A = (shx*syy - shy*sxy)/det;
+  double B = (shy*sxx - shx*sxy)/det;
+  double D = shh + A*A*sxx + B*B*syy - 2*A*shx - 2*B*shy + 2*A*B*sxy;
+  return sqrt(D)/sn;
+}
+
+// RMS difference from horizontal line perpendicular to dir
+double perp_dev(const Image & dem, const iPoint & p, const int dir, const int r){
+  if (r<1) return 0.0;
+
+  if (!dem.check_crd(p.x,p.y)) return 0.0;
+  double h0 = dem.get_double(p.x, p.y);
+  iPoint p1(p), p2(p);
+  double s(0.0);
+  double n(0.0);
+  for (int x = 1; x<=r; x++){
+    p1 = adjacent(p1, dir+2);
+    if (dem.check_crd(p1.x,p1.y)){
+      double dh = dem.get_double(p1.x, p1.y) - h0;
+      s += pow(dh,2);
+      n += 1.0;
+    }
+    p2 = adjacent(p2, dir-2);
+    if (dem.check_crd(p2.x,p2.y)){
+      double dh = dem.get_double(p2.x, p2.y) - h0;
+      s += pow(dh,2);
+      n += 1.0;
+    }
+  }
+  return sqrt(s)/n;
+}
+
+
 dMultiLine
 trace_map(const ImageR & dem, const int nmax, const bool down, const double mina,
           const start_detect_t start_detect, const double start_par,
@@ -305,6 +363,26 @@ trace_map(const ImageR & dem, const int nmax, const bool down, const double mina
           }
           break;
         }
+        case TRACE_START_PERP3: {
+          double dev = perp_dev(dem, p, dir, 3);
+          if (dev > start_par) visible = true;
+          break;
+        }
+        case TRACE_START_PERP4: {
+          double dev = perp_dev(dem, p, dir, 4);
+          if (dev > start_par) visible = true;
+          break;
+        }
+        case TRACE_START_PL3:{
+          double dev = plane_dev(dem, p, 3);
+          if (dev > start_par) visible = true;
+          break;
+        }
+        case TRACE_START_PL4:{
+          double dev = plane_dev(dem, p, 4);
+          if (dev > start_par) visible = true;
+          break;
+        }
         case TRACE_START_NONE:
           visible = true;
           break;
@@ -347,6 +425,92 @@ trace_map(const ImageR & dem, const int nmax, const bool down, const double mina
     }
   }
 
+  return ret;
+}
+
+dMultiLine
+trace_map2(const ImageR & dem, const int nmax, const bool down, const double mina){
+
+  ImageR dirs = trace_map_dirs(dem, nmax, down);
+
+  size_t w = dirs.width(), h=dirs.height();
+  if (dirs.type() != IMAGE_8)
+    throw Err() << "trace_map: wrong image type";
+  if (dem.width() != w || dem.height() != h)
+    throw Err() << "trace_map: wrong image dimensions";
+
+  // calculate sink areas
+  ImageR areas(w,h, IMAGE_DOUBLE); areas.fillD(0.0);
+  for (size_t y=0; y<h; y++){
+    for (size_t x=0; x<w; x++){
+      iPoint p = iPoint(x, y);
+      while (dirs.check_crd(p.x, p.y)) {
+        double A = areas.getD(p.x,p.y);
+        areas.setD(p.x,p.y, A + 1);
+        int dir = dirs.get8(p.x,p.y);
+        if (dir < 0 || dir > 7) break;
+        p = adjacent(p, dir);
+      }
+    }
+  }
+
+  // Make set of all points with large enough area:
+  std::map<iPoint, double> pts;
+  for (size_t y=0; y<h; y++){
+    for (size_t x=0; x<w; x++){
+      double A = areas.getD(x,y);
+      if ( A > mina) pts.emplace(iPoint(x,y), A);
+    }
+  }
+
+  // trace rivers/ridges
+  dMultiLine ret;
+  while (pts.size()){
+
+    // Always start with a point with smallest area
+    double A0 = pts.begin()->second;
+    iPoint p = pts.begin()->first;
+    for (const auto & i: pts){
+      if (A0 > i.second) {A0 = i.second; p = i.first;}
+    }
+
+    // Start from this point and go along the river/ridge
+    // Note that area always increase on this way
+    dLine l;
+    // std::cerr << "start trace: " << p << " " << A0 << "\n";
+    while (dirs.check_crd(p.x, p.y)) {
+
+      double A = areas.getD(p.x,p.y);
+      int dir = dirs.get8(p.x, p.y);
+      // std::cerr << "  " << p << " A=" << A << " dir=" << dir << "\n";
+
+      //detect nodes and break line
+      bool node = false;
+      if (l.size()){
+        for (int i = 0; i < 8; i++){
+          if (dir == i) continue; // forward direction
+          iPoint p1 = adjacent(p, i);
+          if (p1 == *l.rbegin()) continue; // backward dir
+          if ((i+4)%8 != dirs.get8(p1.x, p1.y)) continue; // wrong dir
+          if (areas.getD(p1.x,p1.y) <=mina ) continue;
+          node = true;
+          // std::cerr << "node\n";
+          break;
+        }
+      }
+
+      l.push_back(p);
+      if (node) break;
+
+      if (pts.count(p)==0) break; // stop at processed point
+      pts.erase(p);
+
+      if (dir < 0 || dir > 7) break; // stop at the end of trace
+      p = adjacent(p, dir);
+    }
+    // std::cerr << "  stop: " << (l.size() ? l[l.size()-1] : dPoint()) << " " << l.size() << "pts \n";
+    if (l.size()) ret.push_back(l);
+  }
   return ret;
 }
 

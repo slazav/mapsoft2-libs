@@ -43,11 +43,18 @@ ImageR trace_map_areas(const ImageR & dirs);
 enum start_detect_t {
   TRACE_START_MINDH,
   TRACE_START_SIDEH2,
+  TRACE_START_PERP3,
+  TRACE_START_PERP4,
+  TRACE_START_PL3,
+  TRACE_START_PL4,
   TRACE_START_NONE
 };
 
 dMultiLine
 trace_map(const ImageR & dem, const int nmax, const bool down, const double mina,
-          const start_detect_t start_detect = TRACE_START_SIDEH2, const double start_par = 10.0,
+          const start_detect_t start_detect = TRACE_START_NONE, const double start_par = 1.0,
           const size_t smooth_passes = 2);
+
+dMultiLine
+trace_map2(const ImageR & dem, const int nmax, const bool down, const double mina);
 #endif
