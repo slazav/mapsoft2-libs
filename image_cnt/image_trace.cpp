@@ -72,6 +72,9 @@ public:
     // do the next step, reset ns and as counters
     if ((!down && h2 > h1) || (down && h2 < h1)) {
       h1=h2; p1=p2; ns=0;
+      P.clear(); B.clear();
+      P.insert(p1);
+      for (int i=0; i<8; i++) B.insert(adjacent(p1,i));
     }
     return true;
   }
