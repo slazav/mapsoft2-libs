@@ -17,14 +17,12 @@ class trace_gear{
 public:
   const ImageR & img;
   std::set<iPoint> P, B; // processed points, border of processed area
-  int n,ns;              // counters: all points, areas without sink
   iPoint p0,p1,p2;       // starting point, last-step point, last processed point
   double h0,h1,h2;       // heights of p0,p1,p2
 
   trace_gear(const ImageR & img_, const iPoint & p0_): img(img_){
 
     if (!img.check_crd(p0.x, p0.y)) throw Err() << "trace_gear: point outside the image";
-    n = ns = 0;
     p0 = p1 = p2 = p0_;
     h0 = h1 = h2 = img.get_double(p0.x, p0.y);
 
@@ -32,31 +30,31 @@ public:
     for (int i=0; i<8; i++) B.insert(adjacent(p0,i));
   }
 
-  // Process one more point
-  // If it is possible, the point is lower then previous,
-  // then ns is set to 0.
+  // Process one more point.
   // down parameter -- is the flow goes down (river) of up (mountain)
   // return false if step is not possible
   bool go(bool down){
 
-    // find adjacent point (member of B) with minimum height
+    // find member of B with min/max height
     h2 = NAN;
+    double sl2 = NAN;
+    p2 = p1;
     for (const auto & b: B){
       if (!img.check_crd(b.x, b.y)) {
-        p1=p2; h1=h2; // do the last step to the map edge (is it good?)
-        h2=NAN; break;
+        p1=p2; h1=h2; // do the last step to the map edge
+        h2=NAN; return false;
       }
       double hh = img.get_double(b.x, b.y);
-      if (std::isnan(h2) ||
-         (!down && hh > h2) ||
-         ( down && hh < h2)) {
-        h2=hh; p2=b;
-      }
-    }
+      // for the first step minimize slope,
+      // for next steps just find min height
+      double sl = (hh-h1);
+      if (P.size()==1) sl/=dist2d(b, p1);
 
-    // can't move
-    if (std::isnan(h2)){
-      return false;
+      if (std::isnan(sl2) ||
+         (!down && sl > sl2) ||
+         ( down && sl < sl2)) {
+        sl2=sl; h2=hh; p2=b;
+      }
     }
 
     // add found point into P, recalculate B
@@ -67,11 +65,10 @@ public:
       if (P.count(b)==0) B.insert(b);
     }
 
-    n++; ns++;
     // If found point is lower than that on a previous step,
-    // do the next step, reset ns and as counters
+    // clear sets
     if ((!down && h2 > h1) || (down && h2 < h1)) {
-      h1=h2; p1=p2; ns=0;
+      p1=p2; h1=h2;
       P.clear(); B.clear();
       P.insert(p1);
       for (int i=0; i<8; i++) B.insert(adjacent(p1,i));
@@ -101,7 +98,7 @@ trace_river(const ImageR & img, const iPoint & p0, int nmax, int hmin, bool down
 
     // If we processed > nmax points but can't do step down, it's
     // a no-sink point:
-    if (G.ns>nmax) break;
+    if (G.P.size()>nmax) break;
     if (G.h1<hmin) break;
   }
 
@@ -144,7 +141,7 @@ trace_go_down(const ImageR & img, const iPoint & p0, ImageR & dirs, int nmax, bo
 
     // If we processed > nmax points but can't do step down, it's
     // a no-sink point:
-    if (nmax && G.ns>nmax) break;
+    if (nmax && G.P.size()>nmax) break;
 
     // if we reach already processed point:
     if (dirs.get8(G.p2.x, G.p2.y)!=255) {
