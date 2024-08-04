@@ -240,196 +240,8 @@ double plane_dev(const Image & dem, const iPoint & p, const int r){
   return sqrt(D)/sn;
 }
 
-// RMS difference from horizontal line perpendicular to dir
-double perp_dev(const Image & dem, const iPoint & p, const int dir, const int r){
-  if (r<1) return 0.0;
-
-  if (!dem.check_crd(p.x,p.y)) return 0.0;
-  double h0 = dem.get_double(p.x, p.y);
-  iPoint p1(p), p2(p);
-  double s(0.0);
-  double n(0.0);
-  for (int x = 1; x<=r; x++){
-    p1 = adjacent(p1, dir+2);
-    if (dem.check_crd(p1.x,p1.y)){
-      double dh = dem.get_double(p1.x, p1.y) - h0;
-      s += pow(dh,2);
-      n += 1.0;
-    }
-    p2 = adjacent(p2, dir-2);
-    if (dem.check_crd(p2.x,p2.y)){
-      double dh = dem.get_double(p2.x, p2.y) - h0;
-      s += pow(dh,2);
-      n += 1.0;
-    }
-  }
-  return sqrt(s)/n;
-}
-
-
-dMultiLine
-trace_map(const ImageR & dem, const int nmax, const bool down, const double mina,
-          const start_detect_t start_detect, const double start_par,
-          const size_t smooth_passes){
-
-  ImageR dirs = trace_map_dirs(dem, nmax, down);
-
-  size_t w = dirs.width(), h=dirs.height();
-  if (dirs.type() != IMAGE_8)
-    throw Err() << "trace_map: wrong image type";
-  if (dem.width() != w || dem.height() != h)
-    throw Err() << "trace_map: wrong image dimensions";
-
-  // calculate sink areas and sum of altitudes in these areas
-  ImageR areas(w,h, IMAGE_DOUBLE); areas.fillD(0.0);
-  ImageR hdiff(w,h, IMAGE_DOUBLE); hdiff.fillD(0.0);
-  for (size_t y=0; y<h; y++){
-    for (size_t x=0; x<w; x++){
-      iPoint p = iPoint(x, y);
-      double H = dem.get_double(p.x,p.y);
-
-      while (dirs.check_crd(p.x, p.y)) {
-        double A = areas.getD(p.x,p.y);
-        areas.setD(p.x,p.y, A + 1);
-        if (start_detect == TRACE_START_MINDH){
-          double S = hdiff.getD(p.x,p.y);
-          hdiff.setD(p.x,p.y, S + H);
-        }
-        int dir = dirs.get8(p.x,p.y);
-        if (dir < 0 || dir > 7) break;
-        p = adjacent(p, dir);
-      }
-    }
-  }
-
-  // Make set of all points with large enough area,
-  // update hdiff image to have h - s/a
-  std::map<iPoint, double> pts;
-  for (size_t y=0; y<h; y++){
-    for (size_t x=0; x<w; x++){
-      double A = areas.getD(x,y);
-      if (start_detect == TRACE_START_MINDH){
-        double H = dem.get_double(x,y);
-        double S = hdiff.getD(x,y);
-        double dh = fabs(H - S/A);
-        hdiff.setD(x,y, dh);
-      }
-      if (A > mina) pts.emplace(iPoint(x,y), A);
-    }
-  }
-
-  // trace rivers/ridges
-  dMultiLine ret;
-  while (pts.size()){
-
-    // alwaws start with a point with smallest area
-    double A0 = pts.begin()->second;
-    iPoint p = pts.begin()->first;
-    for (const auto & i: pts){
-      if (A0 > i.second) {A0 = i.second; p = i.first;}
-    }
-
-    // Visibility flag. It could be different conditions
-    // for setting and clearing it.
-    bool visible = false;
-
-    // Start from this point and go along the river/ridge
-    // Note that area always increase on this way, hdiff - not.
-    dLine l;
-    // std::cerr << "start trace: " << p << " " << A0 << "\n";
-    while (dirs.check_crd(p.x, p.y)) {
-
-      double A = areas.getD(p.x,p.y);
-      int dir = dirs.get8(p.x, p.y);
-
-      // select where to make the trace visible (only once)
-      if (!visible) {
-        switch (start_detect) {
-        case TRACE_START_MINDH: {
-          double dH = hdiff.getD(p.x,p.y);
-          if (dH > start_par) visible = true;
-          break;
-        }
-        case TRACE_START_SIDEH2: {
-          // double step in perpendicular direction
-          auto p1 = adjacent(p, dir+2); p1 = adjacent(p1, dir+2);
-          auto p2 = adjacent(p, dir-2); p2 = adjacent(p2, dir-2);
-          if (dem.check_crd(p1.x, p1.y) && dem.check_crd(p2.x, p2.y)){
-            double H0 = dem.get_double(p.x, p.y);
-            double dH1 = H0 - dem.get_double(p1.x, p1.y);
-            double dH2 = H0 - dem.get_double(p2.x, p2.y);
-            if (down) {dH1 = -dH1; dH2 = -dH2;}
-            if(dH1 > start_par && dH2 > start_par) visible = true;
-          }
-          break;
-        }
-        case TRACE_START_PERP3: {
-          double dev = perp_dev(dem, p, dir, 3);
-          if (dev > start_par) visible = true;
-          break;
-        }
-        case TRACE_START_PERP4: {
-          double dev = perp_dev(dem, p, dir, 4);
-          if (dev > start_par) visible = true;
-          break;
-        }
-        case TRACE_START_PL3:{
-          double dev = plane_dev(dem, p, 3);
-          if (dev > start_par) visible = true;
-          break;
-        }
-        case TRACE_START_PL4:{
-          double dev = plane_dev(dem, p, 4);
-          if (dev > start_par) visible = true;
-          break;
-        }
-        case TRACE_START_NONE:
-          visible = true;
-          break;
-        }
-      }
-
-      // is it a node?
-      bool node = A > A0+mina;
-      A0 = A;
-
-      // std::cerr << "  " << p << " A=" << A << " dir=" << dir
-      //   << (visible ? " vis":"") << (node ? " *":"") << "\n";
-
-      if (visible) l.push_back(dPoint(p.x, p.y, node? 1:0));
-      else
-      if (l.size()>1) {
-        ret.push_back(l);
-        l.clear();
-      }
-      if (pts.count(p)==0) break; // stop at processed point
-      if (!visible && node) break; // stop if a non-visible river meet another river (it could be visible)
-
-      pts.erase(p);
-      if (dir < 0 || dir > 7) break; // stop at the end of trace
-
-      p = adjacent(p, dir);
-    }
-    // std::cerr << "  stop: " << (l.size() ? l[l.size()-1] : dPoint()) << " " << l.size() << "pts \n";
-    if (l.size()>1) ret.push_back(l);
-  }
-
-  // smooth lines within pixel precision
-  for (size_t i =0; i<smooth_passes; i++){
-    for (auto & l:ret){
-      for (size_t i = 0; i+2<l.size(); i++){
-        if (l[i+1].z != 0.0) continue;
-        l[i+1] = (l[i] + l[i+1])/2;
-        l[i+1].z = 0.0;
-      }
-    }
-  }
-
-  return ret;
-}
-
-dMultiLine
-trace_map2(const ImageR & dem, const int nmax, const bool down, const double mina){
+iMultiLine
+trace_map(const ImageR & dem, const int nmax, const bool down, const double mina){
 
   ImageR dirs = trace_map_dirs(dem, nmax, down);
 
@@ -464,7 +276,7 @@ trace_map2(const ImageR & dem, const int nmax, const bool down, const double min
   }
 
   // trace rivers/ridges
-  dMultiLine ret;
+  iMultiLine ret;
   while (pts.size()){
 
     // Always start with a point with smallest area
@@ -514,6 +326,72 @@ trace_map2(const ImageR & dem, const int nmax, const bool down, const double min
   return ret;
 }
 
+dMultiLine
+trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
+              const size_t smooth_passes, const int minpt, const double mindh, const double dist){
+
+  dMultiLine ret(data);
+
+  // smooth lines within pixel precision
+  for (size_t i =0; i<smooth_passes; i++){
+    for (auto & l:ret){
+      for (size_t i = 0; i+2<l.size(); i++){
+        if (l[i+1].z != 0.0) continue;
+        l[i+1] = (l[i] + l[i+1])/2;
+        l[i+1].z = 0.0;
+      }
+    }
+  }
+
+  while (1) { // repeat while lines are removed
+
+    // calculate line ends
+    std::map<iPoint, size_t> cntb, cnte;
+    for (const auto & l:ret) {
+      if (l.size()<2) continue;
+      iPoint p = rint(*l.begin());
+      if (cntb.count(p)) cntb[p]++;
+      else cntb[p] = 1;
+      p = rint(*l.rbegin());
+      if (cnte.count(p)) cnte[p]++;
+      else cnte[p] = 1;
+    }
+
+    // filter lines
+    int nrem = 0; // number of removed lines
+    auto l = ret.begin();
+    while (l!=ret.end()){
+      auto p1 = l->begin();
+      // process only beginning of a line
+      if (cnte.count(rint(*p1))>0) {l++; continue;}
+
+      // find first valid point, remove points before it
+      while (p1+1!=l->end()){
+        auto p2 = p1+1;
+        dPoint dp = *p2-*p1;
+        double h0 = dem.get_double_int4(*p1);
+        double dh1 = dem.get_double_int4(*p1 + dist*dPoint(dp.y, -dp.x)) - h0;
+        double dh2 = dem.get_double_int4(*p1 - dist*dPoint(dp.y, -dp.x)) - h0;
+        if (!down) {dh1 = -dh1; dh2 = -dh2;}
+
+        if (dh1>0 && dh2>0 && dh1 + dh2 > 2*mindh) break;
+        p1++;
+      }
+      dLine l1;
+      l1.insert(l1.end(), p1, l->end());
+      l->swap(l1);
+
+      // remove empty and short lines
+      if (l->size()> std::max(1,minpt)) l++;
+      else { l = ret.erase(l); nrem++; }
+    }
+    if (nrem==0) break;
+  }
+  // merge lines
+
+  return ret;
+
+}
 
 
 /********************************************************************/

@@ -206,9 +206,11 @@ class SRTM {
     dLine find_peaks(const dRect & range, double DH, size_t PS);
 
     // make vector data: rivers or mountains (parameters are described in image_cnt/image_trace.h)
-    dMultiLine trace_map(const dRect & range, const int nmax, const bool down, const double mina,
-          const start_detect_t start_detect = TRACE_START_SIDEH2, const double start_par = 10.0,
-          const size_t smooth_passes = 2);
+    dMultiLine trace_map(const dRect & range,
+          const int nmax, const bool down, const double mina,
+          const size_t smooth_passes = 2, const int minpt=3,
+          const double mindh = 20, const double dist = 2);
+
 
     // make vector data: holes
     dMultiLine find_holes(const dRect & range);
