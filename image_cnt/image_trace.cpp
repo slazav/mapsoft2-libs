@@ -362,8 +362,11 @@ trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
     auto l = ret.begin();
     while (l!=ret.end()){
       auto p1 = l->begin();
-      // process only beginning of a line
+      // skip lines starting from another lines
       if (cnte.count(rint(*p1))>0) {l++; continue;}
+      // skip lines starting from image edge
+      if (p1->x==0 || p1->x==dem.width()-1 ||
+          p1->y==0 || p1->y==dem.height()-1) {l++; continue;}
 
       // find first valid point, remove points before it
       while (p1+1!=l->end()){
@@ -381,13 +384,18 @@ trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
       l1.insert(l1.end(), p1, l->end());
       l->swap(l1);
 
+      // remove short lines
+      int n = std::max(1,minpt);
+      if (l->size() < n) l->clear();
+
       // remove empty and short lines
-      if (l->size()> std::max(1,minpt)) l++;
+      if (l->size()) l++;
       else { l = ret.erase(l); nrem++; }
     }
     if (nrem==0) break;
   }
-  // merge lines
+
+  // TODO: merge lines
 
   return ret;
 
