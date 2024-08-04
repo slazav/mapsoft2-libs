@@ -330,6 +330,8 @@ dMultiLine
 trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
               const size_t smooth_passes, const int minpt, const double mindh, const double dist){
 
+  double mindhf = 10;
+
   dMultiLine ret(data);
 
   // smooth lines within pixel precision
@@ -343,16 +345,16 @@ trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
     }
   }
 
+  // line ends
+  std::map<iPoint, size_t> cnte;
+
   while (1) { // repeat while lines are removed
 
     // calculate line ends
-    std::map<iPoint, size_t> cntb, cnte;
+    cnte.clear();
     for (const auto & l:ret) {
       if (l.size()<2) continue;
-      iPoint p = rint(*l.begin());
-      if (cntb.count(p)) cntb[p]++;
-      else cntb[p] = 1;
-      p = rint(*l.rbegin());
+      iPoint p = rint(*l.rbegin());
       if (cnte.count(p)) cnte[p]++;
       else cnte[p] = 1;
     }
@@ -375,9 +377,10 @@ trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
         double h0 = dem.get_double_int4(*p1);
         double dh1 = dem.get_double_int4(*p1 + dist*dPoint(dp.y, -dp.x)) - h0;
         double dh2 = dem.get_double_int4(*p1 - dist*dPoint(dp.y, -dp.x)) - h0;
-        if (!down) {dh1 = -dh1; dh2 = -dh2;}
+        double dhf = h0 - dem.get_double_int4(*p1 + dist*dp);
+        if (!down) {dh1 = -dh1; dh2 = -dh2; dhf = -dhf;}
 
-        if (dh1>0 && dh2>0 && dh1 + dh2 > 2*mindh) break;
+        if (dh1>0 && dh2>0 && dh1 + dh2 > 2*mindh && dhf > mindhf) break;
         p1++;
       }
       dLine l1;
@@ -395,7 +398,35 @@ trace_map_flt(const iMultiLine & data, const ImageR & dem, const bool down,
     if (nrem==0) break;
   }
 
-  // TODO: merge lines
+  // merge lines
+  auto i1 = ret.begin();
+  while (i1 != ret.end()){
+    if (i1->size()==0) continue;
+    auto p1b = rint(*i1->begin());
+    auto p1e = rint(*i1->rbegin());
+
+    auto i2 = i1+1;
+    bool merged = false;
+    for (auto i2 = i1+1; i2!=ret.end(); ++i2){
+      if (i2->size()==0) continue;
+      auto p2b = rint(*i2->begin());
+      auto p2e = rint(*i2->rbegin());
+
+      if (p1e == p2b && cnte.count(p1e) && cnte[p1e] == 1) {
+        i1->insert(i1->end(), i2->begin(), i2->end());
+        ret.erase(i2);
+        merged = true;
+        break;
+      }
+      if (p1b == p2e && cnte.count(p2e) && cnte[p2e] == 1) {
+        i1->insert(i1->begin(), i2->begin(), i2->end());
+        ret.erase(i2);
+        merged = true;
+        break;
+      }
+    }
+    if (!merged) i1++;
+  }
 
   return ret;
 
