@@ -328,8 +328,8 @@ write_gpx (const string &filename, const GeoData & data, const Opt & opts){
                 BAD_CAST "ele", "%.2f", tp.z)<0)
             throw "writing <ele> element";
 
-          // time
-          if (tp.t && xmlTextWriterWriteFormatElement(writer,
+          // time (nakarte writes gpx with t=1s, do not show it)
+          if (tp.t>1000 && xmlTextWriterWriteFormatElement(writer,
                 BAD_CAST "time", "%s",
                    write_fmt_time("%FT%T%fZ", tp.t).c_str())<0)
             throw "writing <time> element";
