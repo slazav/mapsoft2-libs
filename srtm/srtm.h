@@ -67,24 +67,24 @@ struct SRTMTile: public ImageR {
   size_t w, h; // image dimensions
 
   bool empty;
-  bool is_empty() {return empty;} // slightly different from Image::is_empty
+  bool is_empty() const {return empty;} // slightly different from Image::is_empty
 
   // Convert lonlat coordinate to pixel coordinate
-  inline dPoint ll2px(const dPoint & p){
+  inline dPoint ll2px(const dPoint & p) const {
     dPoint px((p.x - key.x)/step.x, (key.y + 1.0 - p.y)/step.y, p.z);
     if (!srtm) px-=dPoint(0.5,0.5);
     return px;
   }
 
   // Convert pixel coordinate to lonlat
-  inline dPoint px2ll(const dPoint & p){
+  inline dPoint px2ll(const dPoint & p) const {
     dPoint ret(p);
     if (!srtm) ret +=dPoint(0.5,0.5);
     return dPoint(key.x + ret.x*step.x, key.y + 1.0 - ret.y*step.y, p.z);
   }
 
   // be sure that image type is IMAGE_16 and crd is in the image
-  inline int16_t get_unsafe(const iPoint & crd, const bool use_overlay) {
+  inline int16_t get_unsafe(const iPoint & crd, const bool use_overlay) const {
     // Use overlay
     if (use_overlay && overlay.count(crd))
       return overlay.find(crd)->second;
