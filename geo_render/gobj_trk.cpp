@@ -157,8 +157,8 @@ GObjTrk::update_opt(){
       if (trk_mode == "normal"){
         p.color = color;
       }
-      else if (trk_mode == "speed" && !isnan(p.vel)){
-        p.color = RB.get(p.vel) + 0xFF000000;
+      else if (trk_mode == "speed"){
+        if (!isnan(p.vel)) p.color = RB.get(p.vel) + 0xFF000000;
       }
       else if (trk_mode == "height" && !isnan(p.alt)){
         p.color = RB.get(p.alt) + 0xFF000000;
