@@ -316,6 +316,7 @@ rect_crop_multi(const dRect & cutter, const dMultiLine & obj, bool closed){
     size_t idx = pts.size() + l - ret.begin();
     ret.insert(l+1, pts.begin()+1, pts.end());
     l = ret.begin() + idx;
+    if (l==ret.end()) break;
   }
 
   // step 3: remove extra points
