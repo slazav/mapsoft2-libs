@@ -438,18 +438,18 @@ SRTM::get_img(const dRect & rng, dPoint & blc, dPoint & step){
   step = tile0.step;
   step.z = 1.0;
 
-  ImageR img(c2.x-c1.x, c2.y-c1.y, IMAGE_16);
+  ImageR img(c2.x-c1.x+1, c2.y-c1.y+1, IMAGE_16);
   // render main tile
-  for (int y=c1.y; y<c2.y; y++){
-    for (int x=c1.x; x<c2.x; x++){
+  for (int y=c1.y; y<=c2.y; y++){
+    for (int x=c1.x; x<=c2.x; x++){
       if (x>0 && y>0 && x<tile0.w && y<tile0.h) {
-        img.set16(x-c1.x, c2.y-y-1, tile0.get_unsafe(iPoint(x,y), use_overlay));
+        img.set16(x-c1.x, c2.y-y, tile0.get_unsafe(iPoint(x,y), use_overlay));
       }
       else {
         dPoint pt = tile0.px2ll(dPoint(x,y));
         int16_t c = (int16_t)get_interp(pt);
         if (c<SRTM_VAL_MIN) c=0;
-        img.set16(x-c1.x, c2.y-y-1, c);
+        img.set16(x-c1.x, c2.y-y, c);
       }
     }
   }
