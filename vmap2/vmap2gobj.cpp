@@ -484,10 +484,10 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
-      // move_to area|line <type> <max distance>
+      // move_to area|line|point <type> <max distance>
       if (ftr == "move_to"){
         st->check_type(STEP_DRAW_POINT);
-        st->check_args(vs, {"<dist>", "(area|line):<type>", "..."});
+        st->check_args(vs, {"<dist>", "(area|line|point):<type>", "..."});
         st->move_to_dist = str_to_type<double>(vs[0]);
         for (size_t i=1; i<vs.size(); ++i)
           st->move_to_targets.insert(VMap2obj::make_type(vs[i]));
