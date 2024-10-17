@@ -484,9 +484,9 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
-      // move_to area|line|point <type> <max distance>
+      // move_to <max distance> <type>
       if (ftr == "move_to"){
-        st->check_type(STEP_DRAW_POINT);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->check_args(vs, {"<dist>", "(area|line|point):<type>", "..."});
         st->move_to_dist = str_to_type<double>(vs[0]);
         for (size_t i=1; i<vs.size(); ++i)
@@ -495,7 +495,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
-      // rotate_to area|line <type> <max distance>
+      // rotate_to <max distance> <type>
       if (ftr == "rotate_to"){
         st->check_type(STEP_DRAW_POINT);
         st->check_args(vs, {"<dist>", "(area|line):<type>", "..."});
@@ -503,6 +503,16 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         for (size_t i=1; i<vs.size(); ++i)
           st->move_to_targets.insert(VMap2obj::make_type(vs[i]));
         st->move_to_rot = true;
+        continue;
+      }
+
+      // move_from <max distance> <type>
+      if (ftr == "move_from"){
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
+        st->check_args(vs, {"<dist>", "(area|line|point):<type>", "..."});
+        st->move_from_dist = str_to_type<double>(vs[0]);
+        for (size_t i=1; i<vs.size(); ++i)
+          st->move_from_targets.insert(VMap2obj::make_type(vs[i]));
         continue;
       }
 
@@ -620,6 +630,7 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 
   if (cnv) cnv->bck(O);
 
+  // move_to / rotate_to
   if (move_to_targets.size()>0){
     for (auto & l:O){ // segments
       for (auto & p:l){ // points
@@ -640,6 +651,32 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
         dPoint t(1,0);
         nearest_pt(lines, t, p, move_to_dist);
         if (move_to_rot) O.angle = atan2(t.y, t.x);
+      }
+    }
+  }
+
+  // move_from
+  if (move_from_targets.size()>0){
+    for (auto & l:O){ // segments
+      for (auto & p:l){ // points
+        dRect r(p,p);
+        r.expand(move_from_dist);
+        if (cnv) r = cnv->frw_acc(r);
+
+        dMultiLine lines;
+        for (auto & t: move_from_targets){
+          auto ids = gobj->map.find(t, r);
+            for (int i:ids){
+            auto O1 = gobj->map.get(i);
+            if (cnv) cnv->bck(O1);
+            for (auto const & l:O1)
+              lines.push_back(l);
+          }
+        }
+        dPoint t(1,0);
+        dPoint p1(p);
+        nearest_pt(lines, t, p1, move_from_dist);
+        if (p1!=p) p = p1 + (p-p1)*move_from_dist/dist2d(p1,p);
       }
     }
   }

@@ -58,8 +58,9 @@ where possible features are:
                               For `edist` distanse will be adjusted to have exact begin and end distances.
     draw_dist <dist> [<dist0>] -- distances for dist/edist position
     sel_range <color> <width>  -- draw selection range for each object
-    move_to (line|area) <type> <max distance> -- move point to the nearest line or area object
-    rotate_to (line|area) <type> <max distance> -- move and rotate point to the nearest line or area object
+    move_to <max distance> <type> ...  -- move point to the nearest object
+    rotate_to <max distance> <type> ... -- move and rotate point to the nearest object
+    move_from <min distance> <type> ... -- move object points away from other type of object, keeping minimum distance
     rotate <angle>         -- rotate object pictures (img, lines, circles), degrees, cw
     short_expand <len>     -- expand short lines to the length by extending end segments (TODO: polygons?)
     short_skip <len>       -- skip short lines (TODO: polygons?)
@@ -221,9 +222,9 @@ public:
     double font_size;
     double rotate;
     bool outer;
-    std::set<uint32_t> move_to_targets;
+    std::set<uint32_t> move_to_targets, move_from_targets;
     bool move_to_rot;
-    double move_to_dist;
+    double move_to_dist, move_from_dist;
     double sel_range_thickness;
     uint32_t sel_range_color;
     dMultiLine add_lines;
@@ -253,6 +254,7 @@ public:
       outer = false;
       move_to_rot = false;
       move_to_dist = 0;
+      move_from_dist = 0;
       sel_range_thickness = 0;
       sel_range_color = 0;
     }
