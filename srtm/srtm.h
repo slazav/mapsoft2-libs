@@ -203,7 +203,7 @@ class SRTM {
     dMultiLine find_slope_contours(const dRect & range, double val, double vtol = 0.0);
 
     // make vector data: peaks
-    dLine find_peaks(const dRect & range, double DH, size_t PS);
+    dLine find_peaks(const dRect & range, double DH, size_t PS=0, double minh=NAN);
 
     // make vector data: rivers or mountains (parameters are described in image_cnt/image_trace.h)
     dMultiLine trace_map(const dRect & range,

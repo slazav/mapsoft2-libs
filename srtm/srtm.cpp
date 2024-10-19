@@ -524,12 +524,66 @@ SRTM::find_slope_contours(const dRect & range, double val, double vtol){
 
 
 dLine
-SRTM::find_peaks(const dRect & range, double DH, size_t PS){
+SRTM::find_peaks(const dRect & range, double DH, size_t PS, double minh){
+
   dPoint blc, d;
   ImageR img = get_img(range, blc, d);
-  auto ret = image_peaks(img, DH, PS);
+  if (PS == 0) PS = img.width() * img.height();
+
+  dLine ret;
+  std::set<iPoint> done;
+  for (int y=0; y<img.height(); y++){
+    for (int x=0; x<img.width(); x++){
+
+      iPoint p(x,y);
+      if (done.count(p)>0) continue;
+      double h0 = img.get_double(x,y);
+      if (!std::isnan(minh) && h0<minh) continue;
+
+      std::set<iPoint> pts, brd;
+      add_set_and_border(p, pts, brd);
+      do{
+        // find maximum of the border
+        double max = SRTM_VAL_UNDEF;
+        iPoint maxpt;
+        for (auto const & b:brd){
+          double h1 = SRTM_VAL_UNDEF;
+
+          if (img.check_crd(b.x, b.y)){
+            h1 = img.get_double(b.x, b.y);
+          }
+          else {
+            // if point outside the image, use srtm interface
+            h1 = get_h((dPoint)(b)*d + blc);
+          }
+          // starting point too close to undefined value
+          if (h1 < SRTM_VAL_MIN && dist(b,p)<1.5) {
+            max = SRTM_VAL_UNDEF; break;
+          }
+
+          if (h1>max){
+            max = h1; maxpt=b;
+          }
+
+        }
+        if (max<=SRTM_VAL_MIN) break;
+
+        // if max is higher then original point:
+        if (max > h0) { break; }
+
+        // if we descended more then DH or covered area more then PS:
+        if ((h0 - max > DH ) || (pts.size() > PS)) {
+          ret.emplace_back(x, y, h0);
+          break;
+        }
+        add_set_and_border(maxpt, pts, brd);
+        done.insert(maxpt);
+      } while (true);
+    }
+  }
   return ret*d + blc;
 }
+
 
 dMultiLine
 SRTM::trace_map(const dRect & range,
