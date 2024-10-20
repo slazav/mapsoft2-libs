@@ -24,6 +24,7 @@ image_cnt(const ImageR & img,
 //   DH -- min "distance" between peaks (minimum acsent needed to move to the nearest peak)
 //   PS -- When calculating a peak do not collect more then PS points
 //        (0 means image.width * image.height)
-dLine image_peaks(const ImageR & img, double DH, size_t PS=0);
+//   minh -- exclude peaks below this value (could be useful to avoid long calculations on flats)
+dLine image_peaks(const ImageR & img, double DH, size_t PS=0, double minh = NAN);
 
 #endif

@@ -313,7 +313,7 @@ image_cnt(const ImageR & img,
 
 /********************************************************************/
 dLine
-image_peaks(const ImageR & img, double DH, size_t PS){
+image_peaks(const ImageR & img, double DH, size_t PS, double minh){
   if (PS == 0) PS = img.width() * img.height();
 
   dLine ret;
@@ -324,6 +324,7 @@ image_peaks(const ImageR & img, double DH, size_t PS){
       iPoint p(x,y);
       if (done.count(p)>0) continue;
       double h0 = img.get_double(x,y);
+      if (!std::isnan(minh) && h0<minh) continue;
 
       std::set<iPoint> pts, brd;
       add_set_and_border(p, pts, brd);
