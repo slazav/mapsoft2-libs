@@ -102,7 +102,7 @@ TmpDir::zip(const std::string & zipname) const{
     // file
     else {
       struct zip_source *s = zip_source_file(Z, paths[i].c_str(),0,0);
-      if ((s == NULL) || (zip_add(Z, files[i].c_str(), s) < 0)) {
+      if ((s == NULL) || (zip_file_add(Z, files[i].c_str(), s, ZIP_FL_OVERWRITE) < 0)) {
         zip_close(Z);
         throw Err() << "Can't write data to ZIP file: " << zip_strerror(Z);
       }
@@ -121,7 +121,7 @@ TmpDir::unzip(const std::string & zipname) {
   if (!zip_file)
     throw Err() << "Can't open ZIP file " << zipname << ": " << zip_strerror(zip_file);
 
-  int files_total = zip_get_num_files(zip_file);
+  int files_total = zip_get_num_entries(zip_file, 0);
   if (!files_total) {
     zip_close(zip_file);
     throw Err() << "Can't read ZIP file " << zipname << ": " << zip_strerror(zip_file);
