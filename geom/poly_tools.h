@@ -508,8 +508,15 @@ dPoint nearest_pt(const PT & p0, const PT & p1, const PT & p2, bool use2d = true
 template<typename CT, typename PT>
 double nearest_pt(const Line<CT,PT> & line, dPoint & vec, Point<CT> & pt, double maxdist, bool use2d = true){
 
-  Point<CT> pm = pt;
+  if (line.size()==0) return maxdist;
 
+  if (line.size()==1){
+    auto lc = use2d ? dist2d(pt,line[0]) : dist(pt,line[0]);
+    if (lc<maxdist) { maxdist=lc; pt = line[0]; vec = dPoint(1,0); }
+    return maxdist;
+  }
+
+  auto pm = pt;
   for (size_t j=1; j<line.size(); j++){
     auto p1 = line[j-1];
     auto p2 = line[j];
