@@ -20,11 +20,25 @@
 # LDLIBS, LDFLAGS, CXXFLAGS, etc. -- standard Makefile variables
 # MOD_LOCAL    -- do not find dependencies, use only local information,
 #                 do not expand PKG_CONFIG options (used in get_deps)
+# make targets:
+#    make_nodeps -- build current folder without dependencies, including tests
+#    make_nodeps_notests -- build current folder without dependencies, no tests
+#    make_tests  -- build and run tests in the current folder
+#    make_deps -- calculate and build all dependencies on the current folder, with tests
+#    make_deps_notests -- calculate and build all dependencies on the current folder, no tests
+#    make_nodeps -- build current folder without dependencies
+#
+#    all         -- make_deps + make_nodeps
+#    notests     -- make_deps_notest + make_nodeps_notests
+#    clean       -- clean current folder
+
 ######################################################
 
 ######################################################
 # Main building rules
 all: make_deps make_nodeps
+notests: make_deps_notests make_nodeps_notests
+
 clean:
 	rm -f *.o *.a *.so *.test *.passed Makefile.deps $(PROGRAMS)
 
@@ -85,12 +99,19 @@ endif # MOD_LOCAL
 
 ######################################################
 # make_deps/make_nodeps building rules:
+
 make_deps:
 	@echo "## Building dependencies: [$(MDEPS)]"
 	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps; done'
 	@echo "## Finish building dependencies"
 
+make_deps_notests:
+	@echo "## Building dependencies: [$(MDEPS)]"
+	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps_notests; done'
+	@echo "## Finish building dependencies"
+
 make_nodeps: $(MOD_STATIC) $(PROGRAMS) $(SHARED_LIB_SO) make_tests
+make_nodeps_notests: $(MOD_STATIC) $(PROGRAMS) $(SHARED_LIB_SO)
 
 ######################################################
 # Building rules for tests
