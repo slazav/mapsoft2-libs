@@ -89,7 +89,7 @@ override CFLAGS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
 override LDLIBS_ = $(shell [ "$(PKG_CONFIG)" = "" ] ||\
                       pkg-config --libs '$(PKG_CONFIG)')
 
-override CFLAGS_ += -Werror=return-type -O2 -fPIC -g -I$(MODDIR)
+override CFLAGS_ += -Werror=return-type -Wstrict-aliasing=2 -O2 -fPIC -g -I$(MODDIR)
 
 override CFLAGS   := $(CFLAGS_) $(CFLAGS)
 override CXXFLAGS := -std=gnu++11 $(CFLAGS_) $(CXXFLAGS)
