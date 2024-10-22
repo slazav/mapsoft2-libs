@@ -147,7 +147,7 @@ class SRTM {
 
     // Distance between points (dx,dy) at a given place.
     // (0,0) if data is missing.
-    dPoint get_step(const iPoint& p);
+    dPoint get_step(const dPoint& p);
 
     // Get points for interpolation (0,1,2,4 points) for a given tile.
     void get_interp_pts(const iPoint key, const dPoint & p, std::set<dPoint> & pts);

@@ -271,7 +271,7 @@ SRTM::set_opt(const Opt & opt){
 // Distance between points (dx,dy) at a given place.
 // (0,0) if data is missing.
 dPoint
-SRTM::get_step(const iPoint& p){
+SRTM::get_step(const dPoint& p){
   return get_tile(floor(p)).step;
 }
 
@@ -402,13 +402,13 @@ double
 SRTM::get_s(const dPoint& p, bool raw){
   dPoint d = get_step(p);
   int h  = get_h(p, raw);
-  int h1 = get_h(p + dPoint(-d.x/2.0, 0), raw);
-  int h2 = get_h(p + dPoint(+d.x/2.0, 0), raw);
+  int h1 = get_h(p + dPoint(-d.x, 0), raw);
+  int h2 = get_h(p + dPoint(+d.x, 0), raw);
   if (h1 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h2 > SRTM_VAL_MIN) h1 = 2*h - h2;
   if (h2 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h1 > SRTM_VAL_MIN) h2 = 2*h - h1;
 
-  int h3 = get_h(p + dPoint(0, -d.y/2.0));
-  int h4 = get_h(p + dPoint(0, +d.y/2.0));
+  int h3 = get_h(p + dPoint(0, -d.y), raw);
+  int h4 = get_h(p + dPoint(0, +d.y), raw);
   if (h3 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h4 > SRTM_VAL_MIN) h3 = 2*h - h4;
   if (h4 < SRTM_VAL_MIN && h > SRTM_VAL_MIN && h3 > SRTM_VAL_MIN) h4 = 2*h - h3;
 
@@ -417,7 +417,7 @@ SRTM::get_s(const dPoint& p, bool raw){
 
   d *= 6380e3 * M_PI/180;
   d.x *= cos(M_PI*p.y/180.0);
-  double  U = hypot((h2-h1)/d.x, (h4-h3)/d.y);
+  double  U = hypot((h2-h1)/2.0/d.x, (h4-h3)/2.0/d.y);
   return atan(U)*180.0/M_PI;
 }
 
