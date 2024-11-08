@@ -576,12 +576,13 @@ void write_ozi_map (const string &fname, const GeoMap & m, const Opt & opts){
     dPoint pp(p.second);
     if (!grid) {
       gcnv1.bck(pp);
-      int xd = abs(int(pp.x));
-      int yd = abs(int(pp.y));
-      double xm = fabs(pp.x*60) - xd*60;
-      double ym = fabs(pp.y*60) - yd*60;
-      if (fabs(xm-60)<1e-5) {xm=0; xd--;}
-      if (fabs(ym-60)<1e-5) {ym=0; yd--;}
+      int xd = floor(fabs(pp.x));
+      int yd = floor(fabs(pp.y));
+      double xm = 60*(fabs(pp.x) - xd);
+      double ym = 60*(fabs(pp.y) - yd);
+      // after rounding we do not want to have 60 minutes
+      if (fabs(xm-60)<1e-6) {xm=0; xd++;}
+      if (fabs(ym-60)<1e-6) {ym=0; yd++;}
       f << fixed << setprecision(6)
         << setw(4) << yd << ','
         << setw(6) << ym << ','
