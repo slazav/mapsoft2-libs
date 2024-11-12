@@ -65,6 +65,31 @@ main(){
       assert_err(im.get_argb(5,5), "can't get color for this image type");
       assert_err(im.get_rgb(5,5),  "can't get color for this image type");
       assert_err(im.get_double(5,5), "can't get value for this image type");
+
+      assert_eq(im.check_crd(0,0),true);
+      assert_eq(im.check_crd(0,-1),false);
+      assert_eq(im.check_crd(-1,0),false);
+      assert_eq(im.check_crd(-1,-1),false);
+      assert_eq(im.check_crd(10,20),true);
+      assert_eq(im.check_crd(99,99),true);
+      assert_eq(im.check_crd(99,100),false);
+      assert_eq(im.check_crd(100,99),false);
+      assert_eq(im.check_crd(100,100),false);
+
+      assert_eq(im.check_rng(0,0,99,99),true);
+      assert_eq(im.check_rng(0,0,99,100),false);
+      assert_eq(im.check_rng(0,0,100,99),false);
+      assert_eq(im.check_rng(-1,0,99,99),false);
+      assert_eq(im.check_rng(0,-1,99,99),false);
+      assert_eq(im.check_rng(-10,0,-8,1),false);
+
+      assert_eq(im.check_rng(99,99,0,0),true);
+      assert_eq(im.check_rng(100,99,0,0),false);
+      assert_eq(im.check_rng(99,100,0,0),false);
+      assert_eq(im.check_rng(99,0,0,99),true);
+      assert_eq(im.check_rng(0,99,99,0),true);
+      assert_eq(im.check_rng(100,0,0,99),false);
+      assert_eq(im.check_rng(99,0,0,100),false);
     }
 
     { // 32bpp image

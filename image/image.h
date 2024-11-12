@@ -34,12 +34,14 @@ class Image {
     // check functions
 
     // Check if coordinates are valid
-    virtual bool check_crd(const size_t x, const size_t y) const {return true;}
+    virtual bool check_crd(const int x, const int y) const {return true;}
 
     // Check if coordinate range is valid.
-    // x1<=x2, y1<=y2
-    virtual bool check_rng(const size_t x1, const size_t y1,
-                           const size_t x2, const size_t y2) const {return true;}
+    // Should work for any relative position of (x1,y1) and (x2,y2) points.
+    // Should return true if rectangle based on both points
+    // (including both points) contains only valid coordinates
+    virtual bool check_rng(const int x1, const int y1,
+                           const int x2, const int y2) const {return true;}
 
     /******************************************************/
     // get_argb functions

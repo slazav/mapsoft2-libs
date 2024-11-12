@@ -389,13 +389,16 @@ class ImageR : public Image {
     /******************************************************/
     // overrides for Image interface
 
-    bool check_crd(const size_t x, const size_t y) const override{
+    bool check_crd(const int x, const int y) const override{
       return x>=0 && x<w && y>=0 && y<h;
     }
 
-    bool check_rng(const size_t x1, const size_t y1,
-                   const size_t x2, const size_t y2) const override{
-      return x1>=0 && x2<w && y1>=0 && y2<h;
+    bool check_rng(const int x1, const int y1,
+                   const int x2, const int y2) const override{
+      return x1>=0 && x1<w &&
+             x2>=0 && x2<w &&
+             y1>=0 && y1<h &&
+             y2>=0 && y2<h;
     }
 
     /******************************************************/
