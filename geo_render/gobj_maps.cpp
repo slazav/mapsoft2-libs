@@ -181,6 +181,7 @@ GObjMaps::render_tile(const dRect & draw_range) {
     if (!d.src->is_tiled && draw_map)
       imageR_src = img_cache.get(d.src->image, d.load_sc);
 
+    if (imageR_src.is_empty()) continue;
     double avr = d.scale/d.load_sc;
 
     // Simplify map-to-map conversion if possible.
@@ -200,7 +201,7 @@ GObjMaps::render_tile(const dRect & draw_range) {
         if (d.brd.size() && !dPolyTester::test_cr(cr, p.x)) continue;
 
         cnv.frw(p); // convert to source image coordinates
-        image_src->check_crd(p.x, p.y);
+        if (!image_src->check_crd(p.x, p.y)) continue;
 
         int color;
         if (smooth){
