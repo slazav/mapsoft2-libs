@@ -36,8 +36,8 @@
 
 ######################################################
 # Main building rules
-all: make_deps make_nodeps
-notests: make_deps_notests make_nodeps_notests
+all: make_deps
+notests: make_deps_notests
 
 clean:
 	rm -f *.o *.a *.so *.test *.passed Makefile.deps $(PROGRAMS)
@@ -103,16 +103,17 @@ endif # MOD_LOCAL
 make_deps:
 	@echo "## Building dependencies: [$(MDEPS)]"
 	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps make_tests; done'
+	@sh -e -c '$(MAKE) make_nodeps make_tests'
 	@echo "## Finish building dependencies"
 
 make_deps_notests:
 	@echo "## Building dependencies: [$(MDEPS)]"
 	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps; done'
+	@sh -e -c '$(MAKE) make_nodeps'
 	@echo "## Finish building dependencies"
 
 make_nodeps: $(MOD_STATIC) $(PROGRAMS) $(SHARED_LIB_SO)
 make_tests: make_nodeps
-
 
 ######################################################
 # Building rules for tests
