@@ -102,16 +102,17 @@ endif # MOD_LOCAL
 
 make_deps:
 	@echo "## Building dependencies: [$(MDEPS)]"
-	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps; done'
+	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps make_tests; done'
 	@echo "## Finish building dependencies"
 
 make_deps_notests:
 	@echo "## Building dependencies: [$(MDEPS)]"
-	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps_notests; done'
+	@sh -e -c 'for i in $(MDEPS); do $(MAKE) -C $(MODDIR)/$$i make_nodeps; done'
 	@echo "## Finish building dependencies"
 
-make_nodeps: $(MOD_STATIC) $(PROGRAMS) $(SHARED_LIB_SO) make_tests
-make_nodeps_notests: $(MOD_STATIC) $(PROGRAMS) $(SHARED_LIB_SO)
+make_nodeps: $(MOD_STATIC) $(PROGRAMS) $(SHARED_LIB_SO)
+make_tests: make_nodeps
+
 
 ######################################################
 # Building rules for tests
