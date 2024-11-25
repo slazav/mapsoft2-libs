@@ -43,20 +43,24 @@ draw_pulk_grid(const CairoWrapper & cr, const iPoint & origin,
                     opt.get("grid_text_font",  "serif:bold").c_str(), fs);
   }
 
+  /* build  pulkovo ll -> wgs conversion or get it from the cache */
+  if (!draw_pulk_grid_convs.contains(INT_MAX))
+    draw_pulk_grid_convs.add(INT_MAX, ConvGeo("SU_LL"));
+  ConvGeo cnv0(draw_pulk_grid_convs.get(INT_MAX));
+
   /* for all zones */
   for (int lon0=lon0a; lon0<=lon0b; lon0+=6){
-    /* build  pulkovo -> wgs conversion or get it from the cache */
+    /* build  pulkovo grid -> wgs conversion or get it from the cache */
     if (!draw_pulk_grid_convs.contains(lon0))
       draw_pulk_grid_convs.add(lon0, ConvGeo(GEO_PROJ_SU(lon0)));
 
     ConvGeo cnv1(draw_pulk_grid_convs.get(lon0));
     ConvMulti cnv2(cnv, cnv1, 1,0); // map -> pulk
+    dRect rng_pulk = cnv1.bck_acc(rng_wgs); // wgs -> pulkovo grid
 
-    dRect rng_pulk = cnv1.bck_acc(rng_wgs); // wgs -> pulkovo
-
-    // Grid step. We want to have ~1 line/ 200 px
+    // Grid step
     double step = opt.get("grid_step",  0.0);
-    if (step<=0){
+    if (step<=0){ // auto mode: we want to have ~1 line/ 200 px
       int nlines = rng.w/200;
       step = 2000;
       while (rng_pulk.w > step*nlines) step*=10.0;
@@ -74,6 +78,7 @@ draw_pulk_grid(const CairoWrapper & cr, const iPoint & origin,
 
     if (lon0a!=lon0b){ /* clip the zone */
       dRect rng_clip(lon0-3.0, rng_wgs.y, 6.0, rng_wgs.h);
+      rng_clip = cnv0.frw_acc(rng_clip); // wgs -> pulkovo ll
       rng_clip.y-=rng_clip.h*0.2;
       rng_clip.h+=rng_clip.h*0.4;
       cr->mkpath(cnv.bck_acc(rect_to_line(rng_clip,true)) - origin);
