@@ -304,6 +304,7 @@ trace_map(const ImageR & dem, const int nmax, const bool down, const double mina
           iPoint p1 = adjacent(p, i);
           if (p1 == *l.rbegin()) continue; // backward dir
           if ((i+4)%8 != dirs.get8(p1.x, p1.y)) continue; // wrong dir
+          if (!dirs.check_crd(p1.x, p1.y)) continue;
           if (areas.getD(p1.x,p1.y) <=mina ) continue;
           node = true;
           // std::cerr << "node\n";
