@@ -182,8 +182,9 @@ render_tile(const dRect & draw_range){
 
   // draw contours
   if (cnt) {
+    double cnt_rdp = 0.2; // todo: move to options?
     auto srtm_lock = srtm->get_lock();
-    auto c_data = srtm->find_contours(wgs_range, cnt_step, cnt_vtol);
+    auto c_data = srtm->find_contours(wgs_range, cnt_step, cnt_vtol, cnt_rdp);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
       if (is_stopped()) return false;

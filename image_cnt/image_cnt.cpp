@@ -245,24 +245,6 @@ image_cnt_vtol_filter(const ImageR & img,
     auto v0 = s.first;
     auto & ml = s.second;
 
-/*
-    // V1 filter with vtol.
-    // Remove points while altitude along the line is within the tolerance.
-    if (vtol>0){
-      for (auto & l:ml){
-        auto i1 = l.begin();
-        while (i1+2!=l.end()){
-          auto i2=i1+1, i3=i1+2;
-          dPoint rng = img_vrange(*i1, *i3, img);
-          if (fabs(rng.x-v0) < vtol && fabs(rng.y-v0) < vtol ||
-              std::isinf(rng.x) || std::isinf(rng.y))
-            l.erase(i2);
-          else ++i1;
-        }
-      }
-    }
-*/
-    // V2 filter with vtol.
     // Iteratively minimize line length.
     if (vtol>0){
       for (auto & l:ml){
@@ -297,17 +279,6 @@ image_cnt_vtol_filter(const ImageR & img,
           }
         }
         if (closed) l.push_back(*l.begin());
-
-        // filter stright lines
-        auto i1 = l.begin();
-        while (i1+2!=l.end()){
-          auto i2=i1+1, i3=i1+2;
-          if (dist(*i1,*i2)<pt_acc || dist(*i2,*i3)<pt_acc ||
-              dist(norm(*i2-*i1), norm(*i3-*i2)) < pt_acc)
-            l.erase(i2);
-          else ++i1;
-        }
-
       }
     }
 
