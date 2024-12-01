@@ -201,14 +201,14 @@ class SRTM {
     // rdp  - apply Ramer-Douglas-Peucker algorithm with tolerance rdp (in DEM grid units)
     // smooth_dh, smooth_dr -- smooth image before countour finding, with radius dr and hight limit dh
     std::map<double, dMultiLine> find_contours(const dRect & range, double step,
-      double vtol = 0.0, double rdp = 0.0, double smooth_dh = 0.0, double smooth_dr = 0.0);
+      double vtol = 0.0, double smooth_dh = 0.0, double smooth_dr = 0.0);
 
     // make vector data: slope contours
     // vtol - smooth lines with vertical tolerance vtol (in meters)
     // rdp  - apply Ramer-Douglas-Peucker algorithm with tolerance rdp (in DEM grid units)
     // smooth_dh, smooth_dr -- smooth image before countour finding, with radius dr and hight limit dh
     dMultiLine find_slope_contours(const dRect & range, double val,
-      double vtol = 0.0, double rdp = 0.0, double smooth_dh = 0.0, double smooth_dr = 0.0);
+      double vtol = 0.0, double smooth_dh = 0.0, double smooth_dr = 0.0);
 
     // make vector data: peaks
     dLine find_peaks(const dRect & range, double DH, size_t PS=0, double minh=NAN);
