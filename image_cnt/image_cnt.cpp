@@ -324,6 +324,71 @@ image_cnt_vtol_filter(const ImageR & img,
 }
 
 /********************************************************************/
+ImageR
+image_smooth_lim(const ImageR & img, const double dh, const double dr){
+  size_t w = img.width();
+  size_t h = img.height();
+  ImageR ret(w,h, IMAGE_DOUBLE);
+
+  for (size_t y=0; y<h; y++){
+    for (size_t x=0; x<w; x++){
+      double v = img.get_double(x,y);
+
+      double s = v;
+      double n = 1.0;
+      // Average with Gaussian weight
+      int ri = ceil(2*dr);
+      for (int y1=y-ri; y1<=y+ri; y1++){
+        if (y1<0 || y1>=h) continue;
+        for (int x1=x-ri; x1<=x+ri; x1++){
+
+
+          if (x1<0 || x1>=w) continue;
+          if (x1==x && y1==y) continue;
+          double dd = pow((double)x1-(double)x,2) + pow((double)y1-(double)y,2);
+          double w = exp(-dd/2.0/pow(dr,2));
+          s+=w*img.get_double(x1,y1);
+          n+=w;
+        }
+      }
+      double dv = s/n - v;
+
+/**************/
+
+// Following limits go to dh when difference -> inf
+
+      // sharp limit
+//      if (fabs(dv)>dh) dv*=dh/fabs(dv);
+
+      // exponential limit (like ballistic viscosity in He3-B:)
+//      if (dh>0 && dv!=0) dv = dh * dv/fabs(dv) * (1.0 - exp(-fabs(dv/dh)));
+//      else dv=0;
+
+      // 1/x limit
+//      if (dh>0) dv *= 1.0/(fabs(dv)/dh+1.0);
+//      else dv=0;
+
+//      // one more exponential limit
+//      if (dh>0) dv = dh*tanh(dv/dh);
+//      else dv=0;
+
+// Following limits go to 0 when difference -> inf
+// (no changes at sharp ridges)
+
+//    // sharp limit
+      if (fabs(dv)>dh) dv*=dh*dh/dv/dv;
+
+      // exponential limit
+//      if (dh>0) dv *= exp(-0.5*fabs(dv)/dh);
+//      else dv=0;
+
+      ret.setD(x,y, v + dv);
+    }
+  }
+  return ret;
+}
+
+/********************************************************************/
 dLine
 image_peaks(const ImageR & img, double DH, size_t PS, double minh){
   if (PS == 0) PS = img.width() * img.height();

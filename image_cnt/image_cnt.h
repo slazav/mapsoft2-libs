@@ -19,6 +19,15 @@ std::map<double, dMultiLine> image_cnt(const ImageR & img,
 void image_cnt_vtol_filter(const ImageR & img,
   std::map<double, dMultiLine> & lines, const double vtol=0.0);
 
+// Smooth image with a limited vertical change
+// - Smoothing is done using Gaussian weight with radius dr.
+// - Actial smoothing is obtained from calculated change my
+//   multiplying it with some limited function  (options available in the code)
+//   h => h*f(h/dh)
+//   where f(x)->1 at x<<1, f(x)->1/x or smaller at h/dh>>Inf,
+
+ImageR image_smooth_lim(const ImageR & img, const double dh, const double dr);
+
 // Find peaks on the image.
 // Parameters:
 //   img -- image of any type which supports get_double() (see image/image_r.h)
