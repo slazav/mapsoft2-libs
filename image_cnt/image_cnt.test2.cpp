@@ -7,14 +7,20 @@
 #include "cairo/cairo_wrapper.h"
 #include "rainbow/rainbow.h"
 
-// load image from test_dem.tif
+/*
+  - use test_dem.tif profile
+  - draw it as a color surface
+  - draw contours, original and filtered with vtol filter
+  - also draw contours shifted both directions by vtol
+  - save to image_cnt.test2.png
+*/
 
 int
 main(){
   try{
 
     int w, h;   // grid size
-    int mult=5; // image size will be bigget by this factor
+    int mult=5; // image size will be bigger by this factor
 
     double step = 100; // countour step
     double vmin = 0; // countour start value
@@ -48,7 +54,7 @@ main(){
 
 
     // find and draw contours (no filtering)
-    auto ret = image_cnt(img, vmin, vmax, step, closed, 0);
+    auto ret = image_cnt(img, vmin, vmax, step, closed);
     for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->cap_round();
@@ -63,10 +69,10 @@ main(){
     cr->stroke();
 
     // draw tolerances
-    ret = image_cnt(img, vmin-vtol, vmax, step, closed, 0);
+    ret = image_cnt(img, vmin-vtol, vmax, step, closed);
     for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
-    ret = image_cnt(img, vmin+vtol, vmax, step, closed, 0);
+    ret = image_cnt(img, vmin+vtol, vmax, step, closed);
     for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->cap_round();
@@ -75,15 +81,16 @@ main(){
     cr->stroke();
 
     // line filtering
-    auto ret1 = image_cnt(img, vmin, vmax, step, closed, vtol);
-    for (const auto & l:ret1)
+    image_cnt_vtol_filter(img, ret, vtol);
+
+    for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->set_line_width(1);
     cr->set_color_a(0xFFFF00FF);
     cr->stroke();
 
     // draw points
-    for (const auto & l:ret1)
+    for (const auto & l:ret)
       cr->mkpath_points((double)mult*l.second);
     cr->set_line_width(3);
     cr->stroke();

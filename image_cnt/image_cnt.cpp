@@ -98,7 +98,7 @@ double img_int4(const dPoint & p, const ImageR & img){
 std::map<double, dMultiLine>
 image_cnt(const ImageR & img,
           const double vmin, const double vmax, const double vstep,
-          const bool closed, const double vtol){
+          const bool closed){
   size_t w = img.width(), h = img.height();
 
   // Step 1: find oriented segments
@@ -228,6 +228,21 @@ image_cnt(const ImageR & img,
         else ++i1;
       }
     }
+  }
+
+  return ret;
+}
+
+/********************************************************************/
+void
+image_cnt_vtol_filter(const ImageR & img,
+  std::map<double, dMultiLine> & ret, const double vtol){
+
+  size_t w = img.width(), h = img.height();
+
+  for (auto & s:ret){
+    auto v0 = s.first;
+    auto & ml = s.second;
 
 /*
     // V1 filter with vtol.
@@ -295,20 +310,16 @@ image_cnt(const ImageR & img,
       }
     }
 
-
     // remove empty
     // (vtol filter can keep lines with two same points)
-    i1 = ml.begin();
+    auto i1 = ml.begin();
     while (i1!=ml.end()){
       if (i1->size()<2 ||
          (i1->size()==2 && dist(*i1->begin(),*i1->rbegin())<pt_acc))
         i1=ml.erase(i1);
       else ++i1;
     }
-
   }
-
-  return ret;
 }
 
 /********************************************************************/

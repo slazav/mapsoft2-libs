@@ -10,13 +10,14 @@
 //   img -- image of any type which supports get_double() (see image/image_r.h)
 //   vmin, vmax, step -- contours. Both vmin and vmax could be NaN, step should be positive.
 //   closed -- produce closed polygons instead of lines.
-//   vtol   -- tolerance for filtering.
-
-std::map<double, dMultiLine>
-image_cnt(const ImageR & img,
+std::map<double, dMultiLine> image_cnt(const ImageR & img,
           const double vmin, const double vmax, const double vstep,
-          const bool closed, const double vtol=0.0);
+          const bool closed);
 
+// Filter result of image_cnt with vertical tolerance vtol
+// (move lines within vertical tolerance vtol minimizing their length)
+void image_cnt_vtol_filter(const ImageR & img,
+  std::map<double, dMultiLine> & lines, const double vtol=0.0);
 
 // Find peaks on the image.
 // Parameters:

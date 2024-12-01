@@ -12,7 +12,7 @@ main(){
   try{
 
     int w=64, h=32;  // grid size
-    int mult=10;     // image size will be bigget by this factor
+    int mult=10;     // image size will be bigger by this factor
 
     double amp = 1.0;   // amplitude of the function
     double namp = 0.05; // noise amplitude
@@ -49,7 +49,7 @@ main(){
 
 
     // find and draw contours
-    auto ret = image_cnt(img, vmin, vmax, step, closed, 0);
+    auto ret = image_cnt(img, vmin, vmax, step, closed);
     for (const auto & l:ret) cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->cap_round();
     cr->set_line_width(1);
@@ -63,8 +63,8 @@ main(){
     cr->stroke();
 
     // test line filtering
-    auto ret1 = image_cnt(img, vmin, vmax, step, closed, vtol);
-    for (const auto & l:ret1){
+    image_cnt_vtol_filter(img, ret, vtol);
+    for (const auto & l:ret){
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     }
     cr->set_line_width(1);

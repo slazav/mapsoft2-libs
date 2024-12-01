@@ -7,12 +7,19 @@
 #include "cairo/cairo_wrapper.h"
 #include "rainbow/rainbow.h"
 
+/*
+  - create profile using sin/cos functions and random noise
+  - draw it as a color surface
+  - draw contours, original and filtered with vtol filter
+  - save to image_cnt.test1.png
+*/
+
 int
 main(){
   try{
 
     int w=256, h=128;   // grid size
-    int mult=10; // image size will be bigget by this factor
+    int mult=10; // image size will be bigger by this factor
 
 
     double step = 0.2; // countour step
@@ -53,7 +60,7 @@ main(){
     cr.set_surface_img(cimg);
 
     // find and draw contours
-    auto ret = image_cnt(img, vmin, vmax, step, closed, 0);
+    auto ret = image_cnt(img, vmin, vmax, step, closed);
     for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->cap_round();
@@ -68,15 +75,16 @@ main(){
     cr->stroke();
 
     // test line filtering
-    auto ret1 = image_cnt(img, vmin, vmax, step, closed, vtol);
-    for (const auto & l:ret1)
+    image_cnt_vtol_filter(img, ret, vtol);
+
+    for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->set_line_width(1);
     cr->set_color_a(0xFFFF00FF);
     cr->stroke();
 
     // draw points
-    for (const auto & l:ret1)
+    for (const auto & l:ret)
       cr->mkpath_points((double)mult*l.second);
     cr->set_line_width(3);
     cr->stroke();

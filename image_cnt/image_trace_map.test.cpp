@@ -8,7 +8,12 @@
 #include "cairo/cairo_wrapper.h"
 #include "rainbow/rainbow.h"
 
-// load image from test_dem.tif
+/*
+  - use test_dem.tif profile
+  - draw contours
+  - draw ridges and rivers found by trace_map() function
+  - save to image_trace_map.test.png
+*/
 
 int
 main(){
@@ -46,8 +51,10 @@ main(){
     cr->set_color_a(0x80803000);
     cr->stroke();
 
-    // find and draw contours (no filtering)
-    auto ret = image_cnt(img, vmin, vmax, vstep, 0, vtol);
+    // find and draw contours
+    auto ret = image_cnt(img, vmin, vmax, vstep, 0);
+    image_cnt_vtol_filter(img, ret, vtol);
+
     for (const auto & l:ret)
       cr->mkpath_smline(l.second, 0, 0);
     cr->cap_round();
