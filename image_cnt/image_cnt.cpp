@@ -297,6 +297,7 @@ image_cnt_vtol_filter(const ImageR & img,
 /********************************************************************/
 ImageR
 image_smooth_lim(const ImageR & img, const double dh, const double dr){
+  if (dr<=0 || dh<=0) return img;
   size_t w = img.width();
   size_t h = img.height();
   ImageR ret(w,h, IMAGE_DOUBLE);
