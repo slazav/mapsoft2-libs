@@ -1,4 +1,5 @@
 #include "gobj_srtm.h"
+#include "geom/poly_tools.h"
 #include <sstream>
 #include <fstream>
 
@@ -184,7 +185,7 @@ render_tile(const dRect & draw_range){
   if (cnt) {
     double cnt_rdp = 0.2; // todo: move to options?
     auto srtm_lock = srtm->get_lock();
-    auto c_data = srtm->find_contours(wgs_range, cnt_step, cnt_vtol, cnt_rdp);
+    auto c_data = srtm->find_contours(wgs_range, cnt_step, cnt_vtol);
     cr->set_color(cnt_color);
     for(auto const & c:c_data){
       if (is_stopped()) return false;
@@ -192,6 +193,7 @@ render_tile(const dRect & draw_range){
       cr->set_line_width(cnt_w*(isth? 1:cnt_wmult));
       dMultiLine l = c.second;
       cnv->bck(l);
+      line_filter_rdp(l, 0.5); // in pixels
       cr->mkpath_smline(l, 0, cnt_crv);
       cr->stroke();
     }
