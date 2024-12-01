@@ -586,6 +586,65 @@ void line_filter_v1(MultiLine<CT,PT> & lines, double e, int np,
   }
 }
 
+/****************************************************/
+// Ramer-Douglas-Peucker algorithm
+// https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+template<typename CT, typename PT>
+void line_filter_rdp(Line<CT,PT> & line, double e,
+            double (*dist_func)(const PT &, const PT &) = NULL,
+            int ind1=0, int ind2=-1){
+
+
+  // check indices
+  if (ind2<0) ind2 = line.size()-1;
+  if (ind1>=line.size() || ind2>=line.size() || ind1>=ind2)
+    throw Err() << "line_filter_rdp: wrong indices: " << ind1 << ", " << ind2;
+
+  // do not filter lines with less then 3 points
+  if (ind2-ind1<3) return;
+
+  // find point with max distance from first-last line
+  double maxd=0.0;
+  int ind=0;
+  for (int i = ind1+1; i<=ind2-1; ++i){
+    // convert to dPoints
+    dPoint p1(line[ind1]), p2(line[ind2]), p(line[i]);
+    // in nearest_pt a simple dist/pscal functions are used!
+    auto pc = nearest_pt(p,p1,p2);
+    double d = dist_func? dist_func(p,pc) : dist(p,pc);
+    if (d>maxd) {
+      ind = i;
+      maxd = d;
+    }
+  }
+  if (ind==0) return;
+
+  if (maxd>=e) {
+    // order is important, first modify end part
+    line_filter_rdp(line, e, dist_func, ind, ind2);
+    line_filter_rdp(line, e, dist_func, ind1, ind);
+  }
+  else {
+    line.erase(line.begin()+ind1+1, line.begin()+ind2);
+  }
+}
+
+// Same for MultiLine. Remove also segments shorter then e.
+template<typename CT, typename PT>
+void line_filter_rdp(MultiLine<CT,PT> & lines, double e,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
+  for (auto l = lines.begin(); l!=lines.end(); l++){
+    line_filter_rdp(*l, e, dist_func);
+    // remove 2-point lines shorter then e
+    if (l->size() != 2 || e<=0) continue;
+    auto p1 = (*l)[0];
+    auto p2 = (*l)[1];
+    double d = dist_func? dist_func(p1,p2) : dist(p1,p2);
+    if (d<e) lines.erase(l--);
+  }
+}
+
+/****************************************************/
 
 /// Found bounding convex polygon for points.
 /// Resulting polygon start from point with minimal x,
