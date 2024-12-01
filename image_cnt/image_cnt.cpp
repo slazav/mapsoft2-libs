@@ -123,6 +123,8 @@ image_cnt(const ImageR & img,
 
         auto v1 = img.get_double(p1.x, p1.y);
         auto v2 = img.get_double(p2.x, p2.y);
+        if (std::isinf(v1) || std::isinf(v2)) throw Err() << "image_cnt: Inf values";
+        if (std::isnan(v1) || std::isnan(v2)) throw Err() << "image_cnt: NaN values";
 
         // which countours we want to find
         double min(vmin), max(vmax);
@@ -136,7 +138,6 @@ image_cnt(const ImageR & img,
         }
         if (vstep<=0) throw Err() << "image_cnt: positive step expected";
         if (min > max) throw Err() << "image_cnt: min > max";
-
         for (double vv=min; vv<=max; vv+=vstep){
 
           // Method have lots of problems if vv can be
