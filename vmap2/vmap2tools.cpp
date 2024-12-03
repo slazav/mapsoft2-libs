@@ -470,3 +470,223 @@ do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels){
     else map.put(id, o);
   }
 }
+
+/********************************************************************/
+
+// helper for vmap_move_ends
+int
+vmap_move_ends_pt(VMap2 & vmap, const int id0, dPoint & p1, dPoint & p2,
+             const std::list<std::string> types, double r){
+
+  // some range around p1 (larger then r)
+  dRect rng(p1,p1);
+  double d2m = 6380e3*M_PI/180.0; // m/d
+  rng.expand(r / d2m);
+
+  dLine dest; // possible destination points
+
+  for (const auto type: types){
+    for (const auto id: vmap.find(type, rng)){
+      if (id==id0) continue;
+      auto obj = vmap.get(id);
+      auto cl = obj.get_class();
+      for (auto & l:obj){
+
+        // object node near point p1 -> move p1 there
+        for (auto & p:l){
+          if (geo_dist_2d(p1,p) > r) continue;
+          //std::cerr << " p: " << p1 << " -> " << p << "\n";
+          dest.push_back(p);
+        }
+
+        // object segment near p1 -> change length of p1-p2 segment
+        if (cl == VMAP2_POINT) continue;
+        for (size_t j=0; j<l.size(); j++){
+          auto q1 = l[j];
+          auto q2 = (j==l.size()-1) ? l[0]:l[j+1];
+          if (q1==q2) continue;
+          if (cl == VMAP2_LINE && j==l.size()-1) continue;
+
+          dPoint cr;
+          segment_cross_2d(p1, p2, q1, q2, cr);
+
+          if (std::isnan(cr.x) || std::isinf(cr.x) ||
+              std::isnan(cr.y) || std::isinf(cr.y)) continue;
+          double dp = geo_dist_2d(p1,p2);
+          double dq = geo_dist_2d(q1,q2);
+          if (geo_dist_2d(cr,q1) >= dq || geo_dist_2d(cr,q2) >= dq) continue;
+          if (geo_dist_2d(cr,p1) > r) continue;
+          //std::cerr << " s: " << p1 << " -> " << cr << "\n";
+          dest.push_back(cr);
+        }
+      }
+    }
+  }
+  if (dest.size()==0) return 0;
+  // choose nearest destination point
+  dPoint pm = dest[0];
+  for (const auto p:dest)
+    if (geo_dist_2d(p1,p) < geo_dist_2d(p1, pm)) pm=p;
+  p1 = pm;
+  return 1;
+}
+
+void
+vmap_move_ends(VMap2 & vmap,
+    const std::string & type0,
+    const std::list<std::string> types,
+    double r){
+
+  size_t gc=0;
+  //std::cerr << "  vmap_move_ends (" << type0 << ")\n";
+  for (const auto id0: vmap.find(type0)){
+    auto obj0 = vmap.get(id0);
+
+    int count = 0;
+    for (auto & l:obj0){
+      if (l.size()<2) continue;
+      // too short line can collapse into one point
+      if (geo_dist_2d(l[0], l[l.size()-1]) <= 2*r) continue;
+      count +=
+        vmap_move_ends_pt(vmap, id0, l[0], l[1], types, r) +
+        vmap_move_ends_pt(vmap, id0, l[l.size()-1], l[l.size()-2], types, r);
+    }
+    if (count) vmap.put(id0, obj0);
+    gc+=count;
+  }
+  if (gc) std::cerr << "  move segment end (" << type0 << "): " << gc << "\n";
+}
+
+/********************************************************************/
+
+void
+vmap_rem_dups(VMap2 & vmap, const std::string & type, double r){
+  size_t gcp=0, gcs=0;
+  for (const auto id: vmap.find(type)){
+    auto obj = vmap.get(id);
+
+    size_t cs=0, cp=0;
+    auto l = obj.begin();
+    while (l!=obj.end()) {
+
+      // remove short segments
+      if (l->size()<2) {
+        //std::cerr << "remove empty segment in " << id << "\n";
+        l=obj.erase(l);
+        cs++;
+        continue;
+      }
+      auto i = l->begin();
+      while (i+1 != l->end()){
+        if (geo_dist_2d(*i, *(i+1)) < r){
+          //std::cerr << "remove duplicated point in " << id << "\n";
+          i=l->erase(i);
+          cp++;
+        }
+        else i++;
+      }
+      l++;
+    }
+    if (cs || cp){
+      if (obj.size()) vmap.put(id, obj);
+      else vmap.del(id);
+    }
+    gcp+=cp;
+    gcs+=cs;
+  }
+  if (gcs) std::cerr << "  remove 1-point segments (" << type << "):  " << gcs << "\n";
+  if (gcp) std::cerr << "  remove duplicated points (" << type << "): " << gcp << "\n";
+}
+
+/********************************************************************/
+
+// Join objects with best matching angles (with min_ang limit)
+// (should be run after vmap_move_ends and vmap_rem_dups)
+void
+vmap_join(VMap2 & vmap, const std::string & type, double min_ang){
+
+  // fill main data structure, collect information about all line ends:
+  // point -> [object id - segment number - begin/end - direction]
+  struct inf {
+    size_t id, seg, end;
+    dPoint p1,p2;
+  };
+  std::multimap<iPoint, inf> data;
+  std::set<iPoint> keys;
+
+  size_t count=0;
+
+  //std::cerr << "  vmap_join (" << type << ")\n";
+  for (const auto id: vmap.find(type)){
+    auto obj = vmap.get(id);
+    for (size_t seg = 0; seg<obj.size(); ++seg){
+      if (obj[seg].size()<2) continue;
+      size_t N = obj[seg].size()-1;
+      data.emplace(obj[seg][0]*1e6, inf({id, seg, 0, obj[seg][0], obj[seg][1]}));
+      data.emplace(obj[seg][N]*1e6, inf({id, seg, 1, obj[seg][N], obj[seg][N-1]}));
+      keys.emplace(obj[seg][0]*1e6);
+      keys.emplace(obj[seg][N]*1e6);
+    }
+  }
+
+  for (const auto p: keys){
+    if (data.count(p)<2) continue;
+
+    // find pair of points with best direction match
+    auto range = data.equal_range(p);
+    double minc = 2.0; // min cos value
+    auto i1m(range.first), i2m(range.first);
+    for (auto i1 = range.first; i1 != range.second; ++i1){
+      for (auto i2 = range.first; i2 != i1; ++i2){
+        if (i1->second.id == i2->second.id) continue; // circular/short object
+        auto v1 = norm2d(i1->second.p2 - i1->second.p1);
+        auto v2 = norm2d(i2->second.p2 - i2->second.p1);
+        auto c = pscal2d(v1,v2);
+        if (c<minc) { minc=c; i1m=i1; i2m=i2; }
+      }
+    }
+    if (minc>1.0) continue;
+    if (acos(minc)<min_ang*M_PI/180.0) continue;
+
+    //std::cerr << " join " << i1m->second.id << " " << i2m->second.id
+    //          << " angle: " << acos(minc)*180/M_PI << "\n";
+
+    // join objects
+    auto A = i1m->second; // make copy (objects will be modified)
+    auto B = i2m->second;
+    auto O1 = vmap.get(A.id);
+    auto O2 = vmap.get(B.id);
+
+    if (A.end && !B.end)
+      O1[A.seg].insert(O1[A.seg].end(), O2[B.seg].begin()+1, O2[B.seg].end());
+    else if (A.end && B.end)
+      O1[A.seg].insert(O1[A.seg].end(), O2[B.seg].rbegin()+1, O2[B.seg].rend());
+    else if (!A.end && !B.end){
+      O1[A.seg].erase(O1[A.seg].begin());
+      O1[A.seg].insert(O1[A.seg].begin(), O2[B.seg].rbegin(), O2[B.seg].rend());
+    }
+    else if (!A.end && B.end){
+      O1[A.seg].erase(O1[A.seg].begin());
+      O1[A.seg].insert(O1[A.seg].begin(), O2[B.seg].begin(), O2[B.seg].end());
+    }
+
+    O2.erase(O2.begin()+B.seg);
+    if (O2.size()) vmap.put(B.id, O2);
+    else vmap.del(B.id);
+
+    vmap.put(A.id, O1);
+
+    // update data (we will never return to same point,
+    // but can meet other end of deleted segment of O2)
+    for (auto & d:data){
+      if (d.second.id==B.id && d.second.seg==B.seg){
+        //std::cerr << "  replace: " << B.id << " " << A.id << "\n";
+        d.second.id = A.id;
+        d.second.seg = A.seg;
+        d.second.end = A.end;
+      }
+    }
+    count++;
+  }
+  if (count) std::cerr << "  join segments (" << type << "): " << count << "\n";
+}

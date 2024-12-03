@@ -31,5 +31,24 @@ void do_filter_pts(VMap2 & map, const double D);
 // (Useful for updating map from a source (e.g. gpx) where names are missing.)
 void do_update_labels(VMap2 & map, const VMap2types & types, const bool label_names=false);
 
-// Crop map with a rectangleUpdate labels
+// Crop map with a rectangle
 void do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels);
+
+/************************************************************/
+// Additional functions, used for custom filters
+
+// For each object of <type> move object ends towards nearest point
+// or extend/reduce end segments to nearest segment of an object from <types>.
+void vmap_move_ends(VMap2 & vmap, const std::string & type0, const std::list<std::string> types, double r);
+
+// remove 0- and 1- point segments and duplicated points for a given type
+void vmap_rem_dups(VMap2 & vmap, const std::string & type, double r);
+
+// Join objects with best matching angles (with min_ang limit)
+// (should be used after after vmap_move_ends and vmap_rem_dups).
+// Differences with do_join_lines():
+//  - work with selected type
+//  - choose best angle
+//  - ignore object names, comments (can be lost!)
+// Written for merging mountain ranges
+void vmap_join(VMap2 & vmap, const std::string & type, double min_ang);
