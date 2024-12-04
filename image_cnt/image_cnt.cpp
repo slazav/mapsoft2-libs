@@ -318,7 +318,8 @@ image_cnt_vtol_filter(const ImageR & img,
     auto i1 = ml.begin();
     while (i1!=ml.end()){
       if (i1->size()<2 ||
-         (i1->size()==2 && dist(*i1->begin(),*i1->rbegin())<pt_acc))
+         (i1->size()==2 && dist(*i1->begin(),*i1->rbegin())<pt_acc) ||
+          i1->bbox().w * i1->bbox().h < 1.0) // collapsed contours
         i1=ml.erase(i1);
       else ++i1;
     }
