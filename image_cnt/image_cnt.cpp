@@ -305,7 +305,7 @@ image_cnt_vtol_filter(const ImageR & img,
           double sh = dist2d(p2n, *i2);
           if (sh>maxsh) maxsh=sh;
 
-          *i2 += tmin*(p4-*i2);
+          *i2 = p2n;
           i2->z = 0;
 
         }
