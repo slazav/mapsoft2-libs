@@ -14,10 +14,14 @@ std::map<double, dMultiLine> image_cnt(const ImageR & img,
           const double vmin, const double vmax, const double vstep,
           const bool closed);
 
-// Filter result of image_cnt with vertical tolerance vtol
-// (move lines within vertical tolerance vtol minimizing their length)
+// Filter result of image_cnt with vertical tolerance vtol and radius R.
+// It's line optimization (not too accurate and exact) which minimizes
+// both vertical distance from original contour (with vtol scale) and
+// maximizes curve radius with R scale (at radius R line will hit vtol limit).
+// There is an additional hard restriction which does not allow contour to
+// go beyond vtol limit.
 void image_cnt_vtol_filter(const ImageR & img,
-  std::map<double, dMultiLine> & lines, const double vtol=0.0);
+  std::map<double, dMultiLine> & lines, const double vtol=0.0, const double R=10.0);
 
 // Smooth image with a limited vertical change
 // - Smoothing is done using Gaussian weight with radius dr.

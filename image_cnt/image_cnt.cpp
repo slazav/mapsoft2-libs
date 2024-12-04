@@ -237,7 +237,7 @@ image_cnt(const ImageR & img,
 /********************************************************************/
 void
 image_cnt_vtol_filter(const ImageR & img,
-  std::map<double, dMultiLine> & ret, const double vtol){
+  std::map<double, dMultiLine> & ret, const double vtol, const double R){
 
   size_t w = img.width(), h = img.height();
 
@@ -246,40 +246,71 @@ image_cnt_vtol_filter(const ImageR & img,
     auto & ml = s.second;
 
     // Iteratively minimize line length.
-    if (vtol>0){
-      for (auto & l:ml){
-        if (l.size()<3) continue;
-        double maxsh = 2*pt_acc;
-        bool closed = dist(*l.begin(), *l.rbegin()) < pt_acc;
-        if (closed) l.resize(l.size()-1);
+    if (vtol<=0 || R<=0) continue;
 
-        while (maxsh > pt_acc/2){
-          maxsh = 0;
-          for (auto i1 = l.begin(); i1!=l.end(); i1++){
-            auto i2=i1+1;
-            auto i3=(i2!=l.end()) ? i2+1: i2;
+    for (auto & l:ml){
+      if (l.size()<3) continue;
+      double maxsh = 2*pt_acc;
+      bool closed = dist(*l.begin(), *l.rbegin()) < pt_acc;
+      if (closed) l.resize(l.size()-1);
 
-            if (closed){
-              if (i2 == l.end()) {i2 =l.begin(); i3 = i2+1;}
-              else if (i3 == l.end()) i3 = l.begin();
-            }
-            else if (i3 == l.end()) continue;
-            if (dist(*i1,*i2)>1.5 || dist(*i2,*i3)>1.5) continue;
+      int maxiter=100;
+      while (maxsh > pt_acc/2 && maxiter>0){
+        maxiter--;
+        maxsh = 0;
+        for (auto i1 = l.begin(); i1!=l.end(); i1++){
+          auto i2=i1+1;
+          auto i3=(i2!=l.end()) ? i2+1: i2;
 
-            // can we move i2?
-            dPoint p2 = (*i1+*i3)/2;
-            double v2 = img_int4(p2, img);
-            if (fabs(v2-v0) < vtol){
-              double sh = dist2d(p2, *i2);
-              if (sh>maxsh) maxsh=sh;
-              *i2 = p2;
-              i2->z = 0;
-            }
-
+          if (closed){
+            if (i2 == l.end()) {i2 =l.begin(); i3 = i2+1;}
+            else if (i3 == l.end()) i3 = l.begin();
           }
+          else if (i3 == l.end()) continue;
+
+          if (dist(*i1,*i2)>1.5 || dist(*i2,*i3)>1.5) continue;
+
+          // We have a triangle p1 p2 p3. with angle
+          // We can move p2 to p2n, towards p4 = (p1+p3)/2.
+          //   p2n = p2 + t*(p4-p2), with a parameter t.
+          // We assume that height v(p2n) changes linearly
+          //   v(t) = v(p2) + |p2n-p2|/|p4-p2| * (v(p4)-v(p2)).
+          //        = v(p2) + t*(v(p4)-v(p2))
+
+          // We minimize energy: potential energy + "tension".
+          // Potential energy is
+          //   Ep = ((v(t)-v0)/vtol)^2, it is 0 at v0 and 1 at v0+vtol
+          // There are a few ways how we can introduce "tension":
+          //   Et = -(p1-p2n)/|p1-p2n| * (p2n-p3)/|p2n-p3| -- minimize angle
+          //   Et = (|p2n-p1|+|p2n-p3|)/|p3-p1| -- minimize normilised length
+          //   Et = (|p2n-p4|/|p3-p1| * R/|p3-p1|)^2 -- minimize normalised distance between p2n and p4
+          // The third one is the most convenient.
+          // Total energy:
+          //   E(t) = (A + B*t)^2 + C*(1-t)^2
+          //   with A = (v(p2)-v0)/vtol, B = (v(p4)-v(p2))/vtol
+          //        C = R^2*|p2-p4|^2/|p3-p1|^4
+
+          dPoint p4 = (*i1+*i3)/2;
+          double A = (img_int4(*i2, img) - v0)/vtol;
+          double B = (img_int4(p4, img) - v0)/vtol;
+          double C = pow(2,R) * pscal(*i2-p4, *i2-p4) / (pow,pscal(*i3-*i1, *i3-*i1),2);
+
+          // Minimization gives:
+          double tmin = (fabs(C+B*B)>1e-4)? (C-A*B)/(C+B*B) : 0;
+          dPoint p2n = *i2 + tmin*(p4-*i2);
+
+          // hard limit: we can't go beyond vtol
+          if (fabs(img_int4(p2n, img) - v0) > vtol) continue;
+
+          double sh = dist2d(p2n, *i2);
+          if (sh>maxsh) maxsh=sh;
+
+          *i2 += tmin*(p4-*i2);
+          i2->z = 0;
+
         }
-        if (closed) l.push_back(*l.begin());
       }
+      if (closed) l.push_back(*l.begin());
     }
 
     // remove empty
