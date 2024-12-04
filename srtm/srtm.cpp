@@ -484,24 +484,20 @@ SRTM::get_color(const dPoint & p, bool raw) {
 /************************************************/
 
 std::map<double, dMultiLine>
-SRTM::find_contours(const dRect & range, double step, double vtol,
-    double smooth_dh, double smooth_dr){
+SRTM::find_contours(const dRect & range, double step, double vtol, double R){
 
   // Extract altitudes for the whole range, make image
   dPoint blc, d;
   ImageR img = get_img(range, blc, d);
 
-  if (smooth_dh>0 && smooth_dr>0)
-    img = image_smooth_lim(img, smooth_dh, smooth_dr);
   auto ret = image_cnt(img, NAN, NAN, step, 0);
-  if (vtol>0) image_cnt_vtol_filter(img, ret, vtol);
+  if (vtol>0 && R>0) image_cnt_vtol_filter(img, ret, vtol);
   for (auto & r:ret) r.second = blc + r.second*d;
   return ret;
 }
 
 dMultiLine
-SRTM::find_slope_contours(const dRect & range, double val,
-    double vtol, double smooth_dh, double smooth_dr){
+SRTM::find_slope_contours(const dRect & range, double val, double vtol, double R){
 
   dPoint d = get_step(range.cnt());
 
@@ -521,10 +517,8 @@ SRTM::find_slope_contours(const dRect & range, double val,
     }
   }
 
-  if (smooth_dh>0 && smooth_dr>0)
-    img = image_smooth_lim(img, smooth_dh, smooth_dr);
   auto ret = image_cnt(img, val, val, 1.0, 1);
-  if (vtol>0) image_cnt_vtol_filter(img, ret, vtol);
+  if (vtol>0 && R>0) image_cnt_vtol_filter(img, ret, vtol, R);
 
   if (ret.size()==0) return dMultiLine();
 

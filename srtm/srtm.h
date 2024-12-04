@@ -197,18 +197,16 @@ class SRTM {
     /******************************/
 
     // make vector data: contours
-    // vtol - smooth lines with vertical tolerance vtol (in meters)
-    // rdp  - apply Ramer-Douglas-Peucker algorithm with tolerance rdp (in DEM grid units)
-    // smooth_dh, smooth_dr -- smooth image before countour finding, with radius dr and hight limit dh
-    std::map<double, dMultiLine> find_contours(const dRect & range, double step,
-      double vtol = 0.0, double smooth_dh = 0.0, double smooth_dr = 0.0);
+    // vtol, R - smooth lines with vertical tolerance vtol (in meters) and radius R (in srtm grid units),
+    // see image_cnt_vtol_filter function in image_cnt module.
+    // if vtol or R is zero, no smoothing is done
+    std::map<double, dMultiLine> find_contours(const dRect & range, double step, double vtol = 0.0, double R = 0.0);
 
     // make vector data: slope contours
-    // vtol - smooth lines with vertical tolerance vtol (in meters)
-    // rdp  - apply Ramer-Douglas-Peucker algorithm with tolerance rdp (in DEM grid units)
-    // smooth_dh, smooth_dr -- smooth image before countour finding, with radius dr and hight limit dh
-    dMultiLine find_slope_contours(const dRect & range, double val,
-      double vtol = 0.0, double smooth_dh = 0.0, double smooth_dr = 0.0);
+    // vtol, R - smooth lines with vertical tolerance vtol (in meters) and radius R (in srtm grid units),
+    // see image_cnt_vtol_filter function in image_cnt module.
+    // if vtol or R is zero, no smoothing is done
+    dMultiLine find_slope_contours(const dRect & range, double val, double vtol = 0.0, double R = 0.0);
 
     // make vector data: peaks
     dLine find_peaks(const dRect & range, double DH, size_t PS=0, double minh=NAN);
