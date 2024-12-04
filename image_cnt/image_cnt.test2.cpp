@@ -6,6 +6,7 @@
 #include "image/io.h"
 #include "cairo/cairo_wrapper.h"
 #include "rainbow/rainbow.h"
+#include "geom/poly_tools.h"
 
 /*
   - use test_dem.tif profile
@@ -29,6 +30,7 @@ main(){
     double cmin=0, cmax=3000; // min/max value for the color image
 
     double vtol = 5; // tolerance for contour filtering
+    double rr = 10;   // radius for contour filtering
     bool closed = 1;    // produce closed/open contours
 
     ImageR img = image_load("test_dem.tif");
@@ -68,12 +70,13 @@ main(){
     cr->set_line_width(3);
     cr->stroke();
 
+
     // draw tolerances
-    ret = image_cnt(img, vmin-vtol, vmax, step, closed);
-    for (const auto & l:ret)
+    auto ret1 = image_cnt(img, vmin-vtol, vmax, step, closed);
+    for (const auto & l:ret1)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
-    ret = image_cnt(img, vmin+vtol, vmax, step, closed);
-    for (const auto & l:ret)
+    ret1 = image_cnt(img, vmin+vtol, vmax, step, closed);
+    for (const auto & l:ret1)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
     cr->cap_round();
     cr->set_line_width(1);
@@ -81,7 +84,9 @@ main(){
     cr->stroke();
 
     // line filtering
-    image_cnt_vtol_filter(img, ret, vtol);
+    image_cnt_vtol_filter(img, ret, vtol, rr);
+    for (auto & l:ret)
+      line_filter_rdp(l.second, 0.2);
 
     for (const auto & l:ret)
       cr->mkpath_smline((double)mult*l.second, 0, 0);
