@@ -172,16 +172,16 @@ GObjMaps::render_tile(const dRect & draw_range) {
 
     bool draw_map = d.scale*pow(2,d.zoom) >= minsc &&
                     d.scale*pow(2,d.zoom) <= maxsc;
-
     // tiled map
     if (d.src->is_tiled && draw_map)
       image_src = d.timg.get();
 
     // non-tiled maps
-    if (!d.src->is_tiled && draw_map)
+    if (!d.src->is_tiled && draw_map){
       imageR_src = img_cache.get(d.src->image, d.load_sc);
+      if (imageR_src.is_empty()) continue;
+    }
 
-    if (imageR_src.is_empty()) continue;
     double avr = d.scale/d.load_sc;
 
     // Simplify map-to-map conversion if possible.
