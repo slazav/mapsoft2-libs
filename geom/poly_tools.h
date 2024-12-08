@@ -594,6 +594,7 @@ void line_filter_rdp(Line<CT,PT> & line, double e,
             double (*dist_func)(const PT &, const PT &) = NULL,
             int ind1=0, int ind2=-1){
 
+  if (line.size()<2) return;
 
   // check indices
   if (ind2<0) ind2 = line.size()-1;
