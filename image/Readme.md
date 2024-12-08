@@ -262,7 +262,7 @@ Supported TIFF types for saving:
 
 ### tiled images (image_t.h)
 
-TODO
+See modules/image_tiles
 
 ### tiled TIFF
 

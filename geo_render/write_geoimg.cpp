@@ -3,7 +3,7 @@
 #include "geo_data/geo_io.h"
 #include "geo_data/conv_geo.h"
 #include "write_geoimg.h"
-#include "image/image_t.h"       // ImageT::make_url
+#include "image_tiles/image_tiles.h" // ImageT::make_url
 #include "image/image_colors.h"
 #include "geo_mkref/geo_mkref.h" // for tiled maps
 #include "geom/poly_tools.h"     // for rect_in_polygon

@@ -1,7 +1,7 @@
 #include <sstream>
 #include "geo_tiles/quadkey.h"
-#include "io.h"
-#include "image_t.h"
+#include "image/io.h"
+#include "image_tiles.h"
 
 std::string
 ImageT::make_url(const std::string& tmpl, const iPoint & key){

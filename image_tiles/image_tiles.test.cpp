@@ -1,7 +1,7 @@
 ///\cond HIDDEN (do not show this in Doxyden)
 
 #include <iostream>
-#include "image_t.h"
+#include "image_tiles.h"
 #include "err/assert_err.h"
 
 int

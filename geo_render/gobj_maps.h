@@ -8,7 +8,7 @@
 #include "geom/poly_tools.h"
 #include "cache/cache.h"
 #include "image/image_cache.h"
-#include "image/image_t.h"
+#include "image_tiles/image_tiles.h"
 #include "opt/opt.h"
 #include "viewer/gobj.h"
 

@@ -1,13 +1,12 @@
-#ifndef IMAGE_T_H
-#define IMAGE_T_H
+#ifndef IMAGE_TILES_H
+#define IMAGE_TILES_H
 
 #include <sstream>
 #include "downloader/downloader.h"
 #include "cache/cache.h"
 #include "geo_tiles/quadkey.h"
-#include "image.h"
-#include "image_r.h"
-#include "io.h"
+#include "image/image.h"
+#include "image/image_r.h"
 
 /*
 Read only access to a tiled image.
@@ -63,7 +62,7 @@ class ImageT: public Image {
     // Set options, now it's only Downloader options
     void set_opt(const Opt & opt) {dmanager.set_opt(opt);}
 
-    // Make url from a template - replace {x} by key.x, {y} by key.y, {z} by 
+    // Make url from a template - replace {x} by key.x, {y} by key.y, etc.
     static std::string make_url(const std::string& tmpl, const iPoint & key);
 
     // set zoom level
