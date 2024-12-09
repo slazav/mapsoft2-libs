@@ -6,6 +6,7 @@
 #include "opt/opt.h"
 #include "cache/cache.h"
 #include "geom/rect.h"
+#include "geom/multiline.h"
 #include "image/image.h"
 #include "image/image_r.h"
 #include "filename/filename.h"
@@ -52,6 +53,12 @@ class ImageMBTiles: public Image {
     // Same with iPoint key
     void put_tile(const iPoint & p, const ImageR img) {put_tile(p.x, p.y, p.z, img);}
 
+    // Delete x-y-z tile
+    void del_tile(const size_t x, const size_t y, const size_t z);
+
+    // Same with iPoint key
+    void del_tile(const iPoint & p) {del_tile(p.x, p.y, p.z);}
+
     // list of all tiles at the zoom level z
     std::vector<iPoint> tile_list(const int z);
 
@@ -76,6 +83,9 @@ class ImageMBTiles: public Image {
     // Update minzoom, maxzoom, center and bounds value in the metadata table
     // Run this after adding tiles
     void update_bounds();
+
+    // remove tiles outside border
+    void crop(const dMultiLine & brd);
 
     /****************************************************************/
     // Image interface

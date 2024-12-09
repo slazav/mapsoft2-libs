@@ -1,6 +1,7 @@
 #include <sstream>
 #include "image_mbtiles.h"
 #include "geo_tiles/geo_tiles.h"
+#include "geom/poly_tools.h"
 #include "filename/filename.h"
 #include "image/io.h"
 #include "image/io_png.h"
@@ -172,6 +173,18 @@ ImageMBTiles::get_tile(const size_t x, const size_t y, const size_t z) const {
   return image_load(str);
 }
 
+void
+ImageMBTiles::del_tile(const size_t x, const size_t y, const size_t z){
+  if (readonly) throw Err() << "can't write to read-only database";
+
+  auto stmt = stmt_tile_del.get();
+  sqlite3_reset(stmt);
+  sql_bind_int(stmt, 1, x);
+  sql_bind_int(stmt, 2, y);
+  sql_bind_int(stmt, 3, z);
+  sql_run_simple(stmt);
+}
+
 std::vector<iPoint>
 ImageMBTiles::tile_list(const int z){
   auto stmt = stmt_tile_lst.get();
@@ -318,4 +331,15 @@ ImageMBTiles::update_bounds() {
   set_metadata("center", s2.str());
   set_metadata("minzoom", type_to_str(minz));
   set_metadata("maxzoom", type_to_str(maxz));
+}
+
+void
+ImageMBTiles::crop(const dMultiLine & brd) {
+  const GeoTiles tcalc(tsize);
+  for (int z=min_zoom(); z<=max_zoom(); ++z){
+    for (auto tile:tile_list(z)){
+      dRect trange = tcalc.gtile_to_range(tile, z);
+      if (brd.size() && rect_in_polygon(trange, brd) == 0) del_tile(tile);
+    }
+  }
 }
