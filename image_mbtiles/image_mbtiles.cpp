@@ -288,8 +288,8 @@ ImageMBTiles::wgs_bounds(const int z) const {
   const int tsize = 256;
   const GeoTiles tcalc(tsize);
   iRect r = tile_bounds(z);
-  iPoint p1 = tcalc.tile_gtile(r.tlc(),z)*tsize;
-  iPoint p2 = tcalc.tile_gtile(r.brc(),z)*tsize;
+  iPoint p1 = r.tlc()*tsize;
+  iPoint p2 = r.brc()*tsize;
   return dRect(
     tcalc.m_to_ll(tcalc.px_to_m(p1, z)),
     tcalc.m_to_ll(tcalc.px_to_m(p2, z))
@@ -338,7 +338,7 @@ ImageMBTiles::crop(const dMultiLine & brd) {
   const GeoTiles tcalc(tsize);
   for (int z=min_zoom(); z<=max_zoom(); ++z){
     for (auto tile:tile_list(z)){
-      dRect trange = tcalc.gtile_to_range(tile, z);
+      dRect trange = tcalc.tile_to_range(tile, z);
       if (brd.size() && rect_in_polygon(trange, brd) == 0) del_tile(tile);
     }
   }

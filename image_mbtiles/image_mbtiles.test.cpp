@@ -36,21 +36,21 @@ main(){
       img.fill32(0xFFFF0000);
       img.set32(128,128,0xFF00FF00);
 
-      db.put_tile(5741,3156,13, img);
+      db.put_tile(5741,5035,13, img);
 
       ImageR img1 = db.get_tile(1001,1000,10);
       assert_eq(img1.is_empty(), true);
 
-      ImageR img2 = db.get_tile(5741,3156,13);
+      ImageR img2 = db.get_tile(5741,5035,13);
       assert_eq(img2.is_empty(), false);
       assert_eq(img2.get32(0,0), 0xFFFF0000);
       assert_eq(img2.get32(128,128), 0xFF00FF00);
 
       // get_argb
       db.set_zoom(13);
-      assert_eq(db.get_argb(5741*256, 3156*256), 0xFFFF0000);
-      assert_eq(db.get_argb(5741*256+128, 3156*256+128), 0xFF00FF00);
-      assert_eq(db.get_argb(5740*256, 3156*256), 0);
+      assert_eq(db.get_argb(5741*256, 5035*256), 0xFFFF0000);
+      assert_eq(db.get_argb(5741*256+128, 5035*256+128), 0xFF00FF00);
+      assert_eq(db.get_argb(5740*256, 5035*256), 0);
       assert_eq(db.get_argb(0,0), 0);
 
 
@@ -65,13 +65,13 @@ main(){
       assert_eq(db.max_zoom(), 13);
 
       assert_eq(db.tile_bounds(9), iRect());
-      assert_eq(db.tile_bounds(13), iRect(5741,3156,1,1));
-      assert_deq(db.wgs_bounds(), dRect(dPoint(72.29,38.0654),dPoint(72.334,38.1)), 1e-4);
+      assert_eq(db.tile_bounds(13), iRect(5741,5035,1,1));
+      assert_deq(db.wgs_bounds(), dRect(72.2900391,38.0999826,0.0439453125,0.0345739297), 1e-6);
 
       // update bounds
       db.update_bounds();
-      assert_eq(db.get_metadata("bounds"), "72.29,38.0654,72.334,38.1");
-      assert_eq(db.get_metadata("center"), "72.312,38.0827");
+      assert_eq(db.get_metadata("bounds"), "72.29,38.1,72.334,38.1346");
+      assert_eq(db.get_metadata("center"), "72.312,38.1173");
       assert_eq(db.get_metadata("maxzoom"), "13");
       assert_eq(db.get_metadata("minzoom"), "13");
 
@@ -81,7 +81,7 @@ main(){
 
       auto lst13 = db.tile_list(13);
       assert_eq(lst13.size(), 1);
-      assert_eq(lst13[0], iPoint(5741,3156,13));
+      assert_eq(lst13[0], iPoint(5741,5035,13));
 
     }
 
@@ -109,7 +109,7 @@ main(){
 
       // try to change information
       assert_err(db.set_metadata("maxzoom", "18"), "can't write to read-only database");
-      assert_err(db.put_tile(5741,3156,13,ImageR()), "can't write to read-only database");
+      assert_err(db.put_tile(5741,5035,13,ImageR()), "can't write to read-only database");
 
       // check updated fields
       assert_eq(db.get_metadata("maxzoom"), "15");
