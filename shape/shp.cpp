@@ -85,8 +85,6 @@ Shp::Impl::Impl(const char *fbase, bool create, int t){
     double mmin[4], mmax[4];
     SHPGetInfo((SHPHandle)shp.get(), &num, &type, mmin, mmax);
     type = sh2type(type);
-    if (type!=t) throw Err() <<
-      "Shp: wrong shapefile type: " << t;
   }
 }
 
