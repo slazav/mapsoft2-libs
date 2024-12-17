@@ -28,6 +28,15 @@ class Dbf{
     // ' ' (field out of range).
     char field_type(int fid) const;
 
+    // Get field name
+    std::string field_name(int fid) const;
+
+    // Get width of the field
+    int field_width(int fid) const;
+
+    // Get number of decimal places of the field
+    int field_decimals(int fid) const;
+
     // find field ID ny name (-1 if not found)
     int field_find(const char * name) const;
 

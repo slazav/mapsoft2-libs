@@ -16,6 +16,9 @@ public:
   int nfields() const;
   int nrecords() const;
   char field_type(int id) const;
+  std::string field_name(int fid) const;
+  int field_width(int fid) const;
+  int field_decimals(int fid) const;
   int field_find(const char * name) const;
   int add_str_field(const char *name, int size);
   bool put_str(int id, int fid, const char * val);
@@ -35,7 +38,16 @@ int
 Dbf::nrecords() const {return impl->nrecords();}
 
 char
-Dbf::field_type(int id) const {return impl->field_type(id);}
+Dbf::field_type(int fid) const {return impl->field_type(fid);}
+
+std::string
+Dbf::field_name(int fid) const {return impl->field_name(fid);}
+
+int
+Dbf::field_width(int fid) const {return impl->field_width(fid);}
+
+int
+Dbf::field_decimals(int fid) const {return impl->field_decimals(fid);}
 
 int
 Dbf::field_find(const char * name) const {
@@ -84,6 +96,33 @@ Dbf::Impl::nrecords() const {
 char
 Dbf::Impl::field_type(int fid) const {
   return DBFGetNativeFieldType((DBFHandle)dbf.get(), fid);
+}
+
+std::string
+Dbf::Impl::field_name(int fid) const {
+  char fname[12];
+  int fwidth, fdec;
+  DBFGetFieldInfo((DBFHandle)dbf.get(), fid,
+    fname, &fwidth, &fdec);
+  return std::string(fname);
+}
+
+int
+Dbf::Impl::field_width(int fid) const {
+  char fname[12];
+  int fwidth, fdec;
+  DBFGetFieldInfo((DBFHandle)dbf.get(), fid,
+    fname, &fwidth, &fdec);
+  return fwidth;
+}
+
+int
+Dbf::Impl::field_decimals(int fid) const {
+  char fname[12];
+  int fwidth, fdec;
+  DBFGetFieldInfo((DBFHandle)dbf.get(), fid,
+    fname, &fwidth, &fdec);
+  return fdec;
 }
 
 int
