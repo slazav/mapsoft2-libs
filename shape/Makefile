@@ -4,4 +4,6 @@ MOD_SOURCES := shp.cpp dbf.cpp
 SIMPLE_TESTS := shp dbf
 PKG_CONFIG := shapelib
 
+PROGRAMS := shape_dump
+
 include ../Makefile.inc
