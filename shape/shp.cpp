@@ -120,12 +120,27 @@ Shp::Impl::get(const int id) {
   dMultiLine ret;
   SHPObject *o = SHPReadObject((SHPHandle)shp.get(), id);
   if (o==NULL) throw Err() << "Shp: can't read object: " << id;
-  for (int p = 0; p<o->nParts; p++){
+
+  // if o->nParts == 0 it means 1 part with no panPartStart info!
+  if (o->nParts == 0){
     dLine l;
-    int j1 = o->panPartStart[p];
-    int j2 = (p==o->nParts-1 ? o->nVertices : o->panPartStart[p+1]);
-    for (int j=j1; j<j2; j++) l.push_back(dPoint(o->padfX[j],o->padfY[j]));
+    for (int j=0; j<o->nVertices; j++)
+      l.push_back(dPoint(o->padfX[j],o->padfY[j]));
     ret.push_back(l);
+  }
+  else {
+    for (int p = 0; p<o->nParts; p++){
+      dLine l;
+      // I do not undersand, can it have points before part 0
+      // (note the strange trick that both nParts=0 and nParts=1 mean one part!).
+      // Let's have a warning message for safety
+      if (p==0 && o->panPartStart[p] != 0)
+        std::cerr << ">>> points are missing - FIXME!";
+      int j1 = o->panPartStart[p];
+      int j2 = (p==o->nParts-1 ? o->nVertices : o->panPartStart[p+1]);
+      for (int j=j1; j<j2; j++) l.push_back(dPoint(o->padfX[j],o->padfY[j]));
+      ret.push_back(l);
+    }
   }
   SHPDestroyObject(o);
   return ret;
