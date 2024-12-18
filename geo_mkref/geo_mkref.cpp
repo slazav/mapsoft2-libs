@@ -5,6 +5,7 @@
 #include "geo_data/geo_io.h"
 #include "geo_tiles/geo_tiles.h"
 #include "geo_nom/geo_nom.h"
+#include "geo_nom/geo_nom_fi.h"
 #include "geo_data/geo_utils.h"
 #include "geom/multiline.h"
 #include "geom/poly_tools.h"
@@ -18,7 +19,7 @@ void
 ms2opt_add_mkref_opts(GetOptSet & opts){
   const char *g = "MKREF_OPTS";
   opts.add("mkref", 1,0,g,
-    "Choose map type (nom, google_tile, tms_tile, proj)");
+    "Choose map type (nom, nom_fi, google_tile, tms_tile, proj)");
   opts.add("name", 1,0,g,
     "Set map name. For --mkref=\"nom\" it should contain a "
     "valid Soviet nomenclature name. For --mkref=\"file\" it should contain map-file name.");
@@ -199,6 +200,69 @@ geo_mkref_opts(const Opt & o){
     map.add_ref(pts_r, pts_w);
 
   }
+
+  /***************************************/
+  else if (reftype == "nom_fi"){
+
+    // map name
+    map.name = o.get("name",string());
+    if (map.name == "")
+      throw Err() << "geo_mkref: nomenclature name should be set (name option)";
+
+    // Map range (in ETRS-TM35FIN meters)
+    dRect R = nom_to_range_fi(map.name);
+
+    // map projection
+    map.proj = "ETRS-TM35FIN";
+
+    // conversion map -> wgs84
+    ConvGeo cnv(map.proj);
+
+    // map resolution
+    map.image_dpi = o.get<double>("dpi",300.0);
+    double mag = o.get<double>("mag",1.0);
+
+    // factor (map coordinates (m))/(map point)
+    double k = 100000.0 * 25.4e-3/*m/in*/ /mag / map.image_dpi;
+    cnv.rescale_src(k); // now cnv1: map points -> pulkovo
+
+    // image size
+    iRect image_bbox = R/k;
+
+    // Border in map points (1pt accuracy);
+    // We convert a closed line, then removing the last point.
+    dLine brd = rect_to_line(image_bbox);
+
+    // Refpoints:
+    dLine pts_r = rect_to_line(image_bbox, false);
+    dLine pts_w = pts_r;
+    cnv.frw(pts_w);  // map points -> wgs
+
+    // margins
+    int mt,ml,mr,mb;
+    mt=ml=mr=mb=o.get("margins", 0);
+    mt=o.get("top_margin", mt);
+    ml=o.get("left_margin", ml);
+    mr=o.get("right_margin", mr);
+    mb=o.get("bottom_margin", mb);
+    image_bbox = iRect(image_bbox.x-ml, image_bbox.y-mb,
+                       image_bbox.w+ml+mr, image_bbox.h+mt+mb);
+
+    brd -= image_bbox.tlc();
+    pts_r -= image_bbox.tlc();
+    brd.flip_y(image_bbox.h);
+    pts_r.flip_y(image_bbox.h);
+    map.image_size = iPoint(image_bbox.w, image_bbox.h);
+
+    // Add map border:
+    map.border.push_back(brd);
+
+    // Add refpoints:
+    map.add_ref(pts_r, pts_w);
+
+  }
+
+
 
   /***************************************/
   else if (reftype == "tms_tile" || reftype == "google_tile"){

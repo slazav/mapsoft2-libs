@@ -39,6 +39,25 @@ main(){
         "[2582,99],[36.4979852,55.9998413]]"), 1e-6);
     }
 
+    { // nomenclature finnish map with margins
+      Opt o = Opt("{\"mkref\":\"nom_fi\", \"name\":\"v52\", \"dpi\":\"200\"}");
+
+      GeoMap map = geo_mkref_opts(o);
+      assert_eq(map.name, "v52");
+      assert_eq(map.proj, "ETRS-TM35FIN");
+      assert_eq(map.image_dpi, 200);
+      assert_eq(map.image_size, iPoint(7559,3779));  // 96x48cm / 2.54 * dpi
+      assert_eq((iMultiLine)map.border, iMultiLine(
+        "[[[0,3779],[7559,3779],[7559,0],[0,0],[0,3779]]]"));
+      dLine l;
+      for (auto & r:map.ref) {l.push_back(r.first); l.push_back(r.second);}
+      assert_deq(l, dLine(
+        "[[0,0],[26.9999753,68.7454733],"
+        "[0,3779],[26.9999757,68.3150335],"
+        "[7559,0],[29.3716246,68.7288655],"
+        "[7559,3779],[29.3268414,68.2987865]]"), 1e-6);
+    }
+
     { // nomenclature map with margins
       Opt o = Opt("{\"mkref\":\"nom\", \"name\":\"n37-001\", \"dpi\":\"100\","
                   "\"margins\": \"100\", \"top_margin\": \"200\" }");
