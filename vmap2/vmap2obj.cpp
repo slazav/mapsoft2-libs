@@ -142,12 +142,12 @@ VMap2obj::read(std::istream & s) {
 /**********************************************************/
 
 uint32_t
-VMap2obj::make_type(const uint16_t cl, const uint16_t tnum){
+VMap2obj::make_type(const uint16_t cl, const uint32_t tnum){
   switch (cl){
     case VMAP2_POINT:   return  tnum;
-    case VMAP2_LINE:    return (1<<24) | tnum;
-    case VMAP2_POLYGON: return (2<<24) | tnum;
-    case VMAP2_TEXT:    return (3<<24) | tnum;
+    case VMAP2_LINE:    return (1<<24) | (tnum & 0xFFFFFF);
+    case VMAP2_POLYGON: return (2<<24) | (tnum & 0xFFFFFF);
+    case VMAP2_TEXT:    return (3<<24) | (tnum & 0xFFFFFF);
     case VMAP2_NONE:    return 0xFFFFFFFF;
     default: throw Err() << "unknown object class: " << cl;
   }
@@ -161,7 +161,7 @@ VMap2obj::make_type(const std::string & s){
     size_t n = s.find(':');
     if (n==std::string::npos) throw Err() << "':' separator not found";
     int tnum = str_to_type<int>(s.substr(n+1));
-    if (tnum>0xFFFF) throw Err() << "too large number";
+    if (tnum>0xFFFFFF) throw Err() << "too large number";
     if (s.substr(0,n) == "point") return make_type(VMAP2_POINT,   tnum);
     if (s.substr(0,n) == "line")  return make_type(VMAP2_LINE,    tnum);
     if (s.substr(0,n) == "area")  return make_type(VMAP2_POLYGON, tnum);
@@ -186,7 +186,7 @@ VMap2obj::print_type(const uint32_t t){
     case 0xFF: return "none";
     default: s << "unknown:";
   }
-  s << "0x" << std::hex << (t&0xFFFF);
+  s << "0x" << std::hex << (t&0xFFFFFF);
   return s.str();
 }
 

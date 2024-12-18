@@ -21,6 +21,8 @@ main(){
       assert_eq(VMap2obj::make_type("point:0xFFFF"), 0xFFFF);
       assert_eq(VMap2obj::make_type("line:0xFFFF"),  0x100FFFF);
       assert_eq(VMap2obj::make_type("area:0xFFFF"),  0x200FFFF);
+      assert_eq(VMap2obj::make_type("line:0xFFFFFF"),  0x1FFFFFF);
+      assert_eq(VMap2obj::make_type("area:0xFFFFFF"),  0x2FFFFFF);
 
       assert_eq(VMap2obj::make_type("point:123"), 123);
 
@@ -29,7 +31,7 @@ main(){
       assert_err(VMap2obj::make_type("a"), "can't parse VMAP2 object type \"a\": ':' separator not found");
       assert_err(VMap2obj::make_type("point:"), "can't parse VMAP2 object type \"point:\": can't parse value: \"\"");
       assert_err(VMap2obj::make_type("point:a"), "can't parse VMAP2 object type \"point:a\": can't parse value: \"a\"");
-      assert_err(VMap2obj::make_type("point:0xFFFFFF"), "can't parse VMAP2 object type \"point:0xFFFFFF\": too large number");
+      assert_err(VMap2obj::make_type("point:0x1FFFFFF"), "can't parse VMAP2 object type \"point:0x1FFFFFF\": too large number");
       assert_err(VMap2obj::make_type("abc:0xFFFF"), "can't parse VMAP2 object type \"abc:0xFFFF\": point, line, area, or text word expected");
 
       assert_eq(VMap2obj::print_type(0x123), "point:0x123");
@@ -38,8 +40,10 @@ main(){
       assert_eq(VMap2obj::print_type(0x300FFFF), "text:0xffff");
       assert_eq(VMap2obj::print_type(0x400FFFF), "unknown:0xffff");
 
-      assert_eq(VMap2obj::print_type(0x312FFFF), "text:0xffff");
-      assert_eq(VMap2obj::print_type(0x412FFFF), "unknown:0xffff");
+      assert_eq(VMap2obj::print_type(0x312FFFF), "text:0x12ffff");
+      assert_eq(VMap2obj::print_type(0x412FFFF), "unknown:0x12ffff");
+      assert_eq(VMap2obj::print_type(0xEFFFFFFF), "unknown:0xffffff");
+      assert_eq(VMap2obj::print_type(0xFFFFFFFF), "none");
 
 
     }

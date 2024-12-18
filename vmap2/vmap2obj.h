@@ -60,7 +60,8 @@ struct VMap2obj: public dMultiLine {
   // object type is assembled from following parts:
   // - first byte: object classification (VMap2objClass)
   // - second byte: reserved;
-  // - two last bytes: type number (= MP type)
+  // - three last bytes: type number
+  //   note that type in MP format has only two bytes
   uint32_t        type;
   float           angle;   // object angle, CW, deg, (default is NaN)
   float           scale;   // object scale (default is 1.0)
@@ -81,16 +82,16 @@ struct VMap2obj: public dMultiLine {
   // type and ref_type operations:
 
   // assemble object type:
-  static uint32_t make_type(const uint16_t cl, const uint16_t tnum);
+  static uint32_t make_type(const uint16_t cl, const uint32_t tnum);
 
   // parse object type from string (point|line|area|text):<number>
   static uint32_t make_type(const std::string & s);
 
   // set object type
-  void set_type(const uint16_t cl, const uint16_t tnum){ type = make_type(cl, tnum);}
+  void set_type(const uint16_t cl, const uint32_t tnum){ type = make_type(cl, tnum);}
 
   // set object ref_type
-  void set_ref_type(const uint16_t cl, const uint16_t tnum){ ref_type = make_type(cl, tnum);}
+  void set_ref_type(const uint16_t cl, const uint32_t tnum){ ref_type = make_type(cl, tnum);}
 
   // set object type from string
   void set_type(const std::string & s) {type = make_type(s);}
@@ -114,17 +115,17 @@ struct VMap2obj: public dMultiLine {
 
 
   // get type number for type t
-  static uint16_t get_tnum(const uint32_t t) {return t & 0xFFFF;}
+  static uint32_t get_tnum(const uint32_t t) {return t & 0xFFFFFF;}
 
   // get object type number
-  uint16_t get_tnum() const {return get_tnum(type);}
+  uint32_t get_tnum() const {return get_tnum(type);}
 
   // get ref_type type number
-  uint16_t get_ref_tnum() const {return get_tnum(ref_type);}
+  uint32_t get_ref_tnum() const {return get_tnum(ref_type);}
 
   /***********************************************/
 
-  VMap2obj(const uint16_t cl, const uint16_t tnum): VMap2obj(make_type(cl,tnum)) {}
+  VMap2obj(const uint16_t cl, const uint32_t tnum): VMap2obj(make_type(cl,tnum)) {}
   VMap2obj(const std::string & s): VMap2obj(make_type(s)) { }
 
   /***********************************************/
