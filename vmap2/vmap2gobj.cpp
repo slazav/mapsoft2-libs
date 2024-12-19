@@ -164,6 +164,15 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
           o.put("dpi", vs[3]);
           r = geo_mkref_opts(o);
         }
+        else if (vs[1] == "nom_fi") {
+          if (vs.size()!=4) throw Err()
+            << "wrong number of arguments: " << vs[0] << " nom <name> <dpi>";
+          Opt o;
+          o.put("mkref", "nom_fi");
+          o.put("name", vs[2]);
+          o.put("dpi", vs[3]);
+          r = geo_mkref_opts(o);
+        }
         else if (vs[1] == "none") {
           if (vs.size()!=2) throw Err()
             << "wrong number of arguments: " << vs[0] << " none";
