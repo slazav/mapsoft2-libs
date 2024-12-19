@@ -36,10 +36,15 @@ ConvBase::frw_acc(const dLine & l, double acc) const {
       frw(C2x); frw(C2y); frw(C2z);
 
       // accuracy in destination units:
-      double acc_dst = std::max(std::max(dist(C1a,C2x),dist(C1a,C2y)),dist(C1a,C2z));
+      double acc_dstx = dist(C1a,C2x);
+      double acc_dsty = dist(C1a,C2y);
+      double acc_dstz = dist(C1a,C2z);
+      dPoint C1b = (P1a+P2a)/2.;
 
-      if ((dist(C1a, (P1a+P2a)/2.) < acc_dst) ||
-          (dist(P1,P2) < acc)){
+      if (((fabs(C1a.x-C1b.x) < acc_dstx) &&
+           (fabs(C1a.y-C1b.y) < acc_dsty) &&
+           (fabs(C1a.z-C1b.z) < acc_dstz) ) ||
+           (dist(P1,P2) < acc)){
         // go to the rest of line (P2-l[i])
         ret.push_back(P2a);
         P1 = P2;
