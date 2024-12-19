@@ -126,6 +126,7 @@ string convert_proj2ozi(const string & s){
   if (pr=="latlon") return "Latitude/Longitude";
   if (pr=="lonlat") return "Latitude/Longitude";
   if (pr=="tmerc")   return "Transverse Mercator";
+  if (pr=="utm")     return "Transverse Mercator";
   if (pr=="merc")    return "Mercator";
   if (pr=="webmerc") return "Mercator"; // not exact
   if (pr=="lcc")     return "Lambert Conformal Conic";
