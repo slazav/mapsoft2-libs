@@ -226,14 +226,14 @@ geo_mkref_opts(const Opt & o){
     double k = 100000.0 * 25.4e-3/*m/in*/ /mag / map.image_dpi;
     cnv.rescale_src(k); // now cnv1: map points -> meters
 
-    // image size
-    iRect image_bbox = R/k;
+    // image size (rounded)
+    iRect image_bbox = rint(R/k);
 
-    // Border in map points
-    dLine brd = rect_to_line(image_bbox);
+    // Border in map points (exact)
+    dLine brd = rect_to_line(R/k);
 
     // Refpoints:
-    dLine pts_r = rect_to_line(image_bbox, false);
+    dLine pts_r = rect_to_line(R/k, false);
     dLine pts_w = pts_r;
     cnv.frw(pts_w);  // map points -> wgs
 
