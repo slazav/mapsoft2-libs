@@ -224,13 +224,12 @@ geo_mkref_opts(const Opt & o){
 
     // factor (map coordinates (m))/(map point)
     double k = 100000.0 * 25.4e-3/*m/in*/ /mag / map.image_dpi;
-    cnv.rescale_src(k); // now cnv1: map points -> pulkovo
+    cnv.rescale_src(k); // now cnv1: map points -> meters
 
     // image size
     iRect image_bbox = R/k;
 
-    // Border in map points (1pt accuracy);
-    // We convert a closed line, then removing the last point.
+    // Border in map points
     dLine brd = rect_to_line(image_bbox);
 
     // Refpoints:
