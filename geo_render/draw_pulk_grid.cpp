@@ -155,4 +155,36 @@ draw_pulk_grid(const CairoWrapper & cr, const iPoint & origin,
   }
 }
 
+/************************************************************/
+void
+draw_fi_grid(const CairoWrapper & cr, const iPoint & origin,
+               ConvBase & cnv, const Opt & opt){
+
+  /* find wgs coordinate range and 6 degree zones */
+  dRect rng = cr.bbox() + origin;   // image range
+  dRect wgs_rng = cnv.frw_acc(rng); // image range -> wgs range
+
+  // drawing parameters
+  cr->set_color_a(opt.get("grid_color", 0x8000000));
+  cr->set_line_width(opt.get("grid_thick", 1.0));
+
+  double fs = opt.get("grid_text_size",  0.0);
+  if (fs>0)
+    cr->set_fc_font(opt.get("grid_text_color", 0xFF000000),
+                    opt.get("grid_text_font",  "serif:bold").c_str(), fs);
+
+  double step = opt.get("grid_step",  0.0);
+
+  // conversions and ranges
+  wgs_rng.intersect(dRect(19, 58, 32-19, 71-58));
+  if (wgs_rng.is_empty()) return;
+
+  ConvGeo cnv1("ETRS-TM35FIN");
+  dRect rng_grid = cnv1.bck_acc(wgs_rng); // wgs -> grid
+  ConvMulti cnv2(cnv, cnv1, 1,0); // screen -> grid
+
+  draw_grid_zone(cr, cnv2, origin, rng_grid, dLine(), step, fs>0);
+}
+
+
 

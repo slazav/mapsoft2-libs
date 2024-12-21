@@ -25,4 +25,8 @@ void
 draw_pulk_grid(const CairoWrapper & cr, const iPoint & origin,
                ConvBase & cnv, const Opt & opt);
 
+void
+draw_fi_grid(const CairoWrapper & cr, const iPoint & origin,
+             ConvBase & cnv, const Opt & opt);
+
 #endif
