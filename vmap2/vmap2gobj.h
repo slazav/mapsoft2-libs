@@ -70,6 +70,7 @@ where possible features are:
     name  <name>           -- set name for a drawing step
     pulk_grid <step> <color> <line width> -- draw Pulkovo-1942 grid
     fi_grid <step> <color> <line width> -- draw ETRS-TM35FIN grid (Finland)
+    grid_labels <size> <font> <color> -- draw grid labels
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.

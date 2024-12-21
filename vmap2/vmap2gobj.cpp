@@ -574,6 +574,16 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // grid_labels <size> <font> <color>
+      if (ftr == "grid_labels"){
+        st->check_type(STEP_DRAW_MAP);
+        st->check_args(vs, {"<size>", "<font>", "<color>"});
+        st->grid_opts["grid_text_size"] = vs[0];
+        st->grid_opts["grid_text_font"]  = vs[1];
+        st->grid_opts["grid_text_color"] = vs[2];
+        continue;
+      }
+
       // group <name>
       if (ftr == "group"){
         st->check_args(vs, {"<group>"});
