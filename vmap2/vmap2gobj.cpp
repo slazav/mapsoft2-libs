@@ -557,9 +557,20 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         st->check_type(STEP_DRAW_MAP);
         st->check_args(vs, {"<step>", "<color>", "<line width>"});
         st->do_pulk_grid = true;
-        st->pulk_grid_opts["grid_step"]  = vs[0];
-        st->pulk_grid_opts["grid_color"] = vs[1];
-        st->pulk_grid_opts["grid_thick"] = vs[2];
+        st->grid_opts["grid_step"]  = vs[0];
+        st->grid_opts["grid_color"] = vs[1];
+        st->grid_opts["grid_thick"] = vs[2];
+        continue;
+      }
+
+      // fi_grid <color> <line width>
+      if (ftr == "fi_grid"){
+        st->check_type(STEP_DRAW_MAP);
+        st->check_args(vs, {"<step>", "<color>", "<line width>"});
+        st->do_fi_grid = true;
+        st->grid_opts["grid_step"]  = vs[0];
+        st->grid_opts["grid_color"] = vs[1];
+        st->grid_opts["grid_thick"] = vs[2];
         continue;
       }
 
@@ -1088,7 +1099,12 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
     // PulkGrid feature
     if (do_pulk_grid){
-      draw_pulk_grid(cr, dPoint(), *cnv, pulk_grid_opts);
+      draw_pulk_grid(cr, dPoint(), *cnv, grid_opts);
+    }
+
+    // FiGrid feature
+    if (do_fi_grid){
+      draw_fi_grid(cr, dPoint(), *cnv, grid_opts);
     }
 
     // Clip feature - just restore previous clip

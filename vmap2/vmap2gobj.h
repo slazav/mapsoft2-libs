@@ -68,7 +68,8 @@ where possible features are:
     write <color>          -- render the text (a bit different from `fill`)
     group <name>           -- set group name for a drawing step
     name  <name>           -- set name for a drawing step
-    pulk_grid <step> <color> <line width> -- dray Pulkovo-1942 grid
+    pulk_grid <step> <color> <line width> -- draw Pulkovo-1942 grid
+    fi_grid <step> <color> <line width> -- draw ETRS-TM35FIN grid (Finland)
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.
@@ -200,7 +201,7 @@ public:
     std::string step_name;  // step name
     std::string group_name; // group name
     bool do_clip, do_stroke, do_fill, do_write,
-         do_patt, do_img, do_pulk_grid, do_sel_range;
+         do_patt, do_img, do_pulk_grid, do_fi_grid, do_sel_range;
     uint32_t stroke_color;
     uint32_t fill_color;
     uint32_t write_color;
@@ -217,7 +218,7 @@ public:
     enum pos_t { DRAW_POS_POINT, DRAW_POS_BEGIN,
                  DRAW_POS_END, DRAW_POS_DIST, DRAW_POS_EDIST} draw_pos;
     double draw_pos_dist, draw_pos_b, draw_pos_e;
-    Opt pulk_grid_opts;
+    Opt grid_opts;
     std::string font;
     double font_size;
     double rotate;
@@ -234,7 +235,7 @@ public:
 
     DrawingStep(GObjVMap2 * gobj): gobj(gobj), action(STEP_UNKNOWN), etype(0) {
       do_clip = do_stroke = do_fill = do_write = false;
-      do_patt = do_img = do_pulk_grid = do_sel_range = false;
+      do_patt = do_img = do_pulk_grid = do_fi_grid = do_sel_range = false;
       stroke_color = 0;
       fill_color = 0;
       write_color = 0;
