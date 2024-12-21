@@ -4,7 +4,7 @@
 #include "getopt/getopt.h"
 #include "geo_data/geo_io.h"
 
-#include "draw_pulk_grid.h"
+#include "draw_grid.h"
 
 #include "write_geoimg.h"
 
