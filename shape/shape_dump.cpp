@@ -17,6 +17,10 @@ void usage(bool pod=false){
   HelpPrinter pr(pod, options, "shp2vmap");
   pr.name("Read shape files from maanmittauslaitos.fi");
   pr.usage("<options> <shape basename>");
+
+  pr.head(2, "Options:");
+  pr.opts({"HELP","POD","A"});
+
   throw Err();
 }
 
@@ -24,7 +28,9 @@ void usage(bool pod=false){
 int
 main(int argc, char *argv[]){
   try{
-    ms2opt_add_std(options, {"HELP","POD","VERB"});
+    ms2opt_add_std(options, {"HELP","POD"});
+
+    options.add("crd", 0,'c', "A", "print coordinates");
 
     vector<string> files;
     Opt O = parse_options_all(&argc, &argv, options, {}, files);
@@ -69,7 +75,11 @@ main(int argc, char *argv[]){
     for (size_t i = 0; i<nr; ++i){
       std::cout << "id: " << i << "\n";
       auto l = SH.get(i);
-      std::cout << "crd: " << l << "\n";
+      if (O.exists("crd"))
+        std::cout << "crd: " << l << "\n";
+      else
+        std::cout << "crd: " << l.npts()
+           << " points in " << l.size() << " segments\n";
       for (size_t j = 0; j<nf; ++j){
         std::cout << "  " << DB.field_type(j)
                   << " " << DB.field_width(j) 
