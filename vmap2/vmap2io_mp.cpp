@@ -90,7 +90,8 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
   // skip objects which are not in typeinfo file
   bool skip_unknown = opts.get("skip_unknown", false);
 
-  std::set<uint32_t> skipped_types;
+  std::set<uint32_t> skipped_unk_types;
+  std::set<uint32_t> skipped_bad_types;
 
   // Loop through VMap2 objects:
   vmap2.iter_start();
@@ -98,32 +99,37 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
     VMap2obj o = vmap2.iter_get_next().second;
     MPObj o1;
 
-    // Get object type:
-    auto t = o.type>>24;
+    // Get object class and type:
+    auto cl = o.type>>24;
+    auto o1.type = o.type & 0xFFFFFF;
+
+    if (o1.type > 0x7FFF){
+      skipped_bad_types.insert(o.type);
+      continue;
+    }
 
     // Type info
     VMap2type typeinfo; // default
     if (types.count(o.type))
       typeinfo = types.find(o.type)->second;
     else if (skip_unknown) {
-      if (!quiet) skipped_types.insert(o.type);
+      skipped_unk_types.insert(o.type);
       continue;
     }
 
     // Process text objects:
-    if (t == VMAP2_TEXT) {
+    if (cl == VMAP2_TEXT) {
       // todo?
       continue;
     }
 
-    // convert type to mp format
-    switch (t){
+    // convert object class to mp format
+    switch (cl){
       case VMAP2_POINT:   o1.Class = MP_POINT; break;
       case VMAP2_LINE:    o1.Class = MP_LINE; break;
       case VMAP2_POLYGON: o1.Class = MP_POLYGON; break;
-      default: throw Err() << "vmap2_to_mp: unsupported object: " << t;
+      default: throw Err() << "vmap2_to_mp: unsupported object: " << cl;
     }
-    o1.Type = o.type & 0xFFFF;
 
     // name, comments
     o1.Label = o.name;
@@ -145,12 +151,18 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
     mp.push_back(o1);
   }
 
-  if (skipped_types.size()){
+  if (skipped_bad_types.size()){
+      std::cerr << "Writing MP file: skip object types bigger then 0x7FFF:\n";
+      for (const auto & t:skipped_bad_types)
+        std::cerr << VMap2obj::print_type(t) << "\n";
+  }
+
+  if (!quiet && skipped_unk_types.size()){
     std::cerr <<
        "Writing MP file: some types were skipped because "
        "skip_unknown parameter is set and there is no information in "
        "the typeinfo file:\n";
-    for (const auto & t:skipped_types)
+    for (const auto & t:skipped_unk_types)
       std::cerr << VMap2obj::print_type(t) << "\n";
   }
 
