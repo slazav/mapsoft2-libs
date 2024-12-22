@@ -6,6 +6,9 @@
 #include <set>
 #include <iostream>
 
+// Only TM35 1:100'000 map division is implemented
+// See https://www.maanmittauslaitos.fi/en/maps-and-spatial-data/datasets-and-interfaces/product-descriptions/map-sheet-division
+
 /*
 Returns region for a given Finnish 1:100000 nomenclature map "V51 etc.".
 Coordinates are ETRS-TM35FIN meters.
