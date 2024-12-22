@@ -52,6 +52,7 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("mp_levels",    1, 0, "MP", "set mp data levels (comma-separated integers),"
                                          " default: \"24,22,20,18,17,15\".");
     opts.add("crop_nom",     1, 0, "VMAP2", "Crop map to nomenclature region.");
+    opts.add("crop_nom_fi",  1, 0, "VMAP2", "Crop map to Finnish nomenclature region.");
     opts.add("crop_rect",    1, 0, "VMAP2", "Crop map to a rectangle.");
     opts.add("crop_labels",  1, 0, "VMAP2", "By default crop_* commands are not applied to labels. This option can change it. Values: 0 or 1, default: 0.");
 
@@ -146,6 +147,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   bool filter_pts = opts.exists("filter_pts");
   double filter_pts_d = opts.get("filter_pts_d", 10); // m
   std::string crop_nom = opts.get("crop_nom");
+  std::string crop_nom_fi = opts.get("crop_nom_fi");
   std::string crop_rect = opts.get("crop_rect");
   bool crop_labels = opts.get("crop_labels", false);
 
@@ -186,6 +188,9 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
 
   if (crop_nom.size())
      do_crop_rect(vmap2, nom_to_wgs(crop_nom), crop_labels);
+
+  if (crop_nom.size())
+     do_crop_nom_fi(vmap2, crop_nom_fi, crop_labels);
 
   if (crop_rect.size())
     do_crop_rect(vmap2, dRect(crop_rect), crop_labels);

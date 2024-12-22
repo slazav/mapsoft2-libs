@@ -34,6 +34,9 @@ void do_update_labels(VMap2 & map, const VMap2types & types, const bool label_na
 // Crop map with a rectangle
 void do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels);
 
+// Crop to a finnish nomenclature map (e.g "V51")
+void do_crop_nom_fi(VMap2 & map, const std::string & name, const bool crop_labels);
+
 /************************************************************/
 // Additional functions, used for custom filters
 

@@ -1,6 +1,8 @@
 #include "vmap2tools.h"
 #include <map>
 #include "geo_data/geo_utils.h"
+#include "geo_data/conv_geo.h"
+#include "geo_nom/geo_nom_fi.h"
 #include "geom/line_rectcrop.h"
 #include "geom/poly_tools.h"
 
@@ -469,6 +471,31 @@ do_crop_rect(VMap2 & map, const dRect & r, const bool crop_labels){
     if (o.empty()) map.del(id);
     else map.put(id, o);
   }
+}
+
+void
+do_crop_nom_fi(VMap2 & map, const std::string & name, const bool crop_labels){
+  ConvGeo cnv("ETRS-TM35FIN");
+  auto box = nom_to_range_fi(name);
+
+  // Loop through VMap2 objects:
+  map.iter_start();
+  while (!map.iter_end()){
+    auto p = map.iter_get_next();
+    auto id = p.first;
+    auto & o = p.second;
+    if (!crop_labels && o.get_class() == VMAP2_TEXT) continue;
+
+    bool closed = (o.get_class() == VMAP2_POLYGON);
+
+    cnv.bck(o); // convert to ETRS-TM35FIN;
+    o.set_coords(rect_crop_multi(box, o, closed)); // crop
+    cnv.frw(o); // convert to WGS;
+
+    if (o.empty()) map.del(id);
+    else map.put(id, o);
+  }
+
 }
 
 /********************************************************************/
