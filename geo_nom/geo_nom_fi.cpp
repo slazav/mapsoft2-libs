@@ -15,93 +15,94 @@ dRect nom_to_range_fi(const string & name){
 
   istringstream f(name);
 
-  // Read letter K..X without O
-  char c = tolower(f.get());
-  if (c<'k' || c>'x' || c=='o') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": letter k..n or p..x expected";
-  c= (c>'o')? c-'k'-1 : c-'k';
-  ret.y = (int)c*ret.h + 6570; // y coordinate, m
+  try {
 
-  // Read digit 2..6
-  c = f.get();
-  if (c<'2' || c>'6') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": first digit 2..6 expected";
-  ret.x = (int)(c-'5')*ret.w + 500; // x coordinate, km
+    // Read letter K..X without O
+    char c = tolower(f.get());
+    if (c<'k' || c>'x' || c=='o') throw Err() << "letter k..n or p..x expected";
+    c= (c>'o')? c-'k'-1 : c-'k';
+    ret.y = (int)c*ret.h + 6570; // y coordinate, m
 
-  // return 1:200'000, 96x192 km map
-  if (f.peek() == -1) return ret*1000.0;
+    // Read digit 2..6
+    c = f.get();
+    if (c<'2' || c>'6') throw Err() << "first digit 2..6 expected";
+    ret.x = (int)(c-'5')*ret.w + 500; // x coordinate, km
+
+    // return 1:200'000, 96x192 km map
+    if (f.peek() == -1) return ret*1000.0;
 
 
-  // Read digit 1..4
-  c = f.get();
-  if (c<'1' || c>'4') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": second digit 1..4 expected";
-  ret.w/=2;  ret.h/=2;
-  if (c=='3' || c=='4') ret.x+=ret.w;
-  if (c=='2' || c=='4') ret.y+=ret.h;
+    // Read digit 1..4
+    c = f.get();
+    if (c<'1' || c>'4') throw Err() << "second digit 1..4 expected";
+    ret.w/=2;  ret.h/=2;
+    if (c=='3' || c=='4') ret.x+=ret.w;
+    if (c=='2' || c=='4') ret.y+=ret.h;
 
-  // return 1:100'000, 48x96 km map
-  if (f.peek() == -1) return ret*1000.0;
+    // return 1:100'000, 48x96 km map
+    if (f.peek() == -1) return ret*1000.0;
 
 
-  // Read digit 1..4
-  c = f.get();
-  if (c<'1' || c>'4') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": third digit 1..4 expected";
-  ret.w/=2;  ret.h/=2;
-  if (c=='3' || c=='4') ret.x+=ret.w;
-  if (c=='2' || c=='4') ret.y+=ret.h;
+    // Read digit 1..4
+    c = f.get();
+    if (c<'1' || c>'4') throw Err() << "third digit 1..4 expected";
+    ret.w/=2;  ret.h/=2;
+    if (c=='3' || c=='4') ret.x+=ret.w;
+    if (c=='2' || c=='4') ret.y+=ret.h;
 
-  // return 1:50'000, 24x48 km map
-  if (f.peek() == -1) return ret*1000.0;
+    // return 1:50'000, 24x48 km map
+    if (f.peek() == -1) return ret*1000.0;
 
 
-  // Read digit 1..4
-  c = f.get();
-  if (c<'1' || c>'4') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": forth digit 1..4 expected";
-  ret.w/=2;  ret.h/=2;
-  if (c=='3' || c=='4') ret.x+=ret.w;
-  if (c=='2' || c=='4') ret.y+=ret.h;
+    // Read digit 1..4
+    c = f.get();
+    if (c<'1' || c>'4') throw Err() << "forth digit 1..4 expected";
+    ret.w/=2;  ret.h/=2;
+    if (c=='3' || c=='4') ret.x+=ret.w;
+    if (c=='2' || c=='4') ret.y+=ret.h;
 
-  // return 1:25'000, 12x24 km map
-  if (f.peek() == -1) return ret*1000.0;
+    // return 1:25'000, 12x24 km map
+    if (f.peek() == -1) return ret*1000.0;
 
 
-  // Read letter A..H
-  c = tolower(f.get());
-  if (c<'a' || c>'h') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": letter A..H expected";
-  ret.w/=4;  ret.h/=2;
-  c-='a';
-  ret.x += ret.w * (c/2);
-  if (c%2==1) ret.y+=ret.h;
+    // Read a letter. Two options:
+    // - A..H for a classical 1:10'000, 6x6 km map
+    // - L or R for 12x12km map (as in MML datasets)
+    c = tolower(f.get());
+    if (c=='r' || c=='l'){
+      ret.w/=2;
+      if (c=='r') ret.x+=ret.w;
+      if (f.peek() == -1) return ret*1000.0;
+      throw Err() << "extra symbols after the name";
+    }
+    if (c<'a' || c>'h') throw Err()
+      << "letter A..H (or R, or L) expected";
+    ret.w/=4;  ret.h/=2;
+    c-='a';
+    ret.x += ret.w * (c/2);
+    if (c%2==1) ret.y+=ret.h;
 
-  // return 1:10'000, 6x6 km map
-  if (f.peek() == -1) return ret*1000.0;
+    // return 1:10'000, 6x6 km map
+    if (f.peek() == -1) return ret*1000.0;
 
 
-  // Read digit 1..4
-  c = f.get();
-  if (c<'1' || c>'4') throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": forth digit 1..4 expected";
-  ret.w/=2;  ret.h/=2;
-  if (c=='3' || c=='4') ret.x+=ret.w;
-  if (c=='2' || c=='4') ret.y+=ret.h;
+    // Read digit 1..4
+    c = f.get();
+    if (c<'1' || c>'4') throw Err() << "digit 1..4 expected";
+    ret.w/=2;  ret.h/=2;
+    if (c=='3' || c=='4') ret.x+=ret.w;
+    if (c=='2' || c=='4') ret.y+=ret.h;
 
-  // return 1:10'000, 3x3 km map
-  if (f.peek() == -1) return ret*1000.0;
+    // return 1:10'000, 3x3 km map
+    if (f.peek() == -1) return ret*1000.0;
 
-  throw Err()
-    << "nom_to_range_fi: can't parse name: \"" << name
-    << "\": extra symbols after the name";
+    throw Err() << "extra symbols after the name";
+
+    }
+  catch (const Err & e){
+    throw Err() << "nom_to_range_fi: can't parse name: \""
+      << name << "\": " << e.str();
+  }
 }
 
 

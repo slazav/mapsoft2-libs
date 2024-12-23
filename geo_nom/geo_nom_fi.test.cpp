@@ -33,8 +33,10 @@ main(){
   assert_eq((iRect)nom_to_range_fi("v5311c"), 1000*iRect(602,7530, 6,6));
   assert_eq((iRect)nom_to_range_fi("v5311e"), 1000*iRect(608,7530, 6,6));
   assert_eq((iRect)nom_to_range_fi("v5311h"), 1000*iRect(614,7536, 6,6));
+  assert_eq((iRect)nom_to_range_fi("v5311l"), 1000*iRect(596,7530, 12,12));
+  assert_eq((iRect)nom_to_range_fi("v5311r"), 1000*iRect(608,7530, 12,12));
 
-  assert_err(nom_to_range_fi("v5311i"), "nom_to_range_fi: can't parse name: \"v5311i\": letter A..H expected");
+  assert_err(nom_to_range_fi("v5311i"), "nom_to_range_fi: can't parse name: \"v5311i\": letter A..H (or R, or L) expected");
 
   assert_eq((iRect)nom_to_range_fi("v5311e1"), 1000*iRect(608,7530, 3,3));
   assert_eq((iRect)nom_to_range_fi("v5311e2"), 1000*iRect(608,7533, 3,3));
