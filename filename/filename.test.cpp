@@ -114,12 +114,34 @@ int main() {
     free(cwd);
     assert_eq(file_rel_path("a.png",       "a/b/c/d/b.map"),  "../../../../a.png");
 
+    // file_mkdir
     file_mkdir("."); // no need to do anything
     assert_err(file_mkdir("filename.test.cpp"), "not a directory: filename.test.cpp");
     assert_eq(file_exists("test_dir"), 0);
     file_mkdir("test_dir"); // no need to do anything
     assert_eq(file_exists("test_dir"), 1);
     remove("test_dir");
+
+    // file_ls
+    assert_err(file_ls("filename.test.cpp"), "filename.test.cpp: Not a directory");
+    assert_err(file_ls("missing"), "missing: No such file or directory");
+    // for (const auto f:file_ls(".")) std::cerr << f << "\n";
+
+    // file_glob
+    auto r = file_glob({"*.cpp"});
+    assert_eq(r.size(), 2);
+    assert_eq(r[0], "filename.cpp");
+    assert_eq(r[1], "filename.test.cpp");
+
+    r = file_glob({"*.cpp", "Ma??file"});
+    assert_eq(r.size(), 3);
+    assert_eq(r[0], "filename.cpp");
+    assert_eq(r[1], "filename.test.cpp");
+    assert_eq(r[2], "Makefile");
+
+    r = file_glob({"*.CPP"});
+    assert_eq(r.size(), 0);
+
 }
 
 ///\endcond

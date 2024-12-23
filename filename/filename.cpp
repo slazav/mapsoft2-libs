@@ -153,3 +153,40 @@ file_mkdir(const std::string & dir_name){
   else if (!S_ISDIR(st.st_mode))
     throw Err() << "not a directory: " << dir_name;
 }
+
+#include <dirent.h>
+#include <algorithm>
+
+std::vector<std::string>
+file_ls(const std::string & dir){
+  std::vector<std::string> ret;
+  dirent *de;
+  DIR *dirp = opendir(dir.c_str());
+  if (dirp == 0) throw Err() << dir << ": " << strerror(errno);
+
+  while ((de = readdir(dirp)) != NULL){
+    std::string n(de->d_name);
+    ret.push_back(n);
+  }
+
+  (void)closedir(dirp);
+  return ret;
+}
+
+#include <glob.h>
+
+std::vector<std::string>
+file_glob(const std::vector<std::string> & patts, int glob_flags){
+  std::vector<std::string> ret;
+
+  glob_t globbuf;
+  for (const auto & patt: patts){
+    int res = glob(patt.c_str(), glob_flags, NULL, &globbuf);
+    glob_flags |= GLOB_APPEND;
+  }
+  for (size_t i = 0; i<globbuf.gl_pathc; ++i)
+    ret.push_back(globbuf.gl_pathv[i]);
+  globfree(&globbuf);
+  return ret;
+}
+

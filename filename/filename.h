@@ -62,4 +62,10 @@ bool file_newer(const std::string & file_src, const std::string & file_dst);
 // make directory if it does not exist
 void file_mkdir(const std::string & name);
 
+// list all files in the dir
+std::vector<std::string> file_ls(const std::string & dir);
+
+// find pathnames matching patterns
+std::vector<std::string> file_glob(const std::vector<std::string> & patts, int glob_flags = 0);
+
 #endif
