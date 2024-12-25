@@ -453,6 +453,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       // draw_pos (point|begin|end)
       // draw_pos dist <dist> [<dist_begin>]
       // draw_pos edist <dist> [<dist_begin>] [<dist_end>]
+      // draw_pos fill <w> <h>
       if (ftr == "draw_pos"){
         st->check_type(STEP_DRAW_LINE | STEP_DRAW_AREA);
         if (vs.size()<1) throw Err() << "argument expected";
@@ -476,6 +477,12 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
           else st->draw_pos_b = st->draw_pos_dist/2;
           if (vs.size()>3) st->draw_pos_e = str_to_type<double>(vs[3]);
           else st->draw_pos_e = st->draw_pos_dist/2;
+        }
+        else if (vs[0] == "fill") {
+          st->check_args(vs, {"fill", "w", "h"});
+          st->draw_pos = DrawingStep::DRAW_POS_FILL;
+          st->draw_pos_w = str_to_type<size_t>(vs[1]);
+          st->draw_pos_h = str_to_type<size_t>(vs[2]);
         }
         else throw Err() << "Wrong position. Possible values: "
           "point, begin, end, dist, edist.";
@@ -791,6 +798,57 @@ GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const d
   cr->restore();
 }
 
+void
+GObjVMap2::DrawingStep::setup_ctx(const CairoWrapper & cr, const double osc){
+  // Operator feature
+  cr->set_operator(op);
+
+  // Font feature (set font + font size)
+  if (font!=""){
+    cr->set_font_size(osc*font_size);
+    // For work with patterns see:
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
+    // For font properties see:
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x19.html
+    // https://www.freedesktop.org/software/fontconfig/fontconfig-user.html
+    // https://wiki.archlinux.org/index.php/Font_configuration
+    FcPattern *patt = FcNameParse((const FcChar8 *)font.c_str());
+    cr->set_font_face(Cairo::FtFontFace::create(patt));
+    FcPatternDestroy(patt);
+  }
+
+  // Set up pattern feature
+  if (do_patt){
+    patt.set_filter(img_filter);
+  }
+
+  // Set up image feature (points and areas)
+  if (do_img){
+    img.set_filter(img_filter);
+  }
+
+  // Always using this rule (for fill, pattern, clip)
+  cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+
+  // Set up stroke
+  if (do_stroke){
+    // Setup dashed line
+    if (dash.size()){
+      auto vd = dash;
+      for (auto & d:vd) d*=osc;
+      cr->set_dash(vd, 0);
+    }
+    else
+      cr->unset_dash();
+
+    // Setup line cap, line join, line thickness
+    cr->set_color_a(stroke_color);
+    cr->set_line_cap(line_cap);
+    cr->set_line_join(line_join);
+    cr->set_line_width(osc*thickness);
+  }
+}
+
 GObj::ret_t
 GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
@@ -866,58 +924,41 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->stroke();
   }
 
-  // Operator feature
-  cr->set_operator(op);
-
-  // Font feature (set font + font size)
-  if (font!=""){
-    cr->set_font_size(osc*font_size);
-    // For work with patterns see:
-    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x103.html#AEN242
-    // For font properties see:
-    // https://www.freedesktop.org/software/fontconfig/fontconfig-devel/x19.html
-    // https://www.freedesktop.org/software/fontconfig/fontconfig-user.html
-    // https://wiki.archlinux.org/index.php/Font_configuration
-    FcPattern *patt = FcNameParse((const FcChar8 *)font.c_str());
-    cr->set_font_face(Cairo::FtFontFace::create(patt));
-    FcPatternDestroy(patt);
-  }
-
-  // Set up pattern feature
-  if (do_patt){
-    patt.set_filter(img_filter);
-  }
-
-  // Set up image feature (points and areas)
-  if (do_img){
-    img.set_filter(img_filter);
-  }
-
   // set up smooth feature
   double sm = osc*smooth;
 
   // for building paths
   bool close = (action == STEP_DRAW_AREA);
 
-  // Always using this rule (for fill, pattern, clip)
-  cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+  // Set up drawing context
+  setup_ctx(cr, osc);
 
-  // Set up stroke
-  if (do_stroke){
-    // Setup dashed line
-    if (dash.size()){
-      auto vd = dash;
-      for (auto & d:vd) d*=osc;
-      cr->set_dash(vd, 0);
+  // Fill with line/circle objects
+  if (draw_pos == DRAW_POS_FILL){
+    // make new cairo surface
+    CairoWrapper cr2;
+    ImageR img(draw_pos_w,draw_pos_h, IMAGE_32ARGB);
+    img.fill32(0);
+    cr2.set_surface_img(img);
+
+    // setup context
+    setup_ctx(cr2, osc);
+
+    //draw lines/circles
+    cr2->mkpath_smline(osc*add_lines, sm);
+    for (auto const &c:osc*add_circles){
+      cr2->move_to(c.x+c.z, c.y);
+      cr2->arc(c.x, c.y, c.z, 0, 2*M_PI);
     }
-    else
-      cr->unset_dash();
-
-    // Setup line cap, line join, line thickness
-    cr->set_color_a(stroke_color);
-    cr->set_line_cap(line_cap);
-    cr->set_line_join(line_join);
-    cr->set_line_width(osc*thickness);
+    if (do_fill){
+      cr2->set_color_a(fill_color);
+      cr2->fill_preserve();
+    }
+    if (do_stroke){
+      cr2->set_color_a(stroke_color);
+      cr2->stroke_preserve();
+      }
+    patt = ImageRenderer(img);
   }
 
   // Draw each object
@@ -933,9 +974,13 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
          action == STEP_DRAW_AREA) &&
         (do_stroke || do_fill || do_patt )){
 
+      // make path for original object
+      if ((add_lines.size()==0 && add_circles.size()==0) ||
+          draw_pos == DRAW_POS_FILL) {
+        cr->mkpath_smline(O, close, sm);
+      }
       // make path for Lines or Circles
-      if (add_lines.size()>0 || add_circles.size()>0) {
-
+      else {
         // make reference points (x,y,angle)
         dLine ref_points;
         for (auto const & l:O){
@@ -1000,10 +1045,6 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
         }
 
       }
-      // make path from original object
-      else {
-        cr->mkpath_smline(O, close, sm);
-      }
     }
 
     // make path for TEXT objects
@@ -1013,7 +1054,7 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     }
 
     // Pattern feature
-    if (do_patt){
+    if (do_patt || draw_pos == DRAW_POS_FILL){
       double scx = osc, scy = osc;
       if (gobj->fit_patt_size) {
         double nx = range.w/patt.w/patt.sc0;
@@ -1027,13 +1068,14 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Fill feature
     // We want to set color for each object, because it can contain
     // fill+stroke+draw features with different colors
-    if (do_fill){
+    if (do_fill && draw_pos != DRAW_POS_FILL){
       cr->set_color_a(fill_color);
       cr->fill_preserve();
     }
 
+
     // Stroke feature
-    if (do_stroke){
+    if (do_stroke && draw_pos != DRAW_POS_FILL){
       cr->set_color_a(stroke_color);
       cr->stroke_preserve();
     }

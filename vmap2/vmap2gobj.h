@@ -56,6 +56,7 @@ where possible features are:
                               at dist period, starting at dist_begin (defaults: dist/2) from the first point
                               and ending not further then dist_end from the last point.
                               For `edist` distanse will be adjusted to have exact begin and end distances.
+    draw_pos fill <w> <h>     use lines/circles features as a pattern for filling area
     sel_range <color> <width>  -- draw selection range for each object
     move_to <max distance> <type> ...  -- move point to the nearest object
     rotate_to <max distance> <type> ... -- move and rotate point to the nearest object
@@ -156,6 +157,12 @@ public:
       }
       empty = false;
     }
+    ImageRenderer(const ImageR & image){
+      img = image; sc0=1;
+      if (img.type() != IMAGE_32ARGB) img = image_to_argb(img);
+      w = img.width(); h = img.height();
+      patt = image_to_pattern(img, 1.0, 1.0, 0.0, 0.0);
+    }
     void draw_patt(const CairoWrapper & cr,
          const double scx, const double scy,
          bool fill=true){
@@ -216,8 +223,9 @@ public:
     double short_skip;
     bool pix_align;
     enum pos_t { DRAW_POS_POINT, DRAW_POS_BEGIN,
-                 DRAW_POS_END, DRAW_POS_DIST, DRAW_POS_EDIST} draw_pos;
+                 DRAW_POS_END, DRAW_POS_DIST, DRAW_POS_EDIST, DRAW_POS_FILL} draw_pos;
     double draw_pos_dist, draw_pos_b, draw_pos_e;
+    size_t draw_pos_w, draw_pos_h;
     Opt grid_opts;
     std::string font;
     double font_size;
@@ -265,6 +273,7 @@ public:
     // helpers used in draw() method, see .cpp files for description
     void convert_coords(VMap2obj & O);
     void draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path);
+    void setup_ctx(const CairoWrapper & cr, const double osc);
 
     // main drawing function
     ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
