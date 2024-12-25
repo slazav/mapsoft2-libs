@@ -56,7 +56,6 @@ where possible features are:
                               at dist period, starting at dist_begin (defaults: dist/2) from the first point
                               and ending not further then dist_end from the last point.
                               For `edist` distanse will be adjusted to have exact begin and end distances.
-    draw_dist <dist> [<dist0>] -- distances for dist/edist position
     sel_range <color> <width>  -- draw selection range for each object
     move_to <max distance> <type> ...  -- move point to the nearest object
     rotate_to <max distance> <type> ... -- move and rotate point to the nearest object
