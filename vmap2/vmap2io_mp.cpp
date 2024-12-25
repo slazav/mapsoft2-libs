@@ -101,9 +101,9 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
 
     // Get object class and type:
     auto cl = o.type>>24;
-    auto o1.type = o.type & 0xFFFFFF;
+    o1.Type = o.type & 0xFFFFFF;
 
-    if (o1.type > 0x7FFF){
+    if (o1.Type > 0x7FFF){
       skipped_bad_types.insert(o.type);
       continue;
     }
