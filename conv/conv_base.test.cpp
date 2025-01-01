@@ -142,6 +142,11 @@ main(){
       // cnv is not so interesting here, rectangle converts to rectungle:
       assert_eq(cnv.frw_acc(dRect(0,0,10,10),0.005), dRect(0,0,100,20));
       assert_eq(cnv.bck_acc(dRect(0,0,100,20),0.005), dRect(0,0,10,10));
+
+      // empty rectangle
+      assert_eq(cnv.bck_acc(dRect()), dRect());
+      assert_eq(cnv.frw_acc(dRect()), dRect());
+
     }
 
     { //scales
