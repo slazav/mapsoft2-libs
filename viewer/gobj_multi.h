@@ -89,6 +89,9 @@ public:
   // Draw all objects
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
+  // Check the range
+  ret_t check(const dRect & draw_range) const override;
+
   // prepare range
   void prepare_range(const dRect & range) override;
 

@@ -165,6 +165,20 @@ GObjMulti::draw(const CairoWrapper & cr, const dRect & draw_range){
   return res;
 }
 
+GObj::ret_t
+GObjMulti::check(const dRect & draw_range) const{
+  // If all are FILL_NONE -> return FILL_NONE
+  // If at least one is FILL_ALL -> return FILL_ALL
+  ret_t ret = FILL_NONE;
+  for (auto const & p:data){
+    switch (p.second.obj->check(draw_range)){
+      case FILL_ALL: return FILL_ALL;
+      case FILL_PART: ret=FILL_PART;
+    }
+  }
+  return ret;
+}
+
 void
 GObjMulti::prepare_range(const dRect & range){
   for (auto const & p:data){

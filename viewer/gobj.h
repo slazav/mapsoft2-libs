@@ -66,6 +66,9 @@ public:
   // - `cr` should be translated to viewer coordinate origin.
   virtual ret_t draw(const CairoWrapper & cr, const dRect & draw_range) = 0;
 
+  // check if the range will be covered with drawing
+  virtual ret_t check(const dRect & draw_range) const {return FILL_PART;}
+
   // Object can return bounding box in viewer coordinates (empty if not specified)
   virtual dRect bbox() const {return dRect();}
 
