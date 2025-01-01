@@ -61,6 +61,7 @@ GObjVMap2::set_ref(const GeoMap & r, bool set_ptsize) {
     border = cnv.frw_acc(ref.border);
     if (set_ptsize) ptsize0 = get_ptsize(cnv, r.bbox());
   }
+  update_bbox();
 }
 
 // set WGS border
@@ -70,6 +71,23 @@ GObjVMap2::set_brd(const dMultiLine & brd) {
   if (ref.ref.size()==0) return;
   ConvMap cnv(ref);
   ref.border = cnv.bck_acc(border);
+  update_bbox();
+}
+
+// set_cnv
+void
+GObjVMap2::set_cnv(const std::shared_ptr<ConvBase> c) {
+  if (!c) throw Err() << "GObjVMap2::set_cnv: cnv is NULL";
+  cnv = c;
+  update_bbox();
+}
+
+void
+GObjVMap2::update_bbox(){
+  // update bbox in viewer coords
+  if (!cnv) return;
+  if (border.size()) range = cnv->bck_acc(border).bbox();
+  else range = cnv->bck_acc(map.bbox()); // wgs, based on geohash
 }
 
 
@@ -1213,6 +1231,11 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
 
 /**********************************************************/
 
+GObj::ret_t
+GObjVMap2::check(const dRect & draw_range) const {
+  if (intersect(draw_range, range).is_zsize()) return FILL_NONE;
+  return FILL_PART;
+}
 
 GObj::ret_t
 GObjVMap2::draw(const CairoWrapper & cr, const dRect & draw_range) {
@@ -1222,7 +1245,7 @@ GObjVMap2::draw(const CairoWrapper & cr, const dRect & draw_range) {
   if (sc!=0 && sc < minsc){
     cr->set_color_a(minsc_color);
     cr->paint();
-    return GObj::FILL_PART;
+    return FILL_PART;
   }
 
   // we want to track save/restore pairs here

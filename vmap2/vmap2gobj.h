@@ -342,6 +342,9 @@ public:
   // set WGS border
   void set_brd(const dMultiLine & brd);
 
+  // update range (used in set_brd, set_ref, set_cnv)
+  void update_bbox();
+
   // constructor -- open new map
   GObjVMap2(VMap2 & map, const Opt & o);
 
@@ -352,17 +355,19 @@ public:
 
   std::shared_ptr<ConvBase> cnv;
   Opt opt;
+  dRect range; // bbox in viewer coords (based on non-empty border or geohash)
 
   // set coordinate transformation
-  void set_cnv(const std::shared_ptr<ConvBase> c) override {cnv = c;};
+  void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
   // set drawing options
   void set_opt(const Opt & o) override {opt = o;}
 
-  dRect bbox() const override {
-    if (border.size()) return border.bbox(); // wgs
-    else return map.bbox();
-  }
+  // bbox in viewer coords
+  dRect bbox() const override { return range; }
+
+  // Check drawing range
+  ret_t check(const dRect & draw_range) const override;
 
   // Draw all objects
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
