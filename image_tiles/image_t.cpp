@@ -1,7 +1,6 @@
-#include <sstream>
+#include <string>
 #include "geo_tiles/quadkey.h"
-#include "image/io.h"
-#include "image_tiles.h"
+#include "image_t.h"
 
 std::string
 ImageT::make_url(const std::string& tmpl, const iPoint & key){
@@ -34,40 +33,21 @@ ImageT::make_url(const std::string& tmpl, const iPoint & key){
   return ret;
 }
 
-void
-ImageT::clear(){
-  tiles.clear();
-  dmanager.clear();
+ImageR &
+ImageT::get_tile_cache(const iPoint & key) const {
+  if (tile_cache.contains(key)) return tile_cache.get(key);
+  tile_cache.add(key, read_tile(key));
+  return tile_cache.get(key);
 }
 
-void
-ImageT::clear_queue(){
-  dmanager.clear_queue();
-}
-
-void
-ImageT::load_key(const iPoint & key) const {
-  if (tiles.contains(key)) return;
-  auto url = make_url(tmpl, key);
-  try {
-    auto s = dmanager.get(url);
-    std::istringstream str(s);
-    ImageR img = image_load(str, 1);
-    if (img.width()!=tsize || img.height()!=tsize){
-      std::cerr << "ImageT: wrong image size "
-                << img.width() << "x" << img.height()
-                << ": " << url << "\n";
-      tiles.add(key, ImageR());
-    }
-    else {
-      tiles.add(key, img);
-    }
-  }
-  catch (Err & e){
-    // No error messages. Turn on Downloader logging to
-    // See OK/Errors
-    tiles.add(key, ImageR());
-  }
+uint32_t
+ImageT::get_argb(const size_t x, const size_t y) const {
+  iPoint key(x/tsize, y/tsize, zoom);
+  iPoint crd(x%tsize, y%tsize);
+  if (swapy) key.y = (1<<zoom) - key.y - 1;
+  auto & img = get_tile_cache(key);
+  if (img.is_empty()) return 0;
+  return img.get_argb(crd.x, crd.y);
 }
 
 ImageR

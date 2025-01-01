@@ -8,7 +8,7 @@
 #include "geom/poly_tools.h"
 #include "cache/cache.h"
 #include "image/image_cache.h"
-#include "image_tiles/image_tiles.h"
+#include "image_tiles/image_t_remote.h"
 #include "opt/opt.h"
 #include "viewer/gobj.h"
 
@@ -52,7 +52,7 @@ private:
       }
       else {
         src_bbox = m.bbox_ref_img();
-        timg = std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
+        timg = std::unique_ptr<ImageT>(new ImageTRemote(m.image, m.tile_swapy, m.tile_size));
       }
       src_brd  = m.border;
       if (src_brd.size()==0) src_brd.push_back(rect_to_line(src_bbox, false));
