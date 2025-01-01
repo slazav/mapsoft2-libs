@@ -98,8 +98,11 @@ public:
   // Set options
   void set_opt(const Opt & opt) override;
 
-  // BBox
+  // BBox (includes bboxes of all objects)
   virtual dRect bbox() const override;
+
+  // Border (append borders of all objects)
+  virtual dMultiLine border() const override;
 
 };
 

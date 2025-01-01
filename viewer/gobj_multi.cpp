@@ -228,3 +228,13 @@ GObjMulti::bbox() const{
     bbox.expand(p.second.obj->bbox());
   return bbox;
 }
+
+dMultiLine
+GObjMulti::border() const{
+  dMultiLine border;
+  for (auto const & p:data){
+    auto b = p.second.obj->border();
+    border.insert(border.end(), b.begin(), b.end());
+  }
+  return border;
+}

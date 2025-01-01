@@ -69,6 +69,9 @@ public:
   // Object can return bounding box in object coordinates (empty if not specified)
   virtual dRect bbox() const {return dRect();}
 
+  // Object can return border in object coordinates (empty if not specified)
+  virtual dMultiLine border() const {return dMultiLine();}
+
   // signal_redraw_me should be emitted when data was changed and the
   // object has to be redrawn. Normally it is attached to Viewer::redraw
   // method.
