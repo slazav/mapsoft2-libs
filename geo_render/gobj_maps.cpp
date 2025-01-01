@@ -66,7 +66,6 @@ GObjMaps::set_opt(const Opt & opt) {
 void
 GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
   if (!cnv) throw Err() << "GObjMaps::set_cnv: cnv is NULL";
-  range = dRect();
   for (auto & d:data){
 
     // We want to calculate some map parameters in viewer projection:
@@ -110,10 +109,9 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
     // Same with bbox.
     try {
       d.bbox = d.cnv.bck_acc(d.src_bbox);
-      range.expand(d.bbox);
     }
     catch (const Err & e) {
-      d.bbox = dRect();
+      d.bbox = dRect(0,0,0,0); // non-empty
     }
 
     // Calculate map scale (map pixels per viewer pixel).
@@ -130,9 +128,6 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
 
     // update map scale
     d.set_scale(k, smooth);
-
-    // for tiled maps clear downloader's queue
-    if (d.timg) d.timg->clear_queue();
 
   }
   tiles.clear();
@@ -159,7 +154,8 @@ GObjMaps::render_tile(const dRect & draw_range) {
 
   for (auto const & d:data){
 
-    if (intersect(draw_range, d.bbox).is_zsize()) continue;
+    if (!d.bbox.is_empty() &&
+        intersect(draw_range, d.bbox).is_zsize()) continue;
 
     // prepare Image source.
     // For normal maps it's a ImageR, from ImageCache
@@ -236,7 +232,8 @@ GObjMaps::check(const dRect & draw_range) const {
   // from each other). Checking borders could be more accurate,
   // but slower.
   for (const auto & d:data){
-    if (!intersect(draw_range, d.bbox).is_zsize()) return FILL_PART;
+    if (d.bbox.is_empty() ||
+        !intersect(draw_range, d.bbox).is_zsize()) return FILL_PART;
   }
   return FILL_NONE;
 }
@@ -285,3 +282,12 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
   return FILL_PART;
 }
 
+dRect
+GObjMaps::bbox() const{
+  dRect box;
+  for (const auto & d:data){
+    if (d.bbox.is_empty()) return dRect();
+    box.expand(d.bbox);
+  }
+  return box;
+}

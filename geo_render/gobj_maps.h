@@ -25,12 +25,11 @@ private:
 
   // Original data. It may be edited through the GObj interface.
   GeoMapList & maps;
-  dRect range; // data range in viewer coords
 
   struct MapData{
     ConvMulti cnv;      // conversion from viewer coordinates to the map coordinates
     const GeoMap *src;  // pointer to the map
-    dRect src_bbox;     // map original bbox (image coordinates)
+    dRect src_bbox;     // map original bbox (image coordinates, empty if no bbox)
     dMultiLine src_brd; // map original border (image coordinates)
 
     dRect bbox;     // map bbox (viewer coordinates, recalculated in set_cnv)
@@ -45,15 +44,19 @@ private:
 
     MapData(const GeoMap & m): load_sc(1.0), zoom(0), src(&m), test_brd(brd) {
 
-      // src_bbox - based on actual image size, cropped to border if it is set
+      // src_bbox - based on actual image size for non-tiled maps,
+      //            based on refpoints for tiled map, cropped to border if it is set
       // src_brd  - take non-empty border from map, or use image bbox
-      src_bbox = dRect(dPoint(), image_size(m.image));
+      if (!m.is_tiled){
+        src_bbox = dRect(dPoint(), image_size(m.image));
+      }
+      else {
+        src_bbox = m.bbox_ref_img();
+        timg = std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
+      }
       src_brd  = m.border;
       if (src_brd.size()==0) src_brd.push_back(rect_to_line(src_bbox, false));
       else src_bbox.intersect(src_brd.bbox());
-
-      if (m.is_tiled) timg =
-        std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
     }
 
     // Update map scale:
@@ -116,7 +119,7 @@ public:
 
   ret_t check(const dRect &box) const override;
 
-  dRect bbox() const override {return range;}
+  dRect bbox() const override;
 };
 
 #endif
