@@ -128,12 +128,17 @@ GObjWpts::update_data(){
 /********************************************************************/
 
 GObj::ret_t
+GObjWpts::check(const dRect & draw_range) const {
+  for (auto & wt:tmpls)
+    if (!intersect(draw_range, wt.bbox).is_zsize()) return FILL_PART;
+  return FILL_NONE;
+}
+
+GObj::ret_t
 GObjWpts::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
   if (is_stopped()) return GObj::FILL_NONE;
-
-  if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
-
+  if (check(draw_range) == FILL_NONE) return FILL_NONE;
   if (do_adj_brd) adjust_text_brd(draw_range);
 
 

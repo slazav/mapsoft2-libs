@@ -92,6 +92,8 @@ public:
 
   ret_t draw(const CairoWrapper & cr, const dRect & draw_range) override;
 
+  ret_t check(const dRect &box) const override;
+
   // range with linewidths included
   dRect bbox() const override {
     return expand(range, (dot_w+1)*linewidth + sel_w); }

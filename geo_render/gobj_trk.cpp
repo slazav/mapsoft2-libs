@@ -171,12 +171,17 @@ GObjTrk::update_opt(){
 
 
 /********************************************************************/
+GObj::ret_t
+GObjTrk::check(const dRect & draw_range) const {
+  if (intersect(draw_range, bbox()).is_zsize()) return FILL_NONE;
+  return FILL_PART;
+}
 
 GObj::ret_t
 GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
 
-  if (is_stopped()) return GObj::FILL_NONE;
-  if (intersect(draw_range, bbox()).is_zsize()) return GObj::FILL_NONE;
+  if (is_stopped()) return FILL_NONE;
+  if (check(draw_range) == FILL_NONE) return FILL_NONE;
 
   // draw selection
   if (selected) {
@@ -228,7 +233,7 @@ GObjTrk::draw(const CairoWrapper & cr, const dRect & draw_range){
     }
   }
 
-  return GObj::FILL_PART;
+  return FILL_PART;
 }
 
 

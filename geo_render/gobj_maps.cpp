@@ -230,14 +230,26 @@ GObjMaps::prepare_range(const dRect & range) {
 
 
 GObj::ret_t
+GObjMaps::check(const dRect & draw_range) const {
+  // Check bbox of every map (more efficient then checking
+  // global bbox - note that it could be a few maps far away
+  // from each other). Checking borders could be more accurate,
+  // but slower.
+  for (const auto & d:data){
+    if (!intersect(draw_range, d.bbox).is_zsize()) return FILL_PART;
+  }
+  return FILL_NONE;
+}
+
+GObj::ret_t
 GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
 
-  if (is_stopped()) return GObj::FILL_NONE;
-  if (intersect(draw_range, range).is_zsize()) return GObj::FILL_NONE;
+  if (is_stopped()) return FILL_NONE;
+  if (check(draw_range)==FILL_NONE) return FILL_NONE;
 
   // render tile, put to tile cache if needed
   if (!tiles.contains(draw_range)){
-    if (!render_tile(draw_range)) return GObj::FILL_NONE;
+    if (!render_tile(draw_range)) return FILL_NONE;
   }
 
   // render image
@@ -270,6 +282,6 @@ GObjMaps::draw(const CairoWrapper & cr, const dRect & draw_range) {
     cr->paint();
   }
 
-  return GObj::FILL_PART;
+  return FILL_PART;
 }
 
