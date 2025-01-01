@@ -66,10 +66,10 @@ public:
   // - `cr` should be translated to viewer coordinate origin.
   virtual ret_t draw(const CairoWrapper & cr, const dRect & draw_range) = 0;
 
-  // Object can return bounding box in object coordinates (empty if not specified)
+  // Object can return bounding box in viewer coordinates (empty if not specified)
   virtual dRect bbox() const {return dRect();}
 
-  // Object can return border in object coordinates (empty if not specified)
+  // Object can return border in viewer coordinates (empty if not specified)
   virtual dMultiLine border() const {return dMultiLine();}
 
   // signal_redraw_me should be emitted when data was changed and the
