@@ -216,6 +216,13 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   if (box.is_zsize()) box = ref.border.bbox();
   if (box.is_zsize()) throw Err() << "write_img: can't get map dimensions";
 
+  // check if we can skip drawing
+  auto chk = obj.check(box);
+  if (chk == GObj::FILL_NONE){
+    if (opts.get<bool>("skip_empty")) return;
+    if (opts.exists("add") && file_exists(fname)) return;
+  }
+
   // setup cairo context
   CairoWrapper cr;
   ImageR img;
@@ -257,20 +264,22 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
     cr->paint();
   }
 
-  // clip to border
-  if (ref.border.size()) {
-    cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
-    cr->mkpath_smline(ref.border, true, 0);
-    cr->clip();
+  if (chk != GObj::FILL_NONE){
+    // clip to border
+    if (ref.border.size()) {
+      cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+      cr->mkpath_smline(ref.border, true, 0);
+      cr->clip();
+    }
+
+    // Draw data
+    // Save context (objects may want to have their own clip regions)
+    cr->save();
+    int res = obj.draw(cr, box);
+    cr->restore();
+
+    if (opts.get<bool>("skip_empty") && res == GObj::FILL_NONE) return;
   }
-
-  // Draw data
-  // Save context (objects may want to have their own clip regions)
-  cr->save();
-  int res = obj.draw(cr, box);
-  cr->restore();
-
-  if (opts.get<bool>("skip_empty") && res == GObj::FILL_NONE) return;
 
   // Draw title
   cr->reset_clip();
