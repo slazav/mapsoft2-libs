@@ -35,18 +35,6 @@ ImageT::make_url(const std::string& tmpl, const iPoint & key){
 }
 
 void
-ImageT::prepare_range(const iRect &r){
-  int x1 = r.x/tsize;
-  int y1 = r.y/tsize;
-  int x2 = (r.x+r.w-1)/tsize+1;
-  int y2 = (r.y+r.h-1)/tsize+1;
-  // same order as in DThreadViewer
-  for (int x=x1; x<x2; x++)
-    for (int y=y1; y<y2; y++)
-      dmanager.add(make_url(tmpl, iPoint(x,y,zoom)));
-}
-
-void
 ImageT::clear(){
   tiles.clear();
   dmanager.clear();

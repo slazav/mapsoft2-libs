@@ -195,7 +195,6 @@ SimpleViewer::draw(const CairoWrapper & crw, const iRect & r){
 
     crw1->save();
     crw1->translate(-r.tlc()-origin-iPoint(x*bbox.x,0));
-    obj->prepare_range(draw_range);
     obj->draw(crw1, draw_range);
     crw1->restore();
   }

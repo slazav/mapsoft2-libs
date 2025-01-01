@@ -113,8 +113,6 @@ public:
 
   void set_cnv(const std::shared_ptr<ConvBase> c) override;
 
-  void prepare_range(const dRect & range) override;
-
   ret_t draw(const CairoWrapper & cr, const dRect &box) override;
 
   ret_t check(const dRect &box) const override;

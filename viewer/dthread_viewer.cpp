@@ -221,9 +221,6 @@ void DThreadViewer::draw(const CairoWrapper & crw, const iRect & r){
       draw_range.intersect(box);
       if (draw_range.is_zsize()) continue;
     }
-
-    if (obj)
-      obj->prepare_range(draw_range);
   }
 
   updater_mutex->lock();

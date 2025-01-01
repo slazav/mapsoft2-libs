@@ -180,16 +180,6 @@ GObjMulti::check(const dRect & draw_range) const{
 }
 
 void
-GObjMulti::prepare_range(const dRect & range){
-  for (auto const & p:data){
-    if (!p.second.on) continue;
-    auto o = p.second.obj;
-    try { o->prepare_range(range); }
-    catch (std::exception & e) { process_error(e); }
-  }
-}
-
-void
 GObjMulti::set_cnv(std::shared_ptr<ConvBase> c) {
   if (!c) throw Err() << "GObjMulti::set_cnv: cnv is NULL";
   cnv = c;

@@ -26,11 +26,6 @@ Url template format:
  `{[abc]}` - replaced by one letter from [...] set (depenting on x+y value),
  `{{}` and `{}}` - replaced by `{` and `}` literals.
 
-We request background downloading of the coordinate range
-(`prepare_range` method). Packed data is stored in the Downloader
-object. `Downloader::update_clean_list` is done in `prepare_range` to
-remove URLs which we do not need anymore.
-
 Then a point is read by `get_rgb` method, the image is unpacked
 removed from Downloader cache and put into tile cache (this cache has fixed
 capacity, 16 tiles).
@@ -70,10 +65,6 @@ class ImageT: public Image {
 
     // get zoom level
     int get_zoom() const {return zoom;}
-
-
-    // Start downloading all tiles in the range.
-    void prepare_range(const iRect &r);
 
     // Clear all data, including downloader's queue
     void clear();

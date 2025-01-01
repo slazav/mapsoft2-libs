@@ -92,9 +92,6 @@ public:
   // Check the range
   ret_t check(const dRect & draw_range) const override;
 
-  // prepare range
-  void prepare_range(const dRect & range) override;
-
   // Set cnv
   void set_cnv(std::shared_ptr<ConvBase> cnv) override;
 

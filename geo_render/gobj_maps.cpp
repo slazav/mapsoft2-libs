@@ -214,17 +214,6 @@ GObjMaps::render_tile(const dRect & draw_range) {
   return true;
 }
 
-void
-GObjMaps::prepare_range(const dRect & range) {
-  // For tiled maps start parallel downloading of all maps in the range.
-  for (auto const & d:data){
-    if (!d.src->is_tiled) continue;
-    dRect r = d.cnv.frw_acc(range);
-    d.timg->prepare_range(r);
-  }
-}
-
-
 GObj::ret_t
 GObjMaps::check(const dRect & draw_range) const {
   // Check bbox of every map (more efficient then checking

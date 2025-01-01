@@ -49,11 +49,6 @@ public:
   /// Default constructor
   GObj(): stop_drawing_flag(false) { }
 
-  /// This mathod can be called by viewer before drawing the screen.
-  /// draw_range is the whole area, not tiles.
-  /// Some objects can use it to start downloading/preparing data.
-  virtual void prepare_range(const dRect & draw_range) {}
-
   /// Possible results for draw() method.
   enum ret_t{
     FILL_NONE = 0, // object draws nothing
