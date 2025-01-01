@@ -15,7 +15,7 @@
 ///@{
 
 /**
-An object which know how to draw itself using Cairo::Context.
+Interface for an object which knows how to draw itself in a Cairo::Context.
 
 - Object has its own coordinate system. Conversion from viewer to object
   coordinates is set by set_cnv() method.
@@ -25,7 +25,7 @@ An object which know how to draw itself using Cairo::Context.
 - There is no need to save/restore Cairo::Context in GObj,
   it should be done by caller if needed.
 - There is no need to set clip to `draw_range`, it should be done
-  by coller if needed.
+  by caller if needed.
 - `draw` method can be run in a separate thread. To prevent collisions
   use get_lock() method. Method `draw` should be locked by multy-thread
   caller, get_cnv, get_opt and other functions which modify data
@@ -44,32 +44,29 @@ An object which know how to draw itself using Cairo::Context.
   for set_cnv/set_opt methods this should be done by caller.
 */
 class GObj{
-protected:
-
 public:
 
+  /// Default constructor
+  GObj(): stop_drawing_flag(false) { }
+
+  /// This mathod can be called by viewer before drawing the screen.
+  /// draw_range is the whole area, not tiles.
+  /// Some objects can use it to start downloading/preparing data.
+  virtual void prepare_range(const dRect & draw_range) {}
+
+  /// Possible results for draw() method.
   enum ret_t{
     FILL_NONE = 0, // object draws nothing
     FILL_PART = 1, // object draws some points
     FILL_ALL  = 2  // object fills in the whole image with opaque colors
   };
 
-  GObj(): stop_drawing_flag(false) { }
-
-  // Called by viewer before drawing the screen.
-  // draw_range is the whole area, not tiles.
-  virtual void prepare_range(const dRect & draw_range) {}
-
-  /** Draw with CairoWrapper.
-   \return one of:
-   - GObj::FILL_NONE  -- nothing has been drawn
-   - GObj::FILL_PART  -- something has been drawn
-   - GObj::FILL_ALL   -- all image has been covered with a non-dransparent drawing
-   NOTE:
-  */
+  // Draw object on the Cairo::Context
+  // - `draw_range` should be in viewer coordinates.
+  // - `cr` should be translated to viewer coordinate origin.
   virtual ret_t draw(const CairoWrapper & cr, const dRect & draw_range) = 0;
 
-  // Return bounding box in object coordinates (empty if not specified)
+  // Object can return bounding box in object coordinates (empty if not specified)
   virtual dRect bbox() const {return dRect();}
 
   // signal_redraw_me should be emitted when data was changed and the
