@@ -113,8 +113,7 @@ GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {
       range.expand(d.bbox);
     }
     catch (const Err & e) {
-      d.bbox = dRect(-HUGE_VAL, -HUGE_VAL, HUGE_VAL, HUGE_VAL);
-      range.expand(d.bbox);
+      d.bbox = dRect();
     }
 
     // Calculate map scale (map pixels per viewer pixel).

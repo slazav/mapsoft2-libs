@@ -26,23 +26,33 @@ private:
   // Original data. It may be edited through the GObj interface.
   GeoMapList & maps;
   dRect range; // data range in viewer coords
+  dMultiLine brd; // border in viewer coords
 
   struct MapData{
-    ConvMulti cnv;  // conversion from viewer coordinates to the map coordinates
+    ConvMulti cnv;      // conversion from viewer coordinates to the map coordinates
+    const GeoMap *src;  // pointer to the map
+    dRect src_bbox;     // map original bbox (image coordinates)
+    dMultiLine src_brd; // map original border (image coordinates)
+
+    dRect bbox;     // map bbox (viewer coordinates, recalculated in set_cnv)
+    dMultiLine brd; // map border (viewer coordinates, recalculated in set_cnv)
     double scale;   // map scale (map pixels / viewer pixels)
     double load_sc; // scale for image loading
     int zoom;       // zoom level for tiled maps
-    dMultiLine brd; // map border (in viewer coordinates)
     dLine refs;     // map refpoints (in viewer coordinates)
-    dRect bbox;     // map bbox (in viewer coordinates)
-    dRect src_bbox; // map original bbox (it may take some time to get it)
-    const GeoMap * src;           // pointer to the map
     std::unique_ptr<ImageT> timg; // normal maps use a single img_cache for data storage;
                     // tiled maps have one ImageT object per map.
     dPolyTester test_brd; // test if point is inside map border (viewer coords)
 
-    MapData(const GeoMap & m): load_sc(1.0), zoom(0), src_bbox(m.bbox()),
-                               src(&m), test_brd(brd) {
+    MapData(const GeoMap & m): load_sc(1.0), zoom(0), src(&m), test_brd(brd) {
+
+      // src_bbox - based on actual image size, cropped to border if it is set
+      // src_brd  - take non-empty border from map, or use image bbox
+      src_bbox = dRect(dPoint(), image_size(m.image));
+      src_brd  = m.border;
+      if (src_brd.size()==0) src_brd.push_back(rect_to_line(src_bbox, false));
+      else src_bbox.intersect(src_brd.bbox());
+
       if (m.is_tiled) timg =
         std::unique_ptr<ImageT>(new ImageT(m.image, m.tile_swapy, m.tile_size));
     }
@@ -106,6 +116,8 @@ public:
   ret_t draw(const CairoWrapper & cr, const dRect &box) override;
 
   dRect bbox() const override {return range;}
+
+  dMultiLine border() const override {return brd;}
 
 };
 
