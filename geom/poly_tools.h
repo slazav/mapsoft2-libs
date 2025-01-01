@@ -413,7 +413,9 @@ MultiLine<CT,Point<CT> > figure_line(const::std::string &str) {
 
   // try Rect
   try {
-    ret.push_back(rect_to_line(Rect<CT>(str), true));
+    Rect<CT> r(str);
+    // empty rectangle should produce empty multiline, not empty segment
+    if (!r.is_empty()) ret.push_back(rect_to_line(Rect<CT>(str), true));
     return ret;
   }
   catch (Err & e){}

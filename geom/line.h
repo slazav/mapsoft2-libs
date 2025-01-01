@@ -415,10 +415,12 @@ Line<CT,PT> flip_x(const Line<CT,PT> & l, const CT x0=0){
 /// Convert rectangle to a line. Line goes clockwise,
 /// starting from top-left corner (<tlc>, <trc>, <brc>, <blc>, and
 /// if <closed> parameter is true back to <tlc>).
+/// Empty rectangle converts to empty line.
 /// \relates Line
 template <typename CT>
 Line<CT,Point<CT> > rect_to_line(const Rect<CT> & r, bool closed=true) {
   Line<CT,Point<CT> > ret;
+  if (r.is_empty()) return ret;
   ret.push_back(r.tlc());
   ret.push_back(r.trc());
   ret.push_back(r.brc());

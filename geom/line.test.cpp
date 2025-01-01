@@ -223,6 +223,10 @@ main(){
   assert_eq(rect_to_line(iRect(1,1,2,2), true), iLine("[[1,1],[3,1],[3,3],[1,3],[1,1]]"));
   assert_eq(rect_to_line(iRect(1,1,2,2), false), iLine("[[1,1],[3,1],[3,3],[1,3]]"));
 
+  assert_eq(rect_to_line(iRect(), false), iLine());
+  assert_eq(rect_to_line(iRect(), true), iLine());
+  assert_eq(rect_to_line(dRect(), true), dLine());
+
   // dist
   assert_deq(
     dLine("[[0,0],[1,1],[2,2]]"),
