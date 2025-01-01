@@ -106,6 +106,8 @@ DThreadViewer::updater(){
             if (draw_rng.is_zsize()) continue;
           }
 
+          if (obj->check(draw_rng)==GObj::FILL_NONE) continue;
+
           crw->save();
           crw->translate(-draw_rng.tlc()+iPoint(sh,0));
           try {

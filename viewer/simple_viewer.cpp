@@ -182,20 +182,22 @@ SimpleViewer::draw(const CairoWrapper & crw, const iRect & r){
   for (int x = x1; x<x2; x++) {
     // if xloop = false we draw only x=0
     if (!get_xloop() && x!=0) continue;
+    if (!obj) continue;
 
-    if (obj){
-      crw1->save();
-      crw1->translate(-r.tlc()-origin-iPoint(x*bbox.x,0));
-      iRect draw_range = r+origin;
-      if (bbox) {
-        draw_range.x -= x*bbox.x;
-        draw_range.intersect(bbox);
-        if (draw_range.is_zsize()) continue;
-      }
-      obj->prepare_range(draw_range);
-      obj->draw(crw1, draw_range);
-      crw1->restore();
+    iRect draw_range = r+origin;
+    if (bbox) {
+      draw_range.x -= x*bbox.x;
+      draw_range.intersect(bbox);
+      if (draw_range.is_zsize()) continue;
     }
+
+    if (obj->check(draw_range)==GObj::FILL_NONE) continue;
+
+    crw1->save();
+    crw1->translate(-r.tlc()-origin-iPoint(x*bbox.x,0));
+    obj->prepare_range(draw_range);
+    obj->draw(crw1, draw_range);
+    crw1->restore();
   }
   crw1.get_surface()->flush();
   crw->set_source(crw1.get_surface(), r.x, r.y);
