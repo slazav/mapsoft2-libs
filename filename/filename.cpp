@@ -154,6 +154,12 @@ file_mkdir(const std::string & dir_name){
     throw Err() << "not a directory: " << dir_name;
 }
 
+void
+file_remove(const std::string & fname){
+  if (remove(fname.c_str())!=0)
+    throw Err() << "can't delete file: " << fname << ": " << strerror(errno);
+}
+
 #include <dirent.h>
 #include <algorithm>
 

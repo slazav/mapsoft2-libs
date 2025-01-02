@@ -120,7 +120,8 @@ int main() {
     assert_eq(file_exists("test_dir"), 0);
     file_mkdir("test_dir"); // no need to do anything
     assert_eq(file_exists("test_dir"), 1);
-    remove("test_dir");
+    file_remove("test_dir");
+    assert_err(file_remove("test_dir"), "can't delete file: test_dir: No such file or directory");
 
     // file_ls
     assert_err(file_ls("filename.test.cpp"), "filename.test.cpp: Not a directory");
