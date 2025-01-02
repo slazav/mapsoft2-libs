@@ -129,6 +129,13 @@ file_exists(const std::string & fname){
   return stat(fname.c_str(), &st_buf) == 0;
 }
 
+time_t
+file_mtime(const std::string & fname){
+  struct stat st_buf;
+  if (stat(fname.c_str(), &st_buf) != 0) return -1;
+  return st_buf.st_mtim.tv_sec;
+}
+
 bool
 file_newer(const std::string & file_src, const std::string & file_dst){
   struct stat st_buf1, st_buf2;

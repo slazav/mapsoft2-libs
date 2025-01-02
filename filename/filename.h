@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <time.h>
 
 /* Check if the file has specified extension (case insensitive).
    Example: file_ext_check("file.jpg", ".jpg") => true
@@ -55,6 +56,9 @@ bool file_exists(const std::string & fname);
 
 // delete file or directory
 void file_remove(const std::string & fname);
+
+// get mtime for a file
+time_t file_mtime(const std::string & fname);
 
 // Check if file_src newer then file_dst.
 // Returns true if:
