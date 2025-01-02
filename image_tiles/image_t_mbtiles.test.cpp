@@ -40,6 +40,9 @@ main(){
       assert_eq(db.tile_exists(iPoint(5741,5035,13)), true);
       assert_eq(db.tile_exists(iPoint(5741,5035,12)), false);
 
+      assert_feq(db.tile_mtime(iPoint(5741,5035,13)), time(NULL), 2);
+      assert_eq(db.tile_mtime(iPoint(5741,5035,12)), -1);
+
       ImageR img1 = db.tile_read(iPoint(1001,1000,10));
       assert_eq(img1.is_empty(), true);
 

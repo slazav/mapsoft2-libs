@@ -30,6 +30,9 @@ class ImageTLocal: public ImageT {
     // check if tile exists
     bool tile_exists(const iPoint & key) const override;
 
+    // get timestamp (or -1 if unavalable)
+    virtual time_t tile_mtime(const iPoint & key) const override;
+
     // check if tile1 newer then tile2 OR tile2 does not exist
     bool tile_newer(const iPoint & key1, const iPoint & key2) const override;
 
