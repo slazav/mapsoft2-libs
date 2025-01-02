@@ -37,6 +37,8 @@ main(){
       img.set32(128,128,0xFF00FF00);
 
       db.tile_write(iPoint(5741,5035,13), img);
+      assert_eq(db.tile_exists(iPoint(5741,5035,13)), true);
+      assert_eq(db.tile_exists(iPoint(5741,5035,12)), false);
 
       ImageR img1 = db.tile_read(iPoint(1001,1000,10));
       assert_eq(img1.is_empty(), true);

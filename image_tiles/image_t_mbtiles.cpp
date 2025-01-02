@@ -66,6 +66,9 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
   stmt_tile_sel = sql_prepare("SELECT tile_data FROM tiles "
                               "WHERE tile_column=? AND tile_row=? AND zoom_level=?");
 
+  stmt_tile_ex = sql_prepare("SELECT 1 FROM tiles "
+                              "WHERE tile_column=? AND tile_row=? AND zoom_level=?");
+
   stmt_tile_del = sql_prepare("DELETE FROM tiles "
                               "WHERE tile_column=? AND tile_row=? AND zoom_level=?");
 
@@ -175,7 +178,15 @@ ImageMBTiles::tile_read(const iPoint & key) const {
 
 bool
 ImageMBTiles::tile_exists(const iPoint & key) const {
-  return false;
+
+  auto stmt = stmt_tile_ex.get();
+  sqlite3_reset(stmt);
+  sql_bind_int(stmt, 1, key.x);
+  sql_bind_int(stmt, 2, key.y);
+  sql_bind_int(stmt, 3, key.z);
+
+  // no data - return empty image
+  return sqlite3_step(stmt)==SQLITE_ROW;
 }
 
 bool
