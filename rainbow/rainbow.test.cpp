@@ -45,6 +45,11 @@ main(){
     R.set_limits(0x111111, 0x222222u);
     assert_eq(R.get(0.0), 0x111111u);
     assert_eq(R.get(1.0), 0x222222u);
+
+    assert_eq(R.get(NAN), 0x111111u);
+    assert_eq(R.get(-INFINITY), 0x111111u);
+    assert_eq(R.get(+INFINITY), 0x222222u);
+
   }
 
 /************************************************/

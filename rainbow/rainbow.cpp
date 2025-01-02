@@ -105,6 +105,7 @@ Rainbow::get(double val) const{
   if (N<1) return 0;
   if (val < lv) return lc;
   if (val > hv) return hc;
+  if (std::isnan(val)) return lc;
 
   int i = 1;
   while (i<N-1 && (dir*(val - vv[i]) > 0)) i++;
