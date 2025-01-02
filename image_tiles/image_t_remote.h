@@ -40,6 +40,9 @@ class ImageTRemote: public ImageT {
     // write a tile
     void tile_write(const iPoint & key, const ImageR & img) override;
 
+    // delete a tile
+    void tile_delete(const iPoint & key) override;
+
 };
 
 #endif

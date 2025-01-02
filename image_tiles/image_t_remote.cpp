@@ -44,3 +44,8 @@ void
 ImageTRemote::tile_write(const iPoint & key, const ImageR & img) {
   throw Err() << "Write access for remote tiles is not supported";
 }
+
+void
+ImageTRemote::tile_delete(const iPoint & key) {
+  throw Err() << "tile_delete for remote tiles is not supported";
+}

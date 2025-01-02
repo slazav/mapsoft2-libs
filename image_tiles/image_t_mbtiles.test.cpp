@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <unistd.h>
-#include "image_mbtiles.h"
+#include "image_t_mbtiles.h"
 #include "err/assert_err.h"
 
 int
@@ -36,12 +36,12 @@ main(){
       img.fill32(0xFFFF0000);
       img.set32(128,128,0xFF00FF00);
 
-      db.put_tile(5741,5035,13, img);
+      db.tile_write(iPoint(5741,5035,13), img);
 
-      ImageR img1 = db.get_tile(1001,1000,10);
+      ImageR img1 = db.tile_read(iPoint(1001,1000,10));
       assert_eq(img1.is_empty(), true);
 
-      ImageR img2 = db.get_tile(5741,5035,13);
+      ImageR img2 = db.tile_read(iPoint(5741,5035,13));
       assert_eq(img2.is_empty(), false);
       assert_eq(img2.get32(0,0), 0xFFFF0000);
       assert_eq(img2.get32(128,128), 0xFF00FF00);
@@ -109,7 +109,7 @@ main(){
 
       // try to change information
       assert_err(db.set_metadata("maxzoom", "18"), "can't write to read-only database");
-      assert_err(db.put_tile(5741,5035,13,ImageR()), "can't write to read-only database");
+      assert_err(db.tile_write(iPoint(5741,5035,13),ImageR()), "can't write to read-only database");
 
       // check updated fields
       assert_eq(db.get_metadata("maxzoom"), "15");

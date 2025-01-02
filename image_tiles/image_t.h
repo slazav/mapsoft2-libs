@@ -51,6 +51,9 @@ class ImageT: public Image {
     // write a tile
     virtual void tile_write(const iPoint & key, const ImageR & img) = 0;
 
+    // delete a tile
+    virtual void tile_delete(const iPoint & key) = 0;
+
     // check if tile exists
     virtual bool tile_exists(const iPoint & key) const = 0;
 

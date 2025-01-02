@@ -1,5 +1,5 @@
 #include <sstream>
-#include "image_mbtiles.h"
+#include "image_t_mbtiles.h"
 #include "geo_tiles/geo_tiles.h"
 #include "geom/poly_tools.h"
 #include "filename/filename.h"
@@ -7,7 +7,7 @@
 #include "image/io_png.h"
 
 ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
-       readonly(readonly), cache(16), tsize(256){
+       readonly(readonly), ImageT(file, false, 256, 0, 16){
 
   int flags = readonly? SQLITE_OPEN_READONLY :
                         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
@@ -56,7 +56,7 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
   }
 
   // set default image options
-  img_opts["fmt"] = "png";
+  opts["fmt"] = "png";
 
   // precompiled statements
   stmt_meta_sel = sql_prepare("SELECT value FROM metadata WHERE name = ?");
@@ -120,13 +120,13 @@ ImageMBTiles::set_metadata(const std::string & key, const std::string & val){
 }
 
 void
-ImageMBTiles::put_tile(const size_t x, const size_t y, const size_t z, const ImageR img){
+ImageMBTiles::tile_write(const iPoint & key, const ImageR & img){
   if (readonly) throw Err() << "can't write to read-only database";
 
   std::string data;
   {
     std::ostringstream str;
-    image_save_png(img, str, img_opts);
+    image_save_png(img, str, opts);
     data = str.str(); // save data
   }
 
@@ -135,13 +135,13 @@ ImageMBTiles::put_tile(const size_t x, const size_t y, const size_t z, const Ima
   sqlite3_reset(stmt1);
   sqlite3_reset(stmt2);
 
-  sql_bind_int(stmt1, 1, x);
-  sql_bind_int(stmt1, 2, y);
-  sql_bind_int(stmt1, 3, z);
+  sql_bind_int(stmt1, 1, key.x);
+  sql_bind_int(stmt1, 2, key.y);
+  sql_bind_int(stmt1, 3, key.z);
 
-  sql_bind_int(stmt2, 1, x);
-  sql_bind_int(stmt2, 2, y);
-  sql_bind_int(stmt2, 3, z);
+  sql_bind_int(stmt2, 1, key.x);
+  sql_bind_int(stmt2, 2, key.y);
+  sql_bind_int(stmt2, 3, key.z);
   sql_bind_blob(stmt2, 4, data);
 
   sql_run_simple(stmt1);
@@ -149,14 +149,14 @@ ImageMBTiles::put_tile(const size_t x, const size_t y, const size_t z, const Ima
 }
 
 ImageR
-ImageMBTiles::get_tile(const size_t x, const size_t y, const size_t z) const {
+ImageMBTiles::tile_read(const iPoint & key) const {
 
   auto stmt = stmt_tile_sel.get();
   sqlite3_reset(stmt);
 
-  sql_bind_int(stmt, 1, x);
-  sql_bind_int(stmt, 2, y);
-  sql_bind_int(stmt, 3, z);
+  sql_bind_int(stmt, 1, key.x);
+  sql_bind_int(stmt, 2, key.y);
+  sql_bind_int(stmt, 3, key.z);
 
   // no data - return empty image
   if (sqlite3_step(stmt)!=SQLITE_ROW) return ImageR();
@@ -173,15 +173,25 @@ ImageMBTiles::get_tile(const size_t x, const size_t y, const size_t z) const {
   return image_load(str);
 }
 
+bool
+ImageMBTiles::tile_exists(const iPoint & key) const {
+  return false;
+}
+
+bool
+ImageMBTiles::tile_newer(const iPoint & key1, const iPoint & key2) const {
+  return false;
+}
+
 void
-ImageMBTiles::del_tile(const size_t x, const size_t y, const size_t z){
+ImageMBTiles::tile_delete(const iPoint & key){
   if (readonly) throw Err() << "can't write to read-only database";
 
   auto stmt = stmt_tile_del.get();
   sqlite3_reset(stmt);
-  sql_bind_int(stmt, 1, x);
-  sql_bind_int(stmt, 2, y);
-  sql_bind_int(stmt, 3, z);
+  sql_bind_int(stmt, 1, key.x);
+  sql_bind_int(stmt, 2, key.y);
+  sql_bind_int(stmt, 3, key.z);
   sql_run_simple(stmt);
 }
 
@@ -339,7 +349,65 @@ ImageMBTiles::crop(const dMultiLine & brd) {
   for (int z=min_zoom(); z<=max_zoom(); ++z){
     for (auto tile:tile_list(z)){
       dRect trange = tcalc.tile_to_range(tile, z);
-      if (brd.size() && rect_in_polygon(trange, brd) == 0) del_tile(tile);
+      if (brd.size() && rect_in_polygon(trange, brd) == 0) tile_delete(tile);
     }
   }
 }
+
+void
+ImageMBTiles::vacuum() {
+  auto stmt = sql_prepare("VACUUM");
+  sql_run_simple(stmt.get());
+}
+
+/**********************************************************/
+// Private functions
+
+std::shared_ptr<sqlite3_stmt>
+ImageMBTiles::sql_prepare(const char * cmd) const{
+  sqlite3_stmt *stmt;
+  // cmd memory should be managed in the program!
+  int res = sqlite3_prepare(db.get(), cmd, -1, &stmt, 0);
+  if (res!=SQLITE_OK) throw Err()
+  << "can't prepare sql command: " << cmd << ": " << sqlite3_errstr(res);
+  return std::shared_ptr<sqlite3_stmt>(stmt, sqlite3_finalize);
+}
+
+void
+ImageMBTiles::sql_bind_str(sqlite3_stmt *stmt, const int n, const std::string & str) const{
+  int res = sqlite3_bind_text(stmt, n, str.c_str(), str.size(), SQLITE_STATIC);
+  if (res!=SQLITE_OK) throw Err()
+    << "can't bind sql command: " << sqlite3_expanded_sql(stmt)
+    << ": " << sqlite3_errstr(res);
+}
+
+void
+ImageMBTiles::sql_bind_blob(sqlite3_stmt *stmt, const int n, const std::string & str) const{
+  int res = sqlite3_bind_blob(stmt, n, str.c_str(), str.size(), SQLITE_STATIC);
+  if (res!=SQLITE_OK) throw Err()
+    << "can't bind sql command: " << sqlite3_expanded_sql(stmt)
+    << ": " << sqlite3_errstr(res);
+}
+
+void
+ImageMBTiles::sql_bind_int(sqlite3_stmt *stmt, const int n, const int v) const{
+  int res = sqlite3_bind_int(stmt, n, v);
+  if (res!=SQLITE_OK) throw Err()
+    << "can't bind sql command: " << sqlite3_expanded_sql(stmt)
+    << ": " << sqlite3_errstr(res);
+}
+
+void
+ImageMBTiles::sql_run_simple(sqlite3_stmt *stmt) const{
+  int res = sqlite3_step(stmt);
+  if (res!=SQLITE_DONE) throw Err()
+    << "can't run sql command: " << sqlite3_expanded_sql(stmt)
+    << ": " << sqlite3_errstr(res);
+}
+
+void
+ImageMBTiles::sql_cmd_simple(const char *cmd) const{
+  auto stmt = sql_prepare(cmd);
+  sql_run_simple(stmt.get());
+}
+

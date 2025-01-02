@@ -8,7 +8,7 @@
 #include "getopt/help_printer.h"
 #include "image/io_jpeg.h"
 
-#include "image_mbtiles/image_mbtiles.h"
+#include "image_tiles/image_t_mbtiles.h"
 #include "jnx.h"
 
 #define MINZ_LIMIT 8
@@ -131,7 +131,7 @@ std::cerr << "r: " << r.tlc() << " - " << r.brc()  << "\n";
       for (const auto tkey: mbtiles.tile_list(z)){
         dRect r = tcalc.tile_to_range(tkey, z);
         std::ostringstream s1;
-        image_save_jpeg(mbtiles.get_tile(tkey), s1, O);
+        image_save_jpeg(mbtiles.tile_read(tkey), s1, O);
         auto data = s1.str().substr(2, s1.str().size()-4);
 
         jnx_tile_info_t info;

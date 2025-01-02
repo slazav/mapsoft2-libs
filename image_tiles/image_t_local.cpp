@@ -45,3 +45,10 @@ ImageTLocal::tile_write(const iPoint & key, const ImageR & img) {
   // save image
   image_save(img, fname, O);
 }
+
+void
+ImageTLocal::tile_delete(const iPoint & key) {
+  auto fname = make_url(tmpl, key);
+  if (verb) std::cout << "tile_delete: " << fname << "\n";
+  file_remove(fname);
+}

@@ -7,7 +7,6 @@
 #include "getopt/help_printer.h"
 #include "image/io_jpeg.h"
 
-#include "image_mbtiles/image_mbtiles.h"
 #include "jnx.h"
 
 GetOptSet options;
