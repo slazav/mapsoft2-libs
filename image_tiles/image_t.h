@@ -15,6 +15,7 @@ class ImageT: public Image {
     bool swapy;
     int zoom;
     mutable Cache<iPoint, ImageR> tile_cache;
+    bool verb; // if true - print messages to stdout when reading/writing tiles
 
   public:
 
@@ -34,23 +35,40 @@ class ImageT: public Image {
     ImageT(const std::string & tmpl, bool swapy = false, size_t tsize=256,
            uint32_t bg=0xFF000000, size_t cache_size=16):
        tmpl(tmpl), swapy(swapy), tsize(tsize),
-       Image(bg), tile_cache(cache_size), zoom(0) {};
+       Image(bg), tile_cache(cache_size), zoom(0), verb(false) {};
 
     // Set options
-    virtual void set_opt(const Opt & opt) {}
+    virtual void set_opt(const Opt & opt) { verb = opt.get("verbose", false); }
 
     // Clear all cached data
     virtual void clear() {tile_cache.clear();}
 
+    /*******************************************************/
+
     // get a tile directly (without using cache)
-    virtual ImageR read_tile(const iPoint & key) const = 0;
+    virtual ImageR tile_read(const iPoint & key) const = 0;
 
     // write a tile
-    virtual void write_tile(const iPoint & key) const = 0;
+    virtual void tile_write(const iPoint & key, const ImageR & img) = 0;
+
+    // check if tile exists
+    virtual bool tile_exists(const iPoint & key) const = 0;
+
+    // check if tile1 newer then tile2 OR tile2 does not exist
+    virtual bool tile_newer(const iPoint & key1, const iPoint & key2) const = 0;
+
+    // return true if any of z+1 sub-tiles is newer or tile does not exist
+    // (then one may want to update the tile by rescaling z+1 sub-tiles)
+    virtual bool tile_rescale_check(const iPoint & key) const;
+
+    // make tile by scaling four z+1 sub-tiles and write it
+    virtual void tile_rescale(const iPoint & key);
 
     // get a tile (using tile cache)
-    virtual ImageR & get_tile_cache(const iPoint & key) const;
+    virtual ImageR & tile_get_cached(const iPoint & key) const;
 
+    // tile pixel range
+    virtual iRect tile_bbox(const iPoint & key) const;
 
     /*******************************************************/
     // Image interface

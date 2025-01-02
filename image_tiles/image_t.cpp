@@ -34,9 +34,9 @@ ImageT::make_url(const std::string& tmpl, const iPoint & key){
 }
 
 ImageR &
-ImageT::get_tile_cache(const iPoint & key) const {
+ImageT::tile_get_cached(const iPoint & key) const {
   if (tile_cache.contains(key)) return tile_cache.get(key);
-  tile_cache.add(key, read_tile(key));
+  tile_cache.add(key, tile_read(key));
   return tile_cache.get(key);
 }
 
@@ -45,7 +45,7 @@ ImageT::get_argb(const size_t x, const size_t y) const {
   iPoint key(x/tsize, y/tsize, zoom);
   iPoint crd(x%tsize, y%tsize);
   if (swapy) key.y = (1<<zoom) - key.y - 1;
-  auto & img = get_tile_cache(key);
+  auto & img = tile_get_cached(key);
   if (img.is_empty()) return 0;
   return img.get_argb(crd.x, crd.y);
 }
@@ -59,3 +59,44 @@ ImageT::get_image(const iRect & r) const{
   return ret;
 }
 
+iRect
+ImageT::tile_bbox(const iPoint & key) const{
+  return (int)tsize*iRect(key, key+iPoint(1,1));
+}
+
+bool
+ImageT::tile_rescale_check(const iPoint & key) const{
+  for (int t=0; t<4; t++){
+    iPoint src(2*key.x + t%2, 2*key.y + t/2, key.z+1);
+    if (tile_newer(src, key)) return true;
+  }
+  return false;
+}
+
+void
+ImageT::tile_rescale(const iPoint & key) {
+  ImageR img(tsize, tsize, IMAGE_32ARGB);
+  img.fill32(0);
+
+  for (int t=0; t<4; t++){
+    iPoint src(2*key.x + t%2, 2*key.y + t/2, key.z+1);
+    if (!tile_exists(src)) continue;
+    ImageR src_img = tile_read(src);
+
+    for (size_t y1 = 0; y1<tsize/2; ++y1){
+      for (size_t x1 = 0; x1<tsize/2; ++x1){
+        // calculate 4-point average for all 4 color components
+        int cc[4] = {0,0,0,0};
+        for (int t1 = 0; t1<4; t1++){
+          uint32_t c =  src_img.get_argb(2*x1 + t1%2, 2*y1 + t1/2);
+          for (int i = 0; i<4; ++i) cc[i] += ((c>>(8*i)) & 0xff);
+        }
+        uint32_t c = 0;
+        for (int i = 0; i<4; ++i)
+          c += ((cc[i]/4) & 0xff) << (8*i);
+        img.set32(x1 + (t%2)*tsize/2, y1 + (t/2)*tsize/2, c);
+      }
+    }
+  }
+  tile_write(key, img);
+}

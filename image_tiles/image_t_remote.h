@@ -17,23 +17,28 @@ class ImageTRemote: public ImageT {
 
     ImageTRemote(const std::string & tmpl, bool swapy = false, size_t tsize=256,
                  uint32_t bg=0xFF000000, size_t tcache_size=16, size_t dcache_size=64):
-       ImageT(tmpl, swapy, tsize, bg, tcache_size), dmanager(dcache_size, IMAGE_T_NCONN)  {};
-
+       ImageT(tmpl, swapy, tsize, bg, tcache_size), dmanager(dcache_size, IMAGE_T_NCONN) {};
 
     /*******************************************************/
     // ImageT interface
 
-    // Set options, now it's only Downloader options
-    void set_opt(const Opt & opt) override {dmanager.set_opt(opt);}
+    // Set options
+    void set_opt(const Opt & opt) override { ImageT::set_opt(opt); dmanager.set_opt(opt); }
 
     // Clear tile cache and downloader queue
     void clear() override;
 
     // get a tile (without using cache)
-    ImageR read_tile(const iPoint & key) const override;
+    ImageR tile_read(const iPoint & key) const override;
+
+    // check if tile exists
+    bool tile_exists(const iPoint & key) const override;
+
+    // check if tile1 newer then tile2 OR tile2 does not exist
+    bool tile_newer(const iPoint & key1, const iPoint & key2) const override;
 
     // write a tile
-    void write_tile(const iPoint & key) const override;
+    void tile_write(const iPoint & key, const ImageR & img) override;
 
 };
 

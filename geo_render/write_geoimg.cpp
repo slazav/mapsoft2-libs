@@ -3,7 +3,7 @@
 #include "geo_data/geo_io.h"
 #include "geo_data/conv_geo.h"
 #include "write_geoimg.h"
-#include "image_tiles/image_t.h" // ImageT::make_url
+#include "image_tiles/image_t_local.h"
 #include "image/image_colors.h"
 #include "geo_mkref/geo_mkref.h" // for tiled maps
 #include "geom/poly_tools.h"     // for rect_in_polygon
@@ -62,6 +62,8 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
   obj.set_opt(opts);
 
   GeoTiles tcalc;  // tile calculator
+  ImageTLocal timg(fname); // interface to tiled image
+  timg.set_opt(opts);
 
   // bbox: intersection of border bbox and object bbox
   dRect bbox = intersect_nonempty(brd.bbox(), obj.bbox());
@@ -88,11 +90,6 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
 
         // make filename, create subdirectories if needed
         std::string f = ImageT::make_url(fname, tile);
-        for (const auto & d: file_get_dirs(f, 1)) {
-          if (dirs.count(d)>0) continue;
-          file_mkdir(d);
-          dirs.insert(d);
-        }
 
         // render tile in a normal way
         if (z == zmax || !opts.get("tmap_scale", false)){
@@ -111,18 +108,17 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
           // skip tiles outside object range
           if (obj.check(trange_img) == GObj::FILL_NONE) continue;
 
+          if (verb) std::cout << "create tile: " << tile << "\n";
           // create background image
           ImageR img;
-          if (opts.exists("add") && file_exists(f)){
+          if (opts.exists("add") && timg.tile_exists(tile)){
             try {
-              img = image_to_argb(image_load(f, 1, opts));
-              if (verb) std::cout << "update " << f << "\n";
+              img = image_to_argb(timg.tile_read(tile));
               if (img.height()!=TMAP_TILE_SIZE || img.width()!=TMAP_TILE_SIZE)
                 img = ImageR();
             } catch (const Err & e) { }
           }
           if (img.is_empty()){
-            if (verb) std::cout << "create " << f << "\n";
             img = ImageR(TMAP_TILE_SIZE, TMAP_TILE_SIZE, IMAGE_32ARGB);
             img.fill32(bg);
           }
@@ -145,51 +141,14 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
           cr->save();
           int res = obj.draw(cr, trange_img);
           cr->restore();
-          image_save(img, f, opts);
+          timg.tile_write(tile, img);
         }
 
         // collect the tile from four larger tiles
         else {
-          if (verb) std::cout << "rescale " << f << "\n";
-          size_t w = tcalc.get_tsize();
-          ImageR img(w, w, IMAGE_32ARGB);
-          img.fill32(0);
-
-          // Check if we need to update the tile:
-          // Any of 4 large-scale tile exists and newer then the tile,
-          bool skip = true;
-          for (int t=0; t<4; t++){
-            iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
-            std::string src_f = ImageT::make_url(fname, src_tile);
-            if (file_newer(src_f, f)) skip = false;
-          }
-          if (skip) continue;
-
-          // Make the tile by averaging four larger-scale tiles
-          for (int t=0; t<4; t++){
-            iPoint src_tile(2*x + t%2, 2*y + t/2, z+1);
-            std::string src_f = ImageT::make_url(fname, src_tile);
-            if (!file_exists(src_f)) continue;
-            ImageR src_img = image_load(src_f);
-            if (src_img.width() != w || src_img.height()!=w)
-              throw Err() << "wrong tile size: " << src_f << ": " << src_img; 
-            for (size_t y1 = 0; y1<w/2; ++y1){
-              for (size_t x1 = 0; x1<w/2; ++x1){
-                // calculate 4-point average for all 4 color components
-                int cc[4] = {0,0,0,0};
-                for (int t1 = 0; t1<4; t1++){
-                  uint32_t c =  src_img.get_argb(2*x1 + t1%2, 2*y1 + t1/2);
-                  for (int i = 0; i<4; ++i) cc[i] += ((c>>(8*i)) & 0xff);
-                }
-                uint32_t c = 0;
-                for (int i = 0; i<4; ++i)
-                  c += ((cc[i]/4) & 0xff) << (8*i);
-
-                img.set32(x1 + (t%2)*w/2, y1 + (t/2)*w/2, c);
-              }
-            }
-          }
-          image_save(img, f, opts);
+          if (!timg.tile_rescale_check(tile)) continue;
+          if (verb) std::cout << "rescale tile: " << tile << "\n";
+          timg.tile_rescale(tile);
         }
       }
     }
