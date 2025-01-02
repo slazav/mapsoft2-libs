@@ -53,29 +53,15 @@ ms2opt_add_geoimg(GetOptSet & opts){
 #define TMAP_TILE_SIZE 256
 
 void
-write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts){
-  // calculate zoom range
+write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const Opt & opts){
+
   int zmin = opts.get("zmin", 0);
   int zmax = opts.get("zmax", 0);
+  uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
+  bool verb = opts.get<int>("verbose", false);
+  obj.set_opt(opts);
 
-  dMultiLine brd = ref.border;
-  // if there is a reference:
-  if (!ref.empty()) {
-    ConvMap cnv0(ref); // conversion original map->wgs
-    brd = cnv0.frw_acc(brd); // -> wgs
-  }
   GeoTiles tcalc;  // tile calculator
-
-  // Build new options for write_geoimg. We do not need "tmap", "map",
-  // "skip_image", "border_*" options.
-  Opt o(opts);
-  o.erase("tmap");
-  o.erase("map");
-  o.erase("skip_image");
-  o.erase("tmap_scale");
-  o.erase("border_wgs");
-  o.erase("border_file");
-  o.put<bool>("skip_empty", 1);
 
   // bbox: intersection of border bbox and object bbox
   dRect bbox = intersect_nonempty(brd.bbox(), obj.bbox());
@@ -96,6 +82,8 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
       for (int x = tiles.x; x < tiles.x + tiles.w; x++) {
         iPoint tile(x,y,z);
         dRect trange_wgs = tcalc.gtile_to_range(tile, z); // Google, not TMS tiles
+        dRect trange_img = dRect(0,0,TMAP_TILE_SIZE,TMAP_TILE_SIZE);
+        // skip tiles outside global border
         if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
 
         // make filename, create subdirectories if needed
@@ -113,20 +101,56 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
           r.proj = "WEB";
           r.image_size = iPoint(1,1)*TMAP_TILE_SIZE;
           dLine pts_w = rect_to_line(trange_wgs, false);
-          dLine pts_r = rect_to_line(dRect(dPoint(0,0),r.image_size), false);
+          dLine pts_r = rect_to_line(trange_img, false);
           pts_r.flip_y(r.image_size.y);
           r.add_ref(pts_r, pts_w);
 
-          // convert border to pixel coordinates of this tile
-          ConvMap cnv1(r);
-          r.border = cnv1.bck_acc(brd);
+          std::shared_ptr<ConvMap> cnv(new ConvMap(r));
+          obj.set_cnv(cnv);
 
-          // write to file
-          write_geoimg(f, obj, r, o);
+          // skip tiles outside object range
+          if (obj.check(trange_img) == GObj::FILL_NONE) continue;
+
+          // create background image
+          ImageR img;
+          if (opts.exists("add") && file_exists(f)){
+            try {
+              img = image_to_argb(image_load(f, 1, opts));
+              if (verb) std::cout << "update " << f << "\n";
+              if (img.height()!=TMAP_TILE_SIZE || img.width()!=TMAP_TILE_SIZE)
+                img = ImageR();
+            } catch (const Err & e) { }
+          }
+          if (img.is_empty()){
+            if (verb) std::cout << "create " << f << "\n";
+            img = ImageR(TMAP_TILE_SIZE, TMAP_TILE_SIZE, IMAGE_32ARGB);
+            img.fill32(bg);
+          }
+
+          // setup cairo context
+          CairoWrapper cr;
+          cr.set_surface_img(img);
+
+          // clip to border
+          // convert border to pixel coordinates of this tile
+          r.border = cnv->bck_acc(brd);
+          if (r.border.size()) {
+            cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+            cr->mkpath_smline(r.border, true, 0);
+            cr->clip();
+          }
+
+          // Draw data
+          // Save context (objects may want to have their own clip regions)
+          cr->save();
+          int res = obj.draw(cr, trange_img);
+          cr->restore();
+          image_save(img, f, opts);
         }
 
         // collect the tile from four larger tiles
         else {
+          if (verb) std::cout << "rescale " << f << "\n";
           size_t w = tcalc.get_tsize();
           ImageR img(w, w, IMAGE_32ARGB);
           img.fill32(0);
@@ -165,7 +189,7 @@ write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt
               }
             }
           }
-          image_save(img, f, o);
+          image_save(img, f, opts);
         }
       }
     }
@@ -177,7 +201,13 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
 
   // process tiled maps
   if (opts.exists("tmap")){
-    write_tiles(fname, obj, ref, opts);
+    // calculate WGS border
+    dMultiLine brd = ref.border;
+    if (!ref.empty()) {
+      ConvMap cnv(ref); // conversion original map->wgs
+      brd = cnv.frw_acc(brd); // -> wgs
+    }
+    write_tiles(fname, obj, brd, opts);
     return;
   }
 

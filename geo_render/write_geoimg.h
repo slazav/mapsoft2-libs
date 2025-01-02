@@ -18,8 +18,7 @@ void ms2opt_add_geoimg(GetOptSet & opts);
 void write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts);
 
 // This function is normally called from write_geoimg.
-// ref parameter is used only for border setting
-void write_tiles(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts);
+void write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd_wgs, const Opt & opts);
 
 // write html map with image and links to all maps
 void write_html_map(const std::string & htmfile, const std::string & imgfile,
