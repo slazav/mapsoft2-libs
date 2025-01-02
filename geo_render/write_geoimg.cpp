@@ -41,6 +41,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "the moment. `mkref` options are ignored. Sub-directories are created if needed.");
   opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
   opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
+  opts.add("zfill", 1,0,g, "Starting from this zoom level tiled map will be filled with bgcolor");
   opts.add("tmap_scale", 1,0,g,
     "When creating tiles with multiple zoom levels scale larger tiles to "
     "create smaller ones (instead of rendering all tiles separately). "
@@ -57,6 +58,7 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
 
   int zmin = opts.get("zmin", 0);
   int zmax = opts.get("zmax", 0);
+  int zfill = opts.get("zfill", 0);
   uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
   bool verb = opts.get<int>("verbose", false);
   obj.set_opt(opts);
@@ -92,7 +94,7 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
         std::string f = ImageT::make_url(fname, tile);
 
         // render tile in a normal way
-        if (z == zmax || !opts.get("tmap_scale", false)){
+        if (z == zmax || z == zfill || !opts.get("tmap_scale", false)){
           // make reference for the tile (similar to code in geo_mkref) 
           GeoMap r;
           r.proj = "WEB";
@@ -120,7 +122,7 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
           }
           if (img.is_empty()){
             img = ImageR(TMAP_TILE_SIZE, TMAP_TILE_SIZE, IMAGE_32ARGB);
-            img.fill32(bg);
+            img.fill32(0);
           }
 
           // setup cairo context
@@ -135,11 +137,16 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
             cr->mkpath_smline(r.border, true, 0);
             cr->clip();
           }
-
           // Draw data
           // Save context (objects may want to have their own clip regions)
           cr->save();
-          int res = obj.draw(cr, trange_img);
+          if (z<=zfill){
+            cr->set_color_a(bg);
+            cr->paint();
+          }
+          else {
+            obj.draw(cr, trange_img);
+          }
           cr->restore();
           timg.tile_write(tile, img);
         }
