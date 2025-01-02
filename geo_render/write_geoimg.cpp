@@ -3,7 +3,7 @@
 #include "geo_data/geo_io.h"
 #include "geo_data/conv_geo.h"
 #include "write_geoimg.h"
-#include "image_tiles/image_t_local.h"
+#include "image_tiles/image_t_all.h"
 #include "image/image_colors.h"
 #include "geo_mkref/geo_mkref.h" // for tiled maps
 #include "geom/poly_tools.h"     // for rect_in_polygon
@@ -27,7 +27,9 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "If image file exists, read it and use as the background. "
     "The image should have same dimensions.");
   opts.add("bgcolor", 1,0,g,
-    "Image background color (default 0xFFFFFFFF).");
+    "Image background color (default 0x00000000).");
+  opts.add("fillcolor", 1,0,g,
+    "Color to be used at tiled map with z<zfill level (default 0xFFFF0000).");
   opts.add("map", 1,'m',g, "Write OziExplorer map file for the image.");
   opts.add("skip_image", 0,0,g,
     "Do not write image file (can be used if only the map file is needed). "
@@ -41,12 +43,14 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "the moment. `mkref` options are ignored. Sub-directories are created if needed.");
   opts.add("zmin", 1,0,g, "Min zoom for tiled maps.");
   opts.add("zmax", 1,0,g, "Max zoom for tiled maps.");
-  opts.add("zfill", 1,0,g, "Starting from this zoom level tiled map will be filled with bgcolor");
+  opts.add("zfill", 1,0,g, "Starting from this zoom level tiled map will be filled with fillcolor");
   opts.add("tmap_scale", 1,0,g,
     "When creating tiles with multiple zoom levels scale larger tiles to "
     "create smaller ones (instead of rendering all tiles separately). "
     "Tile is created only if at least one source tile is newer then "
     "the destination tile (or destination does not exist). Default: 0.");
+  opts.add("swapy", 0,0,g, "Normally tiled maps are saved in Google row"
+    " counting; This will switch to TMS");
   opts.add("skip_empty", 0,0,g,
     "Do not save image if nothing was drawn. Default: 0");
 }
@@ -56,16 +60,19 @@ ms2opt_add_geoimg(GetOptSet & opts){
 void
 write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const Opt & opts){
 
-  int zmin = opts.get("zmin", 0);
-  int zmax = opts.get("zmax", 0);
+  int zmin  = opts.get("zmin", 0);
+  int zmax  = opts.get("zmax", 0);
   int zfill = opts.get("zfill", 0);
-  uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
+  uint32_t bg = opts.get<int>("bgcolor", 0);
+  uint32_t fc = opts.get<int>("fillcolor", 0xFFFF0000);
+  bool swapy  = opts.exists("swapy");
+  if (file_ext_check(fname, ".mbtiles")) swapy = true;
+
   bool verb = opts.get<int>("verbose", false);
   obj.set_opt(opts);
 
   GeoTiles tcalc;  // tile calculator
-  ImageTLocal timg(fname); // interface to tiled image
-  timg.set_opt(opts);
+  auto timg = open_tile_img(fname, opts); // interface to tiled image
 
   // bbox: intersection of border bbox and object bbox
   dRect bbox = intersect_nonempty(brd.bbox(), obj.bbox());
@@ -87,6 +94,10 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
         iPoint tile(x,y,z);
         dRect trange_wgs = tcalc.gtile_to_range(tile, z); // Google, not TMS tiles
         dRect trange_img = dRect(0,0,TMAP_TILE_SIZE,TMAP_TILE_SIZE);
+
+        // convert Google->TMS tile if needed
+        if (swapy) tile.y = pow(2,z)-1-y;
+
         // skip tiles outside global border
         if (brd.size() && rect_in_polygon(trange_wgs, brd) == 0) continue;
 
@@ -110,20 +121,22 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
           // skip tiles outside object range
           if (obj.check(trange_img) == GObj::FILL_NONE) continue;
 
-          if (verb) std::cout << "create tile: " << tile << "\n";
           // create background image
           ImageR img;
-          if (opts.exists("add") && timg.tile_exists(tile)){
+          if (opts.exists("add") && timg->tile_exists(tile)){
             try {
-              img = image_to_argb(timg.tile_read(tile));
+              img = image_to_argb(timg->tile_read(tile));
               if (img.height()!=TMAP_TILE_SIZE || img.width()!=TMAP_TILE_SIZE)
                 img = ImageR();
             } catch (const Err & e) { }
           }
+
           if (img.is_empty()){
             img = ImageR(TMAP_TILE_SIZE, TMAP_TILE_SIZE, IMAGE_32ARGB);
-            img.fill32(0);
+            img.fill32(bg);
+            if (verb) std::cout << "create tile: " << tile << "\n";
           }
+          else if (verb) std::cout << "update tile: " << tile << "\n";
 
           // setup cairo context
           CairoWrapper cr;
@@ -141,21 +154,21 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
           // Save context (objects may want to have their own clip regions)
           cr->save();
           if (z<=zfill){
-            cr->set_color_a(bg);
+            cr->set_color_a(fc);
             cr->paint();
           }
           else {
             obj.draw(cr, trange_img);
           }
           cr->restore();
-          timg.tile_write(tile, img);
+          timg->tile_write(tile, img);
         }
 
         // collect the tile from four larger tiles
         else {
-          if (!timg.tile_rescale_check(tile)) continue;
+          if (!timg->tile_rescale_check(tile)) continue;
           if (verb) std::cout << "rescale tile: " << tile << "\n";
-          timg.tile_rescale(tile);
+          timg->tile_rescale(tile);
         }
       }
     }
@@ -166,7 +179,7 @@ void
 write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Opt & opts){
 
   // process tiled maps
-  if (opts.exists("tmap")){
+  if (opts.exists("tmap") || file_ext_check(fname, ".mbtiles")){
     // calculate WGS border
     dMultiLine brd = ref.border;
     if (!ref.empty()) {
@@ -226,7 +239,8 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   size_t w=box.brc().x, h=box.brc().y;
 
   // create background image
-  uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
+  uint32_t bg = opts.get<int>("bgcolor", 0);
+
   bool raster = (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif");
   if (raster) {
     if (opts.exists("add") && file_exists(fname)){
