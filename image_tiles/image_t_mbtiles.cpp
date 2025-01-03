@@ -7,7 +7,7 @@
 #include "image/io_png.h"
 
 ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
-       readonly(readonly), ImageT(file, false, 256, 0, 16){
+       readonly(readonly), ImageT(file, true, 256, 0, 16){
 
   int flags = readonly? SQLITE_OPEN_READONLY :
                         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;

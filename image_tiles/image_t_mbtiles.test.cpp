@@ -49,10 +49,11 @@ main(){
       assert_eq(img2.get32(128,128), 0xFF00FF00);
 
       // get_argb
+      // coordinates are counted from top, tiles counted from bottom
       db.set_zoom(13);
-      assert_eq(db.get_argb(5741*256, 5035*256), 0xFFFF0000);
-      assert_eq(db.get_argb(5741*256+128, 5035*256+128), 0xFF00FF00);
-      assert_eq(db.get_argb(5740*256, 5035*256), 0);
+      assert_eq(db.get_argb(5741*256,     ((1<<13)-1-5035)*256), 0xFFFF0000);
+      assert_eq(db.get_argb(5741*256+128, ((1<<13)-1-5035)*256+128), 0xFF00FF00);
+      assert_eq(db.get_argb(5740*256,     ((1<<13)-1-5035)*256), 0);
       assert_eq(db.get_argb(0,0), 0);
 
 

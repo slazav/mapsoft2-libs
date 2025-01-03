@@ -85,7 +85,7 @@ ImageT::tile_rescale(const iPoint & key) {
         uint32_t c = 0;
         for (int i = 0; i<4; ++i)
           c += ((cc[i]/4) & 0xff) << (8*i);
-        int dy = swapy? t/2: 1-t/2;
+        int dy = swapy? 1-t/2: t/2;
         img.set32(x1 + (t%2)*tsize/2, y1 + dy*tsize/2, c);
       }
     }
