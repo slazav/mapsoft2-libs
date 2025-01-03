@@ -20,7 +20,7 @@ class ImageMBTiles: public ImageT {
   std::shared_ptr<sqlite3_stmt>
     stmt_meta_sel, stmt_meta_del, stmt_meta_ins, // get, delete, insert metadata field
     stmt_tile_sel, stmt_tile_del, stmt_tile_ins, // get, delete, insert tile data
-    stmt_tile_ex, stmt_tile_tst, stmt_tile_lst, // does tile exist?, timestamp, list tiles
+    stmt_tile_ex, stmt_tile_lst, // does tile exist?, list tiles
     stmt_ntile, stmt_ntilez, // get number of tiles (total/at given z)
     stmt_minz, stmt_maxz,    // get min/max zoom level
     stmt_x1, stmt_x2, stmt_y1, stmt_y2; // x and y tile bounds at some zoom level

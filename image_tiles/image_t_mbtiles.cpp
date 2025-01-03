@@ -5,7 +5,6 @@
 #include "filename/filename.h"
 #include "image/io.h"
 #include "image/io_png.h"
-#include <time.h>
 
 ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
        readonly(readonly), ImageT(file, false, 256, 0, 16){
@@ -31,7 +30,7 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
   if (newdb){
     // create MBTILES database (according with spec version 1.3)
     sql_cmd_simple("CREATE TABLE tiles (tile_column int, tile_row int,"
-                   "  zoom_level int, tile_data blob, time int,"
+                   "  zoom_level int, tile_data blob,"
                    "  PRIMARY KEY (tile_column, tile_row, zoom_level))");
     sql_cmd_simple("CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row)");
     sql_cmd_simple("CREATE TABLE metadata (name text, value text)");
@@ -70,15 +69,12 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
   stmt_tile_ex = sql_prepare("SELECT 1 FROM tiles "
                               "WHERE tile_column=? AND tile_row=? AND zoom_level=?");
 
-  stmt_tile_tst = sql_prepare("SELECT time FROM tiles "
-                              "WHERE tile_column=? AND tile_row=? AND zoom_level=?");
-
   stmt_tile_del = sql_prepare("DELETE FROM tiles "
                               "WHERE tile_column=? AND tile_row=? AND zoom_level=?");
 
   stmt_tile_ins = sql_prepare("INSERT INTO tiles "
-                              "(tile_column, tile_row, zoom_level, tile_data, time) "
-                              "VALUES (?,?,?,?,?)");
+                              "(tile_column, tile_row, zoom_level, tile_data) "
+                              "VALUES (?,?,?,?)");
 
   stmt_tile_lst = sql_prepare("SELECT tile_column, tile_row, zoom_level FROM tiles "
                               "WHERE zoom_level=?");
@@ -150,7 +146,6 @@ ImageMBTiles::tile_write(const iPoint & key, const ImageR & img){
   sql_bind_int(stmt2, 2, key.y);
   sql_bind_int(stmt2, 3, key.z);
   sql_bind_blob(stmt2, 4, data);
-  sql_bind_int(stmt2, 5, time(NULL));
 
   sql_run_simple(stmt1);
   sql_run_simple(stmt2);
@@ -196,14 +191,6 @@ ImageMBTiles::tile_exists(const iPoint & key) const {
 
 time_t
 ImageMBTiles::tile_mtime(const iPoint & key) const {
-  auto stmt = stmt_tile_tst.get();
-  sqlite3_reset(stmt);
-  sql_bind_int(stmt, 1, key.x);
-  sql_bind_int(stmt, 2, key.y);
-  sql_bind_int(stmt, 3, key.z);
-  if (sqlite3_step(stmt)==SQLITE_ROW &&
-      sqlite3_column_type(stmt, 0) == SQLITE_INTEGER)
-    return sqlite3_column_int(stmt, 0);
   return -1;
 }
 
