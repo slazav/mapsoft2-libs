@@ -55,7 +55,7 @@ ImageT::get_image(const iRect & r) const{
   ImageR ret(r.w,r.h, IMAGE_32ARGB);
   for (int y = 0; y<r.h; ++y)
     for (int x = 0; x<r.w; ++x)
-      ret.set32(x, swapy?r.h-1-y:y, get_argb(x+r.x,y+r.y));
+      ret.set32(x, y, get_argb(x+r.x,y+r.y));
   return ret;
 }
 
