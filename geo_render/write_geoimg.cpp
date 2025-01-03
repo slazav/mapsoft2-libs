@@ -27,7 +27,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
     "If image file exists, read it and use as the background. "
     "The image should have same dimensions.");
   opts.add("bgcolor", 1,0,g,
-    "Image background color (default 0x00000000).");
+    "Image background color (default 0xFFFFFFFF for normal maps, 0 for tiled maps).");
   opts.add("fillcolor", 1,0,g,
     "Color to be used at tiled map with z<zfill level (default 0xFFFF0000).");
   opts.add("map", 1,'m',g, "Write OziExplorer map file for the image.");
@@ -237,7 +237,7 @@ write_geoimg(const std::string & fname, GObj & obj, const GeoMap & ref, const Op
   size_t w=box.brc().x, h=box.brc().y;
 
   // create background image
-  uint32_t bg = opts.get<int>("bgcolor", 0);
+  uint32_t bg = opts.get<int>("bgcolor", 0xFFFFFFFF);
 
   bool raster = (fmt == "png" || fmt=="jpeg" || fmt=="tiff" || fmt=="gif");
   if (raster) {
