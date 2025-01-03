@@ -189,18 +189,6 @@ ImageMBTiles::tile_exists(const iPoint & key) const {
   return sqlite3_step(stmt)==SQLITE_ROW;
 }
 
-time_t
-ImageMBTiles::tile_mtime(const iPoint & key) const {
-  return -1;
-}
-
-bool
-ImageMBTiles::tile_newer(const iPoint & key1, const iPoint & key2) const {
-  time_t t1 = tile_mtime(key1);
-  time_t t2 = tile_mtime(key2);
-  return (t2 == -1 || t1>t2);
-}
-
 void
 ImageMBTiles::tile_delete(const iPoint & key){
   if (readonly) throw Err() << "can't write to read-only database";

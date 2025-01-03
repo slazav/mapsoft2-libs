@@ -35,11 +35,6 @@ ImageTRemote::tile_exists(const iPoint & key) const {
   throw Err() << "tile_exists for remote tiles is not supported";
 }
 
-bool
-ImageTRemote::tile_newer(const iPoint & key1, const iPoint & key2) const {
-  throw Err() << "tile_newer for remote tiles is not supported";
-}
-
 void
 ImageTRemote::tile_write(const iPoint & key, const ImageR & img) {
   throw Err() << "Write access for remote tiles is not supported";

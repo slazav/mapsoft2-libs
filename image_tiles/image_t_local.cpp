@@ -25,16 +25,6 @@ ImageTLocal::tile_exists(const iPoint & key) const {
   return file_exists(make_url(tmpl, key));
 }
 
-time_t
-ImageTLocal::tile_mtime(const iPoint & key) const {
-  return file_mtime(make_url(tmpl, key));
-}
-
-bool
-ImageTLocal::tile_newer(const iPoint & key1, const iPoint & key2) const {
-  return file_newer(make_url(tmpl, key1), make_url(tmpl, key2));
-}
-
 void
 ImageTLocal::tile_write(const iPoint & key, const ImageR & img) {
   // make filename

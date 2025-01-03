@@ -64,15 +64,6 @@ ImageT::tile_bbox(const iPoint & key) const{
   return (int)tsize*iRect(key, key+iPoint(1,1));
 }
 
-bool
-ImageT::tile_rescale_check(const iPoint & key) const{
-  for (int t=0; t<4; t++){
-    iPoint src(2*key.x + t%2, 2*key.y + t/2, key.z+1);
-    if (tile_newer(src, key)) return true;
-  }
-  return false;
-}
-
 void
 ImageT::tile_rescale(const iPoint & key) {
   ImageR img(tsize, tsize, IMAGE_32ARGB);

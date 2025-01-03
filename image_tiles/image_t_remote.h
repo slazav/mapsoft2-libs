@@ -34,9 +34,6 @@ class ImageTRemote: public ImageT {
     // check if tile exists
     bool tile_exists(const iPoint & key) const override;
 
-    // check if tile1 newer then tile2 OR tile2 does not exist
-    bool tile_newer(const iPoint & key1, const iPoint & key2) const override;
-
     // write a tile
     void tile_write(const iPoint & key, const ImageR & img) override;
 

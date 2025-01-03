@@ -2,7 +2,6 @@
 #define IMAGE_TILES_H
 
 #include <string>
-#include <time.h>
 #include "cache/cache.h"
 #include "image/image.h"
 #include "image/image_r.h"
@@ -57,16 +56,6 @@ class ImageT: public Image {
 
     // check if tile exists
     virtual bool tile_exists(const iPoint & key) const = 0;
-
-    // get timestamp (or -1 if unavalable)
-    virtual time_t tile_mtime(const iPoint & key) const {return -1;}
-
-    // check if tile1 newer then tile2 OR tile2 does not exist
-    virtual bool tile_newer(const iPoint & key1, const iPoint & key2) const = 0;
-
-    // return true if any of z+1 sub-tiles is newer or tile does not exist
-    // (then one may want to update the tile by rescaling z+1 sub-tiles)
-    virtual bool tile_rescale_check(const iPoint & key) const;
 
     // make tile by scaling four z+1 sub-tiles and write it
     virtual void tile_rescale(const iPoint & key);
