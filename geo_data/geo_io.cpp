@@ -3,6 +3,7 @@
 #include "tmpdir/tmpdir.h"
 #include "filename/filename.h"
 #include "geo_io.h"
+#include "geo_mkref.h"
 
 using namespace std;
 
@@ -10,7 +11,7 @@ void
 ms2opt_add_geo_i(GetOptSet & opts){
   const char *g = "GEO_I";
   opts.add("in_fmt", 1, 0, g,
-    "Geodata input format (json, gu, gpx, kml, kmz, ozi, zip).");
+    "Geodata input format (json, gu, gpx, kml, kmz, ozi, zip, mbtiles).");
 }
 
 void
@@ -56,6 +57,7 @@ read_geo (const string &fname, GeoData & data, const Opt & opt){
   else if (file_ext_check(fname, ".plt"))  fmt="ozi";
   else if (file_ext_check(fname, ".map"))  fmt="ozi";
   else if (file_ext_check(fname, ".zip"))  fmt="zip";
+  else if (file_ext_check(fname, ".mbtiles"))  fmt="mbtiles";
 
   if (opt.get("in_fmt","") != "") fmt = opt.get("in_fmt", "");
 
@@ -110,6 +112,17 @@ read_geo (const string &fname, GeoData & data, const Opt & opt){
       if (*p.rbegin() == '/') continue;
       read_geo(p, data, opt);
     }
+    return;
+  }
+
+  // MBTILES format
+  if (fmt == "mbtiles") {
+    GeoMap m = geo_mkref_web();
+    m.image = fname;
+    m.is_tiled   = true;
+    m.tile_size  = 256;
+    m.tile_swapy = false;
+    data.push_back(m);
     return;
   }
 

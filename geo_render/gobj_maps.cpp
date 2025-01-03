@@ -4,6 +4,7 @@
 #include "geohash/storage.h"
 #include "geom/line.h"
 #include "geo_data/conv_geo.h"
+#include "image_tiles/image_t_all.h"
 
 #include "gobj_maps.h"
 
@@ -62,6 +63,54 @@ GObjMaps::set_opt(const Opt & opt) {
   for (auto & d:data){ if (d.timg) d.timg->set_opt(opt); }
   redraw_me();
 }
+
+/**********************************************************/
+
+GObjMaps::MapData::MapData(const GeoMap & m):
+    load_sc(1.0), zoom(0), src(&m), test_brd(brd) {
+
+  // src_bbox - based on actual image size for non-tiled maps,
+  //            based on refpoints for tiled map, cropped to border if it is set
+  // src_brd  - take non-empty border from map, or use image bbox
+  if (!m.is_tiled){
+    src_bbox = dRect(dPoint(), image_size(m.image));
+  }
+  else {
+    src_bbox = m.bbox_ref_img();
+    Opt o;
+    if (m.tile_swapy) o.put("swapy", 1);
+    o.put("tsize", m.tile_size);
+    o.put("readonly", "1");
+    timg = open_tile_img(m.image, o); // interface to tiled image
+  }
+  src_brd  = m.border;
+  if (src_brd.size()==0) src_brd.push_back(rect_to_line(src_bbox, false));
+  else src_bbox.intersect(src_brd.bbox());
+}
+
+void
+GObjMaps::MapData::set_scale(const double k, bool sm){
+  scale = k;
+
+  // calculate zoom level for tiled images
+  if (timg){
+    zoom = rint(log(1.0/k)/log(2.0));
+    if (zoom < 0) zoom = 0;
+    if (zoom < src->tile_minz) zoom = src->tile_minz;
+    if (zoom > src->tile_maxz) zoom = src->tile_maxz;
+    timg->set_zoom(zoom);
+  }
+
+  // scale for normal image loading
+  else {
+    load_sc = floor(k/load_sc);
+    if (sm) load_sc = floor(load_sc/2); // load larger images for smoothing
+    if (load_sc <=1) load_sc = 1;           // never load images larger then 1:1
+  }
+  cnv.set_scale_dst(pow(2,zoom)/load_sc);
+}
+
+/**********************************************************/
 
 void
 GObjMaps::set_cnv(const std::shared_ptr<ConvBase> cnv) {

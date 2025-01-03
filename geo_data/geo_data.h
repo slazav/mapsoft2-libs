@@ -314,6 +314,15 @@ struct GeoData{
   void push_back(const GeoTrk     & d) {trks.push_back(d);}
   void push_back(const GeoMapList & d) {maps.push_back(d);}
 
+  void push_back(const GeoMap & d) {
+    if (maps.size() == 0) maps.push_back(GeoMapList());
+    maps.rbegin()->push_back(d);
+  }
+  void push_back(const GeoWpt & d) {
+    if (wpts.size() == 0) wpts.push_back(GeoWptList());
+    wpts.rbegin()->push_back(d);
+  }
+
 //  /// get range of all maps in lon-lat coords, fast
 //  dRect range_map() const;
 //  /// get range of all maps in lon-lat coords using file size
