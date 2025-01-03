@@ -57,6 +57,30 @@ void geo_mkref_brd(GeoMap & ref, const Opt & o);
 // make map reference from data
 GeoMap geo_mkref_data(const GeoData & data, const Opt & o);
 
+/********************************************************************/
+// Functions for individual reference types
+
+// Soviet standard map (e.g n37-001).
+//   name -- map name
+//   dpi, mag -- map dpi and additional magnification
+//   north -- north/grid irientation
+//   mt, ml, mr, mb -- top, left, right, bottom margins [pixels]
+GeoMap geo_mkref_nom(const std::string & name,
+  double dpi=300.0, double mag=1.0, bool north = false,
+  int mt=0, int ml=0, int mr=0, int mb=0);
+
+// Finnish standard map (e.g V51)
+//   name -- map name
+//   dpi, mag -- map dpi and additional magnification
+//   mt, ml, mr, mb -- top, left, right, bottom margins [pixels]
+GeoMap geo_mkref_nom_fi(const std::string & name,
+  double dpi=300.0, double mag=1.0,
+  int mt=0, int ml=0, int mr=0, int mb=0);
+
+// Rectangular range of Google/TMS tiles
+GeoMap geo_mkref_tiles(const iRect & tile_range, int z, bool G,
+   const dMultiLine & border, double mag=1.0);
+
 // create default web-mercator projection (256x256 image)
 GeoMap geo_mkref_web();
 

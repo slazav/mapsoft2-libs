@@ -118,154 +118,200 @@ dRect read_bbox(const std::string & fname){
 /********************************************************************/
 
 GeoMap
-geo_mkref_opts(const Opt & o){
+geo_mkref_nom(const std::string & name,
+              double dpi, double mag, bool north,
+              int mt, int ml, int mr, int mb){
+
+  GeoMap map;
+  map.name = name;
+
+  // Map range (in pulkovo coordinates)
+  nom_scale_t sc;
+  dRect R = nom_to_range(map.name, sc, true);
+
+  // map projection (use a bit shifted longitude to calculate boundary lon0)
+  map.proj = "SU" + type_to_str(lon2lon0(R.x + 1e-6));
+
+  string proj_pulk = "SU_LL";
+  // conversion map_projection -> pulkovo
+  ConvMulti cnv1;
+  cnv1.push_back(ConvGeo(map.proj, proj_pulk));
+  // conversion pulkovo -> wgs84
+  ConvGeo cnv2(proj_pulk);
+
+  // map resolution
+  map.image_dpi = dpi;
+
+  // factor (map coordinates (m))/(map point)
+  double k = (int)sc/mag * 25.4e-3 /*m/in*/ / map.image_dpi;
+  cnv1.rescale_src(k); // now cnv1: map points -> pulkovo
+
+  // Orient to north (R in LL coordinates)
+  if (north){
+    double a = cnv1.bck_ang(R.cnt(), 0, 0.1);
+    cnv1.push_front(ConvAff2D(R.cnt(), a));
+  }
+
+  // Border in map points (1pt accuracy);
+  // We convert a closed line, then removing the last point.
+  dLine brd = open(cnv1.bck_acc(rect_to_line(R, true)));
+
+  // image size
+  iRect image_bbox = ceil(cnv1.bck_acc(R));
+
+  // Refpoints:
+  dLine pts_r = rect_to_line(R, false);
+  cnv1.bck(pts_r); // pulkovo -> map points
+  pts_r.to_floor();
+
+  dLine pts_w = pts_r;
+  cnv1.frw(pts_w); // map points -> pulkovo
+  cnv2.frw(pts_w);  // pulkovo -> wgs
+
+  // margins
+  image_bbox = iRect(image_bbox.x-ml, image_bbox.y-mb,
+                     image_bbox.w+ml+mr, image_bbox.h+mt+mb);
+
+  brd -= image_bbox.tlc();
+  pts_r -= image_bbox.tlc();
+  brd.flip_y(image_bbox.h);
+  pts_r.flip_y(image_bbox.h);
+  map.image_size = iPoint(image_bbox.w, image_bbox.h);
+
+  // Add map border:
+  map.border.push_back(brd);
+
+  // Add refpoints:
+  map.add_ref(pts_r, pts_w);
+  return map;
+}
+
+GeoMap
+geo_mkref_nom_fi(const std::string & name,
+                 double dpi, double mag,
+                 int mt, int ml, int mr, int mb){
+
+  GeoMap map;
+  map.name = name;
+
+  // Map range (in ETRS-TM35FIN meters)
+  dRect R = nom_to_range_fi(map.name);
+
+  // map projection
+  map.proj = "ETRS-TM35FIN";
+
+  // conversion map -> wgs84
+  ConvGeo cnv(map.proj);
+
+  // map resolution
+  map.image_dpi = dpi;
+
+  // factor (map coordinates (m))/(map point)
+  double k = 100000.0 * 25.4e-3/*m/in*/ /mag / map.image_dpi;
+  cnv.rescale_src(k); // now cnv1: map points -> meters
+
+  // image size (rounded)
+  iRect image_bbox = rint(R/k);
+
+  // Border in map points (exact)
+  dLine brd = rect_to_line(R/k);
+
+  // Refpoints:
+  dLine pts_r = rect_to_line(R/k, false);
+  dLine pts_w = pts_r;
+  cnv.frw(pts_w);  // map points -> wgs
+
+  // margins
+  image_bbox = iRect(image_bbox.x-ml, image_bbox.y-mb,
+                     image_bbox.w+ml+mr, image_bbox.h+mt+mb);
+
+  brd -= image_bbox.tlc();
+  pts_r -= image_bbox.tlc();
+  brd.flip_y(image_bbox.h);
+  pts_r.flip_y(image_bbox.h);
+  map.image_size = iPoint(image_bbox.w, image_bbox.h);
+
+  // Add map border:
+  map.border.push_back(brd);
+
+  // Add refpoints:
+  map.add_ref(pts_r, pts_w);
+  return map;
+}
+
+GeoMap
+geo_mkref_tiles(const iRect & tile_range, int z, bool G,
+                const dMultiLine & border, double mag){
+
   GeoMap map;
   GeoTiles tcalc;
+  map.name = type_to_str(tile_range);
+  map.proj = "WEB";
+  map.border = border;
+
+  // find coordinates of opposite corners:
+  dPoint tlc = G ? tcalc.gtile_to_range(tile_range.blc(),z).blc():
+                   tcalc.tile_to_range(tile_range.tlc(),z).tlc();
+  dPoint brc = G ? tcalc.gtile_to_range(tile_range.trc(),z).blc():
+                   tcalc.tile_to_range(tile_range.brc(),z).tlc();
+
+  // Refpoints. Corners correspond to points 0,image_size.
+  // Should it be -0.5 .. image_size-0.5
+  map.image_size = iPoint(tile_range.w, tile_range.h)*tcalc.get_tsize() * mag;
+  dLine pts_w = rect_to_line(dRect(tlc,brc), false);
+  dLine pts_r = rect_to_line(dRect(dPoint(0,0),map.image_size), false);
+
+  pts_r.flip_y(map.image_size.y);
+  map.add_ref(pts_r, pts_w);
+
+  if (map.border.size()!=0){
+    ConvMap cnv(map);
+    map.border = cnv.bck_acc(map.border);
+  }
+  else
+    map.border.push_back(pts_r);
+  return map;
+}
+
+/********************************************************************/
+
+GeoMap
+geo_mkref_opts(const Opt & o){
 
   if (!o.exists("mkref")) return GeoMap();
   string reftype = o.get("mkref","");
 
+  auto name = o.get("name",string());
+  auto dpi  = o.get<double>("dpi",300.0);
+  auto mag  = o.get<double>("mag",1.0);
+  bool north = o.exists("north");
+
+  // margins
+  int mt,ml,mr,mb;
+  mt=ml=mr=mb=o.get("margins", 0);
+  mt=o.get("top_margin", mt);
+  ml=o.get("left_margin", ml);
+  mr=o.get("right_margin", mr);
+  mb=o.get("bottom_margin", mb);
+
   /***************************************/
   if (reftype == "nom"){
-
-    // map name
-    map.name = o.get("name",string());
-    if (map.name == "")
-      throw Err() << "geo_mkref: nomenclature name should be set (name option)";
-
-    // Map range (in pulkovo coordinates)
-    nom_scale_t sc;
-    dRect R = nom_to_range(map.name, sc, true);
-
-    // map projection (use a bit shifted longitude to calculate boundary lon0)
-    map.proj = "SU" + type_to_str(lon2lon0(R.x + 1e-6));
-
-    string proj_pulk = "SU_LL";
-    // conversion map_projection -> pulkovo
-    ConvMulti cnv1;
-    cnv1.push_back(ConvGeo(map.proj, proj_pulk));
-    // conversion pulkovo -> wgs84
-    ConvGeo cnv2(proj_pulk);
-
-    // map resolution
-    map.image_dpi = o.get<double>("dpi",300.0);
-    double mag = o.get<double>("mag",1.0);
-
-    // factor (map coordinates (m))/(map point)
-    double k = (int)sc/mag * 25.4e-3 /*m/in*/ / map.image_dpi;
-    cnv1.rescale_src(k); // now cnv1: map points -> pulkovo
-
-    // Orient to north (R in LL coordinates)
-    if (o.exists("north")){
-      double a = cnv1.bck_ang(R.cnt(), 0, 0.1);
-      cnv1.push_front(ConvAff2D(R.cnt(), a));
-    }
-
-    // Border in map points (1pt accuracy);
-    // We convert a closed line, then removing the last point.
-    dLine brd = open(cnv1.bck_acc(rect_to_line(R, true)));
-
-    // image size
-    iRect image_bbox = ceil(cnv1.bck_acc(R));
-
-    // Refpoints:
-    dLine pts_r = rect_to_line(R, false);
-    cnv1.bck(pts_r); // pulkovo -> map points
-    pts_r.to_floor();
-
-    dLine pts_w = pts_r;
-    cnv1.frw(pts_w); // map points -> pulkovo
-    cnv2.frw(pts_w);  // pulkovo -> wgs
-
-    // margins
-    int mt,ml,mr,mb;
-    mt=ml=mr=mb=o.get("margins", 0);
-    mt=o.get("top_margin", mt);
-    ml=o.get("left_margin", ml);
-    mr=o.get("right_margin", mr);
-    mb=o.get("bottom_margin", mb);
-    image_bbox = iRect(image_bbox.x-ml, image_bbox.y-mb,
-                       image_bbox.w+ml+mr, image_bbox.h+mt+mb);
-
-    brd -= image_bbox.tlc();
-    pts_r -= image_bbox.tlc();
-    brd.flip_y(image_bbox.h);
-    pts_r.flip_y(image_bbox.h);
-    map.image_size = iPoint(image_bbox.w, image_bbox.h);
-
-    // Add map border:
-    map.border.push_back(brd);
-
-    // Add refpoints:
-    map.add_ref(pts_r, pts_w);
-
+    if (name == "") throw Err() <<
+      "geo_mkref: nomenclature name should be set (name option)";
+    return geo_mkref_nom(name, dpi, mag, north, mt, ml, mr, mb);
   }
 
   /***************************************/
   else if (reftype == "nom_fi"){
-
-    // map name
-    map.name = o.get("name",string());
-    if (map.name == "")
-      throw Err() << "geo_mkref: nomenclature name should be set (name option)";
-
-    // Map range (in ETRS-TM35FIN meters)
-    dRect R = nom_to_range_fi(map.name);
-
-    // map projection
-    map.proj = "ETRS-TM35FIN";
-
-    // conversion map -> wgs84
-    ConvGeo cnv(map.proj);
-
-    // map resolution
-    map.image_dpi = o.get<double>("dpi",300.0);
-    double mag = o.get<double>("mag",1.0);
-
-    // factor (map coordinates (m))/(map point)
-    double k = 100000.0 * 25.4e-3/*m/in*/ /mag / map.image_dpi;
-    cnv.rescale_src(k); // now cnv1: map points -> meters
-
-    // image size (rounded)
-    iRect image_bbox = rint(R/k);
-
-    // Border in map points (exact)
-    dLine brd = rect_to_line(R/k);
-
-    // Refpoints:
-    dLine pts_r = rect_to_line(R/k, false);
-    dLine pts_w = pts_r;
-    cnv.frw(pts_w);  // map points -> wgs
-
-    // margins
-    int mt,ml,mr,mb;
-    mt=ml=mr=mb=o.get("margins", 0);
-    mt=o.get("top_margin", mt);
-    ml=o.get("left_margin", ml);
-    mr=o.get("right_margin", mr);
-    mb=o.get("bottom_margin", mb);
-    image_bbox = iRect(image_bbox.x-ml, image_bbox.y-mb,
-                       image_bbox.w+ml+mr, image_bbox.h+mt+mb);
-
-    brd -= image_bbox.tlc();
-    pts_r -= image_bbox.tlc();
-    brd.flip_y(image_bbox.h);
-    pts_r.flip_y(image_bbox.h);
-    map.image_size = iPoint(image_bbox.w, image_bbox.h);
-
-    // Add map border:
-    map.border.push_back(brd);
-
-    // Add refpoints:
-    map.add_ref(pts_r, pts_w);
-
+    if (name == "") throw Err() <<
+      "geo_mkref: nomenclature name should be set (name option)";
+    return geo_mkref_nom_fi(name, dpi, mag, mt, ml, mr, mb);
   }
-
-
 
   /***************************************/
   else if (reftype == "tms_tile" || reftype == "google_tile"){
 
+    GeoTiles tcalc;
     bool G = (reftype == "google_tile");
     int  z = o.get("zindex",-1);
     list<string> confl = {"tiles", "coords"};
@@ -289,6 +335,7 @@ geo_mkref_opts(const Opt & o){
 
     }
 
+    dMultiLine border;
     o.check_conflict({"coords_wgs", "coords_file", "coord_nom"});
 
     if (o.exists("coords_wgs")){
@@ -307,7 +354,7 @@ geo_mkref_opts(const Opt & o){
       dRect r = nom_to_range(o.get("coords_nom",""), sc, true);
       if (G) tile_range = tcalc.range_to_gtiles(cnv2.frw_acc(r), z);
       else   tile_range = tcalc.range_to_tiles(cnv2.frw_acc(r), z);
-      map.border.push_back(cnv2.frw_acc(rect_to_line(r)));
+      border.push_back(cnv2.frw_acc(rect_to_line(r)));
     }
 
     // here tile_range should be set to non-zero rectangle
@@ -317,43 +364,12 @@ geo_mkref_opts(const Opt & o){
     // z-index should be set here
     if (z<0) throw Err() << "geo_mkref: z-index not set";
 
-
-    /*** fill map parameters ***/
-
-    // map name
-    map.name = type_to_str(tile_range);
-
-    // map projection
-    map.proj = "WEB";
-
-    // map magnification
-    double mag = o.get<double>("mag",1.0);
-
-    // find coordinates of opposite corners:
-    dPoint tlc = G ? tcalc.gtile_to_range(tile_range.blc(),z).blc():
-                     tcalc.tile_to_range(tile_range.tlc(),z).tlc();
-    dPoint brc = G ? tcalc.gtile_to_range(tile_range.trc(),z).blc():
-                     tcalc.tile_to_range(tile_range.brc(),z).tlc();
-
-    // Refpoints. Corners correspond to points 0,image_size.
-    // Should it be -0.5 .. image_size-0.5
-    map.image_size = iPoint(tile_range.w, tile_range.h)*tcalc.get_tsize() * mag;
-    dLine pts_w = rect_to_line(dRect(tlc,brc), false);
-    dLine pts_r = rect_to_line(dRect(dPoint(0,0),map.image_size), false);
-
-    pts_r.flip_y(map.image_size.y);
-    map.add_ref(pts_r, pts_w);
-
-    if (map.border.size()!=0){
-      ConvMap cnv(map);
-      map.border = cnv.bck_acc(map.border);
-    }
-    else
-      map.border.push_back(pts_r);
+    return geo_mkref_tiles(tile_range, z, G, border, mag);
   }
 
   /***************************************/
   else if (reftype == "proj"){
+    GeoMap map;
 
     // map projection
     map.proj = o.get("proj", "WGS");
@@ -401,12 +417,6 @@ geo_mkref_opts(const Opt & o){
     range.to_ceil();
 
     // set margins
-    int mt,ml,mr,mb;
-    mt=ml=mr=mb=o.get("margins", 0);
-    mt=o.get("top_margin", mt);
-    ml=o.get("left_margin", ml);
-    mr=o.get("right_margin", mr);
-    mb=o.get("bottom_margin", mb);
     range = dRect(range.x-ml, range.y-mb,
                   range.w+ml+mr, range.h+mt+mb);
 
@@ -430,6 +440,7 @@ geo_mkref_opts(const Opt & o){
 
     // image_size
     map.image_size = dPoint(range.w, range.h);
+    return map;
   }
 
   else if (reftype == "file"){
@@ -439,14 +450,14 @@ geo_mkref_opts(const Opt & o){
     read_geo(name, d);
     if (d.maps.size()<1 || d.maps.begin()->size()<1) throw Err()
       << "mkref: can't read any map reference from file: " << name;
-    map = (*d.maps.begin())[0];
+    return (*d.maps.begin())[0];
   }
 
   else {
     throw Err() << "geo_mkref: unknown reference type: " << reftype;
   }
 
-  return map;
+  return GeoMap();
 }
 
 
