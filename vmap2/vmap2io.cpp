@@ -189,7 +189,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   if (crop_nom.size())
      do_crop_rect(vmap2, nom_to_wgs(crop_nom), crop_labels);
 
-  if (crop_nom.size())
+  if (crop_nom_fi.size())
      do_crop_nom_fi(vmap2, crop_nom_fi, crop_labels);
 
   if (crop_rect.size())
