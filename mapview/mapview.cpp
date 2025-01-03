@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include "mapview.h"
 #include "geo_data/conv_geo.h"
-#include "geo_mkref/geo_mkref.h"
+#include "geo_data/geo_mkref.h"
 #include "filename/filename.h"
 
 Mapview::Mapview(const Opt & o) :

@@ -1,7 +1,7 @@
 #include "vmap2io.h"
 #include "vmap2tools.h"
 #include "filename/filename.h"
-#include "geo_mkref/geo_mkref.h"
+#include "geo_data/geo_mkref.h"
 #include "fig_geo/fig_geo.h"
 #include "fig_opt/fig_opt.h"
 #include "geo_data/geo_utils.h"

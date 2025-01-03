@@ -5,8 +5,8 @@
 #include "write_geoimg.h"
 #include "image_tiles/image_t_all.h"
 #include "image/image_colors.h"
-#include "geo_mkref/geo_mkref.h" // for tiled maps
-#include "geom/poly_tools.h"     // for rect_in_polygon
+#include "geo_data/geo_mkref.h" // for tiled maps
+#include "geom/poly_tools.h"    // for rect_in_polygon
 #include "geo_tiles/geo_tiles.h"
 #include <fstream>
 

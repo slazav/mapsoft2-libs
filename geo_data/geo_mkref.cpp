@@ -1,17 +1,17 @@
 #include <sstream>
 #include <iomanip>
 
-#include "geo_data/conv_geo.h"
-#include "geo_data/geo_io.h"
+#include "geo_mkref.h"
+#include "conv_geo.h"
+#include "geo_io.h"
 #include "geo_tiles/geo_tiles.h"
 #include "geo_nom/geo_nom.h"
 #include "geo_nom/geo_nom_fi.h"
-#include "geo_data/geo_utils.h"
+#include "geo_utils.h"
 #include "geom/multiline.h"
 #include "geom/poly_tools.h"
 #include "err/err.h"
 
-#include "geo_mkref.h"
 
 using namespace std;
 

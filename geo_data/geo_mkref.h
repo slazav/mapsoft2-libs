@@ -1,7 +1,7 @@
 #ifndef MK_REF_H
 #define MK_REF_H
 
-#include "geo_data/geo_data.h"
+#include "geo_data.h"
 #include "opt/opt.h"
 
 /********
