@@ -46,9 +46,7 @@ ms2opt_add_geoimg(GetOptSet & opts){
   opts.add("zfill", 1,0,g, "Starting from this zoom level tiled map will be filled with fillcolor");
   opts.add("tmap_scale", 1,0,g,
     "When creating tiles with multiple zoom levels scale larger tiles to "
-    "create smaller ones (instead of rendering all tiles separately). "
-    "Tile is created only if at least one source tile is newer then "
-    "the destination tile (or destination does not exist). Default: 0.");
+    "create smaller ones (instead of rendering all tiles separately). Default: 0.");
   opts.add("swapy", 0,0,g, "Normally tiled maps are saved in Google row"
     " counting; This will switch to TMS");
   opts.add("skip_empty", 0,0,g,
@@ -104,72 +102,72 @@ write_tiles(const std::string & fname, GObj & obj, const dMultiLine & brd, const
         // make filename, create subdirectories if needed
         std::string f = ImageT::make_url(fname, tile);
 
-        // render tile in a normal way
-        if (z == zmax || z == zfill || !opts.get("tmap_scale", false)){
-          // make reference for the tile (similar to code in geo_mkref) 
-          GeoMap r;
-          r.proj = "WEB";
-          r.image_size = iPoint(1,1)*TMAP_TILE_SIZE;
-          dLine pts_w = rect_to_line(trange_wgs, false);
-          dLine pts_r = rect_to_line(trange_img, false);
-          pts_r.flip_y(r.image_size.y);
-          r.add_ref(pts_r, pts_w);
+        // make reference for the tile (similar to code in geo_mkref) 
+        GeoMap r;
+        r.proj = "WEB";
+        r.image_size = iPoint(1,1)*TMAP_TILE_SIZE;
+        dLine pts_w = rect_to_line(trange_wgs, false);
+        dLine pts_r = rect_to_line(trange_img, false);
+        pts_r.flip_y(r.image_size.y);
+        r.add_ref(pts_r, pts_w);
 
-          std::shared_ptr<ConvMap> cnv(new ConvMap(r));
-          obj.set_cnv(cnv);
+        std::shared_ptr<ConvMap> cnv(new ConvMap(r));
+        obj.set_cnv(cnv);
 
-          // skip tiles outside object range
-          if (obj.check(trange_img) == GObj::FILL_NONE) continue;
+        // skip tiles outside object range
+        if (obj.check(trange_img) == GObj::FILL_NONE) continue;
 
-          // create background image
-          ImageR img;
-          if (opts.exists("add") && timg->tile_exists(tile)){
-            try {
-              img = image_to_argb(timg->tile_read(tile));
-              if (img.height()!=TMAP_TILE_SIZE || img.width()!=TMAP_TILE_SIZE)
-                img = ImageR();
-            } catch (const Err & e) { }
-          }
-
-          if (img.is_empty()){
-            img = ImageR(TMAP_TILE_SIZE, TMAP_TILE_SIZE, IMAGE_32ARGB);
-            img.fill32(bg);
-            if (verb) std::cout << "create tile: " << tile << "\n";
-          }
-          else if (verb) std::cout << "update tile: " << tile << "\n";
-
-          // setup cairo context
-          CairoWrapper cr;
-          cr.set_surface_img(img);
-
-          // clip to border
-          // convert border to pixel coordinates of this tile
-          r.border = cnv->bck_acc(brd);
-          if (r.border.size()) {
-            cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
-            cr->mkpath_smline(r.border, true, 0);
-            cr->clip();
-          }
-          // Draw data
-          // Save context (objects may want to have their own clip regions)
-          cr->save();
-          if (z<=zfill){
-            cr->set_color_a(fc);
-            cr->paint();
-          }
-          else {
-            obj.draw(cr, trange_img);
-          }
-          cr->restore();
-          timg->tile_write(tile, img);
-        }
 
         // collect the tile from four larger tiles
-        else {
-          if (!timg->tile_rescale_check(tile)) continue;
+        if (z != zmax && z != zfill && opts.get("tmap_scale", false)){
           if (verb) std::cout << "rescale tile: " << tile << "\n";
           timg->tile_rescale(tile);
+          continue;
         }
+
+        // render tile in a normal way
+
+        // create background image
+        ImageR img;
+        if (opts.exists("add") && timg->tile_exists(tile)){
+          try {
+            img = image_to_argb(timg->tile_read(tile));
+            if (img.height()!=TMAP_TILE_SIZE || img.width()!=TMAP_TILE_SIZE)
+              img = ImageR();
+          } catch (const Err & e) { }
+        }
+
+        if (img.is_empty()){
+          img = ImageR(TMAP_TILE_SIZE, TMAP_TILE_SIZE, IMAGE_32ARGB);
+          img.fill32(bg);
+          if (verb) std::cout << "create tile: " << tile << "\n";
+        }
+        else if (verb) std::cout << "update tile: " << tile << "\n";
+
+        // setup cairo context
+        CairoWrapper cr;
+        cr.set_surface_img(img);
+
+        // clip to border
+        // convert border to pixel coordinates of this tile
+        r.border = cnv->bck_acc(brd);
+        if (r.border.size()) {
+          cr->set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+          cr->mkpath_smline(r.border, true, 0);
+          cr->clip();
+        }
+        // Draw data
+        // Save context (objects may want to have their own clip regions)
+        cr->save();
+        if (z<=zfill){
+          cr->set_color_a(fc);
+          cr->paint();
+        }
+        else {
+          obj.draw(cr, trange_img);
+        }
+        cr->restore();
+        timg->tile_write(tile, img);
       }
     }
   }
