@@ -133,23 +133,21 @@ ImageMBTiles::tile_write(const iPoint & key, const ImageR & img){
     image_save_png(img, str, opts);
     data = str.str(); // save data
   }
-
-  auto stmt1 = stmt_tile_del.get();
-  auto stmt2 = stmt_tile_ins.get();
-  sqlite3_reset(stmt1);
-  sqlite3_reset(stmt2);
-
-  sql_bind_int(stmt1, 1, key.x);
-  sql_bind_int(stmt1, 2, key.y);
-  sql_bind_int(stmt1, 3, key.z);
-
-  sql_bind_int(stmt2, 1, key.x);
-  sql_bind_int(stmt2, 2, key.y);
-  sql_bind_int(stmt2, 3, key.z);
-  sql_bind_blob(stmt2, 4, data);
-
-  sql_run_simple(stmt1);
-  sql_run_simple(stmt2);
+  if (tile_exists(key)){
+    auto stmt = stmt_tile_del.get();
+    sqlite3_reset(stmt);
+    sql_bind_int(stmt, 1, key.x);
+    sql_bind_int(stmt, 2, key.y);
+    sql_bind_int(stmt, 3, key.z);
+    sql_run_simple(stmt);
+  }
+  auto stmt = stmt_tile_ins.get();
+  sqlite3_reset(stmt);
+  sql_bind_int(stmt, 1, key.x);
+  sql_bind_int(stmt, 2, key.y);
+  sql_bind_int(stmt, 3, key.z);
+  sql_bind_blob(stmt, 4, data);
+  sql_run_simple(stmt);
 }
 
 ImageR
