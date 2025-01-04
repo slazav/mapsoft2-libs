@@ -90,6 +90,7 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
   stmt_y1 = sql_prepare("SELECT MIN(tile_row) FROM tiles WHERE zoom_level=?");
   stmt_y2 = sql_prepare("SELECT MAX(tile_row) FROM tiles WHERE zoom_level=?");
 
+  stmt_delz = sql_prepare("DELETE FROM tiles WHERE zoom_level=?");
 }
 
 std::string
@@ -347,6 +348,14 @@ ImageMBTiles::update_bounds() {
   set_metadata("center", s2.str());
   set_metadata("minzoom", type_to_str(minz));
   set_metadata("maxzoom", type_to_str(maxz));
+}
+
+void
+ImageMBTiles::layer_del(const int z) {
+  auto stmt = stmt_delz.get();
+  sqlite3_reset(stmt);
+  sql_bind_int(stmt, 1, z);
+  sql_run_simple(stmt);
 }
 
 void

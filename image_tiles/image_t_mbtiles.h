@@ -23,7 +23,8 @@ class ImageMBTiles: public ImageT {
     stmt_tile_ex, stmt_tile_lst, // does tile exist?, list tiles
     stmt_ntile, stmt_ntilez, // get number of tiles (total/at given z)
     stmt_minz, stmt_maxz,    // get min/max zoom level
-    stmt_x1, stmt_x2, stmt_y1, stmt_y2; // x and y tile bounds at some zoom level
+    stmt_x1, stmt_x2, stmt_y1, stmt_y2, // x and y tile bounds at some zoom level
+    stmt_delz; // delete layer
 
   public:
 
@@ -82,6 +83,9 @@ class ImageMBTiles: public ImageT {
     // Update minzoom, maxzoom, center and bounds value in the metadata table
     // Run this after adding tiles
     void update_bounds();
+
+    // Remove all tiles in the layer
+    void layer_del(const int z);
 
     // remove tiles outside border
     void crop(const dMultiLine & brd);
