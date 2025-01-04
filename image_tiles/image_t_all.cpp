@@ -10,6 +10,7 @@ open_tile_img(const std::string & url, const Opt & opts){
   int tcache_s  = opts.get("tmap_cache_size", 16);
   int dcache_s  = opts.get("tmap_dcache_size", 64);
   bool rdonly   = opts.get("tmap_readonly", false);
+  int db_sync   = opts.get("db_sync", 0);
 
   // If url contains schema, use remote
   if (url.find("://")!=url.npos){
@@ -22,7 +23,7 @@ open_tile_img(const std::string & url, const Opt & opts){
   // If extension is mbtiles
   if (file_ext_check(url, ".mbtiles")){
     std::shared_ptr<ImageT> ret(
-      new ImageMBTiles(url, rdonly));
+      new ImageMBTiles(url, rdonly, db_sync));
     ret->set_opt(opts);
     return ret;
   }

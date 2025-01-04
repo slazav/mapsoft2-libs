@@ -6,7 +6,7 @@
 #include "image/io.h"
 #include "image/io_png.h"
 
-ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
+ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly, int db_sync):
        readonly(readonly), ImageT(file, true, 256, 0, 16){
 
   int flags = readonly? SQLITE_OPEN_READONLY :
@@ -53,6 +53,13 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly):
     sql_cmd_simple("INSERT INTO metadata (name, value) VALUES ('description', '')");
     sql_cmd_simple("INSERT INTO metadata (name, value) VALUES ('type', 'overlay')"); // overlay or baselayer
     sql_cmd_simple("INSERT INTO metadata (name, value) VALUES ('version', '0')");
+  }
+
+  // set sync mode (0,1,2,3)
+  {
+    std::string cmd = "PRAGMA synchronous = ";
+    cmd += type_to_str(db_sync);
+    sql_cmd_simple(cmd.c_str());
   }
 
   // set default image options
@@ -184,7 +191,6 @@ ImageMBTiles::tile_exists(const iPoint & key) const {
   sql_bind_int(stmt, 2, key.y);
   sql_bind_int(stmt, 3, key.z);
 
-  // no data - return empty image
   return sqlite3_step(stmt)==SQLITE_ROW;
 }
 

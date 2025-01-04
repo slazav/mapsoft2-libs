@@ -28,8 +28,10 @@ class ImageMBTiles: public ImageT {
 
   public:
 
-    // Open database; If readonly=0 and file does not exist then create it.
-    ImageMBTiles(const std::string & file, bool readonly);
+    // Open database
+    // - If readonly=0 and file does not exist then create it.
+    // - Sync is database sync mode: 0-OFF, 1-NORMAL, 2-FULL, 3-EXTRA.
+    ImageMBTiles(const std::string & file, bool readonly, int db_sync = 0);
 
     /*******************************************************/
     // ImageT interface
