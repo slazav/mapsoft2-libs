@@ -231,7 +231,7 @@ do_join_lines(VMap2 & map, const double D, const double A){
         if (l.size()<2) continue;
         dPoint pt = l[l.size()-1];
         dPoint dpt = l[l.size()-1] - l[l.size()-2];
-        double a = 180.0/2/M_PI*atan2(dpt.y,dpt.x);
+        double a = 180.0/M_PI*atan2(dpt.y,dpt.x);
         dRect r(pt,pt); r.expand(Dd);
 
         // Find all lines of same type near the end point.
@@ -249,7 +249,7 @@ do_join_lines(VMap2 & map, const double D, const double A){
             if (l1->size()<2) {++l1; continue;}
             dPoint pt1 = (*l1)[0];
             dPoint dpt1 = (*l1)[1]-(*l1)[0];
-            double a1 = 180.0/2/M_PI*atan2(dpt1.y,dpt1.x);
+            double a1 = 180.0/M_PI*atan2(dpt1.y,dpt1.x);
             double da = fabs(a1-a); // positive angle difference
             while (da>180) da-=360;   // -180..180
             if (geo_dist_2d(pt,pt1) > D || fabs(da) > A) {++l1; continue;}
