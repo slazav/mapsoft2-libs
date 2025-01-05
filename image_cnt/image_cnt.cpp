@@ -293,7 +293,7 @@ image_cnt_vtol_filter(const ImageR & img,
           dPoint p4 = (*i1+*i3)/2;
           double A = (img_int4(*i2, img) - v0)/vtol;
           double B = (img_int4(p4, img) - v0)/vtol;
-          double C = pow(2,R) * pscal(*i2-p4, *i2-p4) / (pow,pscal(*i3-*i1, *i3-*i1),2);
+          double C = pow(2,R) * pscal(*i2-p4, *i2-p4) / pow(pscal(*i3-*i1, *i3-*i1),2);
 
           // Minimization gives:
           double tmin = (fabs(C+B*B)>1e-4)? (C-A*B)/(C+B*B) : 0;
