@@ -6,8 +6,7 @@
 #include "getopt/getopt.h"
 #include "getopt/help_printer.h"
 #include "filename/filename.h"
-#include "shp.h"
-#include "dbf.h"
+#include "shape_db.h"
 
 using namespace std;
 
@@ -39,37 +38,19 @@ main(int argc, char *argv[]){
 
     if (files.size() != 1) usage();
 
-    // SHP file
-
-    std::string shp = files[0] + ".shp";
-    if (!file_exists(shp)) {
-      std::cout << "SHP: no file\n";
-      exit(0);
-    }
-
-    Shp SH(shp.c_str(), 0);
+    ShapeDB SH(files[0].c_str(), 0);
     std::cout << "SHP: "
-      << "type=" << SH.get_type() << " "
-      << "num=" <<SH.get_num() << "\n";
+      << "type=" << SH.shp_type() << " "
+      << "num=" <<SH.shp_num() << "\n";
 
-    // DBF file
-
-    std::string dbf = files[0] + ".dbf";
-    if (!file_exists(dbf)) {
-      std::cout << "DBF: no file\n";
-      exit(0);
-    }
-
-    Dbf DB(dbf.c_str(), 0);
-
-    int nr = DB.nrecords();
-    int nf = DB.nfields();
+    int nr = SH.dbf_num();
+    int nf = SH.dbf_field_num();
 
     std::cout << "DBF: "
       << "nfld=" << nf << " "
       << "nrec=" << nr << "\n";
 
-    if (SH.get_num() != nr) throw Err()
+    if (SH.shp_num() != nr) throw Err()
       << "different number of objects in .shp and .dbf";
 
     for (size_t i = 0; i<nr; ++i){
@@ -81,11 +62,11 @@ main(int argc, char *argv[]){
         std::cout << "crd: " << l.npts()
            << " points in " << l.size() << " segments\n";
       for (size_t j = 0; j<nf; ++j){
-        std::cout << "  " << DB.field_type(j)
-                  << " " << DB.field_width(j) 
-                  << ":" << DB.field_decimals(j) 
-                  << " " << DB.field_name(j) 
-                  << ":  " << DB.get_str(i,j) << "\n";
+        std::cout << "  " << SH.dbf_field_type(j)
+                  << " " << SH.dbf_field_width(j) 
+                  << ":" << SH.dbf_field_decimals(j) 
+                  << " " << SH.dbf_field_name(j) 
+                  << ":  " << SH.dbf_get_str(i,j) << "\n";
       }
     }
 
