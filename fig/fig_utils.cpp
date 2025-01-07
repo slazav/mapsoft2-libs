@@ -19,8 +19,10 @@ fig_make_comp(list<FigObj> & objects){
   o.type = -6;
   objects.insert(objects.end(), o);
   o.type=6;
-  o.push_back(r.tlc());
-  o.push_back(r.brc());
+//  o.push_back(r.tlc());
+//  o.push_back(r.brc());
+  o.push_back(iPoint());
+  o.push_back(iPoint());
   objects.insert(objects.begin(), o);
 }
 
