@@ -434,6 +434,14 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // text_vspace <val>
+      if (ftr == "text_vspace"){
+        st->check_type( STEP_DRAW_TEXT);
+        st->check_args(vs, {"<val>"});
+        st->text_vspace = str_to_type<bool>(vs[0]);
+        continue;
+      }
+
       // outer
       if (ftr == "outer"){
         st->check_type( STEP_DRAW_BRD);
@@ -781,12 +789,32 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 // `range` parameter is used for check if we should draw the object.
 void
 GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const dRect & range, bool path){
+
   if (O.size()==0 || O[0].size()==0) return; // no coordinates
-  dPoint pt = O[0][0];
-//  auto txt = conv_label(O.name);
   auto txt = O.name;
-  dRect ext = cr->get_text_extents(txt.c_str());
+
+  // multiline text
+  auto n2 = txt.find('\\');
+  if (n2!=txt.npos){
+    Cairo::FontExtents fext;
+    cr->get_font_extents(fext);
+    auto O1(O);
+    size_t n1 = 0;
+    while (n2!=txt.npos){
+      O1.name = txt.substr(n1,n2);
+      draw_text(O1, cr, range, path);
+      n1 = n2;
+      n2 = txt.find('\\', n1+1);
+      O1[0][0].y += fext.height * O.scale * text_vspace;
+    }
+    O1.name = txt.substr(n1+1);
+    draw_text(O1, cr, range, path);
+    return;
+  }
+
   // To allow any rotated/align text do be in the range use diagonal
+  dPoint pt = O[0][0];
+  dRect ext = cr->get_text_extents(txt.c_str());
   dRect rng = expand(dRect(pt,pt), hypot(ext.w, ext.h)*(double)O.scale);
   if (!intersect(rng, range)) return;
 
@@ -814,6 +842,9 @@ GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const d
   if (path) cr->text_path(txt);
   else      cr->show_text(txt);
   cr->restore();
+
+
+
 }
 
 void

@@ -187,7 +187,10 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
       }
 
       // name -- from label text
-      o1.name = o.text;
+      if (o_opts.exists("FullText"))
+        o1.name = o_opts.get("FullText");
+      else
+        o1.name = o.text;
       for (size_t i=0; i<comm.size(); i++)
         o1.comm += (i>0?"\n":"") + comm[i];
 
@@ -370,7 +373,6 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
     // Text
     if (o.get_class() == VMAP2_TEXT){
       o1.type=4;
-      o1.text = o.name;
       dPoint ref_pt(o.ref_pt); cnv.bck(ref_pt);
       fig_add_opt(o1, "RefPt",   type_to_str(rint(ref_pt)));
       fig_add_opt(o1, "RefType", VMap2obj::print_type(o.ref_type));
@@ -390,7 +392,34 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       // Font size can be adjusted in the fig template
       o1.font_size = o.scale * o1.font_size;
       o1.push_back(pt0);
-      fig.push_back(o1);
+
+      // multiline text
+      auto n2 = o.name.find('\\');
+      if (n2 != o.name.npos){
+        std::list<FigObj> ff;
+        size_t n1 = 0;
+        fig_add_opt(o1, "FullText", o.name);
+        while (n2!=o.name.npos){
+          o1.text = o.name.substr(n1,n2);
+          ff.push_back(o1);
+          fig_del_opts(o1);
+          n1 = n2;
+          n2 = o.name.find('\\', n1+1);
+          // line shift
+          double d = 2.54*450/72*o1.font_size * 1.2;
+                 // (cm/in)*(px/cm)/(pt/in)*pt -> px
+          o1[0]+=dPoint(sin(o1.angle), cos(o1.angle)) * d;
+        }
+        o1.text = o.name.substr(n1+1);
+        ff.push_back(o1);
+        fig_make_comp(ff);
+        fig.insert(fig.end(), ff.begin(), ff.end());
+      }
+      else {
+        o1.text = o.name;
+        fig.push_back(o1);
+      }
+
       continue;
     }
   }

@@ -47,7 +47,9 @@ where possible features are:
     join round|miter       -- Set line join (default round). Use with stroke feature.
     operator <op>          -- Set drawing operator (clear|source|over|in|out|atop|dest|
                               dest_over|dest_in|dest_out|dest_atop|xor|add|saturate)
-    text_align (0|1)       -- align text positions to integer pixels (default: 0)
+    pix_align (0|1)        -- align text positions to integer pixels (default: 0)
+    text_vspace <value>    -- adjust multi-line objects vertical spacing. 1.0 is
+                              a normal font spacing, default is 0.7 (dense lines).
     lines <lines> ...      -- draw lines
     circles <circle> ...   -- draw circles
     draw_pos (point|begin|end) -- reference positions for lines/circles features:
@@ -229,6 +231,7 @@ public:
     Opt grid_opts;
     std::string font;
     double font_size;
+    double text_vspace;
     double rotate;
     bool outer;
     std::set<uint32_t> move_to_targets, move_from_targets;
@@ -259,6 +262,7 @@ public:
       draw_pos = DRAW_POS_POINT;
       draw_pos_dist = draw_pos_b = draw_pos_e = 0;
       font_size = 10;
+      text_vspace = 0.7;
       rotate = 0;
       outer = false;
       move_to_rot = false;
