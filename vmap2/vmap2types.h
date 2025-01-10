@@ -52,7 +52,7 @@ public:
 class VMap2types : public std::map<int, VMap2type> {
 public:
   // Constuctor: read configuration file
-  VMap2types(const Opt & o);
+  VMap2types(const Opt & o = Opt());
 
   // Write typ file.
   // - Codepage is used for converting names, it is also written to TYP header
