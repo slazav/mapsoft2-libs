@@ -6,6 +6,7 @@
 #include "fig_geo/fig_geo.h"
 #include "fig_opt/fig_opt.h"
 #include "geo_data/geo_utils.h"
+#include "iofilter/iofilter.h"
 
 /****************************************************************************/
 
@@ -104,6 +105,11 @@ vmap2_import(const std::string & ifile, const VMap2types & types,
   }
   else if (file_ext_check(ifile, ".vmap2")){
     vmap2.read(ifile);
+  }
+  else if (file_ext_check(ifile, ".vmap2.gz")){
+    std::ifstream ff(ifile);
+    IFilter flt(ff, "gunzip");
+    vmap2.read(flt.stream());
   }
   else if (file_ext_check(ifile, ".vmap")){
     vmap_to_vmap2(ifile, types, vmap2, opts);
@@ -213,6 +219,11 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   }
   else if (file_ext_check(ofile, ".vmap2")){
     vmap2.write(ofile);
+  }
+  else if (file_ext_check(ofile, ".vmap2.gz")){
+    std::ofstream ff(ofile);
+    OFilter flt(ff, "gzip");
+    vmap2.write(flt.stream());
   }
   else if (file_ext_check(ofile, ".vmap")){
     vmap2_to_vmap(vmap2, types, ofile, opts);
