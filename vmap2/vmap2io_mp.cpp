@@ -7,7 +7,7 @@ mp_to_vmap2(const std::string & ifile, const VMap2types & types,
             VMap2 & vmap2, const Opt & opts){
 
   MP mp;
-  read_mp(ifile, mp, opts);
+  read_mp(ifile, mp);
 
   // be quiet (by default types of skipped objects are printed)
   bool quiet = opts.get("quite", false);
@@ -88,6 +88,7 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
   if (opts.exists("mp_id"))     mp.ID = opts.get<int>("mp_id");
   if (opts.exists("mp_name"))   mp.Name = opts.get("mp_name");
   if (opts.exists("mp_levels")) mp.Levels = str_to_type_ivec(opts.get("mp_levels"));
+  if (opts.exists("mp_cp"))     mp.Codepage = opts.get<int>("mp_cp", 1251);
 
   // be quiet (by default types of skipped objects are printed)
   bool quiet = opts.get("quite", false);

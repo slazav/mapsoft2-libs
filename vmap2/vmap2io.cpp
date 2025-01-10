@@ -45,13 +45,14 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("osm_tags",  0, 0, "OSM",
         "Put OSM tags in object comments");
 
-    if (!write) ms2opt_add_mp_i(opts);// MP group, reading mp files
   }
   if (write) {
     opts.add("mp_id",        1, 0, "MP", "override MP ID");
     opts.add("mp_name",      1, 0, "MP", "override MP Name");
     opts.add("mp_levels",    1, 0, "MP", "set mp data levels (comma-separated integers),"
                                          " default: \"24,22,20,18,17,15\".");
+    opts.add("mp_cp",        1, 0, "MP", "codepage for MP files (default 1251)");
+
     opts.add("crop_nom",     1, 0, "VMAP2", "Crop map to nomenclature region.");
     opts.add("crop_nom_fi",  1, 0, "VMAP2", "Crop map to Finnish nomenclature region.");
     opts.add("crop_rect",    1, 0, "VMAP2", "Crop map to a rectangle.");
@@ -86,10 +87,7 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("filter_pts",0, 0,   "VMAP2", "Reduce number of points in lines and polygons.");
     opts.add("filter_pts_d",1, 0, "VMAP2", "Accuracy for point filtering in meters. Default: 10");
     opts.add("edit",1, 0, "VMAP2", "Edit map using a file with commands");
-
-    if (!read) ms2opt_add_mp_o(opts);  // MP group, writing mp files
   }
-  if (read && write)  ms2opt_add_mp_io(opts);
 }
 
 /****************************************************************************/
