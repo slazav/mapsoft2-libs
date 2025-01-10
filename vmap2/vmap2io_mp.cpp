@@ -43,11 +43,16 @@ mp_to_vmap2(const std::string & ifile, const VMap2types & types,
     o1.comm = o.Comment;
 
     // Non-standard fields
-    if (o.Opts.exists("Tags"))  o1.add_tags(o.Opts.get("Tags"));
-    if (o.Opts.exists("Source"))o1.tags.insert(o.Opts.get("Source")); // old
+    if (o.Opts.exists("Tags"))  o1.add_tags(o.Opts.get("Tags")); // old files
+    if (o.Opts.exists("Source"))o1.opts.put("Source", o.Opts.get("Source")); // old files
     if (o.Opts.exists("Angle")) o1.angle = o.Opts.get("Angle", 0.0);
     if (o.Opts.exists("Scale")) o1.scale = o.Opts.get("Scale", 1.0);
     if (o.Opts.exists("Align")) o1.align = (VMap2objAlign)o.Opts.get("Align", 0);
+    // Opts
+    for (const auto &opt: o.Opts){
+      auto n = opt.first.find("Opt_");
+      if (n==0) o1.opts.emplace(opt.first.substr(4), opt.second);
+    }
 
     // MP object can contain different data levels.
     // When writing MP file we use typeinfo.mp_start parameter (default:0)
@@ -136,7 +141,7 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
     o1.Comment = o.comm;
 
     // Non-standard fields
-    if (o.tags.size()>0) o1.Opts.put("Tags", o.get_tags());
+    for (const auto & o: o.opts) o1.Opts.put("Opt_" + o.first, o.second);
     if (!std::isnan(o.angle)) o1.Opts.put<int>("Angle", o.angle);
     if (o.scale!=1.0) o1.Opts.put<int>("Scale", o.scale);
     if (o.align!=VMAP2_ALIGN_SW) o1.Opts.put<int>("Align", o.align);

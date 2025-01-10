@@ -68,9 +68,9 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
       "Values: 0 or 1, default: 0.");
 
     opts.add("keep_labels",  1, 0, "VMAP2", "Keep old labels. Values: 0 or 1, default: 0.");
-    opts.add("replace_tag",   1, 0, "VMAP2", "Replace objects with a given tag.");
-    opts.add("replace_type",  1, 0, "VMAP2", "Replace objects with a given type.");
-    opts.add("replace_types", 1, 0, "VMAP2", "Replace objects with all types which exist in input files. "
+    opts.add("replace_source", 1, 0, "VMAP2", "Replace objects with a given Source=<src> option.");
+    opts.add("replace_type",   1, 0, "VMAP2", "Replace objects with a given type.");
+    opts.add("replace_types",  1, 0, "VMAP2", "Replace objects with all types which exist in input files. "
       "Values: 0 or 1, default: 0.");
     opts.add("fix_rounding", 1, 0,
        "VMAP2", "Fix rounding errors using information from the output file."
@@ -139,7 +139,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   bool update_labels = opts.get("update_labels", false);
   bool label_names = opts.get("label_names", false);
   bool keep_labels = opts.get("keep_labels", false);
-  std::string replace_tag = opts.get("replace_tag");
+  std::string replace_source = opts.get("replace_source");
   uint32_t replace_type = VMap2obj::make_type(opts.get("replace_type", "none"));
   bool replace_types = opts.get("replace_types", false);
   bool fix_rounding = opts.get("fix_rounding", false);
@@ -155,10 +155,10 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   bool crop_labels = opts.get("crop_labels", false);
   std::string editor = opts.get("edit");
 
-  opts.check_conflict({"replace_tag", "replace_type", "replace_types"});
+  opts.check_conflict({"replace_source", "replace_type", "replace_types"});
 
   // Merge with old data if needed
-  if ((keep_labels || replace_tag!="" || fix_rounding ||
+  if ((keep_labels || replace_source!="" || fix_rounding ||
       replace_types || VMap2obj::get_class(replace_type)!=VMAP2_NONE) &&
       file_exists(ofile)){
 
@@ -168,8 +168,8 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
     if (keep_labels)
       do_keep_labels(vmap2o, vmap2);
 
-    if (replace_tag!="")
-      do_replace_tag(vmap2o, vmap2, replace_tag);
+    if (replace_source!="")
+      do_replace_source(vmap2o, vmap2, replace_source);
 
     if (replace_types)
       do_replace_types(vmap2o, vmap2);

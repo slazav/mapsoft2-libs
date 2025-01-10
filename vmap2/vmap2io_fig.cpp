@@ -160,13 +160,17 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
       vmap2.try_collect_holes(o1);
     }
 
-    // tags - space-separated list of words
-    if (o_opts.exists("Tags"))
-      o1.add_tags(o_opts.get("Tags"));
+    // Opts
+    for (const auto &opt: o_opts){
+      auto n = opt.first.find("Opt_");
+      if (n==0) o1.opts.emplace(opt.first.substr(4), opt.second);
+    }
 
-    // old-style Source option - add as a tag
-    if (o_opts.exists("Source"))
-      o1.tags.insert(o_opts.get("Source"));
+    // Old-style Tags option - space-separated list of words
+    if (o_opts.exists("Tags")) o1.add_tags(o_opts.get("Tags"));
+
+    // old-style Source option
+    if (o_opts.exists("Source")) o1.opts.put("Source", o_opts.get("Source"));
 
     // scale
     o1.scale = o_opts.get("Scale", 1.0);
@@ -295,9 +299,8 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
 
     }
 
-    // Tags, space-separated words
-    if (o.tags.size()>0)
-      fig_opts.put("Tags", o.get_tags());
+    // Options
+    for (const auto & o: o.opts) fig_opts.put("Opt_" + o.first, o.second);
 
     // Scale
     if (o.scale!=1.0)

@@ -6,7 +6,8 @@
 void do_keep_labels(VMap2 & mapo, VMap2 & mapn);
 
 // Assign a tag to all objects in mapn. Add all objects from mapo without this tag
-void do_replace_tag(VMap2 & mapo, VMap2 & mapn, const std::string & tag);
+// Add source=src option to all objects in mapn, add all objects from mapo without it
+void do_replace_source(VMap2 & mapo, VMap2 & mapn, const std::string & src);
 
 // Replace all objects in mapn with objects from mapo
 // except ones with the given type

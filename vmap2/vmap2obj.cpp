@@ -10,6 +10,33 @@
 using namespace std;
 
 /**********************************************************/
+// simple helpers for reading/writing options:
+
+std::string opt_to_str(const std::pair<std::string, std::string> & o){
+  if (o.second.size()) return o.first + ": " + o.second;
+  else return o.first;
+}
+
+std::pair<std::string, std::string> str_to_opt(const std::string & s){
+  auto n = s.find(": ");
+  if (n!=s.npos)
+    return std::make_pair(s.substr(0,n), s.substr(n+2));
+  else
+    return std::make_pair(s, "");
+}
+
+// reading tags from old files ("tags" is a space-separated stirng)
+void
+VMap2obj::add_tags(const std::string & s){
+  std::istringstream ss(s);
+  std::string tag;
+  while (ss) {
+    ss >> tag;
+    if (tag!="") opts.emplace(tag, "");
+  }
+}
+
+/**********************************************************/
 // pack object to a string (for DB storage)
 string
 VMap2obj::pack(const VMap2obj & obj) {
@@ -28,9 +55,9 @@ VMap2obj::pack(const VMap2obj & obj) {
   if (obj.name!="") string_pack_str(s, "name", obj.name);
   if (obj.comm!="") string_pack_str(s, "comm", obj.comm);
 
-  // tags
-  for (auto const & t: obj.tags)
-    string_pack_str(s, "tags", t);
+  // opts
+  for (auto const & o: obj.opts)
+    string_pack_str(s, "opts", opt_to_str(o));
 
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF) {
@@ -63,8 +90,9 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
   if (obj.name!="") string_write_str(s, "name", obj.name);
   if (obj.comm!="") string_write_str(s, "comm", obj.comm);
 
-  // tags
-  if (obj.tags.size()>0) string_write_str(s, "tags", obj.get_tags());
+  // opts
+  for (const auto & o:obj.opts)
+    string_write_str(s, "opts", opt_to_str(o));
 
   // reference point and type
   if (obj.ref_type!=0xFFFFFFFF){
@@ -98,7 +126,8 @@ VMap2obj::unpack(const std::string & str) {
     else if (tag == "algn") ret.align = (VMap2objAlign)string_unpack<int8_t>(s);
     else if (tag == "name") ret.name  = string_unpack_str(s);
     else if (tag == "comm") ret.comm  = string_unpack_str(s);
-    else if (tag == "tags") ret.tags.insert(string_unpack_str(s));
+    else if (tag == "tags") ret.opts.emplace(string_unpack_str(s), ""); // old files
+    else if (tag == "opts") ret.opts.insert(str_to_opt(string_unpack_str(s)));
     else if (tag == "reft") ret.ref_type = string_unpack<uint32_t>(s);
     else if (tag == "refp") ret.ref_pt   = string_unpack_pt(s);
     else if (tag == "crds") ret.push_back(string_unpack_crds(s));
@@ -128,7 +157,8 @@ VMap2obj::read(std::istream & s) {
     else if (tag == "algn") ret.align = parse_align(string_read_str(s));
     else if (tag == "name") ret.name  = string_read_str(s);
     else if (tag == "comm") ret.comm  = string_read_str(s);
-    else if (tag == "tags") ret.add_tags(string_read_str(s));
+    else if (tag == "tags") ret.add_tags(string_read_str(s)); // old files
+    else if (tag == "opts") ret.opts.insert(str_to_opt(string_read_str(s)));
     else if (tag == "reft") ret.ref_type = make_type(string_read_str(s));
     else if (tag == "refp") ret.ref_pt   = string_read_pt(s);
     else if (tag == "crds") ret.push_back(string_read_crds(s));
@@ -241,23 +271,6 @@ VMap2obj::parse_align(const std::string & str){
   return align_tab_s2i.find(str)->second;
 }
 
-std::string
-VMap2obj::get_tags() const{
-  std::string s;
-  for (const auto & t:tags)
-    s += (s.size()?" ":"") + t;
-  return s;
-}
-
-void
-VMap2obj::add_tags(const std::string & s){
-  std::istringstream ss(s);
-  std::string tag;
-  while (ss) {
-    ss >> tag;
-    if (tag!="") tags.insert(tag);
-  }
-}
 
 
 /**********************************************************/

@@ -72,9 +72,8 @@ vmap_to_vmap2(const std::string & ifile, const VMap2types & types,
     o1.name = o.text;
     o1.comm = o.comm;
 
-    // source
-    if (o.opts.exists("Source"))
-      o1.tags.insert(o.opts.get("Source"));
+    // options
+    o1.opts = o.opts;
 
     // angle
     double angle = o.opts.get("Angle", std::nan(""));
@@ -201,8 +200,7 @@ vmap2_to_vmap(VMap2 & vmap2, const VMap2types & types,
     o1.comm = o.comm;
 
     // source
-    if (o.tags.size()>0)
-      o1.opts.put("Source", *o.tags.begin());
+    o1.opts = o.opts;
 
     // angle
     if (!std::isnan(o.angle)){

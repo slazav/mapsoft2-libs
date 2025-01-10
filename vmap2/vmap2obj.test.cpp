@@ -59,7 +59,7 @@ main(){
       assert_eq(isnan(o1.angle), true);
       assert_eq(o1.name, "");
       assert_eq(o1.comm, "");
-      assert_eq(o1.tags.size(), 0);
+      assert_eq(o1.opts.size(), 0);
       assert_eq(o1.size(), 0);
 
       // <=> operators
@@ -107,16 +107,16 @@ main(){
       assert(o2 >= o1);
 
       o2=o1;
-      o1.tags.insert("a");
-      o2.tags.insert("b");
+      o1.opts.put("a", "1");
+      o2.opts.put("b", "2");
       assert(o1 != o2);
       assert(o1 < o2);
       assert(o1 <= o2);
       assert(o2 > o1);
       assert(o2 >= o1);
 
-      o2.tags.insert("a");
-      o1.tags.insert("b");
+      o2.opts.put("a", "1");
+      o1.opts.put("b", "2");
       assert_eq(o1, o2);
       assert(o1 <= o2);
       assert(o2 >= o1);
@@ -132,7 +132,9 @@ main(){
       o1.align  = VMAP2_ALIGN_C;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
-      o1.add_tags("tag1 tag2 tag3");
+      o1.opts.put("opt1", "");
+      o1.opts.put("opt2", "1");
+      o1.opts.put("opt3", "2");
       o1.set_coords("[[[0,0],[1,1]],[[1,1],[2,2]]]");
       assert_err(o1.set_coords("[0,0]"), "can't parse multisegment line: \"[0,0]\": a JSON array expected");
       assert_eq(dMultiLine(o1), dMultiLine("[[[0,0],[1,1]],[[1,1],[2,2]]]"));
@@ -159,7 +161,7 @@ main(){
       o1.align  = VMAP2_ALIGN_NW;
       o1.name = "";
       o1.comm = "";
-      o1.tags.clear();
+      o1.opts.clear();
 
       // pack/upack
       {

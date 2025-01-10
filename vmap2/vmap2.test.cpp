@@ -23,7 +23,7 @@ main(){
       o1.angle  = 60;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
-      o1.tags.insert("object source\nsecond line");
+      o1.opts.put("opt1", "object source\nsecond line");
 
       assert_err(m.add(o1), "VMap2::add: empty object");
       assert_err(m.put(0,o1), "VMap2::put: empty object");
@@ -90,7 +90,7 @@ main(){
       o1.angle  = 60;
       o1.name = "object name\nsecond line";
       o1.comm = "object comment\nsecond line";
-      o1.tags.insert("object source\nsecond line");
+      o1.opts.put("opt1", "object source\nsecond line");
 
       assert_err(m.add(o1), "VMap2::add: empty object");
       assert_err(m.put(0,o1), "VMap2::put: empty object");

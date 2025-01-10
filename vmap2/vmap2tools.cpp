@@ -22,22 +22,21 @@ do_keep_labels(VMap2 & mapo, VMap2 & mapn){
 
 /****************************************************************************/
 
-// Assign a tag to all objects in mapn. Add all objects from mapo without this tag
+// Add source=src option to all objects in mapn, add all objects from mapo without it
 void
-do_replace_tag(VMap2 & mapo, VMap2 & mapn, const std::string & tag){
-  // add the tag to all objects in mapn
+do_replace_source(VMap2 & mapo, VMap2 & mapn, const std::string & src){
+  // add source=src option to all objects in mapn
   mapn.iter_start();
   while (!mapn.iter_end()){
     auto p = mapn.iter_get_next();
-    p.second.tags.insert(tag);
+    p.second.opts.emplace("Source", src);
     mapn.put(p.first, p.second);
   }
-  // transfer objects without the tag from mapo to mapn
+  // transfer objects without the option from mapo to mapn
   mapo.iter_start();
   while (!mapo.iter_end()){
     auto p = mapo.iter_get_next();
-    if (!p.second.tags.count(tag)>0)
-      mapn.add(p.second);
+    if (p.second.opts.get("Source") != src) mapn.add(p.second);
   }
 }
 
@@ -239,9 +238,9 @@ do_join_lines(VMap2 & map, const double D, const double A){
           // skip same object
           if (i==j) continue;
           auto o1=map.get(j);
-          // name, comm, tags should match
+          // name, comm, opts should match
           if (o1.name!=o.name ||
-              o1.comm!=o.comm || o1.tags!=o.tags) continue;
+              o1.comm!=o.comm || o1.opts!=o.opts) continue;
           // for all segments:
           auto l1=o1.begin();
           while (l1!=o1.end()){

@@ -5,6 +5,7 @@
 #include <set>
 
 #include "geom/multiline.h"
+#include "opt/opt.h"
 
 // Class for VMAP2 object.
 // All coordinates are lat,lon in WGS84 datum.
@@ -68,7 +69,7 @@ struct VMap2obj: public dMultiLine {
   VMap2objAlign   align;   // align
   std::string     name;    // object name (to be printed on map labels)
   std::string     comm;    // object comment
-  std::set<std::string> tags;    // object tags
+  Opt             opts;    // object options
 
   dPoint   ref_pt;    // type of parent object (for detached labels)
   uint32_t ref_type;  // coordinates of a parent object point (for detached labels)
@@ -133,10 +134,8 @@ struct VMap2obj: public dMultiLine {
   static std::string print_align(const VMap2objAlign align);
   static VMap2objAlign parse_align(const std::string & str);
 
-  // get tags as a string with space-separated words
-  std::string get_tags() const;
-
-  // add tags from a string with space-separated words
+  // Add tags from a string with space-separated words.
+  // This is needed for reading old vmap2 and mp files with Tags field.
   void add_tags(const std::string & s);
 
   /***********************************************/
@@ -184,7 +183,7 @@ struct VMap2obj: public dMultiLine {
     if (align!=o.align) return align<o.align;
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
-    if (tags!=o.tags)   return tags<o.tags;
+    if (opts!=o.opts)   return opts<o.opts;
     if (ref_type!=o.ref_type)   return ref_type<o.ref_type;
     if (ref_pt!=o.ref_pt)       return ref_pt<o.ref_pt;
     return dMultiLine::operator<(o);
@@ -195,7 +194,7 @@ struct VMap2obj: public dMultiLine {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
     return type==o.type && ang_eq &&
         scale==o.scale && align==o.align &&
-        name==o.name && comm==o.comm && tags==o.tags &&
+        name==o.name && comm==o.comm && opts==o.opts &&
         ref_type==o.ref_type && ref_pt==o.ref_pt &&
         dMultiLine::operator==(o);
   }
