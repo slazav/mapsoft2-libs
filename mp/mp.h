@@ -53,7 +53,7 @@ struct MP : std::list<MPObj>{
     std::string Name;
 
     int LblCoding;           // 6,9,10
-    std::string Codepage;    // "1251" etc.
+    std::string Codepage;    // "1251" etc. Used for converting names and comments to UTF
     //std::string Datum;     // W84, or Custom, or other.
     //bool Transparent;
     //bool MG;               // for routing maps
@@ -111,26 +111,19 @@ struct MP : std::list<MPObj>{
 /******************************************************************/
 // reading/writing
 
-#include "getopt/getopt.h"
-
-// add MP group of options
-void ms2opt_add_mp_i(GetOptSet & opts);  // for programs which only read MP
-void ms2opt_add_mp_o(GetOptSet & opts);  // for programs which only write MP
-void ms2opt_add_mp_io(GetOptSet & opts); // for programs which do both
-
 /// Read mp-file from a stream <f> into <data>. If some data
 /// already exists in <data> then objects are appended and the header
 /// is replaced...
 /// Text is converted to UTF8 encoding using CodePage parameter in the
 /// file header or "mp_in_enc" option.
-void read_mp(std::istream & f, MP & data, const Opt & opts = Opt());
+void read_mp(std::istream & f, MP & data);
 
 /// Write <data> to stream <f> in MP format.
 /// Text is converted from UTF8 encoding to the encoding specified
 /// by CodePage parameter or "mp_out_enc" option.
-void write_mp(std::ostream & f, const MP & data, const Opt & opts = Opt());
+void write_mp(std::ostream & f, const MP & data);
 
-void read_mp(const std::string & fname, MP & data, const Opt & opts = Opt());
-void write_mp(const std::string & fname, const MP & data, const Opt & opts = Opt());
+void read_mp(const std::string & fname, MP & data);
+void write_mp(const std::string & fname, const MP & data);
 
 #endif
