@@ -59,11 +59,13 @@ VMap2obj::pack(const VMap2obj & obj) {
   for (auto const & o: obj.opts)
     string_pack_str(s, "opts", opt_to_str(o));
 
-  // reference point and type
-  if (obj.ref_type!=0xFFFFFFFF) {
+  // reference type
+  if (obj.ref_type!=0xFFFFFFFF)
     string_pack<uint32_t>(s, "reft", obj.ref_type);
+
+  // reference point
+  if (obj.ref_pt!=dPoint())
     string_pack_pt(s, "refp", obj.ref_pt);
-  }
 
   // coordinates
   string_pack_crds(s, "crds", obj);
@@ -94,11 +96,13 @@ VMap2obj::write(std::ostream & s, const VMap2obj & obj) {
   for (const auto & o:obj.opts)
     string_write_str(s, "opts", opt_to_str(o));
 
-  // reference point and type
-  if (obj.ref_type!=0xFFFFFFFF){
+  // reference type
+  if (obj.ref_type!=0xFFFFFFFF)
     string_write_str(s, "reft", print_type(obj.ref_type));
+
+  // reference point
+  if (obj.ref_pt!=dPoint())
     string_write_pt(s, "refp", obj.ref_pt);
-  }
 
   // coordinates
   string_write_crds(s, "crds", obj);
