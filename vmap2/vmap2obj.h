@@ -91,18 +91,39 @@ struct VMap2obj: public dMultiLine {
   // set object type
   void set_type(const uint16_t cl, const uint32_t tnum){ type = make_type(cl, tnum);}
 
-  // set object ref_type
-  void set_ref_type(const uint16_t cl, const uint32_t tnum){ ref_type = make_type(cl, tnum);}
-
   // set object type from string
   void set_type(const std::string & s) {type = make_type(s);}
+
+  // set object ref_type
+  void set_ref_type(const uint16_t cl, const uint32_t tnum){ ref_type = make_type(cl, tnum);}
 
   // set object ref_type from string
   void set_ref_type(const std::string & s) {ref_type = make_type(s);}
 
+  // check if type matches string
+  bool is_type(const std::string & s) const {return make_type(s) == type;}
+
+  // check if ref_type matches string
+  bool is_ref_type(const std::string & s) const {return make_type(s) == ref_type;}
 
   // convert type to string
   static std::string print_type(const uint32_t t);
+
+  // print type as string
+  std::string print_type() const {return print_type(type);}
+
+  // print ref_type as string
+  std::string print_ref_type() const {return print_type(ref_type);}
+
+
+  // get type number for type t
+  static uint32_t get_tnum(const uint32_t t) {return t & 0xFFFFFF;}
+
+  // get object type number
+  uint32_t get_tnum() const {return get_tnum(type);}
+
+  // get ref_type type number
+  uint32_t get_ref_tnum() const {return get_tnum(ref_type);}
 
 
   // get classification for a type t
@@ -114,15 +135,12 @@ struct VMap2obj: public dMultiLine {
   // get ref_type classification (VMap2objClass)
   VMap2objClass get_ref_class() const {return get_class(ref_type);}
 
+  // check if class matches
+  bool is_class(const uint16_t cl) const {return get_class() == cl;}
 
-  // get type number for type t
-  static uint32_t get_tnum(const uint32_t t) {return t & 0xFFFFFF;}
+  // check if ref_class matches
+  bool is_ref_class(const uint16_t cl) const {return get_ref_class() == cl;}
 
-  // get object type number
-  uint32_t get_tnum() const {return get_tnum(type);}
-
-  // get ref_type type number
-  uint32_t get_ref_tnum() const {return get_tnum(ref_type);}
 
   /***********************************************/
 
