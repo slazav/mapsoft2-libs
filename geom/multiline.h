@@ -153,7 +153,7 @@ struct MultiLine : std::vector<Line<CT,PT> > {
   }
 
   // Get first point, throw error if line is empty
-  PT get_first() const {
+  PT get_first_pt() const {
     for (const auto & seg: *this)
       if (seg.size()) return seg[0];
     throw Err() << "dMultiLine::get_first: no points";
