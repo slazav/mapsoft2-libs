@@ -208,6 +208,10 @@ Line with multiple segments (std::vector of Line).
   - `l.npts()`, `npts(l)` -- number of points (sum of segments' point numbers).
   - `l.bbox()`, `bbox(l)` -- return a bounding box in x-y plane (Rect object).
   - `l.is_empty()` -- check if MultiLine is empty (has no segents or only empty segments).
+  - `add_segment()` -- add a new empty segment
+  - `add_point(p)` -- add a point to the end of last segment, or to a new segment if no one exists
+  - `get_first()` -- get first point, throw error if line is empty
+  - `del_last_point()` -- remove last point and delete all empty segments at the end
 
   - `p.to_rint()` -- set coordinates to nearest integer values.
   - `p.to_floor()` -- set coordinates to nearest smaller integers.

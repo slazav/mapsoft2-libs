@@ -152,6 +152,13 @@ struct MultiLine : std::vector<Line<CT,PT> > {
     (*this)[this->size()-1].push_back(pt);
   }
 
+  // Get first point, throw error if line is empty
+  PT get_first() const {
+    for (const auto & seg: *this)
+      if (seg.size()) return seg[0];
+    throw Err() << "dMultiLine::get_first: no points";
+  }
+
   // Remove last point and delete all empty segments at the end
   void del_last_point() {
     // find last non-empty segment
