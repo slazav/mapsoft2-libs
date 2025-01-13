@@ -44,30 +44,37 @@ main(){
   assert_err(nom_to_range_fi("v5311a1a"), "nom_to_range_fi: can't parse name: \"v5311a1a\": extra symbols after the name");
 
   //
+  nom_scale_fi_t sc;
+
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5").cnt(), SC_FI_200k), "V5");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("k5").cnt(), SC_FI_200k), "K5");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("k2").cnt(), SC_FI_200k), "K2");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("x6").cnt(), SC_FI_200k), "X6");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("x6", &sc).cnt(), SC_FI_200k), "X6");
+  assert_eq(sc, SC_FI_200k);
 
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v51").cnt()), "V51");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v52").cnt()), "V52");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v53").cnt()), "V53");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("v54").cnt()), "V54");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v54",&sc).cnt()), "V54");
+  assert_eq(sc, SC_FI_100k);
 
   assert_eq(pt_to_nom_fi(nom_to_range_fi("k21").cnt()), "K21");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("k22").cnt()), "K22");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("k23").cnt()), "K23");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("k24").cnt()), "K24");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k24", &sc).cnt()), "K24");
+  assert_eq(sc, SC_FI_100k);
 
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v511").cnt(), SC_FI_50k), "V511");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v522").cnt(), SC_FI_50k), "V522");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v533").cnt(), SC_FI_50k), "V533");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("v544").cnt(), SC_FI_50k), "V544");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v544", &sc).cnt(), SC_FI_50k), "V544");
+  assert_eq(sc, SC_FI_50k);
 
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5111").cnt(), SC_FI_25k), "V5111");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5222").cnt(), SC_FI_25k), "V5222");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333").cnt(), SC_FI_25k), "V5333");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444").cnt(), SC_FI_25k), "V5444");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444", &sc).cnt(), SC_FI_25k), "V5444");
+  assert_eq(sc, SC_FI_25k);
 
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5111A").cnt(), SC_FI_10k), "V5111A");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5222B").cnt(), SC_FI_10k), "V5222B");
@@ -76,12 +83,62 @@ main(){
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5111E").cnt(), SC_FI_10k), "V5111E");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5222F").cnt(), SC_FI_10k), "V5222F");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333G").cnt(), SC_FI_10k), "V5333G");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444H").cnt(), SC_FI_10k), "V5444H");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444H", &sc).cnt(), SC_FI_10k), "V5444H");
+  assert_eq(sc, SC_FI_10k);
 
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C1").cnt(), SC_FI_5k), "V5333C1");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C2").cnt(), SC_FI_5k), "V5333C2");
   assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C3").cnt(), SC_FI_5k), "V5333C3");
-  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C4").cnt(), SC_FI_5k), "V5333C4");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C4", &sc).cnt(), SC_FI_5k), "V5333C4");
+  assert_eq(sc, SC_FI_5k);
+
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5l").cnt(), SC_FI_H200k), "V5L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k5r").cnt(), SC_FI_H200k), "K5R");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k2L").cnt(), SC_FI_H200k), "K2L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("x6R", &sc).cnt(), SC_FI_H200k), "X6R");
+  assert_eq(sc, SC_FI_H200k);
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v51l").cnt(), SC_FI_H100k), "V51L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v52r").cnt(), SC_FI_H100k), "V52R");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v53L").cnt(), SC_FI_H100k), "V53L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v54R",&sc).cnt(), SC_FI_H100k), "V54R");
+  assert_eq(sc, SC_FI_H100k);
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k21l").cnt(), SC_FI_H100k), "K21L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k22r").cnt(), SC_FI_H100k), "K22R");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k23L").cnt(), SC_FI_H100k), "K23L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("k24R", &sc).cnt(), SC_FI_H100k), "K24R");
+  assert_eq(sc, SC_FI_H100k);
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v511l").cnt(), SC_FI_H50k), "V511L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v522r").cnt(), SC_FI_H50k), "V522R");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v533L").cnt(), SC_FI_H50k), "V533L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v544R", &sc).cnt(), SC_FI_H50k), "V544R");
+  assert_eq(sc, SC_FI_H50k);
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5111l").cnt(), SC_FI_H25k), "V5111L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5222r").cnt(), SC_FI_H25k), "V5222R");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333L").cnt(), SC_FI_H25k), "V5333L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444R", &sc).cnt(), SC_FI_H25k), "V5444R");
+  assert_eq(sc, SC_FI_H25k);
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5111Al").cnt(), SC_FI_H10k), "V5111AL");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5222Br").cnt(), SC_FI_H10k), "V5222BR");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333Cl").cnt(), SC_FI_H10k), "V5333CL");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444Dr").cnt(), SC_FI_H10k), "V5444DR");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5111El").cnt(), SC_FI_H10k), "V5111EL");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5222Fr").cnt(), SC_FI_H10k), "V5222FR");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333GL").cnt(), SC_FI_H10k), "V5333GL");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5444HR", &sc).cnt(), SC_FI_H10k), "V5444HR");
+  assert_eq(sc, SC_FI_H10k);
+
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C1l").cnt(), SC_FI_H5k), "V5333C1L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C2r").cnt(), SC_FI_H5k), "V5333C2R");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C3L").cnt(), SC_FI_H5k), "V5333C3L");
+  assert_eq(pt_to_nom_fi(nom_to_range_fi("v5333C4R", &sc).cnt(), SC_FI_H5k), "V5333C4R");
+  assert_eq(sc, SC_FI_H5k);
+
 
   }
   catch (Err & E){
