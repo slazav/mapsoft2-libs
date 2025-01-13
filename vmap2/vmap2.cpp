@@ -361,8 +361,9 @@ VMap2::find_refs(const double & dist1, const double & dist2){
         auto l = get(*it);
 
         dRect r(l.ref_pt, l.ref_pt);
-        r.expand(dist);
-        double md = INFINITY;
+        double D = dist * 180/M_PI/6380000;
+        r.expand(D); // in approx.degrees
+        double md = dist;
         uint32_t mi = 0xFFFFFFFF;
         for (auto const & i:find(l.ref_type, r)){
           auto o1 = get(i);
@@ -390,8 +391,9 @@ VMap2::find_refs(const double & dist1, const double & dist2){
         auto l = get(*it);
 
         dRect r(l.ref_pt, l.ref_pt);
-        r.expand(dist);
-        double md = INFINITY;
+        double D = dist * 180/M_PI/6380000;
+        r.expand(D); // in approx.degrees
+        double md = dist;
         uint32_t mi = 0xFFFFFFFF;
         for (auto const & i:find(l.ref_type, r)){
           if (tab.count(i)>0){
