@@ -107,6 +107,18 @@ public:
   std::set<uint32_t> find(const std::string & type) {
     return geohash->get(VMap2obj::make_type(type)); }
 
+  /// Find nearest object of a given type.
+  /// Only distance between vertices are counted.
+  /// Parameter maxdist in meters. If no objects found return -1
+  uint32_t find_nearest(const uint32_t & type, const dPoint & pt, double maxdist);
+  uint32_t find_nearest(const std::string & type, const dPoint & pt, double maxdist){
+    return find_nearest(VMap2obj::make_type(type), pt, maxdist); }
+
+  // same, but name should match
+  uint32_t find_nearest(const uint32_t & type, const std::string name, const dPoint & pt, double maxdist);
+  uint32_t find_nearest(const std::string & type, const std::string name, const dPoint & pt, double maxdist){
+    return find_nearest(VMap2obj::make_type(type), name, pt, maxdist); }
+
 
   /// get all object types in the database
   std::set<uint32_t> get_types() { return geohash->get_types();}

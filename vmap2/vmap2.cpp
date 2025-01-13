@@ -299,6 +299,43 @@ VMap2::write(const std::string & file){
 
 #include "geo_data/geo_utils.h"
 
+uint32_t
+VMap2::find_nearest(const uint32_t & type, const dPoint & pt, double maxdist){
+  dRect r(pt, pt);
+  // approx. distance in degrees, for founding objects:
+  double D = maxdist * 180/M_PI/6380000;
+  r.expand(D);
+  double md = maxdist;
+  uint32_t mi = 0xFFFFFFFF;
+  for (auto const & i:find(type, r)){
+    auto o = get(i);
+    auto d = nearest_vertex(o, pt, (dPoint *)NULL,
+      (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
+      if (d<md) {md=d, mi=i;}
+  }
+  return mi;
+}
+
+uint32_t
+VMap2::find_nearest(const uint32_t & type, const std::string name, const dPoint & pt, double maxdist){
+  dRect r(pt, pt);
+  // approx. distance in degrees, for founding objects:
+  double D = maxdist * 180/M_PI/6380000;
+  r.expand(D);
+  double md = maxdist;
+  uint32_t mi = 0xFFFFFFFF;
+  for (auto const & i:find(type, r)){
+    auto o = get(i);
+    if (o.name != name) continue;
+    auto d = nearest_vertex(o, pt, (dPoint *)NULL,
+      (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
+      if (d<md) {md=d, mi=i;}
+  }
+  return mi;
+}
+
+/**********************************************************/
+
 std::multimap<uint32_t, uint32_t>
 VMap2::find_refs(const double & dist1, const double & dist2){
   std::multimap<uint32_t, uint32_t> tab;
