@@ -801,13 +801,13 @@ GObjVMap2::DrawingStep::draw_text(VMap2obj & O, const CairoWrapper & cr, const d
     auto O1(O);
     size_t n1 = 0;
     while (n2!=txt.npos){
-      O1.name = txt.substr(n1,n2);
+      O1.name = txt.substr(n1,n2-n1);
       draw_text(O1, cr, range, path);
-      n1 = n2;
-      n2 = txt.find('\\', n1+1);
+      n1 = n2+1;
+      n2 = txt.find('\\', n1);
       O1[0][0].y += fext.height * O.scale * text_vspace;
     }
-    O1.name = txt.substr(n1+1);
+    O1.name = txt.substr(n1);
     draw_text(O1, cr, range, path);
     return;
   }

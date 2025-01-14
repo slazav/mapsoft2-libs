@@ -403,17 +403,17 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
         size_t n1 = 0;
         fig_add_opt(o1, "FullText", o.name);
         while (n2!=o.name.npos){
-          o1.text = o.name.substr(n1,n2);
+          o1.text = o.name.substr(n1,n2-n1);
           ff.push_back(o1);
           fig_del_opts(o1);
-          n1 = n2;
-          n2 = o.name.find('\\', n1+1);
+          n1 = n2+1;
+          n2 = o.name.find('\\', n1);
           // line shift
           double d = 2.54*450/72*o1.font_size * 1.2;
                  // (cm/in)*(px/cm)/(pt/in)*pt -> px
           o1[0]+=dPoint(sin(o1.angle), cos(o1.angle)) * d;
         }
-        o1.text = o.name.substr(n1+1);
+        o1.text = o.name.substr(n1);
         ff.push_back(o1);
         fig_make_comp(ff);
         fig.insert(fig.end(), ff.begin(), ff.end());
