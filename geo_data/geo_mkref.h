@@ -74,7 +74,7 @@ GeoMap geo_mkref_nom(const std::string & name,
 //   dpi, mag -- map dpi and additional magnification
 //   mt, ml, mr, mb -- top, left, right, bottom margins [pixels]
 GeoMap geo_mkref_nom_fi(const std::string & name,
-  double dpi=300.0, double mag=1.0,
+  double dpi=300.0, double mag=1.0, bool north = false,
   int mt=0, int ml=0, int mr=0, int mb=0);
 
 // Rectangular range of Google/TMS tiles

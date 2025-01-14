@@ -154,7 +154,7 @@ geo_mkref_nom(const std::string & name,
   }
 
   // Border in map points (1pt accuracy);
-  // We convert a closed line, then removing the last point.
+  // Here we convert a closed line
   dLine brd = open(cnv1.bck_acc(rect_to_line(R, true)));
 
   // image size
@@ -189,7 +189,7 @@ geo_mkref_nom(const std::string & name,
 
 GeoMap
 geo_mkref_nom_fi(const std::string & name,
-                 double dpi, double mag,
+                 double dpi, double mag, bool north,
                  int mt, int ml, int mr, int mb){
 
   GeoMap map;
@@ -201,39 +201,51 @@ geo_mkref_nom_fi(const std::string & name,
   // map projection
   map.proj = "ETRS-TM35FIN";
 
-  // conversion map -> wgs84
-  ConvGeo cnv(map.proj);
+  // conversion grid -> wgs84
+  ConvMulti cnv;
+  cnv.push_back(ConvGeo(map.proj));
 
   // map resolution
   map.image_dpi = dpi;
 
-  // factor (map coordinates (m))/(map point)
+  // factor (grid coordinates (m))/(map point)
   double k = 100000.0 * 25.4e-3/*m/in*/ /mag / map.image_dpi;
-  cnv.rescale_src(k); // now cnv1: map points -> meters
+  cnv.rescale_src(k); // now cnv: map points -> wgs
+  R/=k; // in map points
+
+  // Border (for WGS convert a closed line, then open)
+  dLine brd_r = rect_to_line(R, false);
+  dLine brd_w = open(cnv.frw_acc(rect_to_line(R, true)));
+
+  // Refpoints (four corners)
+  dLine pts_r = rect_to_line(R, false);
+  dLine pts_w = cnv.frw_pts(rect_to_line(R, false));
+
+  // Orient to north
+  if (north){
+    auto cnt = R.cnt();
+    double a = cnv.frw_ang(cnt, 0, 0.1);
+    cnv.push_front(ConvAff2D(cnt, a));
+    // rotate border and refpoints
+    brd_r = rotate2d(rect_to_line(R, false), cnt, a);
+    pts_r.rotate2d(cnt, a);
+  }
 
   // image size (rounded)
-  iRect image_bbox = rint(R/k);
-
-  // Border in map points (exact)
-  dLine brd = rect_to_line(R/k);
-
-  // Refpoints:
-  dLine pts_r = rect_to_line(R/k, false);
-  dLine pts_w = pts_r;
-  cnv.frw(pts_w);  // map points -> wgs
+  iRect image_bbox = rint(brd_r.bbox());
 
   // margins
   image_bbox = iRect(image_bbox.x-ml, image_bbox.y-mb,
                      image_bbox.w+ml+mr, image_bbox.h+mt+mb);
 
-  brd -= image_bbox.tlc();
+  brd_r -= image_bbox.tlc();
   pts_r -= image_bbox.tlc();
-  brd.flip_y(image_bbox.h);
+  brd_r.flip_y(image_bbox.h);
   pts_r.flip_y(image_bbox.h);
   map.image_size = iPoint(image_bbox.w, image_bbox.h);
 
   // Add map border:
-  map.border.push_back(brd);
+  map.border.push_back(brd_r);
 
   // Add refpoints:
   map.add_ref(pts_r, pts_w);
@@ -306,7 +318,7 @@ geo_mkref_opts(const Opt & o){
   else if (reftype == "nom_fi"){
     if (name == "") throw Err() <<
       "geo_mkref: nomenclature name should be set (name option)";
-    return geo_mkref_nom_fi(name, dpi, mag, mt, ml, mr, mb);
+    return geo_mkref_nom_fi(name, dpi, mag, north, mt, ml, mr, mb);
   }
 
   /***************************************/
@@ -386,7 +398,7 @@ geo_mkref_opts(const Opt & o){
 
     // factor (map coordinates)/(pixels)
     double k = scale * 2.54/ map.image_dpi;
-    cnv.rescale_src(k); // now cnv1: map pixels -> wgs84
+    cnv.rescale_src(k); // now cnv: map pixels -> wgs84
 
     // get bounding box (in map pixels)
     dRect range;

@@ -48,7 +48,7 @@ main(){
       assert_eq(map.image_dpi, 200);
       assert_eq(map.image_size, iPoint(7559,3779));  // 96x48cm / 2.54 * dpi
       assert_eq((iMultiLine)map.border, iMultiLine(
-        "[[[0,3779],[7559,3779],[7559,0],[0,0],[0,3779]]]"));
+        "[[[0,3779],[7559,3779],[7559,0],[0,0]]]"));
       dLine l;
       for (auto & r:map.ref) {l.push_back(r.first); l.push_back(r.second);}
       assert_deq(l, dLine(
