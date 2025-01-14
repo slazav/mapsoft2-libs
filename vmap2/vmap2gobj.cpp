@@ -677,18 +677,14 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 
   ConvBase *cnv = gobj->cnv.get();
 
-  // deg -> rad
-  // Note:
-  // - bck_ang calculates angle from x axis, but O.angle is from vertical
-  // - on the picture we have inversed y axis
-  // - lonlat projection has different scales in x any, we can not use bck_ang/frw_ang
-  // - object angle is in deg, ccw
-  if (!std::isnan(O.angle) && O.size()>0 && O[0].size()>0 && cnv) {
-    dPoint pt = O[0][0]; // point where we calculate direction to geographic north:
-    cnv->bck(pt); // lonlat -> px
-    dPoint pt1 = pt + dPoint(0,-1); // up direction
-    cnv->frw(pt); cnv->frw(pt1);  pt1-=pt;
-    O.angle = O.angle*M_PI/180 + atan2(pt1.y, pt1.x) - M_PI/2; // from north, cw, rad
+  // Convert angle to radians, add map-north angle, add PI/2
+  if (!std::isnan(O.angle) && O.npts() && cnv) {
+    dPoint pt1 = O.get_first_pt();
+    dPoint pt2 = pt1 + dPoint(0,1e-3);
+    cnv->bck(pt1); cnv->bck(pt2); // lonlat -> px
+    pt2-=pt1;
+    double da = atan2(pt2.y, pt2.x) + M_PI/2.0; // y axis is inverted!
+    O.angle = O.angle*M_PI/180 + da; // from north, cw, rad
   }
 
   if (cnv) cnv->bck(O);

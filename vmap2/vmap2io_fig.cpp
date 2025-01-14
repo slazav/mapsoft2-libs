@@ -200,10 +200,10 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
 
       // Text angle in fig, rad, CCW
       if (o.angle!=0){
-        dPoint pt1(pt0), pt2(pt0+dPoint(0,1e-4)); // up direction, deg
-        cnv.bck(pt1); cnv.bck(pt2);  pt1-=pt2;
-        double da = atan2(pt1.y, pt1.x) - M_PI/2;
-        o1.angle = - 180/M_PI*(o.angle - da);
+        dPoint pt1(pt0), pt2(pt0+dPoint(0,1e-3)); // up direction, deg
+        cnv.bck(pt1); cnv.bck(pt2);  pt2-=pt1;
+        double da = atan2(pt2.y, pt2.x) + M_PI/2;
+        o1.angle = -180/M_PI*(o.angle + da);
       }
       else o1.angle = std::nan("");
     }
@@ -313,10 +313,10 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
     // see also GObjVMap2::DrawingStep::convert_coords()
     double angle = o.angle;
     if (!std::isnan(o.angle)){
-      dPoint pt1(pt0), pt2(pt0+dPoint(0,1e-4)); // up direction, deg
-      cnv.bck(pt1); cnv.bck(pt2);  pt1-=pt2;
-      double da = atan2(pt1.y, pt1.x) - M_PI/2;
-      angle=-M_PI/180*o.angle + da;
+      dPoint pt1(pt0), pt2(pt0+dPoint(0,1e-3)); // up direction, deg
+      cnv.bck(pt1); cnv.bck(pt2);  pt2-=pt1;
+      double da = atan2(pt2.y, pt2.x) + M_PI/2;
+      angle = -M_PI/180*o.angle - da;
     }
 
     dMultiLine pts(o);

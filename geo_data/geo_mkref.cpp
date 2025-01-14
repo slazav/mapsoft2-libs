@@ -223,12 +223,16 @@ geo_mkref_nom_fi(const std::string & name,
 
   // Orient to north
   if (north){
-    auto cnt = R.cnt();
-    double a = cnv.frw_ang(cnt, 0, 0.1);
-    cnv.push_front(ConvAff2D(cnt, a));
+    auto pt1 = R.cnt();
+    cnv.frw(pt1); // -> wgs
+    dPoint pt2 = pt1 + dPoint(0,1e-3);
+    cnv.bck(pt1); cnv.bck(pt2); // lonlat -> px
+    pt2-=pt1;
+    double da = atan2(pt2.y, pt2.x) - M_PI/2.0;
+    cnv.push_front(ConvAff2D(R.cnt(), -da));
     // rotate border and refpoints
-    brd_r = rotate2d(rect_to_line(R, false), cnt, a);
-    pts_r.rotate2d(cnt, a);
+    brd_r = rotate2d(rect_to_line(R, false), R.cnt(), -da);
+    pts_r.rotate2d(R.cnt(), -da);
   }
 
   // image size (rounded)
