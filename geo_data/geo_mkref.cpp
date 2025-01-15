@@ -100,7 +100,10 @@ dMultiLine read_geoline(const std::string & fname){
   if (d.trks.size()<1) throw Err()
       << "mkref: can't read any track from file: " << fname;
   dMultiLine ret;
-  for (const auto & t:d.trks) ret.push_back(t);
+  for (const auto & trk:d.trks)
+    for (const auto & seg:trk)
+      ret.push_back(seg);
+
   ret.flatten(); // remove z component
   return ret;
 }
