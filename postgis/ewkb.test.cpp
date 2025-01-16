@@ -33,21 +33,21 @@ int
 main(){
   try{
 
-    auto ml = ewkb_decode(v0, false);
+    auto ml = ewkb_decode(v0, false, false);
     // Point: order(2) + type(8) + srid(8) + 16*2
     assert_eq(ml.npts(),  1);
     assert_eq(v0.size(),  2 + 8*2 + 16*2);
 
-    ml = ewkb_decode(v1, false);
+    ml = ewkb_decode(v1, false, false);
     // LineString: order(2) + type(8) + srid(8) + npts(8) + npts*16*2
     assert_eq(v1.size(),  2 + 8*3 + ml.npts()*16*2);
 
     // Polygon: order(2) + type(8) + srid(8) + nseg(8) + nseg*(npts(8) + npts*16*2)
-    ml = ewkb_decode(v2, false);
+    ml = ewkb_decode(v2, false, false);
     assert_eq(v2.size(),  2 + 8*3 + ml.size()*(8 + ml.npts()*16*2));
 
     // Compound: order(2) + type(8) + srid(8) + nseg(8) + nparts( order(2) + type(8) + npts(8) + npts*16*2 )
-    ml = ewkb_decode(v3, false);
+    ml = ewkb_decode(v3, false, false);
     assert_eq(ml.size(), 2);
     assert_eq(v3.size(),  2 + 8*3 + (2 + 8*2)*ml.size() + 16*2*ml.npts());
 

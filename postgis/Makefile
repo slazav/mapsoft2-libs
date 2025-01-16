@@ -1,6 +1,8 @@
-MOD_SOURCES := ewkb.cpp
-MOD_HEADERS := ewkb.h
+MOD_SOURCES := ewkb.cpp  gpkg.cpp
+MOD_HEADERS := ewkb.h  gpkg.h
 
-SIMPLE_TESTS := ewkb
+SIMPLE_TESTS := ewkb gpkg
+
+PKG_CONFIG = sqlite3
 
 include ../Makefile.inc

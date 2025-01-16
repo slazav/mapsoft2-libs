@@ -35,7 +35,13 @@ enum wkbGeometryType {
 };
 
 uint8_t
-wkb_dec_byte(const std::string & str, size_t & pos){
+wkb_dec_byte(const std::string & str, size_t & pos, const bool binary){
+  if (binary){
+    if (pos>=str.size())
+      throw Err() << "wkb_dec_byte: not enough data";
+    return str[pos++];
+  }
+
   if (pos+1>=str.size())
     throw Err() << "wkb_dec_byte: not enough data: " << str << ": " << pos;
   auto c1 = str[pos++];
@@ -51,10 +57,10 @@ wkb_dec_byte(const std::string & str, size_t & pos){
 }
 
 int
-wkb_dec_int(const std::string & str, size_t & pos, const int order){
+wkb_dec_int(const std::string & str, size_t & pos, const int order, const bool binary){
   int ret=0;
   for (int i=0; i<4; ++i ){
-    int c = wkb_dec_byte(str, pos);
+    int c = wkb_dec_byte(str, pos, binary);
     if (order) ret += c<<(8*i);
     else ret += c<<(8*(3-i));
   }
@@ -62,10 +68,10 @@ wkb_dec_int(const std::string & str, size_t & pos, const int order){
 }
 
 double
-wkb_dec_dbl(const std::string & str, size_t & pos, const int order){
+wkb_dec_dbl(const std::string & str, size_t & pos, const int order, const bool binary){
   int64_t ret=0;
   for (int i=0; i<8; ++i ){
-    int64_t c = wkb_dec_byte(str, pos);
+    int64_t c = wkb_dec_byte(str, pos, binary);
     if (order) ret += c<<(8*i);
     else ret += c<<(8*(7-i));
   }
@@ -75,50 +81,50 @@ wkb_dec_dbl(const std::string & str, size_t & pos, const int order){
 
 // decode wkb points (without M field)
 dPoint
-wkb_dec_pt(const std::string & str, size_t & pos, const int order, const int type){
+wkb_dec_pt(const std::string & str, size_t & pos, const int order, const bool binary, const int type){
   dPoint ret;
-  ret.x = wkb_dec_dbl(str, pos, order);
-  ret.y = wkb_dec_dbl(str, pos, order);
+  ret.x = wkb_dec_dbl(str, pos, order, binary);
+  ret.y = wkb_dec_dbl(str, pos, order, binary);
   if (type&ewkbZ || type/1000==1 || type/1000==3)
-    ret.z = wkb_dec_dbl(str, pos, order); // read z field
+    ret.z = wkb_dec_dbl(str, pos, order, binary); // read z field
   if (type&ewkbM || type/1000==2 || type/1000==3 )
-    wkb_dec_dbl(str, pos, order); // skip M field
+    wkb_dec_dbl(str, pos, order, binary); // skip M field
   return ret;
 }
 
 
 dMultiLine
-ewkb_decode(const std::string & str, const bool docnv, size_t & pos){
+ewkb_decode(const std::string & str, const bool docnv, const bool binary, size_t & pos){
   dMultiLine ret;
   if (str == "") return ret;
-  int order = wkb_dec_byte(str, pos);
+  int order = wkb_dec_byte(str, pos, binary);
   if (order!=0 && order!=1) throw Err() << "wkb_decode: order byte is wrong: " << order;
-  int type = wkb_dec_int(str, pos, order);
+  int type = wkb_dec_int(str, pos, order, binary);
   int srid = 0;
-  if (type & ewkbSRID) srid = wkb_dec_int(str, pos, order);
+  if (type & ewkbSRID) srid = wkb_dec_int(str, pos, order, binary);
 
   switch (type & 0xF){
 
     case wkbPoint:
-      ret.add_point(wkb_dec_pt(str, pos, order, type));
+      ret.add_point(wkb_dec_pt(str, pos, order, binary, type));
       break;
 
     case ewkbCircString: // should be similar to line; 3 points min; odd npoints?!
     case wkbLineString: {
-      int npts = wkb_dec_int(str, pos, order);
+      int npts = wkb_dec_int(str, pos, order, binary);
       for (size_t i=0; i<npts; i++)
-        ret.add_point(wkb_dec_pt(str, pos, order, type));
+        ret.add_point(wkb_dec_pt(str, pos, order, binary, type));
       break;
     }
 
     case ewkbTriangle: // should be like a polygon with 1 ring
     case wkbPolygon: {
-      int nseg = wkb_dec_int(str, pos, order);
+      int nseg = wkb_dec_int(str, pos, order, binary);
       for (size_t i=0; i<nseg; i++){
-        int npts = wkb_dec_int(str, pos, order);
+        int npts = wkb_dec_int(str, pos, order, binary);
         ret.add_segment();
         for (size_t j=0; j<npts; j++)
-          ret.add_point(wkb_dec_pt(str, pos, order, type));
+          ret.add_point(wkb_dec_pt(str, pos, order, binary, type));
       }
       break;
     }
@@ -133,9 +139,9 @@ ewkb_decode(const std::string & str, const bool docnv, size_t & pos){
     case ewkbMultiSurf:
     case ewkbTin:
     case wkbGeometryCollection: {
-      int npts = wkb_dec_int(str, pos, order);
+      int npts = wkb_dec_int(str, pos, order, binary);
       for (size_t i=0; i<npts; i++){
-        auto l = ewkb_decode(str, docnv, pos);
+        auto l = ewkb_decode(str, docnv, binary, pos);
         ret.insert(ret.end(), l.begin(), l.end());
       }
       break;
@@ -154,9 +160,9 @@ ewkb_decode(const std::string & str, const bool docnv, size_t & pos){
 }
 
 dMultiLine
-ewkb_decode(const std::string & str, const bool docnv){
+ewkb_decode(const std::string & str, const bool docnv, const bool binary){
   size_t pos = 0;
-  auto ret = ewkb_decode(str, docnv, pos);
+  auto ret = ewkb_decode(str, docnv, binary, pos);
   if (pos!=str.size()) throw Err() << "ewkb_decode: extra data: " << str.substr(pos);
   return ret;
 }
