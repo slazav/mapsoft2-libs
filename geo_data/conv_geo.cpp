@@ -10,15 +10,17 @@ std::map<std::string, std::string> proj_aliases = {
   {"WEB",  "+proj=webmerc +datum=WGS84 +type=crs"}, // spherical web mercator (google maps, etc.)
   {"EWEB", "+proj=merc +datum=WGS84 +no_defs +type=crs"}, // elliptical web mercator (Yandex maps)
 
-  {"FI",   "EPSG:2393"}, // Finnish maps, KKJ
+  // Finland:
+  {"FI",   "EPSG:2393"}, // KKJ
   {"KKJ",  "EPSG:2393"}, // same
   {"FI2",           "EPSG:3067"},  // Finnish maps, ETRS-TM35FIN, ETRS89
   {"ETRS-TM35FIN",  "EPSG:3067"},  // same
   {"ETRS89",        "EPSG:3067"},  // same
+
   {"NO33",          "EPSG:25833"}, // Norway, zone 33
-  {"NO35",          "EPSG:25835"}, // Norway, zone 35
-  {"SE",            "EPSG:3006"},  // Sweeden
-  {"GB",            "EPSG:27700"}, // Great Britain
+  {"NO35",          "EPSG:25835"}, // ETRS89, zone 35
+  {"SE",            "EPSG:3006"},  // SWEREF99 TM
+  {"GB",            "EPSG:27700"}, // OSGB36 / British National Grid
   {"CH",            "EPSG:21781"}, // Swiss CH1903 / LV03 (see also EPSG:2056)
 
   // Pulkovo-1942.
@@ -75,6 +77,22 @@ get_proj_par(const std::string & proj,
   return n1!=std::string::npos ? exp.substr(n1+kl,n2-n1-kl) : def;
 }
 
+PJ *
+normalized_pj(PJ_CONTEXT *ctx, const std::string & crsname){
+  auto crsname1 = expand_proj_aliases(crsname); // expand aliases
+  auto p1 = proj_create(ctx, crsname1.c_str()); // create crs
+  if (!p1) throw Err() << "Can't create libproj projection: " << crsname;
+
+  // always north up
+  auto p2 = proj_normalize_for_visualization(ctx, p1);
+  if (p2) { proj_destroy(p1); p1 = p2; }
+
+  // promote to 3d
+  auto p3 = proj_crs_promote_to_3D(ctx, nullptr, p1);
+  if (p3) { proj_destroy(p1); p1 = p3; }
+
+  return p1;
+}
 
 ConvGeo::ConvGeo(const std::string & src,
        const std::string & dst, const bool use2d){
@@ -95,16 +113,8 @@ ConvGeo::ConvGeo(const std::string & src,
     "ConvGeo: can't make conversion with an empty projection string";
 
   // make transformation object
-  auto src1 = expand_proj_aliases(src);
-  auto dst1 = expand_proj_aliases(dst);
-  auto psrc = proj_create(pcp, src1.c_str());
-  auto pdst = proj_create(pcp, dst1.c_str());
-
-  // promote to 3d
-  auto psrc3D = proj_crs_promote_to_3D(pcp, nullptr, psrc);
-  auto pdst3D = proj_crs_promote_to_3D(pcp, nullptr, pdst);
-  if (psrc3D) { proj_destroy(psrc); psrc = psrc3D; }
-  if (pdst3D) { proj_destroy(pdst); pdst = pdst3D; }
+  auto psrc = normalized_pj(pcp, src);
+  auto pdst = normalized_pj(pcp, dst);
   pj = std::shared_ptr<void>(
       proj_create_crs_to_crs_from_pj(pcp, psrc, pdst, NULL, NULL),
       proj_destroy);
@@ -116,7 +126,7 @@ ConvGeo::ConvGeo(const std::string & src,
     if (err==0)
       throw Err() << "Can't create libproj transformation, unknown reason";
     throw Err() << "Can't create libproj transformation: \""
-                << src1 << "\" to \"" << dst1 << "\": "
+                << src << "\" to \"" << dst << "\": "
                 << proj_context_errno_string(pcp, err);
   }
 }

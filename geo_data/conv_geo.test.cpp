@@ -232,8 +232,116 @@ main(){
 #else
       assert_err(cnv1.frw(p1), "Can't convert coordinates: Point outside of projection domain");
 #endif
-
     }
+
+    {
+      ConvGeo cnv1("SU33");
+      dPoint p1(32.780603, 56.221141);
+      dPoint p2(6486513.76, 6233327.52);
+
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+    }
+
+    // FI - KKJ
+    {
+      ConvGeo cnv1("+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl +towgs84=-90.7,-106.1,-119.2,4.09,0.218,-1.05,1.37");
+      dPoint p1(20.54873,69.05995);
+      dPoint p2(3243163.86,7677778.02);
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("FI");
+      assert_deq(cnv2.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv2.frw_pts(p2), p1, 1e-6);
+    }
+
+    // FI - ETRS-TM35FIN
+    {
+      ConvGeo cnv1("+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs");
+      dPoint p1(20.54873,69.05995);
+      dPoint p2(243094.408,7674572.84);
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("ETRS-TM35FIN");
+      assert_deq(cnv2.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv2.frw_pts(p2), p1, 1e-6);
+    }
+
+    // NO33
+    {
+      ConvGeo cnv1("+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+      dPoint p1(20.54873,69.05995);
+      dPoint p2(721054.955,7671053.62);
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("NO33");
+      assert_deq(cnv2.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv2.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv3("EPSG:25833");
+      assert_deq(cnv3.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv3.frw_pts(p2), p1, 1e-6);
+    }
+
+    // SE
+    {
+      ConvGeo cnv1("+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs");
+      dPoint p1(20.54873,69.05995);
+      dPoint p2(721054.955,7671053.62);
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("SE");
+      assert_deq(cnv2.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv2.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv3("EPSG:3006");
+      assert_deq(cnv3.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv3.frw_pts(p2), p1, 1e-6);
+    }
+
+    // UK
+    {
+      ConvGeo cnv1("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717"
+                   " +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs");
+      dPoint p1(-2.79692, 54.03539);
+      dPoint p2(347903.209,460228.132);
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("GB");
+      assert_deq(cnv2.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv2.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv3("EPSG:27700");
+      assert_deq(cnv3.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv3.frw_pts(p2), p1, 1e-6);
+    }
+
+    // CH
+    {
+      ConvGeo cnv1("+proj=somerc +lat_0=46.95240555555556"
+      " +lon_0=7.439583333333333 +x_0=600000 +y_0=200000"
+      " +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0"
+      " +units=m +no_defs");
+
+      dPoint p1(7.93260, 46.49816);
+      dPoint p2(637920.134,149768.714);
+      assert_deq(cnv1.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv1.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv2("CH");
+      assert_deq(cnv2.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv2.frw_pts(p2), p1, 1e-6);
+
+      ConvGeo cnv3("EPSG:21781");
+      assert_deq(cnv3.bck_pts(p1), p2, 0.1);
+      assert_deq(cnv3.frw_pts(p2), p1, 1e-6);
+    }
+
 
     // SU conversion with automatic zones
 /*    {
@@ -300,7 +408,6 @@ main(){
        assert(dist(p3,p4) < 1);
 
     }
-
   }
   catch (Err & e) {
     std::cerr << "Error: " << e.str() << "\n";
