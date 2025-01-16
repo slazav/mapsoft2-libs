@@ -5,70 +5,60 @@
 #include "conv_geo.h"
 #include "geo_utils.h"
 
-std::string expand_proj_aliases(const std::string & pars){
+std::map<std::string, std::string> proj_aliases = {
+  {"WGS",  "+datum=WGS84 +proj=lonlat +type=crs"},  // default crs: lon-lat in WGS84 datum
+  {"WEB",  "+proj=webmerc +datum=WGS84 +type=crs"}, // spherical web mercator (google maps, etc.)
+  {"EWEB", "+proj=merc +datum=WGS84 +no_defs +type=crs"}, // elliptical web mercator (Yandex maps)
 
-  // a few predefined projections
-  if (pars == "WGS") // default projection: lon-lat in WGS84 datum
-    return "+datum=WGS84 +proj=lonlat";
+  {"FI",   "EPSG:2393"}, // Finnish maps, KKJ
+  {"KKJ",  "EPSG:2393"}, // same
+  {"FI2",           "EPSG:3067"},  // Finnish maps, ETRS-TM35FIN, ETRS89
+  {"ETRS-TM35FIN",  "EPSG:3067"},  // same
+  {"ETRS89",        "EPSG:3067"},  // same
+  {"NO33",          "EPSG:25833"}, // Norway, zone 33
+  {"NO35",          "EPSG:25835"}, // Norway, zone 35
+  {"SE",            "EPSG:3006"},  // Sweeden
+  {"GB",            "EPSG:27700"}, // Great Britain
+  {"CH",            "EPSG:21781"}, // Swiss CH1903 / LV03 (see also EPSG:2056)
 
-  if (pars == "WEB") // web mercator
-    return "+proj=webmerc +datum=WGS84";
+  // Pulkovo-1942.
+  // There is also EPSG:4284, with more accurate ellipsode transformation
+  {"SU_LL", "+ellps=krass +proj=lonlat +towgs84=+28,-130,-95 +type=crs"},
 
-  if (pars == "EWEB") // elliptical web mercator (used by Yandex)
-    return "+proj=merc +datum=WGS84 +no_defs";
+  // all Pulkovo-1942 Gauss-Kreuger zones will be trated separately
+};
 
-  if (pars == "FI" || pars == "KKJ") // Finnish maps, KKJ (EPSG:2393?)
-    return "+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl"
-      " +towgs84=-90.7,-106.1,-119.2,4.09,0.218,-1.05,1.37";
+std::string expand_proj_aliases(const std::string & crs){
 
-  if (pars == "ETRS-TM35FIN" || pars == "ETRS89") // Finnish maps (EPSG:3067?)
-    return "+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs";
-
-  if (pars == "ESPG:25833") // Norway, zone 33 (EPSG:25833)
-    return "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs";
-
-  if (pars == "ESPG:25835") // Norway, zone 35 (EPSG:25835)
-    return "+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs";
-
-  if (pars == "ESPG:3006") // Sweeden
-    return "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs";
-
-  if (pars == "GB") // Breat Britain maps (EPSG:27700)
-    return "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717"
-           " +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs";
-
-  if (pars == "CH") // Swiss maps
-    return "+proj=somerc +lat_0=46.95240555555556"\
-      " +lon_0=7.439583333333333 +x_0=600000 +y_0=200000"\
-      " +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0"\
-      " +units=m +no_defs";
-
-  if (pars == "SU_LL") // Soviet datum (lon-lat)
-    return "+ellps=krass +proj=lonlat +towgs84=+28,-130,-95";
+  if (proj_aliases.count(crs)) return proj_aliases[crs];
 
   // Soviet coordinate system with automatic 6-degree zones
   // Here we use central meridian 0, actual zone will be calculated 
   // outside libproj
-//  if (pars == "SU") 
+//  if (crs == "SU") 
 //    return "+ellps=krass +towgs84=+28,-130,-95 +proj=tmerc +lon_0=0 +x_0=500000";
 
   // SU<N>  -- Soviet coordinate system with central meridian N.
-  // SU<N>N -- Same, but coordinates do not have zone prefix.
-  if (pars.length()>2 &&
-      pars.substr(0,2) == "SU"){
-    bool nopref = (pars[pars.length()-1] == 'N');
-    int lon0 = str_to_type<int>(pars.substr(2,pars.length() - 2 - (nopref?1:0)));
+  // SU<N>N -- Same, but coordinates without zone prefix.
+  if (crs.length()>2 &&
+      crs.substr(0,2) == "SU"){
+    bool nopref = (crs[crs.length()-1] == 'N');
+    int lon0 = str_to_type<int>(crs.substr(2,crs.length() - 2 - (nopref?1:0)));
     if (lon2lon0(lon0) != lon0) throw Err()
-      << "Bad central meridian for " << pars << " system. Should have 3+n*6 form.";
+      << "Bad central meridian for " << crs << " system. Should have 3+n*6 form.";
 
     int pref = (lon0<0 ? 60:0) + (lon0-3)/6 + 1;
     return "+ellps=krass +towgs84=+28,-130,-95 +proj=tmerc"
            " +lon_0=" + type_to_str(lon0) +
-           " +x_0=" + (nopref?"":type_to_str(pref)) + "500000";
+           " +x_0=" + (nopref?"":type_to_str(pref)) + "500000" + " +type=crs";
   }
 
+  // add +type=crs to all proj parameter strings if needed
+  if (crs.find("+")!=crs.npos &&
+      crs.find("+type=crs")==crs.npos)
+    return crs + " +type=crs";
 
-  return pars;
+  return crs;
 }
 
 
@@ -105,9 +95,8 @@ ConvGeo::ConvGeo(const std::string & src,
     "ConvGeo: can't make conversion with an empty projection string";
 
   // make transformation object
-  auto src1 = expand_proj_aliases(src) + " +type=crs";
-  auto dst1 = expand_proj_aliases(dst) + " +type=crs";
-
+  auto src1 = expand_proj_aliases(src);
+  auto dst1 = expand_proj_aliases(dst);
   auto psrc = proj_create(pcp, src1.c_str());
   auto pdst = proj_create(pcp, dst1.c_str());
 

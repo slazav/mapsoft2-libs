@@ -9,39 +9,29 @@ int
 main(){
   try{
 
-    assert_eq(expand_proj_aliases("WGS"),
-      "+datum=WGS84 +proj=lonlat");
-
-    assert_eq(expand_proj_aliases("WEB"),
-      "+proj=webmerc +datum=WGS84");
-
-    assert_eq(expand_proj_aliases("FI"),
-      "+proj=tmerc +lon_0=27 +x_0=3500000 +ellps=intl "
-      "+towgs84=-90.7,-106.1,-119.2,4.09,0.218,-1.05,1.37");
-
-    assert_eq(expand_proj_aliases("CH"),
-      "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 "
-      "+x_0=600000 +y_0=200000 +ellps=bessel "
-      "+towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
+    assert_eq(expand_proj_aliases("WGS"), "+datum=WGS84 +proj=lonlat +type=crs");
+    assert_eq(expand_proj_aliases("WEB"), "+proj=webmerc +datum=WGS84 +type=crs");
+    assert_eq(expand_proj_aliases("FI"),  "EPSG:2393");
+    assert_eq(expand_proj_aliases("CH"),  "EPSG:21781");
 
     assert_eq(expand_proj_aliases("SU-3"),
       "+ellps=krass +towgs84=+28,-130,-95 "
-      "+proj=tmerc +lon_0=-3 +x_0=60500000");
+      "+proj=tmerc +lon_0=-3 +x_0=60500000 +type=crs");
 
     assert_eq(expand_proj_aliases("SU3"),
       "+ellps=krass +towgs84=+28,-130,-95 "
-      "+proj=tmerc +lon_0=3 +x_0=1500000");
+      "+proj=tmerc +lon_0=3 +x_0=1500000 +type=crs");
 
     assert_err(expand_proj_aliases("SU0"),
       "Bad central meridian for SU0 system. Should have 3+n*6 form.");
 
     assert_eq(expand_proj_aliases("SU-3N"),
       "+ellps=krass +towgs84=+28,-130,-95 "
-      "+proj=tmerc +lon_0=-3 +x_0=500000");
+      "+proj=tmerc +lon_0=-3 +x_0=500000 +type=crs");
 
     assert_eq(expand_proj_aliases("SU3N"),
       "+ellps=krass +towgs84=+28,-130,-95 "
-      "+proj=tmerc +lon_0=3 +x_0=500000");
+      "+proj=tmerc +lon_0=3 +x_0=500000 +type=crs");
 
     assert_err(expand_proj_aliases("SU0N"),
       "Bad central meridian for SU0N system. Should have 3+n*6 form.");
