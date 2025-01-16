@@ -50,8 +50,8 @@ GPKG::GPKG(const std::string & fname){
     if (res != SQLITE_ROW) throw Err()
       << sqlite3_expanded_sql(stmt1.get()) << ": " << sqlite3_errstr(res);
 
-    tables[name].srs = sql_column_text(stmt.get(), 0) + ":"
-                     + sql_column_text(stmt.get(), 1);
+    tables[name].srs = sql_column_text(stmt1.get(), 0) + ":"
+                     + sql_column_text(stmt1.get(), 1);
   }
 
 }
