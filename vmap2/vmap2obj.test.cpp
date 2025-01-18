@@ -121,6 +121,30 @@ main(){
       assert(o1 <= o2);
       assert(o2 >= o1);
 
+      // nan/inf scale
+      o1.scale = NAN;
+      assert_eq(o1 == o2, false);
+      assert_eq(o1 < o2,  true);
+      assert_eq(o1 > o2,  false);
+      o2.scale = NAN;
+      assert_eq(o1 == o2, true);
+      assert_eq(o1 < o2, false);
+      assert_eq(o1 > o2, false);
+
+      o1.scale = +INFINITY;
+      assert_eq(o1 == o2, false);
+      assert_eq(o1 > o2, true);
+      assert_eq(o1 < o2, false);
+
+      o1.scale = -INFINITY;
+      assert_eq(o1 != o2, true);
+      assert_eq(o1 < o2, false); // NAN < -INF in our code!
+      assert_eq(o1 > o2, true);
+
+      o2.scale = -INFINITY;
+      assert_eq(o1 == o2, true);
+      assert_eq(o1 < o2, false);
+
     }
 
     // packing and unpacking of VMap2obj

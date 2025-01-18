@@ -2,6 +2,7 @@
 #define VMAP2OBJ_H
 
 #include <string>
+#include <cstring> // memcmp
 #include <set>
 
 #include "geom/multiline.h"
@@ -202,11 +203,11 @@ struct VMap2obj: public dMultiLine {
   // operators <=>
   /// Less then operator.
   bool operator< (const VMap2obj & o) const {
+    bool ang_eq = memcmp(&angle, &o.angle, sizeof angle) == 0;
+    bool scl_eq = memcmp(&scale, &o.scale, sizeof scale) == 0;
     if (type!=o.type)   return type<o.type;
-    if (std::isnan(angle) && !std::isnan(o.angle)) return true;
-    if (std::isnan(o.angle) && !std::isnan(angle)) return false;
-    if (angle!=o.angle && !std::isnan(angle)) return angle<o.angle;
-    if (scale!=o.scale) return scale<o.scale;
+    if (!ang_eq) return std::isnan(angle) || angle<o.angle;
+    if (!scl_eq) return std::isnan(scale) || scale<o.scale;
     if (align!=o.align) return align<o.align;
     if (name!=o.name)   return name<o.name;
     if (comm!=o.comm)   return comm<o.comm;
@@ -218,9 +219,10 @@ struct VMap2obj: public dMultiLine {
 
   /// compare header (but not coordinates) with another object
   bool is_same_head(const VMap2obj & o) const {
-    bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
-    return type==o.type && ang_eq &&
-        scale==o.scale && align==o.align &&
+    // treat nan/inf values in double fields as equal
+    bool ang_eq = memcmp(&angle, &o.angle, sizeof angle) == 0;
+    bool scl_eq = memcmp(&scale, &o.scale, sizeof scale) == 0;
+    return type==o.type && ang_eq && scl_eq && align==o.align &&
         name==o.name && comm==o.comm && opts==o.opts &&
         ref_type==o.ref_type && ref_pt==o.ref_pt;
   }
