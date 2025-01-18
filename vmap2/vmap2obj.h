@@ -106,7 +106,7 @@ struct VMap2obj: public dMultiLine {
   // check if ref_type matches string
   bool is_ref_type(const std::string & s) const {return make_type(s) == ref_type;}
 
-  // convert type to string
+  // convert type to string with hex number
   static std::string print_type(const uint32_t t);
 
   // print type as string
@@ -114,6 +114,15 @@ struct VMap2obj: public dMultiLine {
 
   // print ref_type as string
   std::string print_ref_type() const {return print_type(ref_type);}
+
+  // convert type to string with decimal number
+  static std::string print_type_dec(const uint32_t t);
+
+  // print type as string
+  std::string print_type_dec() const {return print_type_dec(type);}
+
+  // print ref_type as string
+  std::string print_ref_type_dec() const {return print_type_dec(ref_type);}
 
 
   // get type number for type t
@@ -207,13 +216,18 @@ struct VMap2obj: public dMultiLine {
     return dMultiLine::operator<(o);
   }
 
-  /// Equal opertator.
-  bool operator== (const VMap2obj & o) const {
+  /// compare header (but not coordinates) with another object
+  bool is_same_head(const VMap2obj & o) const {
     bool ang_eq = (angle==o.angle || (std::isnan(angle) && std::isnan(o.angle)));
     return type==o.type && ang_eq &&
         scale==o.scale && align==o.align &&
         name==o.name && comm==o.comm && opts==o.opts &&
-        ref_type==o.ref_type && ref_pt==o.ref_pt &&
+        ref_type==o.ref_type && ref_pt==o.ref_pt;
+  }
+
+  /// Equal opertator.
+  bool operator== (const VMap2obj & o) const {
+    return is_same_head(o) &&
         dMultiLine::operator==(o);
   }
   // derived operators:
