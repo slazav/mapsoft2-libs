@@ -224,6 +224,21 @@ VMap2obj::print_type(const uint32_t t){
   return s.str();
 }
 
+std::string
+VMap2obj::print_type_dec(const uint32_t t){
+  std::ostringstream s;
+  switch (t>>24){
+    case 0: s << "point:"; break;
+    case 1: s << "line:";  break;
+    case 2: s << "area:";  break;
+    case 3: s << "text:";  break;
+    case 0xFF: return "none";
+    default: s << "unknown:";
+  }
+  s << (t&0xFFFFFF);
+  return s.str();
+}
+
 
 VMap2objClass
 VMap2obj::get_class(const uint32_t type) {
