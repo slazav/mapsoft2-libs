@@ -27,6 +27,65 @@ geo_length_2d(const MultiLine<CT,PT> & ml) {
   return ret;
 }
 
+/// Maximum distance in meters between points of two Lines.
+/// +inf for different number of points.
+template<typename CT, typename PT>
+double geo_maxdist_2d(const Line<CT,PT> & A, const Line<CT,PT> & B){
+  if (A.size() != B.size()) return +INFINITY;
+  double md = 0.0;
+  for (size_t i=0; i<A.size(); i++){
+    double d = geo_dist_2d(A[i],B[i]);
+    if (md < d) md = d;
+  }
+  return md;
+}
+
+/// Maximum distance in meters between points of two MultiLines.
+/// +inf for different number of segments or number of points.
+template<typename CT, typename PT>
+double geo_maxdist_2d(const MultiLine<CT,PT> & A, const MultiLine<CT,PT> & B){
+  if (A.size() != B.size()) return +INFINITY;
+  double md = 0.0;
+  for (size_t i=0; i<A.size(); i++){
+    double d = geo_maxdist_2d(A[i],B[i]);
+    if (md < d) md = d;
+  }
+  return md;
+}
+
+/// Distance in meters from point pt to the nearest vertex of a Line.
+/// If ptp != NULL, then the nearest vertex point will be copied there.
+/// See also nearest_vertex() from poly_tools.h:
+///   nearest_vertex(line, pt, &ptc, (double (*)(const dPoint&, const dPoint&))geo_dist_2d)
+template<typename CT, typename PT>
+double geo_nearest_vertex_2d(const Line<CT,PT> & line, const PT & pt, PT * ptp=NULL){
+  double md = INFINITY;
+  for (const auto & p:line){
+    double d1 = geo_dist_2d(p,pt);
+    if (d1>=md) continue;
+    md = d1;
+    if (ptp) *ptp=p;
+  }
+  return md;
+}
+
+/// Distance in meters from point pt to the nearest vertex of a MultiLine.
+/// If ptp != NULL, then the nearest vertex point will be copied there.
+/// See also nearest_vertex() from poly_tools.h:
+///   nearest_vertex(line, pt, &ptc, (double (*)(const dPoint&, const dPoint&))geo_dist_2d)
+template<typename CT, typename PT>
+double geo_nearest_vertex_2d(const MultiLine<CT,PT> & line, const PT & pt, PT * ptp=NULL){
+  double md = INFINITY;
+  for (const auto & seg:line){
+    PT v;
+    double d1 = geo_nearest_vertex_2d(seg,pt,&v);
+    if (d1>=md) continue;
+    md = d1;
+    if (ptp) *ptp=v;
+  }
+  return md;
+}
+
 /// Go from point p1 using bearing th (deg) and distance d (m)
 dPoint geo_bearing_2d(const dPoint &p1, const double th, const double d);
 

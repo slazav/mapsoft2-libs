@@ -88,6 +88,15 @@ main(){
       assert_err(nearest_vertex(ml0, dPoint(1,2), &p0,
                  (double (*)(const dPoint&, const dPoint&))geo_dist_2d), "Can't find nearest point: empty line");
 
+      assert_feq(geo_nearest_vertex_2d(l1, dPoint(1,2), &p0), 157448, 1);  // ~111km*sqrt(2)
+      assert_eq(p0, dPoint(2,1));
+      assert_feq(geo_nearest_vertex_2d(ml1, dPoint(1,2), &p0), 157448, 1);
+      assert_eq(p0, dPoint(2,1));
+
+      assert_feq(geo_nearest_vertex_2d(ml1, dPoint(1,2), &p0), 157448, 1);
+      assert_eq(std::isinf(geo_nearest_vertex_2d(ml0, dPoint(1,2), &p0)), true);
+
+
     }
   /****************************/
 
