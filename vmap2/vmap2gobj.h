@@ -73,6 +73,9 @@ where possible features are:
     pulk_grid <step> <color> <line width> -- draw Pulkovo-1942 grid
     fi_grid <step> <color> <line width> -- draw ETRS-TM35FIN grid (Finland)
     grid_labels <size> <font> <color> -- draw grid labels
+    save_to_stack <name>    -- save the drawing step to a named stack instead of rendering
+
+
 
 If `stroke`, `fill` and `patt` `img` features exists together then the drawing
 order is following: pattern, then fill, then stroke, then img.
@@ -90,6 +93,8 @@ other commands in the configuration file
        Command else just inverts condition of the last if command.
     include <file> -- Read another configuration file.
        Image paths are calculated with respect to the current file.
+    stack_render <name> [<operator>]  -- render a stack of previously saved drawing steps
+    stack_clear <name> - clear the stack
 
 */
 
@@ -209,6 +214,7 @@ public:
 
     std::string step_name;  // step name
     std::string group_name; // group name
+    std::string stack_name;
     bool do_clip, do_stroke, do_fill, do_write,
          do_patt, do_img, do_pulk_grid, do_fi_grid, do_sel_range;
     uint32_t stroke_color;
@@ -349,11 +355,18 @@ public:
   // update range (used in set_brd, set_ref, set_cnv)
   void update_bbox();
 
+  /*******************************************/
+
   // constructor -- open new map
   GObjVMap2(VMap2 & map, const Opt & o);
 
   // load configuration file
   void load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth);
+
+  // helper: add step to a stack or GObj (depending on add_to_stack feature),
+  // reset step
+  std::map<std::string, std::list<std::shared_ptr<DrawingStep> > > stacks;
+  void push_step(std::shared_ptr<DrawingStep> & st, int & depth);
 
   /*******************************************/
 

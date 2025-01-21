@@ -115,6 +115,15 @@ GObjVMap2::GObjVMap2(VMap2 & map, const Opt &o): GObjMulti(false), map(map) {
 }
 
 void
+GObjVMap2::push_step(std::shared_ptr<DrawingStep> & st, int & depth){
+  if (!st) return;
+  if (st->stack_name == "") add(depth--, st);
+  else stacks[st->stack_name].push_back(st);
+  st.reset();
+}
+
+
+void
 GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & depth){
 
   std::string cfgdir = file_get_prefix(cfgfile); // for including images and other files
@@ -139,6 +148,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // include command
       if (vs[0] == "include"){
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=2) throw Err() << "include: filename expected";
         auto fn = vs[1];
         // should not happend, but lets check before accessing fn[0]:
@@ -150,9 +160,8 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       }
 
       // set_ref, set_brd commands
-      if (vs.size() > 1 &&
-         (vs[0] == "set_ref" || vs[0] == "set_brd")) {
-        st.reset(); // "+" should not work after the command
+      if (vs[0] == "set_ref" || vs[0] == "set_brd") {
+        push_step(st, depth); // "+" should not work after the command
         GeoMap r;
 
         if (vs[1] == "file") {
@@ -207,7 +216,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // max_text_size command
       if (vs[0] == "max_text_size") {
-        st.reset(); // "+" should not work after the command
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: max_text_size <number>";
         max_text_size = str_to_type<double>(vs[1]);
@@ -216,7 +225,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // fit_patt_size command
       if (vs[0] == "fit_patt_size") {
-        st.reset(); // "+" should not work after the command
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: fit_patt_size 0|1";
         fit_patt_size = str_to_type<bool>(vs[1]);
@@ -225,7 +234,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // minsc command
       if (vs[0] == "minsc") {
-        st.reset(); // "+" should not work after the command
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: minsc <number>";
         minsc = str_to_type<double>(vs[1]);
@@ -234,7 +243,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // minsc_color command
       if (vs[0] == "minsc_color") {
-        st.reset(); // "+" should not work after the command
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: minsc_color <color>";
         minsc_color = str_to_type<uint32_t>(vs[1]);
@@ -243,7 +252,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // define command
       if (vs[0] == "define") {
-        st.reset(); // "+" should not work after the command
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=3) throw Err()
             << "wrong number of arguments: define <name> <definition>";
         defs.define(vs[1],vs[2]);
@@ -252,13 +261,51 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // obj_scale
       if (vs[0] == "obj_scale") {
-        st.reset(); // "+" should not work after the command
+        push_step(st, depth); // "+" should not work after the command
         if (vs.size()!=2) throw Err()
             << "wrong number of arguments: obj_scale <value>";
         obj_scale = str_to_type<double>(vs[1]);
         continue;
       }
 
+      // stack_render - add drawing steps from the named stack
+      if (vs[0] == "stack_render") {
+        push_step(st, depth); // "+" should not work after the command
+        if (vs.size()!=2 && vs.size()!=3 ) throw Err()
+            << "wrong number of arguments: stack_render <name> [dest_over]";
+        if (stacks.count(vs[1])==0) throw Err()
+            << "stack_render: unknown name" << vs[1];
+        auto stack_name = vs[1];
+
+
+        std::string op = vs.size()==3? vs[2]:"over";
+
+        auto & stk = stacks[stack_name];
+        size_t n = 0;
+        for (auto & s: stk){
+          // set operator
+          s->op = str_to_type<Cairo::Operator>(op);
+
+          // reversed order with OPERATOR_DEST_OVER operator
+          int n1 = (op=="dest_over") ?  stk.size()-1-n: n;
+
+          add(depth - n1, s);
+          n++;
+        }
+        depth-=stk.size();
+        continue;
+      }
+
+      if (vs[0] == "stack_clear") {
+        push_step(st, depth); // "+" should not work after the command
+        if (vs.size()!=2) throw Err()
+            << "wrong number of arguments: stack_clear <name>";
+        auto stack_name = vs[1];
+        if (stacks.count(vs[1])==0) throw Err()
+            << "stack_clear: unknown name" << vs[1];
+        stacks.erase(vs[1]);
+        continue;
+      }
 
 
       /**********************************************************/
@@ -266,6 +313,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // draw an object (point, line, area)
       if (vs.size() > 1 && vs[0].find(':')!=std::string::npos) {
+        push_step(st, depth);
         st.reset(new DrawingStep(this));
         st->etype = VMap2obj::make_type(vs[0]);
         switch (st->etype >> 24) {
@@ -278,27 +326,26 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         st->step_name = vs[0];
         ftr = vs[1];
         vs.erase(vs.begin(), vs.begin()+2);
-        add(depth--, st);
       }
 
       // draw on the whole map
       else if (vs.size() > 1 && vs[0] == "map") {
+        push_step(st, depth);
         st.reset(new DrawingStep(this));
         st->action = STEP_DRAW_MAP;
         st->step_name = vs[0];
         ftr = vs[1];
         vs.erase(vs.begin(), vs.begin()+2);
-        add(depth--, st);
       }
 
       // draw border
       else if (vs.size() > 1 && vs[0] == "brd") {
+        push_step(st, depth);
         st.reset(new DrawingStep(this));
         st->action = STEP_DRAW_BRD;
         st->step_name = vs[0];
         ftr = vs[1];
         vs.erase(vs.begin(), vs.begin()+2);
-        add(depth--, st);
       }
 
       // add feature to a previous step
@@ -653,6 +700,13 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // save_to_stack <name>
+      if (ftr == "save_to_stack"){
+        st->check_args(vs, {"<name>"});
+        st->stack_name = vs[0];
+        continue;
+      }
+
       throw Err() << "unknown feature";
     }
     catch (Err & e) {
@@ -662,6 +716,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
     }
 
   } // end of configuration file
+  push_step(st, depth);
   if (ifs.size()>0)
     throw Err() << cfgfile << ":" << "if command is not closed";
 
