@@ -86,6 +86,37 @@ VMap2types::write_typ(const std::string & fname, const int codepage, const int F
 }
 
 void
+VMap2types::print_type_list() const{
+  for (const auto & t: *this)
+    std::cout << VMap2obj::print_type(t.first) << "\n";
+}
+
+void
+VMap2types::print_type_info(const std::string & type) const{
+  auto t = find(VMap2obj::make_type(type));
+  if (t == end()) throw Err() << "Unknown type: " << type;
+  std::cout << "type:      " << VMap2obj::print_type(t->first) << "\n";
+  std::cout << "name:      " << t->second.name     << "\n";
+  std::cout << "name_ru:   " << t->second.name_ru  << "\n";
+  std::cout << "comm:      " << t->second.comm     << "\n";
+  std::cout << "fig_mask:  " << t->second.fig_mask << "\n";
+
+  std::cout << "mp_start:  " << t->second.mp_start  << "\n";
+  std::cout << "mp_end:    " << t->second.mp_end    << "\n";
+  std::cout << "typ_order:        " << t->second.typ_order << "\n";
+  std::cout << "typ_line_width:   " << t->second.typ_line_width << "\n";
+  std::cout << "typ_border_width: " << t->second.typ_border_width << "\n";
+
+  // Information for updating map labels
+  std::cout << "label_type: " << t->second.label_type << "\n";
+  std::cout << "label_def_scale:  " << t->second.label_def_scale << "\n";
+  std::cout << "label_def_align:  " << t->second.label_def_align << "\n";
+  std::cout << "label_def_mshift: " << t->second.label_def_mshift << "\n";
+  std::cout << "label_maxnum:     " << t->second.label_maxnum << "\n";
+}
+
+
+void
 VMap2types::load(const std::string & fname, read_words_defs & defs){
 
   std::ifstream ff(fname);

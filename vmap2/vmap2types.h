@@ -60,6 +60,10 @@ public:
   // Note that FID and codepage can be fixed after assembling img file with gmt -w -y.
   void write_typ(const std::string & fname, const int codepage, const int FID = -1) const;
 
+  void print_type_list() const;
+
+  void print_type_info(const std::string & type) const;
+
 private:
   // load from a file
   void load(const std::string & fname, read_words_defs & defs);
