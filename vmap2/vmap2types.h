@@ -20,12 +20,14 @@ void ms2opt_add_vmap2t(GetOptSet & opts);  // --type, --define options
 // Used for converting objects to different vector formats.
 class VMap2type {
 public:
-  std::string name;     // type short name (EN, default)
-  std::string name_ru;  // type short name (RU)
-  std::string name_fi;  // type short name (FI)
-  std::string comm;     // type description
-  std::string fig_mask; // mask for FIG format
-  Fig         fig_pic;  // picture for FIG format
+  std::string group;     // type group (EN, default)
+  std::string name;      // type short name (EN, default)
+  std::string group_ru;  // type group (RU)
+  std::string name_ru;   // type short name (RU)
+  std::string name_fi;   // type short name (FI)
+  std::string comm;      // type description
+  std::string fig_mask;  // mask for FIG format
+  Fig         fig_pic;   // picture for FIG format
 
   // information for mp/typ
   int mp_start, mp_end; // start/end level for MP format

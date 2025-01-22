@@ -96,6 +96,7 @@ VMap2types::print_type_info(const std::string & type) const{
   auto t = find(VMap2obj::make_type(type));
   if (t == end()) throw Err() << "Unknown type: " << type;
   std::cout << "type:      " << VMap2obj::print_type(t->first) << "\n";
+  std::cout << "group:     " << t->second.group    << "\n";
   std::cout << "name:      " << t->second.name     << "\n";
   std::cout << "name_ru:   " << t->second.name_ru  << "\n";
   std::cout << "comm:      " << t->second.comm     << "\n";
@@ -164,6 +165,11 @@ VMap2types::load(const std::string & fname, read_words_defs & defs){
         if (vs.size()<2) throw Err() << "+: at least one argument expected";
 
         // features
+        if (vs[1] == "group"){
+          if (vs.size()!=3) throw Err() << "+ group: argument expected: <group>";
+          o->second.group = vs[2];
+          continue;
+        }
         if (vs[1] == "name"){
           if (vs.size()!=3) throw Err() << "+ name: argument expected: <name>";
           o->second.name = vs[2];
