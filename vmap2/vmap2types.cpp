@@ -86,14 +86,21 @@ VMap2types::write_typ(const std::string & fname, const int codepage, const int F
 }
 
 void
-VMap2types::print_type_list() const{
-  for (const auto & t: *this)
-    std::cout << VMap2obj::print_type(t.first) << "\n";
+VMap2types::print_type_list(const bool full) const{
+  for (const auto & t: *this){
+    if (full) {
+      print_type_info(t.first);
+      std::cout << "\n";
+    }
+    else {
+      std::cout << VMap2obj::print_type(t.first) << "\n";
+    }
+  }
 }
 
 void
-VMap2types::print_type_info(const std::string & type) const{
-  auto t = find(VMap2obj::make_type(type));
+VMap2types::print_type_info(const uint32_t type) const{
+  auto t = find(type);
   if (t == end()) throw Err() << "Unknown type: " << type;
   std::cout << "type:      " << VMap2obj::print_type(t->first) << "\n";
   std::cout << "group:     " << t->second.group    << "\n";
