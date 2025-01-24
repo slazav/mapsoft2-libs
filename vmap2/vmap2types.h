@@ -55,12 +55,6 @@ public:
   // Constuctor: read configuration file
   VMap2types(const Opt & o = Opt());
 
-  // Write typ file.
-  // - Codepage is used for converting names, it is also written to TYP header
-  // - FID if written to the header if it is not -1.
-  // Note that FID and codepage can be fixed after assembling img file with gmt -w -y.
-  void write_typ(const std::string & fname, const int codepage, const int FID = -1) const;
-
 private:
   // load from a file
   void load(const std::string & fname, read_words_defs & defs);
