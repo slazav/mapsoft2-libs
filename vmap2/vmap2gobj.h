@@ -240,9 +240,8 @@ public:
     double text_vspace;
     double rotate;
     bool outer;
-    std::set<uint32_t> move_to_targets, move_from_targets;
-    bool move_to_rot;
-    double move_to_dist, move_from_dist;
+    struct move_t {uint32_t target; double dist; bool rot; bool dir;};
+    std::list<move_t> move_data; // move_to, move_from, rotate_to data
     double sel_range_thickness;
     uint32_t sel_range_color;
     dMultiLine add_lines;
@@ -271,9 +270,6 @@ public:
       text_vspace = 0.7;
       rotate = 0;
       outer = false;
-      move_to_rot = false;
-      move_to_dist = 0;
-      move_from_dist = 0;
       sel_range_thickness = 0;
       sel_range_color = 0;
     }

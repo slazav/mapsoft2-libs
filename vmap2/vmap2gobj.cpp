@@ -577,10 +577,11 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "move_to"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->check_args(vs, {"<dist>", "(area|line|point):<type>", "..."});
-        st->move_to_dist = str_to_type<double>(vs[0]);
-        for (size_t i=1; i<vs.size(); ++i)
-          st->move_to_targets.insert(VMap2obj::make_type(vs[i]));
-        st->move_to_rot = false;
+        auto dist = str_to_type<double>(vs[0]);
+        for (size_t i=1; i<vs.size(); ++i){
+          auto t = VMap2obj::make_type(vs[i]);
+          st->move_data.push_back({t, dist, 0, 1});
+        }
         continue;
       }
 
@@ -588,10 +589,11 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "rotate_to"){
         st->check_type(STEP_DRAW_POINT);
         st->check_args(vs, {"<dist>", "(area|line):<type>", "..."});
-        st->move_to_dist = str_to_type<double>(vs[0]);
-        for (size_t i=1; i<vs.size(); ++i)
-          st->move_to_targets.insert(VMap2obj::make_type(vs[i]));
-        st->move_to_rot = true;
+        auto dist = str_to_type<double>(vs[0]);
+        for (size_t i=1; i<vs.size(); ++i){
+          auto t = VMap2obj::make_type(vs[i]);
+          st->move_data.push_back({t, dist, 1, 1});
+        }
         continue;
       }
 
@@ -599,9 +601,11 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
       if (ftr == "move_from"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA);
         st->check_args(vs, {"<dist>", "(area|line|point):<type>", "..."});
-        st->move_from_dist = str_to_type<double>(vs[0]);
-        for (size_t i=1; i<vs.size(); ++i)
-          st->move_from_targets.insert(VMap2obj::make_type(vs[i]));
+        auto dist = str_to_type<double>(vs[0]);
+        for (size_t i=1; i<vs.size(); ++i){
+          auto t = VMap2obj::make_type(vs[i]);
+          st->move_data.push_back({t, dist, 0, 0});
+        }
         continue;
       }
 
@@ -744,53 +748,37 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
 
   if (cnv) cnv->bck(O);
 
-  // move_to / rotate_to
-  if (move_to_targets.size()>0){
+  // move/rotate
+  if (move_data.size()>0){
     for (auto & l:O){ // segments
       for (auto & p:l){ // points
-        dRect r(p,p);
-        r.expand(move_to_dist);
-        if (cnv) r = cnv->frw_acc(r);
-
-        dMultiLine lines;
-        for (auto & t: move_to_targets){
-          auto ids = gobj->map.find(t, r);
-            for (int i:ids){
-            auto O1 = gobj->map.get(i);
-            if (cnv) cnv->bck(O1);
-            for (auto const & l:O1)
-              lines.push_back(l);
-          }
-        }
-        dPoint t(1,0);
-        nearest_pt(lines, t, p, move_to_dist);
-        if (move_to_rot) O.angle = atan2(t.y, t.x);
-      }
-    }
-  }
-
-  // move_from
-  if (move_from_targets.size()>0){
-    for (auto & l:O){ // segments
-      for (auto & p:l){ // points
-        dRect r(p,p);
-        r.expand(move_from_dist);
-        if (cnv) r = cnv->frw_acc(r);
-
-        dMultiLine lines;
-        for (auto & t: move_from_targets){
-          auto ids = gobj->map.find(t, r);
-            for (int i:ids){
-            auto O1 = gobj->map.get(i);
-            if (cnv) cnv->bck(O1);
-            for (auto const & l:O1)
-              lines.push_back(l);
-          }
-        }
-        dPoint t(1,0);
         dPoint p1(p);
-        nearest_pt(lines, t, p1, move_from_dist);
-        if (p1!=p) p = p1 + (p-p1)*move_from_dist/dist2d(p1,p);
+        for (auto & md: move_data){
+          dPoint t(1,0);
+          dRect r(p,p);
+          r.expand(md.dist);
+          if (cnv) r = cnv->frw_acc(r);
+          auto ids = gobj->map.find(md.target, r);
+          bool moved = false;
+          for (int i:ids){
+            auto O1 = gobj->map.get(i);
+            if (cnv) cnv->bck(O1);
+
+            nearest_pt(O1, t, p1, md.dist);
+            if (p1==p) continue;
+
+            if (md.dir==1){ // move_to
+              p = p1;
+              if (md.rot) O.angle = atan2(t.y, t.x);
+            }
+            else { // move_from
+              p = p1 + (p-p1)*md.dist/dist2d(p1,p);
+            }
+            moved = true;
+            break;
+          }
+          if (moved) break;
+        }
       }
     }
   }
@@ -979,8 +967,14 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     if (do_img){
       exp_dist = std::max(exp_dist, osc*hypot(img.width(), img.height()));
     }
-    // expand by move_to distance
-    exp_dist = std::max(exp_dist, move_to_dist);
+    // expand by move_to/move_from distance
+    if (move_data.size()){
+      double m = 0;
+      for (const auto md: move_data){
+        if (m < md.dist) m=md.dist;
+      }
+      exp_dist = std::max(exp_dist, m);
+    }
 
     // expand by lines/circles bbox (again, can be rotated, at least for points)
     exp_dist = std::max(exp_dist, osc*hypot(add_bbox.w, add_bbox.h));
