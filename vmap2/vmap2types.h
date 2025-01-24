@@ -20,9 +20,8 @@ void ms2opt_add_vmap2t(GetOptSet & opts);  // --type, --define options
 // Used for converting objects to different vector formats.
 class VMap2type {
 public:
-  std::string group;     // type group (EN, default)
+  std::string group;     // type group
   std::string name;      // type short name (EN, default)
-  std::string group_ru;  // type group (RU)
   std::string name_ru;   // type short name (RU)
   std::string name_fi;   // type short name (FI)
   std::string comm;      // type description
@@ -61,10 +60,6 @@ public:
   // - FID if written to the header if it is not -1.
   // Note that FID and codepage can be fixed after assembling img file with gmt -w -y.
   void write_typ(const std::string & fname, const int codepage, const int FID = -1) const;
-
-  void print_type_list() const;
-
-  void print_type_info(const std::string & type) const;
 
 private:
   // load from a file
