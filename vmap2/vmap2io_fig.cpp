@@ -176,12 +176,11 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
     o1.scale = o_opts.get("Scale", 1.0);
 
     // == Labels ==
-    if (o_opts.get("MapType")=="label" &&
-        o_opts.exists("RefType") && o.is_text()){
+    if (o.is_text()){
 
       // Default reference point - text position
       o1.ref_pt   = o_opts.get("RefPt", pt0); cnv.frw(o1.ref_pt);
-      o1.ref_type = VMap2obj::make_type(o_opts.get("RefType"));
+      o1.ref_type = VMap2obj::make_type(o_opts.get("RefType"), "none");
 
       // Get alignment from text orientation.
       switch (o.sub_type){
@@ -379,7 +378,6 @@ vmap2_to_fig(VMap2 & vmap2, const VMap2types & types,
       dPoint ref_pt(o.ref_pt); cnv.bck(ref_pt);
       fig_add_opt(o1, "RefPt",   type_to_str(rint(ref_pt)));
       fig_add_opt(o1, "RefType", VMap2obj::print_type(o.ref_type));
-      fig_add_opt(o1, "MapType", "label");
       switch (o.align){
         case VMAP2_ALIGN_SW:
         case VMAP2_ALIGN_W:
