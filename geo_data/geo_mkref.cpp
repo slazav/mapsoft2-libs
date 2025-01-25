@@ -401,7 +401,7 @@ geo_mkref_opts(const Opt & o){
     // map resolution
     double scale = ConvGeo::is_deg(map.proj)? 0.01:1000;
     scale = o.get("scale",scale);
-    map.image_dpi = o.get("dpi",300);
+    map.image_dpi = o.get<double>("dpi",300.0);
 
     // factor (map coordinates)/(pixels)
     double k = scale * 2.54/ map.image_dpi;
