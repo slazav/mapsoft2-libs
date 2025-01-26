@@ -35,7 +35,8 @@ The configuration file contains description of each step.
 
 where possible features are:
 
-    stroke <color> <width> -- Draw a point, a line or an area contour.
+    stroke <color> <width>  -- Draw a point, a line or an area contour.
+    stroke2 <color> <width> -- Do second stroke with different color and width.
     fill <color> -- Fill an area or the map.
     clip         -- After drawing set clipping region for the path (area, text, map, border).
     patt <image file> <scale> [<dx>] [<dy>] -- Fill an area with the pattern.
@@ -216,12 +217,12 @@ public:
     std::string step_name;  // step name
     std::string group_name; // group name
     std::string stack_name;
-    bool do_clip, do_stroke, do_fill, do_write,
+    bool do_clip, do_stroke, do_stroke2, do_fill, do_write,
          do_patt, do_img, do_pulk_grid, do_fi_grid, do_sel_range;
-    uint32_t stroke_color;
+    uint32_t stroke_color, stroke_color2;
     uint32_t fill_color;
     uint32_t write_color;
-    double thickness;
+    double thickness, thickness2;
     Cairo::Filter img_filter;
     double smooth;
     double shift;
@@ -252,7 +253,7 @@ public:
     ImageRenderer patt, img;
 
     DrawingStep(GObjVMap2 * gobj): gobj(gobj), action(STEP_UNKNOWN), etype(0) {
-      do_clip = do_stroke = do_fill = do_write = false;
+      do_clip = do_stroke = do_stroke2 = do_fill = do_write = false;
       do_patt = do_img = do_pulk_grid = do_fi_grid = do_sel_range = false;
       stroke_color = 0;
       fill_color = 0;

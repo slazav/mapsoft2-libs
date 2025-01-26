@@ -371,6 +371,17 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // stroke2 <color> <thickness>
+      if (ftr == "stroke2"){
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
+                       STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->check_args(vs, {"<color>", "<line width>"});
+        st->do_stroke2 = true;
+        st->stroke_color2 = str_to_type<uint32_t>(vs[0]);
+        st->thickness2    = str_to_type<double>(vs[1]);
+        continue;
+      }
+
       // fill <color>
       if (ftr == "fill"){
         st->check_type(STEP_DRAW_POINT | STEP_DRAW_LINE | STEP_DRAW_AREA |
@@ -1185,6 +1196,13 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     // Stroke feature
     if (do_stroke && draw_pos != DRAW_POS_FILL){
       cr->set_color_a(stroke_color);
+      cr->stroke_preserve();
+    }
+
+    // Stroke2 feature
+    if (do_stroke2 && draw_pos != DRAW_POS_FILL){
+      cr->set_color_a(stroke_color2);
+      cr->set_line_width(osc*thickness2);
       cr->stroke_preserve();
     }
 
