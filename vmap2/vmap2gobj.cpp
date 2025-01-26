@@ -1031,16 +1031,19 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
   if (draw_pos == DRAW_POS_FILL){
     // make new cairo surface
     CairoWrapper cr2;
-    ImageR img(draw_pos_w,draw_pos_h, IMAGE_32ARGB);
+
+    // if osc>1 we want to make bigger pattern
+    double patt_sc = ceil(osc);
+    ImageR img(patt_sc*draw_pos_w, patt_sc*draw_pos_h, IMAGE_32ARGB);
     img.fill32(0);
     cr2.set_surface_img(img);
 
     // setup context
-    setup_ctx(cr2, osc);
+    setup_ctx(cr2, patt_sc);
 
     //draw lines/circles
-    cr2->mkpath_smline(osc*add_lines, sm);
-    for (auto const &c:osc*add_circles){
+    cr2->mkpath_smline(patt_sc*add_lines, sm);
+    for (auto const &c:patt_sc*add_circles){
       cr2->move_to(c.x+c.z, c.y);
       cr2->arc(c.x, c.y, c.z, 0, 2*M_PI);
     }
@@ -1052,7 +1055,7 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       cr2->set_color_a(stroke_color);
       cr2->stroke_preserve();
       }
-    patt = ImageRenderer(img);
+    patt = ImageRenderer(img, 1.0/patt_sc);
   }
 
   // Draw each object

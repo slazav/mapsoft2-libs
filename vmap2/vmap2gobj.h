@@ -164,11 +164,11 @@ public:
       }
       empty = false;
     }
-    ImageRenderer(const ImageR & image){
-      img = image; sc0=1;
+    ImageRenderer(const ImageR & image, double sc, double dx=0.0, double dy=0.0){
+      img = image; sc0=sc;
       if (img.type() != IMAGE_32ARGB) img = image_to_argb(img);
       w = img.width(); h = img.height();
-      patt = image_to_pattern(img, 1.0, 1.0, 0.0, 0.0);
+      patt = image_to_pattern(img, 1.0, 1.0, dx, dy);
     }
     void draw_patt(const CairoWrapper & cr,
          const double scx, const double scy,
