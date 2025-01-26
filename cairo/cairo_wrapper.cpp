@@ -179,6 +179,61 @@ CairoExtra::mkpath_smline(const dLine & o, bool close, double curve_l){
   }
 }
 
+void
+CairoExtra::mkpath_shifted(const dMultiLine & o, bool close, double shift){
+  for (const auto l: o) mkpath_shifted(l, close, shift);
+}
+
+void
+CairoExtra::mkpath_shifted(const dLine & o, bool close, double shift){
+  if (o.length()==0) return; // should be at least two different points
+  for (auto p = o.begin(); p!= o.end(); ++p) {
+    // previous/next different point
+    auto pp(p), pn(p);
+    bool is_start=false, is_end=false;
+    while (*pp==*p){
+      if (pp==o.begin()){
+        pp = o.begin()+(o.size()-1);
+        is_start=true;
+      }
+      else
+        pp = p-1;
+    }
+    while (*pn==*p){
+      if (pn+1==o.end()){
+        pn = o.begin();
+        is_end=true;
+      }
+      else
+        pn = p+1;
+    }
+    auto v1 = norm(*p-*pp), v2 = norm(*pn-*p);
+    dPoint p1 = *p + shift*dPoint(v1.y, -v1.x);
+    dPoint p2 = *p + shift*dPoint(v2.y, -v2.x);
+
+    if (!close){
+      if (is_start) {move_to(p2); continue;}
+      if (is_end) {line_to(p1); continue;}
+    }
+    bool outer = pscal(p1-*p, *pn-*p)<0;
+    if (outer) {
+      if (is_start) move_to(p1);
+      else line_to(p1);
+      line_to(p2);
+    }
+    else {
+      auto c1 = sqrt((pscal(v1,v2) + 1.0)/2.0);
+      dPoint p3;
+      if (shift > c1*(dist(*p,*pn) + dist(*p,*pp))/2)
+        p3 = (*pn+*pp)/2;
+      else
+        p3 = *p + fabs(shift)*norm(v2-v1)/c1;
+      if (is_start) move_to(p3);
+      else line_to(p3);
+    }
+  }
+}
+
 
 void
 CairoExtra::set_fig_font(int color, int fig_font, double font_size, double dpi){

@@ -145,6 +145,10 @@ struct CairoExtra : public Cairo::Context {
   void mkpath_smline(const dMultiLine & o, bool close=true, double curve_l=0);
   void mkpath_smline(const dLine & o, bool close=true, double curve_l=0);
 
+  // shifted
+  void mkpath_shifted(const dMultiLine & o, bool close=true, double shift = 0);
+  void mkpath_shifted(const dLine & o, bool close=true, double shift = 0);
+
   // some short functions for cap/miter setting
   void cap_round()  { set_line_cap(Cairo::LINE_CAP_ROUND);  }
   void cap_butt()   { set_line_cap(Cairo::LINE_CAP_BUTT);   }

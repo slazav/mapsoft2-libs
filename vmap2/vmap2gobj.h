@@ -41,7 +41,8 @@ where possible features are:
     patt <image file> <scale> [<dx>] [<dy>] -- Fill an area with the pattern.
     img  <image file> <scale> [<dx>] [<dy>] -- Draw an image (point or area)
     img_filter <flt>  -- Set image filter fast|good|best|nearest|bilinear
-    smooth <distance> -- Use smoothed paths.
+    smooth <distance> -- Use smoothed lines.
+    shift  <distance> -- Use shifted lines.
     dash <len1> ...   -- Setup dashed line. Valid for lines and areas together with stroke feature.
     cap  round|butt|square -- Set line cup (default round). Use with stroke feature.
     join round|miter       -- Set line join (default round). Use with stroke feature.
@@ -223,6 +224,7 @@ public:
     double thickness;
     Cairo::Filter img_filter;
     double smooth;
+    double shift;
     std::vector<double> dash;
     Cairo::LineCap line_cap;
     Cairo::LineJoin line_join;
@@ -258,6 +260,7 @@ public:
       thickness = 1.0;
       img_filter = Cairo::FILTER_GOOD;
       smooth = 0;
+      shift = 0;
       line_cap = Cairo::LINE_CAP_ROUND;
       line_join = Cairo::LINE_JOIN_ROUND;
       op = Cairo::OPERATOR_OVER;

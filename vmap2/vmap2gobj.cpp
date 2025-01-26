@@ -436,6 +436,14 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
         continue;
       }
 
+      // shift <distance>
+      if (ftr == "shift"){
+        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_BRD);
+        st->check_args(vs, {"<distance>"});
+        st->shift = str_to_type<double>(vs[0]);
+        continue;
+      }
+
       // dash <length1> <length2> ...
       if (ftr == "dash"){
         st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
@@ -1018,8 +1026,9 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
     cr->stroke();
   }
 
-  // set up smooth feature
+  // set up smooth/shift features
   double sm = osc*smooth;
+  double sh = osc*shift;
 
   // for building paths
   bool close = (action == STEP_DRAW_AREA);
@@ -1074,7 +1083,9 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       // make path for original object
       if ((add_lines.size()==0 && add_circles.size()==0) ||
           draw_pos == DRAW_POS_FILL) {
-        cr->mkpath_smline(O, close, sm);
+        if (sm>0) cr->mkpath_smline(O, close, sm);
+        else if (sh!=0) cr->mkpath_shifted(O, close, sh);
+        else cr->mkpath(O, close);
       }
       // make path for Lines or Circles
       else {
