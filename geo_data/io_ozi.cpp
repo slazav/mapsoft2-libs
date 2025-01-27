@@ -118,7 +118,16 @@ string convert_ozi2datum(const string & s){
 }
 
 string convert_proj2ozi(const string & s){
-  string pr = get_proj_par(s, "proj");
+  string s1 = expand_proj_aliases(s);
+  if (s1 == "EPSG:2393"  ||
+      s1 == "EPSG:3067"  ||
+      s1 == "EPSG:25833" ||
+      s1 == "EPSG:25835" ||
+      s1 == "EPSG:3006"  ||
+      s1 == "EPSG:27700" ||
+      s1 == "EPSG:21781") return "Transverse Mercator";
+
+  string pr = get_proj_par(s1, "proj");
   if (pr == "") throw Err() << "io_ozi: can't find proj setting: " << s;
 
   if (pr=="latlong") return "Latitude/Longitude";
@@ -132,6 +141,33 @@ string convert_proj2ozi(const string & s){
   if (pr=="lcc")     return "Lambert Conformal Conic";
   throw Err() << "io_ozi: unsupported projection: " << pr;
 }
+
+vector<string>
+convert_proj2ozipars(const string & s){
+  // Projection Setup, lat_0, lon_0, k, x_0, y_0, lat_1, lat_2
+  string s1 = expand_proj_aliases(s);
+
+  if (s1 == "EPSG:2393")  return {"Projection Setup", "0","27","1","3500000","0","0","0"};
+  if (s1 == "EPSG:3067")  return {"Projection Setup", "0","27","0.9996","500000","0","0","0"};
+  if (s1 == "EPSG:25833") return {"Projection Setup", "0","15","0.9996","500000","0","0","0"};
+  if (s1 == "EPSG:25834") return {"Projection Setup", "0","21","0.9996","500000","0","0","0"};
+  if (s1 == "EPSG:25835") return {"Projection Setup", "0","27","0.9996","500000","0","0","0"};
+  if (s1 == "EPSG:3006")  return {"Projection Setup", "0","15","0.9996","500000","0","0","0"};
+  if (s1 == "EPSG:27700") return {"Projection Setup", "49","-2","0.9996012717","400000","-100000","0","0"};
+  if (s1 == "EPSG:21781") return {"Projection Setup", "46.9524055555556","7.43958333333333","1","600000","200000","0","0"};
+
+  vector<string> v;
+  v.push_back("Projection Setup");
+  v.push_back(get_proj_par(s1, "lat_0", "0.0"));
+  v.push_back(get_proj_par(s1, "lon_0", "0.0"));
+  v.push_back(get_proj_par(s1, "k", "1.0"));
+  v.push_back(get_proj_par(s1, "x_0", "0.0"));
+  v.push_back(get_proj_par(s1, "y_0", "0.0"));
+  v.push_back(get_proj_par(s1, "lat_1"));
+  v.push_back(get_proj_par(s1, "lat_2"));
+  return v;
+}
+
 
 string convert_datum2ozi(const string & s){
   string dt = get_proj_par(s, "datum");
@@ -611,16 +647,7 @@ void write_ozi_map (const string &fname, const GeoMap & m, const Opt & opts){
   }
 
   // projection setup
-  vector<string> v;
-  v.push_back("Projection Setup");
-  v.push_back(get_proj_par(m.proj, "lat_0", "0.0"));
-  v.push_back(get_proj_par(m.proj, "lon_0", "0.0"));
-  v.push_back(get_proj_par(m.proj, "k", "1.0"));
-  v.push_back(get_proj_par(m.proj, "x_0", "0.0"));
-  v.push_back(get_proj_par(m.proj, "y_0", "0.0"));
-  v.push_back(get_proj_par(m.proj, "lat_1"));
-  v.push_back(get_proj_par(m.proj, "lat_2"));
-  f << pack_ozi_csv(v) << "\r\n";
+  f << pack_ozi_csv(convert_proj2ozipars(m.proj)) << "\r\n";
 
   // map features
   f << "Map Feature = MF ; Map Comment = MC     These follow if they exist\r\n"
