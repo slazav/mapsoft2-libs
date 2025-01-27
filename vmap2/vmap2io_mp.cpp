@@ -88,7 +88,7 @@ vmap2_to_mp(VMap2 & vmap2, const VMap2types & types,
   if (opts.exists("mp_id"))     mp.ID = opts.get<int>("mp_id");
   if (opts.exists("mp_name"))   mp.Name = opts.get("mp_name");
   if (opts.exists("mp_levels")) mp.Levels = str_to_type_ivec(opts.get("mp_levels"));
-  if (opts.exists("mp_cp"))     mp.Codepage = opts.get<int>("mp_cp", 1251);
+  if (opts.exists("mp_cp"))     mp.Codepage = opts.get("mp_cp", "1251");
 
   // be quiet (by default types of skipped objects are printed)
   bool quiet = opts.get("quite", false);
