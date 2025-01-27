@@ -180,7 +180,7 @@ fig_to_vmap2(const std::string & ifile, const VMap2types & types,
 
       // Default reference point - text position
       o1.ref_pt   = o_opts.get("RefPt", pt0); cnv.frw(o1.ref_pt);
-      o1.ref_type = VMap2obj::make_type(o_opts.get("RefType"), "none");
+      o1.ref_type = VMap2obj::make_type(o_opts.get("RefType", "none"));
 
       // Get alignment from text orientation.
       switch (o.sub_type){
