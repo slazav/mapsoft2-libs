@@ -26,6 +26,10 @@ struct Line : std::vector<PT> {
   /// Constructor: make a line using string "[[x1,y1],[x2,y2]]"
   Line(const std::string & s) { *this = str_to_type<Line>(s);}
 
+  template< class InputIt >
+  Line(InputIt i1, InputIt i2): std::vector<PT>(i1,i2) {}
+
+
   /******************************************************************/
   // operators +,-,/,*
 
