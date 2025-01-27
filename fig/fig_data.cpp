@@ -12,8 +12,8 @@ using namespace std;
 /*************************************************/
 /// static data
 
-// fig units, 1.05/1200in (not 1/1200in, I don't know why...)
-const double Fig::cm2fig = 1200.0 / 1.05 / 2.54;
+// fig metric units, 450 pt/cm, not 1200 pt/in
+const double Fig::cm2fig = 450.0;
 const double Fig::fig2cm = 1.0 / cm2fig;
 
 // fig colors

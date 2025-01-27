@@ -47,7 +47,7 @@ main(){
     assert_eq(Fig::texfonts.find(1)->second, "Roman");
     assert_eq(Fig::texfonts.find(5)->second, "Typewriter");
 
-    assert_eq(Fig::cm2fig, 1200.0 / 1.05 / 2.54);
+    assert_eq(Fig::cm2fig, 450);
     assert_eq(Fig::fig2cm, 1.0 / Fig::cm2fig);
 
     // constructing objects from a header string -- ellipse
