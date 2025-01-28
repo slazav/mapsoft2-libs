@@ -457,7 +457,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // dash <length1> <length2> ...
       if (ftr == "dash"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->check_args(vs, {"<dist>", "..."});
         st->dash.clear();
         for (auto const & s:vs)
@@ -467,7 +467,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // cap round|butt|square
       if (ftr == "cap"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_AREA |STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->check_args(vs, {"round|butt|square"});
         st->line_cap = str_to_type<Cairo::LineCap>(vs[0]);
         continue;
@@ -475,7 +475,7 @@ GObjVMap2::load_conf(const std::string & cfgfile, read_words_defs & defs, int & 
 
       // join round|miter
       if (ftr == "join"){
-        st->check_type(STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
+        st->check_type(STEP_DRAW_POINT | STEP_DRAW_AREA | STEP_DRAW_LINE | STEP_DRAW_TEXT | STEP_DRAW_BRD);
         st->check_args(vs, {"miter|round"});
         st->line_join = str_to_type<Cairo::LineJoin>(vs[0]);
         continue;
