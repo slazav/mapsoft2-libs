@@ -1,6 +1,24 @@
 #include <string>
+#include <sstream>
 #include "geo_tiles/quadkey.h"
 #include "image_t.h"
+
+// move to geo_tiles module or somewhere else?
+std::string
+tile_bbox_str(int x, int y, int z){
+  int tsize = 256;
+  double ires  = 2.0 * M_PI * 6378137.0 / tsize;
+  double shift = 2.0 * M_PI * 6378137.0 / 2.0;
+  y = ((1<<z) - 1) - y;
+  dPoint t(x,y);
+  // same as GeoTiles::px_to_m:
+  dPoint p1 = t*tsize*ires/(1<<z) - dPoint(shift,shift);
+  dPoint p2 = (t+iPoint(1,1))*tsize*ires/(1<<z) - dPoint(shift,shift);
+  std::ostringstream ss;
+  ss << std::fixed
+     << p1.x << "," << p1.y << "," << p2.x << "," << p2.y;
+  return ss.str();
+}
 
 std::string
 ImageT::make_url(const std::string& tmpl, const iPoint & key){
@@ -20,6 +38,7 @@ ImageT::make_url(const std::string& tmpl, const iPoint & key){
     else if (s=="y") ret += type_to_str(key.y);
     else if (s=="z") ret += type_to_str(key.z);
     else if (s=="q") ret += tile_to_quadkey(key.x, key.y, key.z);
+    else if (s=="b") ret += tile_bbox_str(key.x, key.y, key.z);
     else if (s=="{") ret += '{';
     else if (s=="}") ret += '}';
     else if (s.size()>2 && s[0]=='[' && s[s.size()-1]==']'){

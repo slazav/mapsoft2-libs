@@ -25,6 +25,7 @@ class ImageT: public Image {
     //  `{x}` and `{y}` - replaced by x and y values,
     //  `{z}` - replaced by z value,
     //  `{q}` - replaced by quadkey(x,y,z),
+    //  `{b}` - replaced by EPSG:3857 bbox,
     //  `{[abc]}` - replaced by one letter from [...] set (depenting on x+y value),
     //  `{{}` and `{}}` - replaced by `{` and `}` literals.
 

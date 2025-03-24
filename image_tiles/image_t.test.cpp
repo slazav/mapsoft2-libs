@@ -20,6 +20,10 @@ main(){
     assert_eq(ImageT::make_url(tmpl, iPoint(11,21,5)), "abc11/21/5-c");
     assert_eq(ImageT::make_url(tmpl, iPoint(11,22,5)), "abc11/22/5-a");
 
+    assert_eq(ImageT::make_url("{b}", iPoint(4664,2370,13)),
+      "2778638.852223,8438647.922683,2783530.822033,8443539.892494");
+
+
     assert_err(ImageT::make_url("abc{x/{y}", p),
       "ImageT: unknown field x/{y in URL template: abc{x/{y}");
     assert_err(ImageT::make_url("abc{x}/{y", p),
