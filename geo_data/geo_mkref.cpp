@@ -19,16 +19,16 @@ void
 ms2opt_add_mkref_opts(GetOptSet & opts){
   const char *g = "MKREF_OPTS";
   opts.add("mkref", 1,0,g,
-    "Choose map type (nom, nom_fi, google_tile, tms_tile, proj)");
+    "Choose map type (nom, nom_fi, google_tile, tms_tile, proj, file)");
   opts.add("name", 1,0,g,
-    "Set map name. For --mkref=\"nom\" it should contain a "
-    "valid Soviet nomenclature name. For --mkref=\"file\" it should contain map-file name.");
+    "Set map name. For nom and nom_fi maps it should contain a "
+    "valid nomenclature name. For --mkref=\"file\" it should contain map-file name.");
   opts.add("dpi", 1,0,g,
-    "Map resolution, pixels per inch (\"nom\" and \"proj\" maps)");
+    "Map resolution, pixels per inch (nom, nom_fi and proj maps)");
   opts.add("mag", 1,0,g,
-    "Map magnification (\"nom\" maps)");
+    "Map magnification (nom, nom_fi, google_tile, tms_tile maps)");
   opts.add("north", 0,0,g,
-    "Orient map to north (\"nom\" maps)");
+    "Orient map to north (nom and nom_fi maps)");
   opts.add("margins",  1,0,g,
     "Map margins, pixels (\"nom\" and \"proj\" maps).");
   opts.add("top_margin", 1,0,g,
