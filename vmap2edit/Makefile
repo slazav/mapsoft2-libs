@@ -1,7 +1,7 @@
-MOD_HEADERS := vmap2edit.h
+MOD_HEADERS := condition.h actions.h vmap2edit.h
 
-MOD_SOURCES := vmap2edit.cpp
+MOD_SOURCES := condition.cpp actions.cpp vmap2edit.cpp
 
-SIMPLE_TESTS := vmap2edit
+SIMPLE_TESTS := condition
 
 include ../Makefile.inc
