@@ -60,14 +60,25 @@ Each condition is a word (without spaces, or quoted with quotes).
 * `type==<type>` -- true for any object of the specified type
 * `type!=<type>` -- false for any object of the specified type
 
+* `ref_type==(point|line|area|text)` -- true for any object with ref_type of specified class
+* `ref_type!=(point|line|area|text)` -- false for any object with ref_type of specified class
+* `ref_type==<type>` -- true for any object with the specified ref_type
+* `ref_type!=<type>` -- false for any object with the specified ref_type
+
+
 ### Commands
 
+* `delete` -- delete object
 * `set_type <new type>` -- change object type
+* `set_ref_type <new type>` -- change object ref_type
+* `crop_rect <rectangle>` -- crop objects to a rectangle
+* `crop_nom <name>` -- crop objects to nomenclature name
+* `crop_nom_fi <name>` -- crop objects to nomenclature name
 
 */
 
 #include <string>
-#include "vmap2.h"
+#include "vmap2/vmap2.h"
 
 // Read filter file, apply to vmap
 void vmap2edit(VMap2 & vmap, const std::string & fname);

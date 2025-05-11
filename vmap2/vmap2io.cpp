@@ -1,6 +1,5 @@
 #include "vmap2io.h"
 #include "vmap2tools.h"
-#include "vmap2edit.h"
 #include "filename/filename.h"
 #include "geo_data/geo_mkref.h"
 #include "fig_geo/fig_geo.h"
@@ -87,7 +86,6 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
     opts.add("join_lines_a",1, 0, "VMAP2", "Max angle for joining lines in degrees. Default 45.");
     opts.add("filter_pts",0, 0,   "VMAP2", "Reduce number of points in lines and polygons.");
     opts.add("filter_pts_d",1, 0, "VMAP2", "Accuracy for point filtering in meters. Default: 10");
-    opts.add("edit",1, 0, "VMAP2", "Edit map using a file with commands");
   }
 }
 
@@ -157,7 +155,6 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   std::string crop_nom_fi = opts.get("crop_nom_fi");
   std::string crop_rect = opts.get("crop_rect");
   bool crop_labels = opts.get("crop_labels", false);
-  std::string editor = opts.get("edit");
 
   opts.check_conflict({"replace_source", "replace_type", "replace_types"});
 
@@ -202,9 +199,6 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
 
   if (crop_rect.size())
     do_crop_rect(vmap2, dRect(crop_rect), crop_labels);
-
-  if (editor.size())
-    vmap2edit(vmap2, editor);
 
   // Save files
   if (file_ext_check(ofile, ".vmap2db")){

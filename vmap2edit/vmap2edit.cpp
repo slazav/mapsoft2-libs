@@ -3,9 +3,15 @@
 #include <algorithm>
 #include <deque>
 #include "filename/filename.h"
-#include "vmap2.h"
-#include "vmap2types.h"
-#include "vmap2obj.h"
+#include "geom/line_rectcrop.h"
+#include "vmap2/vmap2.h"
+#include "vmap2/vmap2types.h"
+#include "vmap2/vmap2obj.h"
+#include "vmap2/vmap2obj.h"
+#include "geo_data/conv_geo.h"
+#include "geo_data/geo_utils.h"
+#include "geo_nom/geo_nom_fi.h"
+
 
 /***********************************************************/
 
@@ -118,35 +124,85 @@ calc_cond(const std::vector<std::string> & cond, const VMap2obj & o){
       else continue;
     }
 
+    //
+
     throw Err() << "Unknown condition: " << c;
   }
   return true;
 }
 
 /***********************************************************/
+// check argument number, throw Err if needed
+void
+check_args(const std::vector<std::string> & cmd,
+           const std::vector<std::string> & expected){
+  if (cmd.size()-1==expected.size()) return;
+  Err e;
+  e << "wrong number of arguments (" << expected.size() << " expected): ";
+  for (const auto & p:expected) e << " <" << p << ">";
+  throw e; 
+}
+
 
 // Run a command for an object.
-// Return true if object has been modified.
 void
 run_cmd(const std::vector<std::string> & cmd, VMap2 & vmap, uint32_t id, VMap2obj & o){
   if (cmd.size()==0) return;
 
+  if (cmd[0] == "delete"){
+    check_args(cmd, {});
+    vmap.del(id);
+    return;
+  }
+
   if (cmd[0] == "set_type"){
-    if (cmd.size()!=2) throw Err()
-      << "wrong number of arguments (1 expected): " << cmd[0] << " <type>";
+    check_args(cmd, {"type"});
     o.set_type(cmd[1]);
     vmap.put(id, o);
     return;
   }
 
-  if (cmd[0] == "delete"){
-    if (cmd.size()!=1) throw Err()
-      << "wrong number of arguments (0 expected): " << cmd[0];
-    vmap.del(id);
+  if (cmd[0] == "set_ref_type"){
+    check_args(cmd, {"type"});
+    o.set_ref_type(cmd[1]);
+    vmap.put(id, o);
     return;
   }
 
-  throw Err() << "Unknown command: " << cmd[0];
+  if (cmd[0] == "crop_rect"){
+    check_args(cmd, {"bbox"});
+    auto box = str_to_type<dRect>(cmd[1]);
+    bool closed = (o.get_class() == VMAP2_POLYGON);
+    o.set_coords(rect_crop_multi(box, o, closed));
+    if (o.empty()) vmap.del(id);
+    else vmap.put(id, o);
+    return;
+  }
+
+  if (cmd[0] == "crop_nom"){
+    check_args(cmd, {"name"});
+    auto box = nom_to_wgs(cmd[1]);
+    bool closed = (o.get_class() == VMAP2_POLYGON);
+    o.set_coords(rect_crop_multi(box, o, closed));
+    if (o.empty()) vmap.del(id);
+    else vmap.put(id, o);
+    return;
+  }
+
+  if (cmd[0] == "crop_nom_fi"){
+    check_args(cmd, {"name"});
+    ConvGeo cnv("ETRS-TM35FIN");
+    auto box = nom_to_range_fi(cmd[1]);
+    bool closed = (o.get_class() == VMAP2_POLYGON);
+    cnv.bck(o); // convert to ETRS-TM35FIN;
+    o.set_coords(rect_crop_multi(box, o, closed));
+    cnv.frw(o); // convert to WGS;
+    if (o.empty()) vmap.del(id);
+    else vmap.put(id, o);
+    return;
+  }
+
+  throw Err() << "unknown command: " << cmd[0];
 }
 
 /***********************************************************/
