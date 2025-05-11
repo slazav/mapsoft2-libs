@@ -78,7 +78,7 @@ public:
 // - words -- output of read_words
 // - defs  -- read_words_defs class, variable definitions
 // - ifs   -- state queue for if commands
-// Return true if line is consumed, false if thurther processing is needed.
+// Return true if line is consumed, false if further processing is needed.
 bool
 read_words_stdcmds(std::vector<std::string> & words,
    read_words_defs & defs, std::deque<bool> & ifs);
