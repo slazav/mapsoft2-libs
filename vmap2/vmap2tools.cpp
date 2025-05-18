@@ -325,7 +325,7 @@ do_make_label(const VMap2obj & o, const VMap2type & t){
   label.ref_type = o.type;
   nearest_vertex(o, pt0, &label.ref_pt,
     (double (*)(const dPoint&, const dPoint&))geo_dist_2d);
-  label.scale = t.label_def_scale;
+  label.scale = t.label_def_scale * o.scale;
   label.align = t.label_def_align;
   return label;
 }
