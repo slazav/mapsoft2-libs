@@ -56,3 +56,12 @@ Conditions can be joined with AND or OR word
 * `move_ends <dist[m]> <type1> ...` -- move object ends towards nearest point or segment
 * `rem_short <min_npts> <min_len[m]>` -- remove segments shorter then n points (<0 for no filtering) or d distance (<0 for no filtering)
 * `rem_dup_pts <dist[m]>` -- remove duplicated points
+* `translate <dictionary file>` -- translate object name according to the dictionary file
+
+### Dictionary file structure
+
+* `<key>\t+<value>(\t.*)` -- normal key-value
+* `!<key>\t+<value>(\t.*)` -- exact key-value
+* `~<key>\t+<value with *>(\t.*)` -- prefix/suffix (order is important)
+* `#` -- comments
+

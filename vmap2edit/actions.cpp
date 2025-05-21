@@ -384,37 +384,93 @@ class vmap_action_rem_dup_pts: public VMap2action {
   }
 };
 
-// Remove duplicated points
+// Translate
 class vmap_action_translate: public VMap2action {
-  std::map<std::string, std::string> dict;
+  std::map<std::string, std::string> exact, dict;
+  std::vector<std::pair<std::string, std::string> > pref; // order is important
   public:
   vmap_action_translate(VMap2 & vmap, const std::vector<std::string> & args): VMap2action(vmap){
     check_args(args, {"dict.file"});
     auto fname = args[0];
     std::ifstream ff(fname);
     if (!ff) throw Err() << "can't open file: " << fname;
-    int line_num[2] = {0,0}; // line counter for read_words
-    read_words_defs defs;
-    while (1){
-      auto vs = read_words(ff, line_num, false);
-      if (vs.size()==0) break;
-      try{
-        if (vs.size()!=2) throw Err() << "2-column dictionary expected";
-        dict.emplace(vs[0],vs[1]);
+
+    // Read dictionary:
+    // <key>\t+<value>(\t.*) -- normal key-value
+    // !<key>\t+<value>(\t.*) -- exact key-value
+    // ~<key>\t+<value with *>(\t.*) -- prefix/suffix (order is important)
+    // # -- comments
+    size_t ln = 0;
+    for (std::string line; std::getline(ff, line);){
+      ln++;
+      std::string s1,s2;
+      int fld=0;
+      for (const auto & c: line){
+        if (fld>1) break;
+        if (c=='#') break;
+        auto & s = (fld==0)? s1:s2;
+        if (c=='\t'){
+          if (s.size()) fld++;
+          continue;
+        }
+        s+=c;
       }
-      catch (Err & e) {
-        throw Err() << fname << ":" << line_num[0] << ": " << e.str();
+      if (s1.find('~')==0 && s1.size()>1 && s2.find('*')!=s2.npos){
+        pref.emplace_back(s1.substr(1,s1.size()-1),s2);
+      }
+      else if (s1.find('!')==0 && s1.size()>1){
+        exact.emplace(s1.substr(1,s1.size()-1),s2);
+      }
+      else {
+        if (s1.size()) dict.emplace(s1,s2);
       }
     }
   }
   bool process_object(uint32_t id, VMap2obj & o) override {
-    if (dict.count(o.name)){
-      o.name = dict[o.name];
-      vmap.put(id, o);
+
+    // try exact dictionary
+    if (exact.count(o.name)){
+      o.name = exact[o.name];
       return true;
     }
-    std::cout << "can't translate: " << o.name << "\n";
-    return false;
+
+    // find prefix/suffix modification
+    std::string name = o.name;
+    std::vector<std::string> mod;
+    for (const auto & pp: pref){
+      auto np = pp.first.size();
+      if (np<1) continue;
+      if (name.size()<=np) continue; // at least 1 char longer then prefix
+      if (name.find(pp.first)==0){
+        if (name[np]!=' ' && name[np-1]!='.') continue; // no . or space
+        if (name[np]==' ') np++; // skip space after prefix
+        name = name.substr(np);
+        mod.push_back(pp.second);
+        continue;
+      }
+      if (name.find(pp.first) + np == name.size() && name[name.size()-np-1] == ' '){
+        name = name.substr(0, name.size()-np-1);
+        mod.push_back(pp.second);
+        continue;
+      }
+    }
+
+    // translate name
+    if (dict.count(name)==0){
+      std::cout << "can't translate: " << o.name << "\n";
+      return false;
+    }
+    name = dict[name];
+
+    // apply prefix/suffix modification
+    for (const auto & m: mod){
+      auto nn = m.find('*');
+      if (nn==m.npos) throw Err() << "* missing"; // should not be reached
+      name = m.substr(0,nn) + name + m.substr(nn+1);
+    }
+    o.name = name;
+    vmap.put(id, o);
+    return true;
   }
 };
 
