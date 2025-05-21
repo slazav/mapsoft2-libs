@@ -68,7 +68,8 @@ ms2opt_add_vmap2(GetOptSet & opts, bool read, bool write){
       "Useful for updating map from a source (e.g. gpx) where names are missing."
       "Values: 0 or 1, default: 0.");
 
-    opts.add("keep_labels",  1, 0, "VMAP2", "Keep old labels. Values: 0 or 1, default: 0.");
+    opts.add("keep_labels",  1, 0, "VMAP2", "If argument is not 0, keep old labels."
+      " If argument >0 use it as a matching distance [m] and add non-matching new labels. Default: 0");
     opts.add("replace_source", 1, 0, "VMAP2", "Replace objects with a given Source=<src> option.");
     opts.add("replace_type",   1, 0, "VMAP2", "Replace objects with a given type.");
     opts.add("replace_types",  1, 0, "VMAP2", "Replace objects with all types which exist in input files. "
@@ -140,7 +141,7 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
 
   bool update_labels = opts.get("update_labels", false);
   bool label_names = opts.get("label_names", false);
-  bool keep_labels = opts.get("keep_labels", false);
+  double keep_labels = opts.get("keep_labels", 0.0);
   std::string replace_source = opts.get("replace_source");
   uint32_t replace_type = VMap2obj::make_type(opts.get("replace_type", "none"));
   bool replace_types = opts.get("replace_types", false);
@@ -159,14 +160,14 @@ vmap2_export(VMap2 & vmap2, const VMap2types & types,
   opts.check_conflict({"replace_source", "replace_type", "replace_types"});
 
   // Merge with old data if needed
-  if ((keep_labels || replace_source!="" || fix_rounding ||
+  if ((keep_labels!=0 || replace_source!="" || fix_rounding ||
       replace_types || VMap2obj::get_class(replace_type)!=VMAP2_NONE) &&
       file_exists(ofile)){
 
     VMap2 vmap2o;
     vmap2_import({ofile}, types, vmap2o, opts);
 
-    if (keep_labels)
+    if (keep_labels!=0)
       do_keep_labels(vmap2o, vmap2);
 
     if (replace_source!="")

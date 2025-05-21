@@ -10,15 +10,35 @@
 
 // Replace labels in mapn with labels from mapo
 void
-do_keep_labels(VMap2 & mapo, VMap2 & mapn){
-  // remove labels from mapn
-  for (auto const i: mapn.find_class(VMAP2_TEXT))
-    mapn.del(i);
+do_keep_labels(VMap2 & mapo, VMap2 & mapn, const double dist){
+  auto old_labels = mapo.find_class(VMAP2_TEXT);
+  auto new_labels = mapn.find_class(VMAP2_TEXT);
 
-  // transfer all labels from mapo to mapn
-  for (auto const i: mapo.find_class(VMAP2_TEXT))
+  // transfer labels from mapo to mapn
+  for (auto const i: old_labels)
     mapn.add(mapo.get(i));
+
+  // remove labels from mapn if they match old labels
+  for (auto const i: new_labels){
+
+    if (dist > 0){
+      bool match = false;
+      const auto & on = mapo.get(i);
+      for (auto const j: old_labels){
+        const auto & oo = mapo.get(j);
+        if (oo.ref_type != on.ref_type ||
+           geo_dist_2d(oo.ref_pt, on.ref_pt) >= dist) continue;
+        match = true;
+        break;
+      }
+      if (!match) continue;
+    }
+
+    mapn.del(i);
+  }
+
 }
+
 
 /****************************************************************************/
 

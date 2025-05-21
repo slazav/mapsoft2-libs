@@ -3,7 +3,7 @@
 #include <string>
 
 // Replace labels in mapn with labels from mapo
-void do_keep_labels(VMap2 & mapo, VMap2 & mapn);
+void do_keep_labels(VMap2 & mapo, VMap2 & mapn, const double dist = -1);
 
 // Assign a tag to all objects in mapn. Add all objects from mapo without this tag
 // Add source=src option to all objects in mapn, add all objects from mapo without it
