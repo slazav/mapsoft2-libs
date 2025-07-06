@@ -1204,6 +1204,7 @@ GObjVMap2::DrawingStep::draw(const CairoWrapper & cr, const dRect & range){
       cr->set_color_a(stroke_color2);
       cr->set_line_width(osc*thickness2);
       cr->stroke_preserve();
+      cr->set_line_width(osc*thickness); // set thickness for step1
     }
 
     // Image feature (points and areas)
