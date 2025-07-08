@@ -771,32 +771,44 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
   if (move_data.size()>0){
     for (auto & l:O){ // segments
       for (auto & p:l){ // points
-        dPoint p1(p);
+
+        // find nearest point (+dist, +angle, +mode data)
+        double dm = INFINITY;
+        dPoint pm;
+        double am;
+        move_t mdm;
+
         for (auto & md: move_data){
-          dPoint t(1,0);
           dRect r(p,p);
           r.expand(md.dist);
           if (cnv) r = cnv->frw_acc(r);
           auto ids = gobj->map.find(md.target, r);
           bool moved = false;
+
           for (int i:ids){
             auto O1 = gobj->map.get(i);
             if (cnv) cnv->bck(O1);
 
-            nearest_pt(O1, t, p1, md.dist);
-            if (p1==p) continue;
-
-            if (md.dir==1){ // move_to
-              p = p1;
-              if (md.rot) O.angle = atan2(t.y, t.x);
-            }
-            else { // move_from
-              p = p1 + (p-p1)*md.dist/dist2d(p1,p);
-            }
-            moved = true;
-            break;
+            dPoint t(1,0);
+            dPoint p1(p);
+            double d = nearest_pt(O1, t, p1, md.dist);
+            if (d>=dm) continue;
+            dm = d;
+            pm = p1;
+            am = atan2(t.y, t.x);
+            mdm = md;
           }
-          if (moved) break;
+        }
+
+        if (std::isinf(dm)) continue;
+
+        // move
+        if (mdm.dir==1){ // move_to
+          p = pm;
+          if (mdm.rot) O.angle = am;
+        }
+        else { // move_from
+          p = pm + (p-pm)*mdm.dist/dm;
         }
       }
     }
