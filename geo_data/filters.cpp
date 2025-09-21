@@ -36,8 +36,9 @@ ms2opt_add_geoflt(GetOptSet & opts){
                                "(the map should have a valid name).");
   opts.add("rescale_maps", 1, 0, g, "Rescale image part of map references by some factor.");
   opts.add("shift_maps",   1, 0, g, "Shift image part of map references by some (x,y) vector.");
-  opts.add("trk_reduce_acc",   1, 0, g, "Reduce number of track points. Argument is accuracy in meters, default: 0");
-  opts.add("trk_reduce_num",   1, 0, g, "Reduce number of track points. Argument is maximum point number, "
+  opts.add("trk_join_segments", 0, 0, g, "Join track segments");
+  opts.add("trk_reduce_acc",    1, 0, g, "Reduce number of track points. Argument is accuracy in meters, default: 0");
+  opts.add("trk_reduce_num",    1, 0, g, "Reduce number of track points. Argument is maximum point number, "
                                "default: 0. Both --trk_reduce_acc and --trk_reduce_num can exist. "
                                "Works separately for each track segment.");
 }
@@ -76,6 +77,15 @@ geo_filters(GeoData & data, const Opt & opt){
     dPoint sh = opt.get("shift_maps", dPoint());
     for (auto & ml:data.maps){
       for (auto & m:ml) m+=sh;
+    }
+  }
+
+  if (opt.exists("trk_join_segments")){
+    for (auto & t:data.trks){
+      if (t.size()<2) continue;
+      for (size_t i = 1; i<t.size(); i++)
+        t[0].insert(t[0].end(), t[i].begin(), t[i].end());
+      t.erase(t.begin()+1, t.end());
     }
   }
 
