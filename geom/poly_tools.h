@@ -589,6 +589,88 @@ void line_filter_v1(MultiLine<CT,PT> & lines, double e, int np,
 }
 
 /****************************************************/
+
+/// Filter out point clouds
+
+// Clud is a group of >=3 points.
+// Cloud size is average segment length in the cloud times square root of number of points.
+// Cloud center is average point.
+// Distance between first and last point should be smaller then the cloud size
+// All points shold be within cloud size distance from the cloud center.
+
+template<typename CT, typename PT>
+void line_filter_clouds(Line<CT,PT> & line,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
+  const int maxpts = 3; // max points in the cloud (including first/last)
+
+  if (line.size() < maxpts) return;
+
+  for (auto i = line.begin(); i!=line.end(); ++i){
+    auto j = i;
+    for (j = i+1; j != line.end(); ++j){
+
+      if (j-i < maxpts-1) continue;
+
+      // center of the cloud (average point)
+      // and average segment length (all segments between i and j)
+      dPoint cnt;
+      double len = 0;
+      size_t n=0;
+      for (auto k = i; k!=j+1; ++k){
+        if (k!=i) len += dist_func? dist_func(*k,*(k-1)) : dist(*k,*(k-1));
+        cnt += *k;
+        n+=1;
+      }
+      cnt/=n;
+      len/=sqrt(n-1);
+
+      // all points should be within len radius from cnt
+      // check that all points between i..j are in the cloud
+      bool out = false;
+      for (auto k = i; k!=j+1; ++k){
+        auto d = dist_func? dist_func(*k,cnt) : dist(*k,cnt);
+        if (d > len) out = true;
+      }
+      if (out) break;
+    }
+
+    // step back
+    auto last = line.begin() + (line.size()-1);
+    j = (j==line.end())? last: j-1;
+
+    // check the second criterium: distance between first and last point should be smaller then len
+    while (j-i >= maxpts-1) {
+      // update len
+      double len = 0;
+      size_t n=0;
+      for (auto k = i+1; k!=j+1; ++k){
+        len += dist_func? dist_func(*k,*(k-1)) : dist(*k,*(k-1));
+        n+=1;
+      }
+      len/=sqrt(n);
+      if ( (dist_func? dist_func(*i,*j) : dist(*i,*j)) < len) break;
+      --j;
+    }
+
+    // Remove points (if any) between first/last inner points
+    if (j-i >= maxpts-1){
+      line.erase(i+1, j);
+      //std::cerr << "erase: " << j-i << "\n";
+    }
+
+  }
+}
+
+ // Same for MultiLine.
+template<typename CT, typename PT>
+void line_filter_clouds(MultiLine<CT,PT> & lines,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
+  for (auto l = lines.begin(); l!=lines.end(); l++){
+    line_filter_clouds(*l, dist_func);
+  }
+}
+
+/****************************************************/
 // Ramer-Douglas-Peucker algorithm
 // https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
 template<typename CT, typename PT>
