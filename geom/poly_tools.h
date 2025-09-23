@@ -590,6 +590,36 @@ void line_filter_v1(MultiLine<CT,PT> & lines, double e, int np,
 
 /****************************************************/
 
+/// Filter out short segments
+
+// If sum length of two adjacent segments is smoller then dist, remove point between them.
+
+template<typename CT, typename PT>
+void line_filter_short(Line<CT,PT> & line, const double mindist,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
+  if (line.size() < 3) return;
+  for (auto i = line.begin(); i!=line.end(); ++i){
+    auto j=i+1;
+    if (j==line.end()) break;
+    auto k=j+1;
+    if (k==line.end()) break;
+
+    double d = dist_func? (dist_func(*i,*j)+dist_func(*j,*k)) : (dist(*i,*j)+dist(*j,*k));
+    if (d<mindist) line.erase(j);
+  }
+}
+
+ // Same for MultiLine.
+template<typename CT, typename PT>
+void line_filter_short(MultiLine<CT,PT> & lines, const double mindist,
+                    double (*dist_func)(const PT &, const PT &) = NULL){
+  for (auto l = lines.begin(); l!=lines.end(); l++){
+    line_filter_short(*l, mindist, dist_func);
+  }
+}
+
+/****************************************************/
+
 /// Filter out point clouds
 
 // Clud is a group of >=3 points.

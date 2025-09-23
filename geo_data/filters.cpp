@@ -3,6 +3,7 @@
 #include "conv_geo.h"
 #include "geo_utils.h"
 #include "filters.h"
+#include "time_fmt/time_fmt.h"
 
 #include <iterator>
 
@@ -41,7 +42,9 @@ ms2opt_add_geoflt(GetOptSet & opts){
   opts.add("trk_reduce_num",    1, 0, g, "Reduce number of track points. Argument is maximum point number, "
                                "default: 0. Both --trk_reduce_acc and --trk_reduce_num can exist. "
                                "Works separately for each track segment.");
+  opts.add("trk_filter_short",    1, 0, g, "Remove short segments. Argument: length limit [m]");
   opts.add("trk_filter_clouds",   0, 0, g, "Remove stops (point clouds) from tracks.");
+  opts.add("trk_mark_stops",      1, 0, g, "Add points for each stop. Argument: time limit in seconds");
 }
 
 /********************************************************************/
@@ -90,6 +93,12 @@ geo_filters(GeoData & data, const Opt & opt){
     }
   }
 
+  if (opt.exists("trk_filter_short")){
+    double d = opt.get("trk_filter_short", 10.0);
+    for (auto & t:data.trks) line_filter_short<double,GeoTpt>(t, d,
+      (double (*)(const GeoTpt&, const GeoTpt&)) geo_dist_2d);
+  }
+
   if (opt.exists("trk_reduce_acc") || opt.exists("trk_reduce_num")){
     double acc = opt.get("trk_reduce_acc", 0.0);
     int num = opt.get("trk_reduce_num", 0);
@@ -101,6 +110,33 @@ geo_filters(GeoData & data, const Opt & opt){
     for (auto & t:data.trks) line_filter_clouds<double,GeoTpt>(t,
       (double (*)(const GeoTpt&, const GeoTpt&)) geo_dist_2d);
   }
+
+  if (opt.exists("trk_mark_stops")){
+    GeoWptList wpts;
+    double dt = 1e3*opt.get("trk_mark_stops", 600.0);
+    GeoTpt pt0;
+    bool first = 1;
+    for (const auto & trk:data.trks){
+      for (const auto & seg:trk){
+        for (const auto & pt:seg){
+           if (first || pt.t - pt0.t > dt){
+              GeoWpt p(pt); p.t = pt.t;
+              p.name = write_fmt_time("%Y-%m-%d %H:%M", p.t);
+              wpts.push_back(p);
+              if (!first){
+                GeoWpt p(pt0); p.t = pt0.t;
+                p.name = write_fmt_time("%Y-%m-%d %H:%M", p.t);
+                wpts.push_back(p);
+              }
+           }
+           pt0 = pt;
+           first = false;
+        }
+      }
+    }
+    data.wpts.push_back(wpts);
+  }
+
 }
 
 
