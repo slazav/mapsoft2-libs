@@ -43,7 +43,7 @@ ms2opt_add_geoflt(GetOptSet & opts){
                                "default: 0. Both --trk_reduce_acc and --trk_reduce_num can exist. "
                                "Works separately for each track segment.");
   opts.add("trk_filter_short",    1, 0, g, "Remove short segments. Argument: length limit [m]");
-  opts.add("trk_filter_clouds",   0, 0, g, "Remove stops (point clouds) from tracks.");
+  opts.add("trk_filter_clouds",   1, 0, g, "Remove stops (point clouds) from tracks. Argument: max cloud radius (m)");
   opts.add("trk_mark_stops",      1, 0, g, "Add points for each stop. Argument: time limit in seconds");
 }
 
@@ -107,7 +107,8 @@ geo_filters(GeoData & data, const Opt & opt){
   }
 
   if (opt.exists("trk_filter_clouds")){
-    for (auto & t:data.trks) line_filter_clouds<double,GeoTpt>(t,
+    double maxrad = opt.get("trk_filter_clouds", 1000.0);
+    for (auto & t:data.trks) line_filter_clouds<double,GeoTpt>(t, maxrad,
       (double (*)(const GeoTpt&, const GeoTpt&)) geo_dist_2d);
   }
 

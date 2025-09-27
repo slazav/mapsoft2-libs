@@ -622,81 +622,63 @@ void line_filter_short(MultiLine<CT,PT> & lines, const double mindist,
 
 /// Filter out point clouds
 
-// Clud is a group of >=3 points.
-// Cloud size is average segment length in the cloud times square root of number of points.
-// Cloud center is average point.
-// Distance between first and last point should be smaller then the cloud size
-// All points shold be within cloud size distance from the cloud center.
+// Cloud is a group of N>=3 points.
+// Cloud is inscribed in a circle with center C and radius R and
+// has average serment length S.
+// - First and last points of a cloud are within distance S from C
+//   and within distance S from each other
+// - R is smaller then S*sqrt(N-1) and smaller then maxrad parameter
 
 template<typename CT, typename PT>
-void line_filter_clouds(Line<CT,PT> & line,
+void line_filter_clouds(Line<CT,PT> & line, const double maxrad,
                     double (*dist_func)(const PT &, const PT &) = NULL){
   const int maxpts = 3; // max points in the cloud (including first/last)
 
-  if (line.size() < maxpts) return;
+  for (size_t i = 0; i<line.size()-maxpts; ++i) {
+    size_t npts = 1;      // number of points in the cloud (including first and last)
+    double len = 0;       // line length
+    dPoint cnt = line[i]; // cloud center
+    double rad = 0;       // cloud radius
+    size_t maxind = 0;    // index of last point for max valid cloud
+    for (size_t j = i+1; j<line.size(); ++j) {
 
-  for (auto i = line.begin(); i!=line.end(); ++i){
-    auto j = i;
-    for (j = i+1; j != line.end(); ++j){
+      // update npts and length
+      npts++;
+      len += dist_func? dist_func(line[j],line[j-1]) : dist(line[j],line[j-1]);
 
-      if (j-i < maxpts-1) continue;
+      // distance from first and last point to cloud center
+      auto d1 = dist_func? dist_func(line[i],cnt) : dist(line[i],cnt);
+      auto d2 = dist_func? dist_func(line[j],cnt) : dist(line[j],cnt);
+      auto d12 = dist_func? dist_func(line[j],line[i]) : dist(line[j],line[i]);
 
-      // center of the cloud (average point)
-      // and average segment length (all segments between i and j)
-      dPoint cnt;
-      double len = 0;
-      size_t n=0;
-      for (auto k = i; k!=j+1; ++k){
-        if (k!=i) len += dist_func? dist_func(*k,*(k-1)) : dist(*k,*(k-1));
-        cnt += *k;
-        n+=1;
+      // update cloud circle and distance to its center
+      if (d2 > rad){
+        cnt += (line[j]-cnt)/d2 * (d2 - rad)/2;
+        rad = (d2 + rad)/2;
+        d2 = dist_func? dist_func(line[j],cnt) : dist(line[j],cnt);
       }
-      cnt/=n;
-      len/=sqrt(n-1);
+      if (rad>maxrad) break;
 
-      // all points should be within len radius from cnt
-      // check that all points between i..j are in the cloud
-      bool out = false;
-      for (auto k = i; k!=j+1; ++k){
-        auto d = dist_func? dist_func(*k,cnt) : dist(*k,cnt);
-        if (d > len) out = true;
-      }
-      if (out) break;
+      // is it a valid cloud?
+      double s = len/(npts-1); // mean segment size
+      if (d1 < s && d2 < s && d12 < s &&
+          rad < s*sqrt(npts) && j-i>=maxpts-1) maxind = j;
     }
 
-    // step back
-    auto last = line.begin() + (line.size()-1);
-    j = (j==line.end())? last: j-1;
-
-    // check the second criterium: distance between first and last point should be smaller then len
-    while (j-i >= maxpts-1) {
-      // update len
-      double len = 0;
-      size_t n=0;
-      for (auto k = i+1; k!=j+1; ++k){
-        len += dist_func? dist_func(*k,*(k-1)) : dist(*k,*(k-1));
-        n+=1;
-      }
-      len/=sqrt(n);
-      if ( (dist_func? dist_func(*i,*j) : dist(*i,*j)) < len) break;
-      --j;
+    // Remove the cloud (except first and last points)
+    if (maxind!=0){
+      line.erase(line.begin()+i+1, line.begin()+maxind);
+      std::cerr << "erase: " << i << "-" << maxind << " " << maxind-i << "\n";
     }
-
-    // Remove points (if any) between first/last inner points
-    if (j-i >= maxpts-1){
-      line.erase(i+1, j);
-      //std::cerr << "erase: " << j-i << "\n";
-    }
-
   }
 }
 
  // Same for MultiLine.
 template<typename CT, typename PT>
-void line_filter_clouds(MultiLine<CT,PT> & lines,
+void line_filter_clouds(MultiLine<CT,PT> & lines, const double maxrad,
                     double (*dist_func)(const PT &, const PT &) = NULL){
   for (auto l = lines.begin(); l!=lines.end(); l++){
-    line_filter_clouds(*l, dist_func);
+    line_filter_clouds(*l, maxrad, dist_func);
   }
 }
 
