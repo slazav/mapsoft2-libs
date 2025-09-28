@@ -601,10 +601,8 @@ void line_filter_short(Line<CT,PT> & line, const double mindist,
   for (auto i = line.begin(); i!=line.end(); ++i){
     auto j=i+1;
     if (j==line.end()) break;
-    auto k=j+1;
-    if (k==line.end()) break;
 
-    double d = dist_func? (dist_func(*i,*j)+dist_func(*j,*k)) : (dist(*i,*j)+dist(*j,*k));
+    double d = dist_func? dist_func(*i,*j) : dist(*i,*j);
     if (d<mindist) line.erase(j);
   }
 }
