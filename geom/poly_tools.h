@@ -666,10 +666,8 @@ void line_filter_clouds(Line<CT,PT> & line, const double maxrad,
     }
 
     // Remove the cloud (except first and last points)
-    if (maxind!=0){
+    if (maxind!=0)
       line.erase(line.begin()+i+1, line.begin()+maxind);
-      std::cerr << "erase: " << i << "-" << maxind << " " << maxind-i << "\n";
-    }
   }
 }
 
