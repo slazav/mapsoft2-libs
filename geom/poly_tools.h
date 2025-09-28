@@ -634,7 +634,7 @@ void line_filter_clouds(Line<CT,PT> & line, const double maxrad,
                     double (*dist_func)(const PT &, const PT &) = NULL){
   const int maxpts = 3; // max points in the cloud (including first/last)
 
-  for (size_t i = 0; i<line.size()-maxpts; ++i) {
+  for (size_t i = 0; i+maxpts < line.size(); ++i) {
     size_t npts = 1;      // number of points in the cloud (including first and last)
     double len = 0;       // line length
     dPoint cnt = line[i]; // cloud center
