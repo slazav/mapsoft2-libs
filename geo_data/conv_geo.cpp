@@ -127,7 +127,7 @@ ConvGeo::ConvGeo(const std::string & src,
       throw Err() << "Can't create libproj transformation, unknown reason";
     throw Err() << "Can't create libproj transformation: \""
                 << src << "\" to \"" << dst << "\": "
-                << proj_context_errno_string(pcp, err);
+                << proj_errno_string(err);
   }
 }
 
