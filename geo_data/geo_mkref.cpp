@@ -398,9 +398,8 @@ geo_mkref_opts(const Opt & o){
     // try to build conversion, proj -> wgs84
     ConvGeo cnv(map.proj);
 
-    // map resolution
-    double scale = ConvGeo::is_deg(map.proj)? 0.01:1000;
-    scale = o.get("scale",scale);
+    // map resolution:
+    double scale = o.get("scale", 1000.0);
     map.image_dpi = o.get<double>("dpi",300.0);
 
     // factor (map coordinates)/(pixels)
