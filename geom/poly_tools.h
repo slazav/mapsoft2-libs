@@ -663,9 +663,13 @@ void line_filter_clouds(Line<CT,PT> & line, const double maxrad,
           rad < s*sqrt(npts) && j-i>=maxpts-1) maxind = j;
     }
 
-    // Remove the cloud (except first and last points)
-    if (maxind!=0)
-      line.erase(line.begin()+i+1, line.begin()+maxind);
+    // Remove the cloud
+    if (maxind!=0){
+//      line.erase(line.begin()+i+1, line.begin()+maxind);
+      auto first = (i==0)? line.begin() : line.begin()+i+1;
+      auto last  = (maxind==line.size()-1)? line.end() : line.begin()+maxind;
+      line.erase(first, last);
+    }
   }
 }
 
