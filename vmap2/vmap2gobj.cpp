@@ -807,7 +807,7 @@ GObjVMap2::DrawingStep::convert_coords(VMap2obj & O){
           p = pm;
           if (mdm.rot) O.angle = am;
         }
-        else { // move_from
+        else if (dm!=0){ // move_from
           p = pm + (p-pm)*mdm.dist/dm;
         }
       }
