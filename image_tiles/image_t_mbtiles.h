@@ -14,6 +14,7 @@
 class ImageMBTiles: public ImageT {
   std::shared_ptr<sqlite3> db;
   Opt opts;
+  std::string fmt; // png, jpg
   bool readonly;
 
   // precompiled commands
@@ -31,7 +32,7 @@ class ImageMBTiles: public ImageT {
     // Open database
     // - If readonly=0 and file does not exist then create it.
     // - Sync is database sync mode: 0-OFF, 1-NORMAL, 2-FULL, 3-EXTRA.
-    ImageMBTiles(const std::string & file, bool readonly, int db_sync = 0);
+    ImageMBTiles(const std::string & file, const Opt & opts = Opt());
 
     /*******************************************************/
     // ImageT interface

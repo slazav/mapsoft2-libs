@@ -5,9 +5,14 @@
 #include "filename/filename.h"
 #include "image/io.h"
 #include "image/io_png.h"
+#include "image/io_jpeg.h"
 
-ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly, int db_sync):
-       readonly(readonly), ImageT(file, true, 256, 0, 16){
+ImageMBTiles::ImageMBTiles(const std::string & file, const Opt & opts):
+       opts(opts), ImageT(file, true, 256, 0, 16){
+
+  readonly = opts.get("tmap_readonly", false);
+  int db_sync = opts.get("db_sync", 0);
+  fmt = opts.get("out_fmt", "png");
 
   int flags = readonly? SQLITE_OPEN_READONLY :
                         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
@@ -40,7 +45,8 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly, int db_sync)
 
     //The metadata table MUST contain these two rows:
     sql_cmd_simple("INSERT INTO metadata (name, value) VALUES ('name', '')");
-    sql_cmd_simple("INSERT INTO metadata (name, value) VALUES ('format', 'png')"); // pbf, jpg, png, webp ...
+    std::string fmt_q = "INSERT INTO metadata (name, value) VALUES ('format', '" + fmt + "')";
+    sql_cmd_simple(fmt_q.c_str()); // pbf, jpg, png, webp ...
 
     // The metadata table SHOULD contain these four rows:
     sql_cmd_simple("INSERT INTO metadata (name, value) VALUES ('bounds', '-180.0,-85,180,85')");
@@ -61,9 +67,6 @@ ImageMBTiles::ImageMBTiles(const std::string & file, bool readonly, int db_sync)
     cmd += type_to_str(db_sync);
     sql_cmd_simple(cmd.c_str());
   }
-
-  // set default image options
-  opts["fmt"] = "png";
 
   // precompiled statements
   stmt_meta_sel = sql_prepare("SELECT value FROM metadata WHERE name = ?");
@@ -137,7 +140,9 @@ ImageMBTiles::tile_write(const iPoint & key, const ImageR & img){
   std::string data;
   {
     std::ostringstream str;
-    image_save_png(img, str, opts);
+    if (fmt == "png") image_save_png(img, str, opts);
+    else if (fmt == "jpg") image_save_jpeg(img, str, opts);
+    else throw Err() << "unknown image format: " << fmt;
     data = str.str(); // save data
   }
   if (tile_exists(key)){

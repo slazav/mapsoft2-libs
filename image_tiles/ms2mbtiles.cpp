@@ -32,8 +32,7 @@ public:
     auto zmax = str_to_type<int>(args[2]);
     bool v = opts.get("verbose", false);
 
-    ImageMBTiles timg(file, 0);
-    timg.set_opt(opts);
+    ImageMBTiles timg(file, opts);
 
     // Get tile bounds for zsrc
     for (int z = zmax; z>=zmin; z--){

@@ -12,7 +12,7 @@ main(){
     // create new MBTILES database:
     {
       unlink("db_test_new.mbtiles");
-      ImageMBTiles db("db_test_new.mbtiles", 0);
+      ImageMBTiles db("db_test_new.mbtiles");
 
       // read default metadata fields
       assert_eq(db.get_metadata("maxzoom"), "16");
@@ -90,7 +90,7 @@ main(){
 
     // re-open database
     {
-      ImageMBTiles db("db_test_new.mbtiles", 0);
+      ImageMBTiles db("db_test_new.mbtiles");
 
       // check updated fields
       assert_eq(db.get_metadata("maxzoom"), "13");
@@ -108,7 +108,9 @@ main(){
 
     // re-open database read-only
     {
-      ImageMBTiles db("db_test_new.mbtiles", 1);
+      Opt o;
+      o.put("tmap_readonly", 1);
+      ImageMBTiles db("db_test_new.mbtiles", o);
 
       // try to change information
       assert_err(db.set_metadata("maxzoom", "18"), "can't write to read-only database");
@@ -126,8 +128,10 @@ main(){
 
     // try to open non-existing database read-only
     {
+      Opt o;
+      o.put("tmap_readonly", 1);
       unlink("db_test_new.mbtiles");
-      assert_err(ImageMBTiles db("db_test_new.mbtiles", 1),
+      assert_err(ImageMBTiles db("db_test_new.mbtiles", o),
         "can't open sqlite database: db_test_new.mbtiles: file does not exists");
     }
 
