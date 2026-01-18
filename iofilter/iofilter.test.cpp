@@ -143,7 +143,18 @@ try{
     std::string l;
     assert_err(flt.getline(l, 0.1), "Read timeout");
     assert_eq(l, "");
-    flt.kill(); // IOFilter will wait for process termination
+    flt.term(0);
+  }
+
+  {
+    IOFilter flt("sleep 5; sleep 5");
+    flt.ostream() << "test1\ntest2\n";
+    flt.close_input();
+
+    std::string l;
+    assert_err(flt.getline(l, 0.1), "Read timeout");
+    assert_eq(l, "");
+    flt.term(1); // IOFilter will wait 1s for process termination
   }
 
   {
@@ -159,7 +170,7 @@ try{
     assert_err(flt.getline(l, 0.1), "Read timeout");
     assert_eq(l, "");
 
-    flt.kill(); // IOFilter will wait for process termination
+    flt.term(0);
   }
 
   return 0;

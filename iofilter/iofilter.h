@@ -67,7 +67,7 @@ class IOFilter {
     void close_input();
 
     int getline(std::string & l, double timeout);
-    void kill();
+    void term(double sec = 0); // wait for process termination up to sec seconds, then kill it with SIGTERM
 };
 
 #endif
