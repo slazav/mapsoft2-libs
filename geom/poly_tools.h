@@ -265,6 +265,68 @@ bool segment_cross_2d(const PT & p1, const PT & p2,
   return true;
 }
 
+// Join segments with close ends
+template<typename CT, typename PT>
+void join_multiline(MultiLine<CT,PT> & L, const float maxd, const bool bidirectional = false){
+
+  if (L.size()==0) return;
+
+  typename MultiLine<CT,PT>::iterator l1 = L.begin();
+  while (l1!=L.end()){
+
+    // remove empty segments
+    if (l1->size() == 0){
+      l1 = L.erase(l1);
+      continue;
+    }
+
+    // for all later segments find and merge one with close starting/ending point
+    auto l2 = l1+1;
+    size_t count = 0;
+    while (l2!=L.end()){
+
+      // erase empty
+      if (l2->size() == 0){
+        l2 = L.erase(l2);
+        continue;
+      }
+
+      if (dist(*l1->rbegin(), *l2->begin()) < maxd){
+        l1->insert(l1->end(), l2->begin()+1, l2->end());
+        l2 = L.erase(l2);
+        count++;
+        continue;
+      }
+
+      if (dist(*l1->begin(), *l2->rbegin()) < maxd){
+        l1->erase(l1->begin());
+        l1->insert(l1->begin(), l2->begin(), l2->end());
+        l2 = L.erase(l2);
+        count++;
+        continue;
+      }
+
+      if (bidirectional && dist(*l1->rbegin(), *l2->rbegin()) < maxd){
+        l1->insert(l1->end(), l2->rbegin()+1, l2->rend());
+        l2 = L.erase(l2);
+        count++;
+        continue;
+      }
+
+      if (bidirectional && dist(*l1->begin(), *l2->begin()) < maxd){
+        l1->erase(l1->begin());
+        l1->insert(l1->begin(), l2->rbegin(), l2->rend());
+        l2 = L.erase(l2);
+        count++;
+        continue;
+      }
+      ++l2;
+    }
+    if (count==0) ++l1; // go to next segment if nothing has been joined
+  }
+}
+
+
 // Join a multi-segment polygon into a single-segment one
 // using shortest cuts.
 template<typename CT, typename PT>
