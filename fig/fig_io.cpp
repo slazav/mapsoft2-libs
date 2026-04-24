@@ -523,16 +523,16 @@ void
 write_comments(std::ostream & s, const vector<string> & comment, const IConv & cnv){
   size_t n=0;
   for (const auto & c:comment){
-    if (n>99) {cerr << "fig comment contains > 100 lines! Cutting...\n"; break;}
+    if (n>99) {cerr << "fig comment contains > 99 lines! Cutting...\n"; break;}
     size_t n1=0;
     while (n1!=std::string::npos) {
       size_t n2 = c.find('\n', n1);
       size_t len = (n2==std::string::npos)? n2:n2-n1;
       auto str = c.substr(n1,len);
       n1  = (n2==std::string::npos)? n2:n2+1;
-      if (str.size()>1022){
-        cerr << "fig comment line is > 1022 chars! Cutting...\n";
-        str.resize(1022);
+      if (str.size()>1021){
+        cerr << "fig comment line is > 1021 chars! Cutting...\n";
+        str.resize(1021);
       }
       s << "# " << cnv(str) << "\n";
       n++;

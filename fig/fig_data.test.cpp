@@ -715,21 +715,36 @@ main(){
     }
 
     { // write comments
+      Fig fig;
+      auto o = figobj_template("4 0 0 50 -1 0 12 0.0000 4");
+      o.comment.push_back("abc");
+      o.comment.push_back("de\nfg\nhi");
+      o.comment.push_back("12\n\n34\n");
+      o.push_back(iPoint(0,0));
+      fig.push_back(o);
+      Opt opts;
+      opts.put("fig_header", false);
+      std::ostringstream ss;
+      write_fig(ss, fig, opts);
+      assert_eq(ss.str(), "# abc\n# de\n# fg\n# hi\n# 12\n# \n# 34\n# \n"
+                          "4 0 0 50 -1 0 12.000 0.0000 4 0 0 0 0 \\001\n");
+    }
 
-    Fig fig;
-    auto o = figobj_template("4 0 0 50 -1 0 12 0.0000 4");
-    o.comment.push_back("abc");
-    o.comment.push_back("de\nfg\nhi");
-    o.comment.push_back("12\n\n34\n");
-    o.push_back(iPoint(0,0));
-    fig.push_back(o);
-    Opt opts;
-    opts.put("fig_header", false);
-    std::ostringstream ss;
-    write_fig(ss, fig, opts);
-    assert_eq(ss.str(), "# abc\n# de\n# fg\n# hi\n# 12\n# \n# 34\n# \n"
-                        "4 0 0 50 -1 0 12.000 0.0000 4 0 0 0 0 \\001\n");
+    if (0) { // write long comments (for manual test in xfig)
+      Fig fig;
+      auto o = figobj_template("4 0 0 50 -1 0 12 0.0000 4");
+      for (int i=0; i<110; ++i) o.comment.push_back("abc");
+      o.push_back(iPoint(0,0));
+      fig.push_back(o);
 
+      o.comment.clear();
+      std::string c;
+      for (int i=0; i<65; ++i) c+="0123456789ABCDEF";
+      o.comment.push_back(c);
+      fig.push_back(o);
+
+      std::ofstream ss("long_comm.fig");
+      write_fig(ss, fig);
     }
 
   }
