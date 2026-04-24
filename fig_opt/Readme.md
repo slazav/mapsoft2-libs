@@ -14,3 +14,7 @@ Options are recorded in comments in the form
 
 2021.01.01 V.Zavjalov 1.1:
 - Change fig_get_opt interface
+
+2026.04.24 V.Zavjalov 1.2:
+- Split long options to have line lengths <1021 (xfig restriction)
+- Join values for multiple options with same key

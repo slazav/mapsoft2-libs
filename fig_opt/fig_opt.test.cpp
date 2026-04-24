@@ -16,10 +16,11 @@ main(){
     str.push_back("\\key1=val1");
     str.push_back("\\key2");
     str.push_back("\\key3=");
+    str.push_back("\\key1=--add");
 
     Opt o = fig_get_opts(str);
     assert_eq(o.size(), 3);
-    assert_eq(o.get<string>("key1"), "val1");
+    assert_eq(o.get<string>("key1"), "val1--add");
     assert_eq(o.get<string>("key2"), "1");
     assert_eq(o.get<string>("key3"), "");
 
@@ -33,7 +34,7 @@ main(){
 
     fig_set_opts(str, o);
     assert_eq(str.size(), 5);
-    assert_eq(str[2], "\\key1=val1");
+    assert_eq(str[2], "\\key1=val1--add");
     assert_eq(str[3], "\\key2=1");
     assert_eq(str[4], "\\key3=");
 
@@ -44,7 +45,7 @@ main(){
     o.put("key4", 10);
     fig_set_opts(str, o);
     assert_eq(str.size(), 6);
-    assert_eq(str[2], "\\key1=val1");
+    assert_eq(str[2], "\\key1=val1--add");
     assert_eq(str[3], "\\key2=125");
     assert_eq(str[4], "\\key3=");
     assert_eq(str[5], "\\key4=10");
@@ -60,6 +61,18 @@ main(){
     fig_add_opt(str, "k2", "2");
     assert_eq(str[4], "\\k1=");
     assert_eq(str[5], "\\k2=2");
+
+
+    //test long options
+    o.clear();
+    str.clear();
+    o.put("long", "");
+    for (int i = 0; i<65; i++) o["long"]+="0123456789ABCDEF";
+    fig_set_opts(str, o);
+    assert_eq(str.size(), 2);
+    assert_eq(str[1], "\\long=789ABCDEF0123456789ABCDEF"); // tail
+    Opt o1 = fig_get_opts(str);
+    assert_eq(o,o1);
 
 
   }

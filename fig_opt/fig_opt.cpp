@@ -15,9 +15,15 @@ fig_get_opts(const vector<string> & comment){
     if (i.size()>0 && i[0] == '\\'){
       int p1 = 1;
       int p2 = i.find('=');
-      string key, val;
-      if (p2<p1) opts.put(i.substr(p1,-1), 1);
-      else opts.put(i.substr(p1,p2-p1), i.substr(p2+1,-1));
+      if (p2<p1){
+        opts.put(i.substr(p1,-1), 1);
+      }
+      else{
+        auto key = i.substr(p1,p2-p1);
+        auto val = i.substr(p2+1,-1);
+        if (opts.exists(key)) opts[key] += val;
+        else opts.put(key, val);
+      }
     }
   }
   return opts;
@@ -39,9 +45,7 @@ void fig_del_opts(FigObj & o){ fig_del_opts(o.comment); }
 void
 fig_set_opts(vector<string> & comm, const Opt & opts){
   fig_del_opts(comm);
-  for (const auto & i:opts){
-    comm.push_back(string("\\") + i.first + "=" + i.second);
-  }
+  for (const auto & i:opts)  fig_add_opt(comm, i.first, i.second);
 }
 void fig_set_opts(Fig & f, const Opt & opts) {fig_set_opts(f.comment, opts);}
 void fig_set_opts(FigObj & o, const Opt & opts) {fig_set_opts(o.comment, opts);}
@@ -49,7 +53,15 @@ void fig_set_opts(FigObj & o, const Opt & opts) {fig_set_opts(o.comment, opts);}
 
 void
 fig_add_opt(vector<string> & comm, const string & key, const string & val){
-  comm.push_back(string("\\") + key + "=" + val);}
+  auto s = string("\\") + key + "=" + val;
+  // split long options (xfig limitation for line lengths)
+  while (s.size()>1021) {
+    auto s1 = s.substr(0,1021);
+    comm.push_back(s1);
+    s = string("\\") + key + "=" + s.substr(1021);
+  }
+  comm.push_back(s);
+}
 void fig_add_opt(Fig & f, const string & key, const string & val) {
   fig_add_opt(f.comment, key, val);}
 void fig_add_opt(FigObj & o, const string & key, const string & val) {

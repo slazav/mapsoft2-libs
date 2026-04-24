@@ -38,14 +38,14 @@ void fig_set_opts(Fig & f, const Opt & opts);
 /// Set options in FigObj (old options are deleted).
 void fig_set_opts(FigObj & o, const Opt & opts);
 
-/// Add a single option to vector<string>
+/// Add a single option to vector<string> (if option exists, text will be appended)
 void fig_add_opt(std::vector<std::string> & comm,
                  const std::string & key, const std::string & val);
 
-/// Add a single option to Fig
+/// Add a single option to Fig (if option exists, text will be appended)
 void fig_add_opt(Fig & f, const std::string & key, const std::string & val);
 
-/// Add a single option to FigObj
+/// Add a single option to FigObj (if option exists, text will be appended)
 void fig_add_opt(FigObj & o, const std::string & key, const std::string & val);
 
 
