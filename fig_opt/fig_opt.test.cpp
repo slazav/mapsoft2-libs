@@ -14,15 +14,17 @@ main(){
     str.push_back("comm1");
     str.push_back("comm2=a");
     str.push_back("\\key1=val1");
+    str.push_back("\\+--add");
     str.push_back("\\key2");
     str.push_back("\\key3=");
-    str.push_back("\\key1=--add");
+    str.push_back("\\"); // empty key allowed
 
     Opt o = fig_get_opts(str);
-    assert_eq(o.size(), 3);
+    assert_eq(o.size(), 4);
     assert_eq(o.get<string>("key1"), "val1--add");
     assert_eq(o.get<string>("key2"), "1");
     assert_eq(o.get<string>("key3"), "");
+    assert_eq(o.get<string>(""), "1");
 
     fig_del_opts(str);
     assert_eq(str.size(), 2);
@@ -33,25 +35,29 @@ main(){
     assert_eq(str.size(), 2);
 
     fig_set_opts(str, o);
-    assert_eq(str.size(), 5);
-    assert_eq(str[2], "\\key1=val1--add");
-    assert_eq(str[3], "\\key2=1");
-    assert_eq(str[4], "\\key3=");
+    assert_eq(str.size(), 6);
+    assert_eq(str[2], "\\=1");
+    assert_eq(str[3], "\\key1=val1--add");
+    assert_eq(str[4], "\\key2=1");
+    assert_eq(str[5], "\\key3=");
 
     fig_set_opts(str, o);
-    assert_eq(str.size(), 5);
+    assert_eq(str.size(), 6);
 
     o.put("key2", 125);
     o.put("key4", 10);
+    o.put("", "");
     fig_set_opts(str, o);
-    assert_eq(str.size(), 6);
-    assert_eq(str[2], "\\key1=val1--add");
-    assert_eq(str[3], "\\key2=125");
-    assert_eq(str[4], "\\key3=");
-    assert_eq(str[5], "\\key4=10");
+    assert_eq(str.size(), 7);
+    assert_eq(str[2], "\\=");
+    assert_eq(str[3], "\\key1=val1--add");
+    assert_eq(str[4], "\\key2=125");
+    assert_eq(str[5], "\\key3=");
+    assert_eq(str[6], "\\key4=10");
 
     o.erase("key1");
     o.erase("key2");
+    o.erase("");
     fig_set_opts(str, o);
     assert_eq(str.size(), 4);
     assert_eq(str[2], "\\key3=");
@@ -70,9 +76,19 @@ main(){
     for (int i = 0; i<65; i++) o["long"]+="0123456789ABCDEF";
     fig_set_opts(str, o);
     assert_eq(str.size(), 2);
-    assert_eq(str[1], "\\long=789ABCDEF0123456789ABCDEF"); // tail
+    assert_eq(str[1], "\\+789ABCDEF0123456789ABCDEF"); // tail
     Opt o1 = fig_get_opts(str);
     assert_eq(o,o1);
+
+    {
+      Opt o("{\"a=\": \"1\"}");
+      assert_err(fig_set_opts(str, o), "fig_opt: key contains =");
+      o.clear();
+      o["+"]="1";
+      assert_err(fig_set_opts(str, o), "fig_opt: key contains +");
+      o.clear();
+    }
+
 
 
   }

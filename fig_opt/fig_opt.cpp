@@ -11,19 +11,39 @@ using namespace std;
 Opt
 fig_get_opts(const vector<string> & comment){
   Opt opts;
+  std::string last;
   for (const auto & i:comment){
-    if (i.size()>0 && i[0] == '\\'){
-      int p1 = 1;
-      int p2 = i.find('=');
-      if (p2<p1){
-        opts.put(i.substr(p1,-1), 1);
-      }
-      else{
-        auto key = i.substr(p1,p2-p1);
-        auto val = i.substr(p2+1,-1);
-        if (opts.exists(key)) opts[key] += val;
-        else opts.put(key, val);
-      }
+
+    // normal comments
+    if (i.size()<1 || i[0] != '\\'){
+      last="";
+      continue;
+    }
+
+    // add to last option
+    if (i.size()>1 && i[1] == '+'){
+      if (last=="") throw Err() << "fig_opt: bad options";
+      opts[last] += i.substr(2,-1);
+      continue;
+    }
+
+    // normal option (key=value)
+    int p = i.find('=');
+    if (p==1) throw Err() << "fig_opt: bad options, empty key";
+    if (p!=i.npos){
+      auto key = i.substr(1,p-1);
+      auto val = i.substr(p+1,-1);
+      opts.put(key, val);
+      last=key;
+      continue;
+    }
+
+    // option with no value
+    else {
+      auto key = i.substr(1,-1);
+      opts.put(key, 1);
+      last=key;
+      continue;
     }
   }
   return opts;
@@ -53,12 +73,18 @@ void fig_set_opts(FigObj & o, const Opt & opts) {fig_set_opts(o.comment, opts);}
 
 void
 fig_add_opt(vector<string> & comm, const string & key, const string & val){
+  // check key
+  for (const auto c: {'=','+'})
+    if (key.find(c) != key.npos) throw Err() << "fig_opt: key contains " << c;
+
+  // build option string
   auto s = string("\\") + key + "=" + val;
+
   // split long options (xfig limitation for line lengths)
   while (s.size()>1021) {
     auto s1 = s.substr(0,1021);
     comm.push_back(s1);
-    s = string("\\") + key + "=" + s.substr(1021);
+    s = string("\\+") + s.substr(1021);
   }
   comm.push_back(s);
 }
