@@ -7,6 +7,7 @@
 #include <unistd.h> // pipe
 #include <signal.h> // kill
 #include <sys/wait.h> // wait
+#include <cmath>
 
 #include "iofilter.h"
 #include "err/err.h"
@@ -403,7 +404,16 @@ class IOFilter::Impl{
     }
   }
 
-  void kill() {::kill(pid, SIGTERM);}
+  // terminate process with sec timeout
+  void term(double sec) {
+    double dt = 0.02;
+    for (int i=0; i<rint(sec/dt); ++i) {
+      if (waitpid(pid, NULL, WNOHANG)) return;
+      usleep(rint(1e6*dt));
+    }
+    ::kill(pid, SIGTERM);
+  }
+
 };
 
 /***********************************************************/
@@ -423,4 +433,4 @@ void IOFilter::close_input(){ impl->close_input(); }
 
 int IOFilter::getline(std::string & l, double timeout) { return impl->getline(l, timeout);}
 
-void IOFilter::kill() { impl->kill();}
+void IOFilter::term(double sec) { impl->term(sec);}
