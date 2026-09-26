@@ -15,7 +15,7 @@ try{
    assert_eq(type_to_str<unsigned int>(123), "123");
 
    assert_eq(type_to_str<char>('A'), "A");
-   assert_eq(type_to_str<unsigned char>('A'), "A");
+   assert_eq(type_to_str<unsigned char>('A'), "65");
 
    assert_eq(type_to_str<int16_t>(0x7FFF), "32767");
    assert_eq(type_to_str<int16_t>(-32767), "-32767");
@@ -30,7 +30,14 @@ try{
    assert_eq(type_to_str<uint64_t>(0xFFFFFFFFFFFFFFFF), "18446744073709551615");
 
   // hex
-//   assert_eq(type_to_str_hex<uint8_t>(0xFF), "0xFF");
+   assert_eq(type_to_str_hex<int8_t>('A'), "A");
+   assert_eq(type_to_str_hex<int16_t>(1024), "0x400");
+   assert_eq(type_to_str_hex<int32_t>(1024), "0x400");
+   assert_eq(type_to_str_hex<int64_t>(1024), "0x400");
+
+   assert_eq(type_to_str_hex<uint8_t>(0), "0x00");
+   assert_eq(type_to_str_hex<uint8_t>(1), "0x01");
+   assert_eq(type_to_str_hex<uint8_t>(0xFF), "0xff");
    assert_eq(type_to_str_hex<uint16_t>(0xFFFF), "0xffff");
    assert_eq(type_to_str_hex<uint32_t>(0xFFFFFFFF), "0xffffffff");
    assert_eq(type_to_str_hex<uint64_t>(0xFFFFFFFFFFFFFFFF), "0xffffffffffffffff");

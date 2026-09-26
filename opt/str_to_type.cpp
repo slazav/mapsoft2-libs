@@ -3,7 +3,26 @@
 /**********************************************************/
 
 template<>
-std::string str_to_type<std::string>(const std::string & s){ return s; }
+std::string
+str_to_type<std::string>(const std::string & s){
+  return s;
+}
+
+/*
+// version for unsigned char
+template<>
+unsigned char
+str_to_type<unsigned char>(const std::string & s){
+  std::istringstream ss(s);
+  int val;
+  ss >> std::showbase >> val;
+  if (ss.fail() || !ss.eof())
+    throw Err() << "can't parse value: \"" << s << "\"";
+  if (val < 0 || val > 255)
+    throw Err() << "byte (0..255) expected: \"" << s << "\"";
+  return val;
+}
+*/
 
 // parse dec/hex numbers (internal, only for unsigned types)
 template<typename T>
@@ -19,6 +38,25 @@ T str_to_type_hex(const std::string & s){
   if (ss.fail() || !ss.eof())
     throw Err() << "can't parse value: \"" << s << "\"";
   return val;
+}
+
+// same for unsigned char
+template<>
+unsigned char str_to_type_hex(const std::string & s){
+  std::istringstream ss(s);
+  int val; ss >> val;
+  if (!ss.eof()){
+    char c; ss>>c;
+    if (val!=0 || c!='x')
+      throw Err() << "can't parse value: \"" << s << "\"";
+    ss >> std::hex >> val;
+  }
+  if (ss.fail() || !ss.eof())
+    throw Err() << "can't parse value: \"" << s << "\"";
+
+  if (val < 0 || val > 255)
+    throw Err() << "byte (0..255) expected: \"" << s << "\"";
+  return (unsigned char) val;
 }
 
 std::vector<int>
@@ -115,16 +153,12 @@ str_to_type_ip4(const std::string & s){
 
 // parse dec/hex numbers
 template<>
-int16_t str_to_type<int16_t>(const std::string & s){
-  return (int16_t)str_to_type_hex<uint16_t>(s);}
+uint8_t str_to_type<uint8_t>(const std::string & s){
+  return (uint8_t)str_to_type_hex<uint8_t>(s);}
 
 template<>
 uint16_t str_to_type<uint16_t>(const std::string & s){
   return str_to_type_hex<uint16_t>(s);}
-
-template<>
-int32_t str_to_type<int32_t>(const std::string & s){
-  return (int32_t)str_to_type_hex<uint32_t>(s);}
 
 template<>
 uint32_t str_to_type<uint32_t>(const std::string & s){
@@ -133,8 +167,4 @@ uint32_t str_to_type<uint32_t>(const std::string & s){
 template<>
 uint64_t str_to_type<uint64_t>(const std::string & s){
   return str_to_type_hex<uint64_t>(s);}
-
-template<>
-int64_t str_to_type<int64_t>(const std::string & s){
-  return (int64_t)str_to_type_hex<uint64_t>(s);}
 

@@ -133,15 +133,15 @@ try{
   assert_eq(O1.get("h1", std::string()), "0xFF");
   assert_eq(O1.get("h2", std::string()), "0xfe");
 
-  assert_eq(O1.get("h1", 0), 255);
-  assert_eq(O1.get("h2", 0), 254);
+  assert_eq(O1.get("h1", 0u), 255);
+  assert_eq(O1.get("h2", 0u), 254);
 
   Opt O3;
   O3.put("h1", 123);
   O3.put("h3", 124);
   O1.put(O3);
   assert_eq(O1.get<int>("h1"), 123);
-  assert_eq(O1.get<int>("h2"), 254);
+  assert_eq(O1.get<unsigned int>("h2"), 254);
   assert_eq(O1.get<int>("h3"), 124);
   assert_eq(O1.get<int>("h4"), 0);
 
@@ -155,25 +155,18 @@ try{
   O1.put("hex32", "0xFFFFFFFF");
   O1.put("hex64", "0xFFFFFFFFFFFFFFFF");
 
-  assert_eq(O1.get<uint16_t>("hex16",0), 0xFFFF);
-  assert_eq(O1.get<uint32_t>("hex32",0), 0xFFFFFFFF);
-  assert_eq(O1.get<uint64_t>("hex64",0), 0xFFFFFFFFFFFFFFFF);
+  assert_eq(O1.get<uint16_t>("hex16",0u), 0xFFFF);
+  assert_eq(O1.get<uint32_t>("hex32",0u), 0xFFFFFFFF);
+  assert_eq(O1.get<uint64_t>("hex64",0u), 0xFFFFFFFFFFFFFFFF);
 
-  assert_eq(O1.get("hex8",0), 0xFF);
-  assert_eq(O1.get("hex16",0), 0xFFFF);
-  assert_eq(O1.get("hex32",0u), 0xFFFFFFFFu);
+  assert_eq(O1.get("hex8",0u), 0xFF);
+  assert_eq(O1.get("hex16",0u), 0xFFFF);
+  assert_eq(O1.get("hex32",0u), 0xFFFFFFFF);
 
   assert_eq(O1.get("hex8"),  "0xFF");
   assert_eq(O1.get("hex16"), "0xFFFF");
   assert_eq(O1.get("hex32"), "0xFFFFFFFF");
   assert_eq(O1.get("hex64"), "0xFFFFFFFFFFFFFFFF");
-
-  // signed types
-  assert_eq(O1.get("hex8",0), (int)0xFF);
-  assert_eq(O1.get<int16_t>("hex8",0), (int16_t)0xFF);
-  assert_eq(O1.get<int16_t>("hex16",0), (int16_t)0xFFFF);
-  assert_eq(O1.get<int32_t>("hex32",0), (int32_t)0xFFFFFFFF);
-  assert_eq(O1.get<int64_t>("hex64",0), (int64_t)0xFFFFFFFFFFFFFFFF);
 
   assert_err(O1.get<uint8_t>("hex16",0), "can't parse value: \"0xFFFF\"");
   assert_err(O1.get<uint16_t>("hex32",0), "can't parse value: \"0xFFFFFFFF\"");

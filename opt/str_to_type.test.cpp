@@ -14,34 +14,54 @@ try{
    assert_eq(str_to_type<int>("123"), 123);
    assert_eq(str_to_type<int>("-123"), -123);
 
-  // assert_eq(str_to_type<int8_t>("1"), 0);
-  // assert_eq(str_to_type<uint8_t>("1"), 0);
-
    assert_eq(str_to_type<int16_t>("0"), 0);
    assert_eq(str_to_type<int16_t>("32767"), 32767);
    assert_eq(str_to_type<int16_t>("-32767"), -32767);
    assert_eq(str_to_type<uint16_t>("65535"), 65535);
 
-   assert_eq(str_to_type<int16_t>("32768"), -32768); // bad handling of signed values overflow
-   assert_eq(str_to_type<int16_t>("32769"), -32767);
-   assert_eq(str_to_type<int16_t>("-32769"), 32767);
-   assert_err(str_to_type<int16_t>("65536"), "can't parse value: \"65536\""); // too big
-   assert_eq(str_to_type<uint16_t>("-1"), 65535); // unsigned overflow
+   assert_err(str_to_type<int16_t>("32768"), "can't parse value: \"32768\""); // overflow
+   assert_err(str_to_type<int16_t>("32769"), "can't parse value: \"32769\"");
+   assert_err(str_to_type<int16_t>("-32769"),"can't parse value: \"-32769\"");
+   assert_err(str_to_type<int16_t>("65536"), "can't parse value: \"65536\"");
+   assert_eq(str_to_type<uint16_t>("-1"), 65535); // overflow
 
-   // reading hex
-   assert_eq(str_to_type<int>("0x1FF"),  0x1FF);
-   assert_eq(str_to_type<int>("-0x1FF"), 0x1FF); // minus is lost!
+   // reading hex (only unsigned types supported)
+   assert_err(str_to_type<int>("0x1F"),  "can't parse value: \"0x1F\"");
+   assert_err(str_to_type<int>("-0x1F"), "can't parse value: \"-0x1F\"");
+   assert_err(str_to_type<int8_t>("0x1F"),  "can't parse value: \"0x1F\"");
+   assert_err(str_to_type<int8_t>("-0x1F"), "can't parse value: \"-0x1F\"");
+   assert_err(str_to_type<int16_t>("0x1F"),  "can't parse value: \"0x1F\"");
+   assert_err(str_to_type<int16_t>("-0x1F"), "can't parse value: \"-0x1F\"");
+   assert_err(str_to_type<int32_t>("0x1F"),  "can't parse value: \"0x1F\"");
+   assert_err(str_to_type<int32_t>("-0x1F"), "can't parse value: \"-0x1F\"");
+   assert_err(str_to_type<int64_t>("0x1F"),  "can't parse value: \"0x1F\"");
+   assert_err(str_to_type<int64_t>("-0x1F"), "can't parse value: \"-0x1F\"");
 
-   assert_eq(str_to_type<int16_t>("0x1FF"), 0x1FF);
-   assert_eq(str_to_type<int16_t>("-0x1FF"), 0x1FF); // minus is lost!
+   assert_eq(str_to_type<uint8_t>("0"), 0);
+   assert_eq(str_to_type<uint8_t>("1"), 1);
+   assert_eq(str_to_type<uint8_t>("255"), 255);
+   assert_eq(str_to_type<uint8_t>("0x00"), 0);
+   assert_eq(str_to_type<uint8_t>("0x01"), 1);
+   assert_eq(str_to_type<uint8_t>("0xFF"), 255);
+   assert_err(str_to_type<uint8_t>("256"), "byte (0..255) expected: \"256\"");
+   assert_err(str_to_type<uint8_t>("-1"),  "byte (0..255) expected: \"-1\"");
+   assert_err(str_to_type<uint8_t>("0x1FF"), "byte (0..255) expected: \"0x1FF\"");
+
+   assert_eq(str_to_type<uint8_t>("0x1F"), 0x1F);
+   assert_eq(str_to_type<uint8_t>("-0x1F"), 0x1F); // minus is lost!
+   assert_err(str_to_type<uint8_t>("0x1FF"), "byte (0..255) expected: \"0x1FF\""); // too big
+
+   assert_eq(str_to_type<uint16_t>("0x1FF"), 0x1FF);
    assert_eq(str_to_type<uint16_t>("-0x1FF"), 0x1FF); // minus is lost!
-   assert_err(str_to_type<int16_t>("0x1FFFF"), "can't parse value: \"0x1FFFF\""); // too big
+   assert_err(str_to_type<uint16_t>("0x1FFFF"), "can't parse value: \"0x1FFFF\""); // too big
 
-   assert_eq(str_to_type<int32_t>("0x1FFFF"), 0x1FFFF);
-   assert_eq(str_to_type<int32_t>("-0x1FFFF"), 0x1FFFF); // minus is lost!
+   assert_eq(str_to_type<uint32_t>("0x1FFFF"), 0x1FFFF);
    assert_eq(str_to_type<uint32_t>("-0x1FFFF"), 0x1FFFF); // minus is lost!
-   assert_err(str_to_type<int32_t>("0x1FFFFFFFF"), "can't parse value: \"0x1FFFFFFFF\""); // too big
+   assert_err(str_to_type<uint32_t>("0x1FFFFFFFF"), "can't parse value: \"0x1FFFFFFFF\""); // too big
 
+   assert_eq(str_to_type<uint64_t>("0x1FFFFFFFF"), 0x1FFFFFFFF);
+   assert_eq(str_to_type<uint64_t>("-0x1FFFFFFFF"), 0x1FFFFFFFF); // minus is lost!
+   assert_err(str_to_type<uint64_t>("0x1FFFFFFFFFFFFFFFF"), "can't parse value: \"0x1FFFFFFFFFFFFFFFF\""); // too big
 
   // ip
    assert_eq(str_to_type_ip4("127.0.0.1"), 0x7F000001u);

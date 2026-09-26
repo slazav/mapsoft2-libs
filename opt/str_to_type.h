@@ -23,12 +23,16 @@ T str_to_type(const std::string & s){
 }
 
 // version for std::string, much simplier
-template<>
-std::string str_to_type<std::string>(const std::string & s);
+//template<>
+//std::string str_to_type<std::string>(const std::string & s);
+
+// version for unsigned char
+//template<>
+//unsigned char str_to_type<unsigned char>(const std::string & s);
 
 // version for int, supports HEX values (starting with 0x)
-template<>
-int str_to_type<int>(const std::string & s);
+//template<>
+//int str_to_type<int>(const std::string & s);
 
 // Version for vector<int>, supports HEX values (starting with 0x)
 // Use ',' or ';' as separators, ':' as range separators.

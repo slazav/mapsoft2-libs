@@ -70,6 +70,10 @@ Opt o("{\"k1\":\"v1\", \"k2\":\"v2\"}");
 -----------------
 ## Changelog:
 
+2026.09.26 V.Zavjalov 1.13:
+- str_to_type supports hex values only for unsinget types (!).
+  Reading and writing unsigned char as integer number (hex or decimal)
+
 2026.09.26 V.Zavjalov 1.12.1:
 - Move code for str_to_type and type_to_str to separate files, add more tests.
   Should be no changes in the module interface.
