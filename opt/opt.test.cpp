@@ -182,52 +182,6 @@ try{
 //  assert_eq(O1.get("h1", 0.0), 255);
 //  assert_eq(O1.get("h2", 0.0), 254);
 
-  // ip
-   assert_eq(str_to_type_ip4("127.0.0.1"), 0x7F000001u);
-   assert_eq(str_to_type_ip4("255.255.255.255"), 0xFFFFFFFFu);
-   assert_err(str_to_type_ip4("127.0.0."), "bad IP: unexpected end of output:127.0.0.");
-   assert_err(str_to_type_ip4("127.0.0"), "bad IP: unexpected end of output:127.0.0");
-   assert_err(str_to_type_ip4("1271.0.0.0"), "bad IP: number out of range: 1271.0.0.0");
-   assert_err(str_to_type_ip4("256.0.0.0"), "bad IP: number out of range: 256.0.0.0");
-   assert_err(str_to_type_ip4("127.1.1.1x"), "bad IP: extra characters at the end: 127.1.1.1x");
-
-   assert_eq(type_to_str_ip4(0xffffffffu), "255.255.255.255");
-   assert_eq(type_to_str_ip4(0x7f000001u), "127.0.0.1");
-   assert_eq(type_to_str_ip4(0), "0.0.0.0");
-
-   // ivec
-   assert_eq(str_to_type_ivec("") == std::vector<int>(), true);
-   assert_eq(str_to_type_ivec(" ") == std::vector<int>(), true);
-   assert_eq(str_to_type_ivec("1") == std::vector<int>({1}), true);
-   assert_eq(str_to_type_ivec(" 1 ") == std::vector<int>({1}), true);
-   assert_eq(str_to_type_ivec("1, 2,3") == std::vector<int>({1,2,3}), true);
-   assert_eq(str_to_type_ivec(" 1, 2,3") == std::vector<int>({1,2,3}), true);
-   assert_eq(str_to_type_ivec("1,3:5,7") == std::vector<int>({1,3,4,5,7}), true);
-   assert_eq(str_to_type_ivec("1,5:3,7") == std::vector<int>({1,5,4,3,7}), true);
-   assert_eq(str_to_type_ivec("1,5:6,-7,+7") == std::vector<int>({1,5,6,-7,7}), true);
-
-   assert_err(str_to_type_ivec("1,5a"), "can't parse integer list: 1,5a");
-   assert_err(str_to_type_ivec("1a,5"), "can't parse integer list: 1a,5");
-   assert_err(str_to_type_ivec(",1,5"), "can't parse integer list: ,1,5");
-   assert_err(str_to_type_ivec("1,5,"), "can't parse integer list: 1,5,");
-   assert_err(str_to_type_ivec("1,5:5,-2"), "can't parse empty range: 1,5:5,-2");
-
-   // dvec
-   assert_eq(str_to_type_dvec("") == std::vector<double>(), true);
-   assert_eq(str_to_type_dvec(" ") == std::vector<double>(), true);
-   assert_eq(str_to_type_dvec("1") == std::vector<double>({1}), true);
-   assert_eq(str_to_type_dvec(" 1 ") == std::vector<double>({1}), true);
-   assert_eq(str_to_type_dvec("1, 2,3") == std::vector<double>({1,2,3}), true);
-   assert_eq(str_to_type_dvec(" 1, 2,3") == std::vector<double>({1,2,3}), true);
-   assert_eq(str_to_type_dvec("1.1, 2E-1,-3.5e-4") == std::vector<double>({1.1,2e-1,-3.5e-4}), true);
-   assert_eq(str_to_type_dvec(" -1.2; 2.2;+3") == std::vector<double>({-1.2,2.2,3}), true);
-
-   assert_err(str_to_type_dvec("1,5a"), "can't parse number list: 1,5a");
-   assert_err(str_to_type_dvec("1a,5"), "can't parse number list: 1a,5");
-   assert_err(str_to_type_dvec(",1,5"), "can't parse number list: ,1,5");
-   assert_err(str_to_type_dvec("1,5,"), "can't parse number list: 1,5,");
-   assert_err(str_to_type_dvec("1:5"), "can't parse number list: 1:5");
-
 }
 catch (Err & e) {
   std::cerr << "Error: " << e.str() << "\n";

@@ -9,64 +9,11 @@
 #include <vector>
 #include "err/err.h"
 
+#include "str_to_type.h"
+#include "type_to_str.h"
+
 ///\addtogroup libmapsoft
 ///@{
-
-/// Convert std::string to any type (similar to boost::lexical_cast).
-/// \relates Opt
-template<typename T>
-T str_to_type(const std::string & s){
-  std::istringstream ss(s);
-  T val;
-  ss >> std::showbase >> val;
-  if (ss.fail() || !ss.eof())
-    throw Err() << "can't parse value: \"" << s << "\"";
-  return val;
-}
-
-// version for std::string, much simplier
-template<>
-std::string str_to_type<std::string>(const std::string & s);
-
-// version for int, supports HEX values (starting with 0x)
-template<>
-int str_to_type<int>(const std::string & s);
-
-// Version for vector<int>, supports HEX values (starting with 0x)
-// Use ',' or ';' as separators, ':' as range separators.
-std::vector<int> str_to_type_ivec(const std::string & s);
-
-// Version for vector<double>, separator is "," or ";".
-std::vector<double> str_to_type_dvec(const std::string & s);
-
-// parsing ip
-uint32_t str_to_type_ip4(const std::string & s);
-
-/// Convert any type to std::string (similar to boost::lexical_cast).
-/// \relates Opt
-template<typename T>
-std::string type_to_str(const T & t){
-  std::ostringstream ss;
-  ss << t;
-  return ss.str();
-}
-
-/// version for hex values
-/// \relates Opt
-template<typename T>
-std::string type_to_str_hex(const T & t){
-  std::ostringstream ss;
-  ss << std::hex << std::showbase << t;
-  return ss.str();
-}
-
-// version for ip
-std::string type_to_str_ip4(const uint32_t & v);
-
-
-/// version for std::string, much simplier
-template<>
-std::string type_to_str<std::string>(const std::string & t);
 
 /***********************************************************/
 /** Mapsoft options
